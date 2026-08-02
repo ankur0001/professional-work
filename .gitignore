@@ -1,0 +1,14 @@
+# Intermediate render artifacts
+video_build/frames/
+video_build/clips/
+video_build/assets/
+video_build/*.log
+video_build/concat.txt
+video_build/audio/*.wav
+video_build/previews/
+__pycache__/
+*.pyc
+
+# Temp encodes
+output/java_ep1_*.mp4
+output/*_tmp.mp4

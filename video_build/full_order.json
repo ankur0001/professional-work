@@ -1,0 +1,134 @@
+[
+  {
+    "id": "hook",
+    "dur": 10.92
+  },
+  {
+    "id": "question",
+    "dur": 10.896
+  },
+  {
+    "id": "promise",
+    "dur": 17.424
+  },
+  {
+    "id": "chapter_bump_1",
+    "dur": 14.496
+  },
+  {
+    "id": "curiosity1",
+    "dur": 12.96
+  },
+  {
+    "id": "nineties",
+    "dur": 23.832
+  },
+  {
+    "id": "cpp_pain",
+    "dur": 32.424
+  },
+  {
+    "id": "curiosity2",
+    "dur": 12.576
+  },
+  {
+    "id": "birth",
+    "dur": 29.208
+  },
+  {
+    "id": "chapter_bump_2",
+    "dur": 11.4
+  },
+  {
+    "id": "wora_intro",
+    "dur": 20.376
+  },
+  {
+    "id": "wora_explain",
+    "dur": 20.04
+  },
+  {
+    "id": "curiosity3",
+    "dur": 14.952
+  },
+  {
+    "id": "bytecode",
+    "dur": 50.568
+  },
+  {
+    "id": "analogy",
+    "dur": 30.888
+  },
+  {
+    "id": "curiosity4",
+    "dur": 15.288
+  },
+  {
+    "id": "chapter_bump_3",
+    "dur": 11.4
+  },
+  {
+    "id": "industry",
+    "dur": 43.44
+  },
+  {
+    "id": "others",
+    "dur": 32.088
+  },
+  {
+    "id": "chapter_bump_4",
+    "dur": 11.256
+  },
+  {
+    "id": "code_intro",
+    "dur": 13.728
+  },
+  {
+    "id": "code_public",
+    "dur": 9.864
+  },
+  {
+    "id": "code_class",
+    "dur": 11.232
+  },
+  {
+    "id": "code_main",
+    "dur": 14.304
+  },
+  {
+    "id": "code_print",
+    "dur": 14.088
+  },
+  {
+    "id": "run",
+    "dur": 17.904
+  },
+  {
+    "id": "memory",
+    "dur": 27.24
+  },
+  {
+    "id": "mistakes",
+    "dur": 48.288
+  },
+  {
+    "id": "jdk_note",
+    "dur": 40.8
+  },
+  {
+    "id": "interview",
+    "dur": 54.36
+  },
+  {
+    "id": "summary",
+    "dur": 34.368
+  },
+  {
+    "id": "teaser",
+    "dur": 23.28
+  },
+  {
+    "id": "closing_cta",
+    "dur": 16.992
+  }
+]
