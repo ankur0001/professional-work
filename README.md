@@ -30,8 +30,16 @@ python3 video_build/extend_and_finalize.py     # chapter bumpers + HQ encode
 
 ## Specs
 
-- **Runtime:** ~12:33
+- **Runtime:** ~15:48
 - **Resolution:** 1920×1080 (16:9)
 - **Frame rate:** 30 FPS
-- **Narration:** Indian English TTS (`en-IN-PrabhatNeural`)
+- **Narration:** Conversational Indian English (`en-IN-PrabhatNeural`), beat-based delivery with natural pauses (not paragraph read-aloud)
 - **Style:** Dark UI · Java orange · JVM blue · motion graphics
+
+## Improve / regenerate human-like audio
+
+```bash
+python3 video_build/humanize_audio.py
+```
+
+This rewrites narration into short spoken beats, synthesizes each beat separately with SSML pauses, remuxes onto the existing visuals, and rebuilds the final cut.
