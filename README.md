@@ -36,25 +36,26 @@ python3 video_build/extend_and_finalize.py     # chapter bumpers + HQ encode
 - **Narration:** Conversational Indian English (`en-IN-PrabhatNeural`), beat-based delivery with natural pauses (not paragraph read-aloud)
 - **Style:** Dark UI · Java orange · JVM blue · motion graphics
 
-## ElevenLabs voice (recommended — truly human-like)
+## Best TTS (no API key) — Kokoro-82M
 
-edge-tts cannot match [ElevenLabs](https://elevenlabs.io). Use this when you have an API key:
+Closest free/open alternative to ElevenLabs that runs locally on CPU:
 
 ```bash
-pip3 install requests
+pip3 install 'kokoro>=0.9.4' soundfile
+export KOKORO_VOICE=am_michael   # warm mentor; also try bm_fable, am_liam
+python3 video_build/kokoro_narrate.py
+```
+
+Voice samples are in `/opt/cursor/artifacts/kokoro_*.mp3`.
+
+## Optional: ElevenLabs (if you have a key)
+
+```bash
 export ELEVENLABS_API_KEY="your_key_here"
-
-# optional: pick a warm Indian-English male voice in ElevenLabs UI
-export ELEVENLABS_VOICE_ID="your_voice_id"
-
-# list voices on your account
-python3 video_build/elevenlabs_narrate.py --list-voices
-
-# rebuild full video with ElevenLabs narration
 python3 video_build/elevenlabs_narrate.py
 ```
 
-## Fallback (free, less human)
+## Older fallback (edge-tts)
 
 ```bash
 python3 video_build/humanize_audio.py
