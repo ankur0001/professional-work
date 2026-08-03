@@ -18,3 +18,6 @@ output/java_ep1_*.mp4
 output/*_tmp.mp4
 output/*_paced.mp4
 output/Java_Episode_01_paced.mp4
+video_build/audio_kokoro/
+video_build/clips_kokoro/
+video_build/assets/kokoro_voice_tests/

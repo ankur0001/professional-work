@@ -1,627 +1,627 @@
 1
-00:00:00,000 --> 00:00:04,235
-Okay... imagine this.
+00:00:00,000 --> 00:00:01,811
+Okay… imagine this.
 
 2
-00:00:04,235 --> 00:00:24,964
-Nearly every bank... every airline... every stock exchange... Android apps... big enterprise systems...
+00:00:01,811 --> 00:00:10,675
+Nearly every bank… every airline… every stock exchange… Android apps… big enterprise systems…
 
 3
-00:00:24,964 --> 00:00:34,771
+00:00:10,675 --> 00:00:14,869
 They all depend on one programming language.
 
 4
-00:00:34,771 --> 00:00:38,270
-That language... is Java.
+00:00:14,869 --> 00:00:17,088
+That language… is Java.
 
 5
-00:00:38,270 --> 00:00:43,593
+00:00:17,088 --> 00:00:20,465
 But here's what I find fascinating.
 
 6
-00:00:43,593 --> 00:00:53,328
-A language created almost thirty years ago... is still everywhere.
+00:00:20,465 --> 00:00:26,639
+A language created almost thirty years ago… is still everywhere.
 
 7
-00:00:53,328 --> 00:01:01,390
+00:00:26,639 --> 00:00:31,752
 Hundreds of other languages disappeared. Java didn't.
 
 8
-00:01:01,390 --> 00:01:02,607
-So... why?
+00:00:31,752 --> 00:00:32,523
+So… why?
 
 9
-00:01:02,607 --> 00:01:05,900
+00:00:32,523 --> 00:00:35,141
 Today, we're going to find out.
 
 10
-00:01:05,900 --> 00:01:10,148
+00:00:35,141 --> 00:00:38,519
 And no — this is not a textbook lecture.
 
 11
-00:01:10,148 --> 00:01:13,972
+00:00:38,519 --> 00:00:41,558
 We're going to tell it like a story.
 
 12
-00:01:13,972 --> 00:01:23,425
+00:00:41,558 --> 00:00:49,073
 How Java was born. What problem it actually solved. And why it's still running the world.
 
 13
-00:01:23,425 --> 00:01:25,097
+00:00:49,073 --> 00:00:50,205
 Chapter one.
 
 14
-00:01:25,097 --> 00:01:27,327
+00:00:50,205 --> 00:00:51,713
 Why Java exists.
 
 15
-00:01:27,327 --> 00:01:38,892
-Before the frameworks... before the buzzwords... there was a real engineering headache.
+00:00:51,713 --> 00:00:59,536
+Before the frameworks… before the buzzwords… there was a real engineering headache.
 
 16
-00:01:38,892 --> 00:01:45,302
+00:00:59,536 --> 00:01:03,871
 And solving it? That changed software forever.
 
 17
-00:01:45,302 --> 00:01:48,613
+00:01:03,871 --> 00:01:06,551
 But first — a quick question.
 
 18
-00:01:48,613 --> 00:01:52,268
+00:01:06,551 --> 00:01:09,507
 C++ was already powerful, right?
 
 19
-00:01:52,268 --> 00:01:58,320
+00:01:09,507 --> 00:01:14,403
 So why did the industry need another language at all?
 
 20
-00:01:58,320 --> 00:02:03,802
+00:01:14,403 --> 00:01:18,838
 Alright. Let's go back to the nineteen nineties.
 
 21
-00:02:03,802 --> 00:02:05,187
+00:01:18,838 --> 00:01:20,127
 Picture this.
 
 22
-00:02:05,187 --> 00:02:10,407
+00:01:20,127 --> 00:01:24,989
 Early nineties. The internet is about to explode.
 
 23
-00:02:10,407 --> 00:02:24,576
+00:01:24,989 --> 00:01:38,184
 At Sun Microsystems, a team led by James Gosling is building software for devices — interactive TVs, set-top boxes, handheld gadgets.
 
 24
-00:02:24,576 --> 00:02:27,346
+00:01:38,184 --> 00:01:40,764
 And they started with C++.
 
 25
-00:02:27,346 --> 00:02:31,106
-Very quickly... they hit a wall.
+00:01:40,764 --> 00:01:43,448
+Very quickly… they hit a wall.
 
 26
-00:02:31,106 --> 00:02:35,117
+00:01:43,448 --> 00:01:46,312
 C++ gave them power. Absolutely.
 
 27
-00:02:35,117 --> 00:02:39,253
+00:01:46,312 --> 00:01:49,266
 But that power came with a price.
 
 28
-00:02:39,253 --> 00:02:49,154
+00:01:49,266 --> 00:01:56,336
 Manual memory management. One tiny mistake — and boom. Memory leak. Or a crash.
 
 29
-00:02:49,154 --> 00:03:01,688
+00:01:56,336 --> 00:02:05,286
 And platform dependency? Code that worked on one operating system could break completely on another.
 
 30
-00:03:01,688 --> 00:03:08,707
-For a team targeting many devices... that was a nightmare.
+00:02:05,286 --> 00:02:10,298
+For a team targeting many devices… that was a nightmare.
 
 31
-00:03:08,707 --> 00:03:12,665
+00:02:10,298 --> 00:02:12,855
 So here's the real problem.
 
 32
-00:03:12,665 --> 00:03:17,209
-How do you write software once...
+00:02:12,855 --> 00:02:15,791
+How do you write software once…
 
 33
-00:03:17,209 --> 00:03:24,685
-and run it on Windows, Mac, Unix, embedded devices...
+00:02:15,791 --> 00:02:20,621
+and run it on Windows, Mac, Unix, embedded devices…
 
 34
-00:03:24,685 --> 00:03:28,936
+00:02:20,621 --> 00:02:23,368
 without rewriting everything?
 
 35
-00:03:28,936 --> 00:03:32,348
+00:02:23,368 --> 00:02:26,304
 Gosling's team made a bold call.
 
 36
-00:03:32,348 --> 00:03:34,480
+00:02:26,304 --> 00:02:28,139
 Build something new.
 
 37
-00:03:34,480 --> 00:03:45,996
+00:02:28,139 --> 00:02:38,049
 It was first called Oak. Later renamed Java — yes, inspired by the coffee that kept those late nights alive.
 
 38
-00:03:45,996 --> 00:03:55,699
+00:02:38,049 --> 00:02:46,399
 The goal sounded simple. Safer than C++. Easier to maintain. And portable across platforms.
 
 39
-00:03:55,699 --> 00:03:59,964
+00:02:46,399 --> 00:02:50,070
 Simple to say. Incredibly hard to build.
 
 40
-00:03:59,964 --> 00:04:01,477
+00:02:50,070 --> 00:02:51,226
 Chapter two.
 
 41
-00:04:01,477 --> 00:04:04,503
+00:02:51,226 --> 00:02:53,538
 What makes Java special.
 
 42
-00:04:04,503 --> 00:04:13,705
+00:02:53,538 --> 00:03:00,572
 This is the idea that made Java famous — and the reason it still matters.
 
 43
-00:04:13,705 --> 00:04:19,588
-When Java launched in nineteen ninety-five... it didn't whisper.
+00:03:00,572 --> 00:03:05,723
+When Java launched in nineteen ninety-five… it didn't whisper.
 
 44
-00:04:19,588 --> 00:04:25,565
+00:03:05,723 --> 00:03:10,957
 It came with a promise that sounded almost too good to be true.
 
 45
-00:04:25,565 --> 00:04:27,937
+00:03:10,957 --> 00:03:13,034
 Write once. Run anywhere.
 
 46
-00:04:27,937 --> 00:04:37,046
+00:03:13,034 --> 00:03:21,010
 And for an industry tired of porting the same code again and again? That promise was everything.
 
 47
-00:04:37,046 --> 00:04:43,043
+00:03:21,010 --> 00:03:25,507
 So what does Write Once, Run Anywhere actually mean?
 
 48
-00:04:43,043 --> 00:04:48,464
-Imagine this. You write one instruction manual...
+00:03:25,507 --> 00:03:29,573
+Imagine this. You write one instruction manual…
 
 49
-00:04:48,464 --> 00:04:53,192
+00:03:29,573 --> 00:03:33,119
 and every machine on Earth can follow it.
 
 50
-00:04:53,192 --> 00:04:59,074
-Not because every machine speaks the same language...
+00:03:33,119 --> 00:03:37,531
+Not because every machine speaks the same language…
 
 51
-00:04:59,074 --> 00:05:04,841
+00:03:37,531 --> 00:03:41,856
 but because every machine has the same translator.
 
 52
-00:05:04,841 --> 00:05:05,704
+00:03:41,856 --> 00:03:42,764
 But wait.
 
 53
-00:05:05,704 --> 00:05:10,786
+00:03:42,764 --> 00:03:48,111
 Windows and Mac don't run the same programs natively.
 
 54
-00:05:10,786 --> 00:05:15,292
+00:03:48,111 --> 00:03:52,853
 So how does Java run on every operating system?
 
 55
-00:05:15,292 --> 00:05:18,744
+00:03:52,853 --> 00:03:56,485
 Watch carefully. This is the secret.
 
 56
-00:05:18,744 --> 00:05:28,436
-When you write Java... you don't hand your program straight to Windows or Mac.
+00:03:56,485 --> 00:04:03,089
+When you write Java… you don't hand your program straight to Windows or Mac.
 
 57
-00:05:28,436 --> 00:05:35,068
+00:04:03,089 --> 00:04:07,608
 First, the compiler turns your source into bytecode.
 
 58
-00:05:35,068 --> 00:05:45,780
+00:04:07,608 --> 00:04:14,907
 Think of bytecode like an international language — not tied to one operating system.
 
 59
-00:05:45,780 --> 00:05:58,022
+00:04:14,907 --> 00:04:23,249
 Then the JVM — the Java Virtual Machine — takes that bytecode and translates it for your system.
 
 60
-00:05:58,022 --> 00:06:05,419
-Honestly? The JVM is like Google Translate... for computers.
+00:04:23,249 --> 00:04:28,289
+Honestly? The JVM is like Google Translate… for computers.
 
 61
-00:06:05,419 --> 00:06:11,795
+00:04:28,289 --> 00:04:32,634
 Windows has a JVM. Mac has a JVM. Linux has a JVM.
 
 62
-00:06:11,795 --> 00:06:18,044
+00:04:32,634 --> 00:04:36,891
 Same bytecode. Different translator. Same result.
 
 63
-00:06:18,044 --> 00:06:20,541
+00:04:36,891 --> 00:04:38,862
 Think about it this way.
 
 64
-00:06:20,541 --> 00:06:25,535
+00:04:38,862 --> 00:04:42,802
 Your Java source code is like handwritten notes.
 
 65
-00:06:25,535 --> 00:06:33,025
+00:04:42,802 --> 00:04:48,712
 The compiler turns those notes into a clean blueprint — that's bytecode.
 
 66
-00:06:33,025 --> 00:06:41,140
-The JVM is the construction crew. It reads the blueprint and builds the house...
+00:04:48,712 --> 00:04:55,115
+The JVM is the construction crew. It reads the blueprint and builds the house…
 
 67
-00:06:41,140 --> 00:06:45,613
+00:04:55,115 --> 00:04:58,645
 whether the site is Windows, Mac, or Linux.
 
 68
-00:06:45,613 --> 00:06:53,832
+00:04:58,645 --> 00:05:05,129
 You don't redraw the blueprint for every site. Same blueprint. The crew adapts.
 
 69
-00:06:53,832 --> 00:06:58,704
+00:05:05,129 --> 00:05:08,938
 Okay — so Java solved portability beautifully.
 
 70
-00:06:58,704 --> 00:07:04,634
+00:05:08,938 --> 00:05:13,575
 But is that enough to explain thirty years of dominance?
 
 71
-00:07:04,634 --> 00:07:09,505
+00:05:13,575 --> 00:05:17,383
 Let's look at where Java actually lives today.
 
 72
-00:07:09,505 --> 00:07:10,884
+00:05:17,383 --> 00:05:18,723
 Chapter three.
 
 73
-00:07:10,884 --> 00:07:13,148
+00:05:18,723 --> 00:05:20,923
 Java in the real world.
 
 74
-00:07:13,148 --> 00:07:19,056
+00:05:20,923 --> 00:05:26,661
 Enough theory. Let's see where this language earns its keep.
 
 75
-00:07:19,056 --> 00:07:23,186
+00:05:26,661 --> 00:05:29,937
 Java didn't survive because of a slogan.
 
 76
-00:07:23,186 --> 00:07:27,832
+00:05:29,937 --> 00:05:33,621
 It survived because it became infrastructure.
 
 77
-00:07:27,832 --> 00:07:36,505
+00:05:33,621 --> 00:05:40,499
 When a bank processes millions of transactions a day — it needs stability, not hype.
 
 78
-00:07:36,505 --> 00:07:46,004
+00:05:40,499 --> 00:05:48,032
 When Android needed a language millions of developers already knew — Java was already there.
 
 79
-00:07:46,004 --> 00:07:56,122
+00:05:48,032 --> 00:05:56,056
 And when companies built backends that had to scale globally — Java's ecosystem was battle-tested.
 
 80
-00:07:56,122 --> 00:08:03,143
+00:05:56,056 --> 00:06:01,624
 Enterprise teams don't switch languages because something is trendy.
 
 81
-00:08:03,143 --> 00:08:08,203
+00:06:01,624 --> 00:06:05,636
 They switch when the cost of failure is too high.
 
 82
-00:08:08,203 --> 00:08:13,881
-Java earned trust... one production deployment at a time.
+00:06:05,636 --> 00:06:10,139
+Java earned trust… one production deployment at a time.
 
 83
-00:08:13,881 --> 00:08:19,753
+00:06:10,139 --> 00:06:14,591
 Now you might ask — what about Python? JavaScript? Go?
 
 84
-00:08:19,753 --> 00:08:22,907
+00:06:14,591 --> 00:06:16,981
 They're excellent. Seriously.
 
 85
-00:08:22,907 --> 00:08:33,889
+00:06:16,981 --> 00:06:25,307
 But Java carved out a lane that still matters — large backends, Android, finance, enterprise systems.
 
 86
-00:08:33,889 --> 00:08:43,784
+00:06:25,307 --> 00:06:32,809
 Places where performance, strong typing, and decades of tooling create real business value.
 
 87
-00:08:43,784 --> 00:08:49,547
+00:06:32,809 --> 00:06:37,177
 Not the only choice. Still one of the most important.
 
 88
-00:08:49,547 --> 00:08:50,866
+00:06:37,177 --> 00:06:38,452
 Chapter four.
 
 89
-00:08:50,866 --> 00:08:53,300
+00:06:38,452 --> 00:06:40,805
 Your first Java program.
 
 90
-00:08:53,300 --> 00:08:59,790
+00:06:40,805 --> 00:06:47,079
 No more waiting. Let's open the editor and write some real code.
 
 91
-00:08:59,790 --> 00:09:03,199
+00:06:47,079 --> 00:06:49,384
 Alright — enough history.
 
 92
-00:09:03,199 --> 00:09:05,517
+00:06:49,384 --> 00:06:50,951
 Let's write Java.
 
 93
-00:09:05,517 --> 00:09:08,108
+00:06:50,951 --> 00:06:52,702
 Your first program.
 
 94
-00:09:08,108 --> 00:09:19,836
-And I want you to watch every keyword... because each one is doing something on purpose.
+00:06:52,702 --> 00:07:00,629
+And I want you to watch every keyword… because each one is doing something on purpose.
 
 95
-00:09:19,836 --> 00:09:23,254
+00:07:00,629 --> 00:07:02,724
 See that word — public?
 
 96
-00:09:23,254 --> 00:09:30,239
+00:07:02,724 --> 00:07:07,005
 It means this class is accessible from outside.
 
 97
-00:09:30,239 --> 00:09:37,522
-Think of it like... this code is open for business.
+00:07:07,005 --> 00:07:11,468
+Think of it like… this code is open for business.
 
 98
-00:09:37,522 --> 00:09:40,705
+00:07:11,468 --> 00:07:13,801
 Next — class HelloWorld.
 
 99
-00:09:40,705 --> 00:09:43,756
+00:07:13,801 --> 00:07:16,036
 A class is a blueprint.
 
 100
-00:09:43,756 --> 00:09:48,000
+00:07:16,036 --> 00:07:19,147
 HelloWorld is the name we chose.
 
 101
-00:09:48,000 --> 00:09:54,101
+00:07:19,147 --> 00:07:23,619
 And the filename must match — HelloWorld.java.
 
 102
-00:09:54,101 --> 00:10:00,069
+00:07:23,619 --> 00:07:27,993
 That tiny detail trips up a lot of beginners.
 
 103
-00:10:00,069 --> 00:10:07,153
-Now this line — public static void main... String args.
+00:07:27,993 --> 00:07:33,141
+Now this line — public static void main… String args.
 
 104
-00:10:07,153 --> 00:10:10,361
+00:07:33,141 --> 00:07:35,472
 This is the entry point.
 
 105
-00:10:10,361 --> 00:10:17,579
+00:07:35,472 --> 00:07:40,717
 When you hit run, the JVM looks for this exact method.
 
 106
-00:10:17,579 --> 00:10:21,722
+00:07:40,717 --> 00:07:43,727
 This is where execution begins.
 
 107
-00:10:21,722 --> 00:10:27,142
+00:07:43,727 --> 00:07:46,734
 And finally — System.out.println.
 
 108
-00:10:27,142 --> 00:10:32,398
+00:07:46,734 --> 00:07:49,649
 This prints text to the console.
 
 109
-00:10:32,398 --> 00:10:43,895
+00:07:49,649 --> 00:07:56,027
 Println means print line — print the text, then move to the next line.
 
 110
-00:10:43,895 --> 00:10:47,015
-Okay... let's run it.
+00:07:56,027 --> 00:07:57,757
+Okay… let's run it.
 
 111
-00:10:47,015 --> 00:10:54,138
+00:07:57,757 --> 00:08:01,473
 Watch what happens behind the scenes.
 
 112
-00:10:54,138 --> 00:10:56,448
+00:08:01,473 --> 00:08:02,678
 You hit Run.
 
 113
-00:10:56,448 --> 00:11:07,036
-Compiler reads HelloWorld.java... turns it into bytecode...
+00:08:02,678 --> 00:08:08,202
+Compiler reads HelloWorld.java… turns it into bytecode…
 
 114
-00:11:07,036 --> 00:11:16,083
-JVM loads it... finds main... and executes println.
+00:08:08,202 --> 00:08:12,922
+JVM loads it… finds main… and executes println.
 
 115
-00:11:16,083 --> 00:11:22,051
+00:08:12,922 --> 00:08:16,035
 And there it is — Hello, World!
 
 116
-00:11:22,051 --> 00:11:27,746
+00:08:16,035 --> 00:08:20,029
 Here's where most beginners get confused.
 
 117
-00:11:27,746 --> 00:11:33,441
+00:08:20,029 --> 00:08:24,022
 They think Java runs directly on Windows.
 
 118
-00:11:33,441 --> 00:11:34,969
+00:08:24,022 --> 00:08:25,094
 It doesn't.
 
 119
-00:11:34,969 --> 00:11:46,220
-Your source goes to the compiler... becomes bytecode... the JVM loads it into memory...
+00:08:25,094 --> 00:08:32,983
+Your source goes to the compiler… becomes bytecode… the JVM loads it into memory…
 
 120
-00:11:46,220 --> 00:11:53,721
+00:08:32,983 --> 00:08:38,243
 and the CPU runs machine instructions through the JVM.
 
 121
-00:11:53,721 --> 00:11:56,360
+00:08:38,243 --> 00:08:40,094
 Every step matters.
 
 122
-00:11:56,360 --> 00:12:01,500
-This tiny detail... changes everything.
+00:08:40,094 --> 00:08:43,697
+This tiny detail… changes everything.
 
 123
-00:12:01,500 --> 00:12:06,489
+00:08:43,697 --> 00:08:47,998
 Quick reality check — common beginner mistakes.
 
 124
-00:12:06,489 --> 00:12:17,103
+00:08:47,998 --> 00:08:57,149
 Mistake one: thinking Java runs like a normal Windows exe. Nope. The JVM is doing the heavy lifting.
 
 125
-00:12:17,103 --> 00:12:21,455
+00:08:57,149 --> 00:09:00,901
 Mistake two: mixing up JDK, JRE, and JVM.
 
 126
-00:12:21,455 --> 00:12:29,415
+00:09:00,901 --> 00:09:07,764
 Quick version — JDK means develop. JRE means run. JVM is the engine inside.
 
 127
-00:12:29,415 --> 00:12:37,482
+00:09:07,764 --> 00:09:14,718
 Mistake three: naming the file helloworld.java when the class is HelloWorld.
 
 128
-00:12:37,482 --> 00:12:44,487
+00:09:14,718 --> 00:09:20,758
 Java is case-sensitive. Filename must match the public class name.
 
 129
-00:12:44,487 --> 00:12:52,766
+00:09:20,758 --> 00:09:27,895
 Don't worry if this feels like a lot. We'll unpack it properly in Episode Two.
 
 130
-00:12:52,766 --> 00:12:57,374
+00:09:27,895 --> 00:09:31,532
 One more useful detail before we wrap up.
 
 131
-00:12:57,374 --> 00:13:06,703
-When people say install Java... they usually mean the JDK — the Java Development Kit.
+00:09:31,532 --> 00:09:38,894
+When people say install Java… they usually mean the JDK — the Java Development Kit.
 
 132
-00:13:06,703 --> 00:13:15,695
+00:09:38,894 --> 00:09:45,989
 Inside it, you get the compiler, the tools, and a runtime that includes the JVM.
 
 133
-00:13:15,695 --> 00:13:26,710
+00:09:45,989 --> 00:09:54,681
 Clean mental model: JDK for developers. JRE for running. JVM is the engine that executes bytecode.
 
 134
-00:13:26,710 --> 00:13:33,903
+00:09:54,681 --> 00:10:00,357
 Keep that in your head — Episode Two will make it crystal clear.
 
 135
-00:13:33,903 --> 00:13:36,679
+00:10:00,357 --> 00:10:02,475
 Alright — interview time.
 
 136
-00:13:36,679 --> 00:13:40,344
+00:10:02,475 --> 00:10:05,270
 Why is Java platform independent?
 
 137
-00:13:40,344 --> 00:13:47,450
-Here's how you answer... like someone who's actually shipped code.
+00:10:05,270 --> 00:10:10,691
+Here's how you answer… like someone who's actually shipped code.
 
 138
-00:13:47,450 --> 00:13:54,446
+00:10:10,691 --> 00:10:16,027
 Java becomes platform independent through bytecode and the JVM.
 
 139
-00:13:54,446 --> 00:14:04,884
+00:10:16,027 --> 00:10:23,989
 We don't compile to machine-specific code. We compile to bytecode — a platform-neutral format.
 
 140
-00:14:04,884 --> 00:14:12,546
+00:10:23,989 --> 00:10:29,833
 Then the JVM on each OS turns that bytecode into native instructions.
 
 141
-00:14:12,546 --> 00:14:21,096
+00:10:29,833 --> 00:10:36,355
 Same class files. Windows, Mac, Linux — as long as a compatible JVM is there.
 
 142
-00:14:21,096 --> 00:14:31,312
+00:10:36,355 --> 00:10:44,147
 If you can explain that calmly in an interview? You're already ahead of half the candidates.
 
 143
-00:14:31,312 --> 00:14:33,488
+00:10:44,147 --> 00:10:45,965
 Let's land the plane.
 
 144
-00:14:33,488 --> 00:14:42,090
+00:10:45,965 --> 00:10:53,150
 Java exists because the nineties needed something safer and more portable than C++.
 
 145
-00:14:42,090 --> 00:14:48,619
+00:10:53,150 --> 00:10:58,603
 Write Once, Run Anywhere works because of bytecode and the JVM.
 
 146
-00:14:48,619 --> 00:14:54,630
+00:10:58,603 --> 00:11:03,623
 Industry adopted it because stability at scale beats hype.
 
 147
-00:14:54,630 --> 00:15:00,020
-And your first program? Public class... main... println.
+00:11:03,623 --> 00:11:08,124
+And your first program? Public class… main… println.
 
 148
-00:15:00,020 --> 00:15:08,829
+00:11:08,124 --> 00:11:15,481
 You now understand why Java became one of the most successful languages ever created.
 
 149
-00:15:08,829 --> 00:15:12,559
+00:11:15,481 --> 00:11:18,618
 But one huge mystery still remains.
 
 150
-00:15:12,559 --> 00:15:17,994
-If Java code doesn't run directly on your computer...
+00:11:18,618 --> 00:11:23,189
+If Java code doesn't run directly on your computer…
 
 151
-00:15:17,994 --> 00:15:22,684
+00:11:23,189 --> 00:11:27,132
 what exactly is the JVM doing inside memory?
 
 152
-00:15:22,684 --> 00:15:27,906
+00:11:27,132 --> 00:11:31,524
 Heap. Stack. Garbage collection. JIT compilation.
 
 153
-00:15:27,906 --> 00:15:32,702
+00:11:31,524 --> 00:11:35,557
 What's actually happening when you press Run?
 
 154
-00:15:32,702 --> 00:15:37,071
+00:11:35,557 --> 00:11:39,231
 That's what we'll uncover in Episode Two.
 
 155
-00:15:37,071 --> 00:15:45,069
+00:11:39,231 --> 00:11:44,659
 If something clicked for you today — stick around for Episode Two.
 
 156
-00:15:45,069 --> 00:15:55,974
+00:11:44,659 --> 00:11:52,059
 We're going inside the JVM. Stack, heap, garbage collection — the stuff interviewers love.
 
 157
-00:15:55,974 --> 00:15:58,276
+00:11:52,059 --> 00:11:53,621
 I'll see you there.
