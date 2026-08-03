@@ -36,10 +36,26 @@ python3 video_build/extend_and_finalize.py     # chapter bumpers + HQ encode
 - **Narration:** Conversational Indian English (`en-IN-PrabhatNeural`), beat-based delivery with natural pauses (not paragraph read-aloud)
 - **Style:** Dark UI · Java orange · JVM blue · motion graphics
 
-## Improve / regenerate human-like audio
+## ElevenLabs voice (recommended — truly human-like)
+
+edge-tts cannot match [ElevenLabs](https://elevenlabs.io). Use this when you have an API key:
+
+```bash
+pip3 install requests
+export ELEVENLABS_API_KEY="your_key_here"
+
+# optional: pick a warm Indian-English male voice in ElevenLabs UI
+export ELEVENLABS_VOICE_ID="your_voice_id"
+
+# list voices on your account
+python3 video_build/elevenlabs_narrate.py --list-voices
+
+# rebuild full video with ElevenLabs narration
+python3 video_build/elevenlabs_narrate.py
+```
+
+## Fallback (free, less human)
 
 ```bash
 python3 video_build/humanize_audio.py
 ```
-
-This rewrites narration into short spoken beats, synthesizes each beat separately with SSML pauses, remuxes onto the existing visuals, and rebuilds the final cut.
