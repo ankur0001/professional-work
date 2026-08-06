@@ -6,7 +6,7 @@ Premium YouTube educational documentary package + **rendered video**.
 
 | File | Description |
 |---|---|
-| [`output/Java_Episode_01_Why_Java_Exists.mp4`](output/Java_Episode_01_Why_Java_Exists.mp4) | Final cut (~12:33, 1080p30, narrated) |
+| [`output/Java_Episode_01_Why_Java_Exists.mp4`](output/Java_Episode_01_Why_Java_Exists.mp4) | Final cut (~4–5 min, 1080p30, Kokoro narration) |
 | [`output/Java_Episode_01_Why_Java_Exists_CAPTIONED.mp4`](output/Java_Episode_01_Why_Java_Exists_CAPTIONED.mp4) | Same cut with burned-in captions |
 | [`output/Java_Episode_01.srt`](output/Java_Episode_01.srt) | SubRip captions |
 | [`output/thumbnail.jpg`](output/thumbnail.jpg) | YouTube thumbnail |
@@ -30,11 +30,18 @@ python3 video_build/extend_and_finalize.py     # chapter bumpers + HQ encode
 
 ## Specs
 
-- **Runtime:** ~15:48
+- **Runtime:** ~4–5 minutes (condensed cut)
 - **Resolution:** 1920×1080 (16:9)
 - **Frame rate:** 30 FPS
-- **Narration:** Conversational Indian English (`en-IN-PrabhatNeural`), beat-based delivery with natural pauses (not paragraph read-aloud)
+- **Narration:** Kokoro-82M (`am_michael`) — open ElevenLabs-class TTS
 - **Style:** Dark UI · Java orange · JVM blue · motion graphics
+
+### Rebuild short cut
+
+```bash
+export KOKORO_VOICE=am_michael
+python3 video_build/make_short_episode.py
+```
 
 ## Best TTS (no API key) — Kokoro-82M
 
