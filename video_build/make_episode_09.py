@@ -48,6 +48,7 @@ SCENES = [
         "For text content — use equals.",
         "Safer pattern — literal first. PAID dot equals status.",
         "Null-safe and clear. Interviewers listen for this.",
+        "Make equals your default reflex for text.",
     ]),
     ("build", "build", [
         "Building strings in a loop?",
@@ -55,6 +56,7 @@ SCENES = [
         "Use StringBuilder — append in place, then toString once.",
         "Modern compilers help simple cases — but builders win when you loop.",
         "Measure hot paths. Clarity first — then allocation discipline.",
+        "Builders are the boring correct tool — use them.",
     ]),
     ("charset", "charset", [
         "Bytes are not characters without a charset.",
@@ -70,6 +72,7 @@ SCENES = [
         "Two — logging secrets inside strings — tokens, passwords, cards.",
         "Three — accepting unbounded string input until memory cries.",
         "Also — pushing raw strings deep into domain code. Prefer typed values.",
+        "A CustomerId type beats a naked string passed twelve layers deep.",
     ]),
     ("interview", "interview", [
         "Interview question — why is String immutable?",
