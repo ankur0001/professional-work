@@ -19,8 +19,8 @@ Rule: **one episode → one branch → one PR**
 | 11 | 11 | Access Modifiers | Done (separate PR) |
 | 12 | 12 | Packages | Done (separate PR) |
 | 13 | 13 | Enums | Done (separate PR) |
-| 14 | 14 | Wrappers and Autoboxing | **This PR** |
-| 15 | 15 | Generics | Planned |
+| 14 | 14 | Wrappers and Autoboxing | Done (separate PR) |
+| 15 | 15 | Generics | **This PR** |
 | 16 | 16 | Annotations | Planned |
 | 17 | 17 | Reflection | Planned |
 | 18 | 18 | Records | Planned |
