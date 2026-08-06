@@ -10,8 +10,8 @@ Rule: **one episode → one branch → one PR**
 | 02 | 2 | JDK, JRE, and JVM | Done (separate PR) |
 | 03 | 3 | Java Program Structure | Done (separate PR) |
 | 04 | 4 | Variables and Data Types | Done (separate PR) |
-| 05 | 5 | Operators | **This PR** |
-| 06 | 6 | Control Flow | Planned |
+| 05 | 5 | Operators | Done (separate PR) |
+| 06 | 6 | Control Flow | **This PR** |
 | 07 | 7 | Methods | Planned |
 | 08 | 8 | Arrays | Planned |
 | 09 | 9 | Strings | Planned |
