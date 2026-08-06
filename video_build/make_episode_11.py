@@ -40,6 +40,7 @@ SCENES = [
         "protected — package plus subclasses.",
         "public — anyone. A promise. Use it carefully.",
         "Default to the narrowest visibility that still works.",
+        "Widen only when a real collaborator needs access.",
     ]),
     ("private", "private", [
         "private is your first encapsulation tool.",
@@ -55,6 +56,7 @@ SCENES = [
         "Great for internal helpers shared by a few types.",
         "When a type must leave the package — promote visibility intentionally.",
         "Accidental public is how APIs grow barnacles.",
+        "Package-private keeps the neighborhood tidy.",
     ]),
     ("protected_public", "protected_public", [
         "protected supports inheritance-aware extension.",
@@ -70,6 +72,7 @@ SCENES = [
         "Two — making every helper public just in case.",
         "Three — protected used as a lazy public for subclasses everywhere.",
         "Also — widening visibility to fix a test instead of redesigning.",
+        "Fix the design — do not dissolve the boundary.",
     ]),
     ("interview", "interview", [
         "Interview question — default access versus private?",
@@ -77,6 +80,7 @@ SCENES = [
         "private — only the declaring class.",
         "Then — prefer narrowest visibility. Public is a contract.",
         "That answer shows API discipline.",
+        "Visibility choices are architecture in miniature.",
     ]),
     ("teaser", "teaser", [
         "Visibility needs a home. Next — packages.",
