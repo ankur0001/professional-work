@@ -11,8 +11,8 @@ Rule: **one episode → one branch → one PR**
 | 03 | 3 | Java Program Structure | Done (separate PR) |
 | 04 | 4 | Variables and Data Types | Done (separate PR) |
 | 05 | 5 | Operators | Done (separate PR) |
-| 06 | 6 | Control Flow | **This PR** |
-| 07 | 7 | Methods | Planned |
+| 06 | 6 | Control Flow | Done (separate PR) |
+| 07 | 7 | Methods | **This PR** |
 | 08 | 8 | Arrays | Planned |
 | 09 | 9 | Strings | Planned |
 | 10 | 10 | Object-Oriented Programming | Planned |
