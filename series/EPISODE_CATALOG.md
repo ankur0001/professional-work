@@ -22,7 +22,7 @@ Rule: **one episode → one branch → one PR**
 | 14 | 14 | Wrappers and Autoboxing | Done (separate PR) |
 | 15 | 15 | Generics | Done (separate PR) |
 | 16 | 16 | Annotations | Done (separate PR) |
-| 17 | 17 | Reflection | Planned |
+| 17 | 17 | Reflection | **This PR** |
 | 18 | 18 | Records | Planned |
 | 19 | 19 | Sealed Classes | Planned |
 | 20 | 20 | Modules and JPMS | Planned |
