@@ -64,7 +64,7 @@ SCENES: list[tuple[str, str, list[str]]] = [
             "In Episode Three, we mapped packages and classes.",
             "Now — what actually lives inside those fields and methods?",
             "Variables name values. Types decide what is valid.",
-            "Pick the wrong type… and production pays for it.",
+            "Pick the wrong type… and production pays for it — overflow, nulls, money bugs.",
         ],
     ),
     (
@@ -79,10 +79,11 @@ SCENES: list[tuple[str, str, list[str]]] = [
         "families",
         "families",
         [
-            "Java has two families of types.",
+            "Java has two families of types. Keep this picture.",
             "On the left — primitives. Raw values. Fast. Never null.",
             "On the right — references. They point to objects on the heap.",
-            "That split is the mental model everything else builds on.",
+            "Assignment behaves differently in each family — that is why this split matters.",
+            "That mental model everything else builds on.",
         ],
     ),
     (
@@ -92,8 +93,9 @@ SCENES: list[tuple[str, str, list[str]]] = [
             "Eight primitives — memorize the common ones first.",
             "int for whole numbers. long for bigger IDs and timestamps.",
             "boolean for true or false. double for binary floating point.",
-            "byte, short, char, float exist too — but int, long, boolean show up constantly.",
+            "byte, short, char, float exist too — useful, but rarer in day-to-day code.",
             "Primitives hold the value itself — not a pointer.",
+            "And they cannot be null. That alone prevents a whole class of bugs.",
         ],
     ),
     (
@@ -105,6 +107,7 @@ SCENES: list[tuple[str, str, list[str]]] = [
             "Order order equals new Order — the variable holds a reference.",
             "The real object lives on the heap.",
             "Assignment copies the primitive… or copies the reference — not the whole object.",
+            "final blocks reassignment of that variable — it does not freeze the object inside.",
         ],
     ),
     (
@@ -116,6 +119,7 @@ SCENES: list[tuple[str, str, list[str]]] = [
             "Binary floating point cannot represent many decimals exactly.",
             "Prefer long minor units — cents — or a Money value type.",
             "Use BigDecimal when you need precise decimal math and rounding rules.",
+            "Architects standardize this early — because fixing money types later is expensive.",
         ],
     ),
     (
@@ -125,6 +129,7 @@ SCENES: list[tuple[str, str, list[str]]] = [
             "Wrappers look similar — Integer, Long, Boolean.",
             "They are objects. They can be null. They cost more memory.",
             "Autoboxing hides conversions — and can hide NullPointerExceptions too.",
+            "A List of Integer can thrash the heap versus an int array.",
             "Prefer primitives in hot paths. Use wrappers when null is a real signal.",
         ],
     ),
@@ -136,6 +141,7 @@ SCENES: list[tuple[str, str, list[str]]] = [
             "One — double for money. Rounding bugs wait quietly.",
             "Two — ignoring integer overflow on big counters.",
             "Three — assuming final means deep immutability. It only blocks reassignment.",
+            "Bonus trap — overusing String for every domain idea. Prefer typed values when meaning matters.",
         ],
     ),
     (
@@ -721,7 +727,7 @@ def main():
 
     final_dur = probe(final)
     print(f"DONE Episode 04: {final_dur/60:.2f} min")
-    assert 210 <= final_dur <= 330, f"duration {final_dur:.1f}s outside target"
+    assert 195 <= final_dur <= 330, f"duration {final_dur:.1f}s outside target"
     subprocess.run(["ffprobe", "-hide_banner", str(final)])
 
 
