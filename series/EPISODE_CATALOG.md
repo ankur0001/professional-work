@@ -20,8 +20,8 @@ Rule: **one episode → one branch → one PR**
 | 12 | 12 | Packages | Done (separate PR) |
 | 13 | 13 | Enums | Done (separate PR) |
 | 14 | 14 | Wrappers and Autoboxing | Done (separate PR) |
-| 15 | 15 | Generics | **This PR** |
-| 16 | 16 | Annotations | Planned |
+| 15 | 15 | Generics | Done (separate PR) |
+| 16 | 16 | Annotations | **This PR** |
 | 17 | 17 | Reflection | Planned |
 | 18 | 18 | Records | Planned |
 | 19 | 19 | Sealed Classes | Planned |
