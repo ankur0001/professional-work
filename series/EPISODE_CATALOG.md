@@ -29,7 +29,7 @@ Rule: **one episode → one branch → one PR**
 | 21 | 21 | Lists | Done (separate PR) |
 | 22 | 22 | Sets | Done (separate PR) |
 | 23 | 23 | Maps | Done (separate PR) |
-| 24 | 24 | Queues and Deques | **This PR** |
+| 24 | 24 | Queues and Deques | Done (separate PR) |
 | 25 | 25 | Sorting and Comparators | Planned |
 | 26 | 26 | Streams Intro | Planned |
 | 27 | 27 | Stream Collectors | Planned |
