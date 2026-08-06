@@ -28,6 +28,7 @@ SCENES = [
         "It prevents name collisions and shapes who collaborates.",
         "On disk and at runtime, package plus class name is identity.",
         "Treat package structure as architecture you can see.",
+        "Folders tell the truth about ownership — or they should.",
     ]),
     ("title", "title", [
         "Episode Twelve.",
@@ -47,6 +48,7 @@ SCENES = [
         "Types outside must use the public API — if you designed one.",
         "Good packages make invalid dependencies hard to introduce.",
         "Bad packages — one giant folder — erase ownership.",
+        "Boundaries only work if the tree reflects them.",
     ]),
     ("structure", "structure", [
         "Organize by capability when you can.",
@@ -54,6 +56,7 @@ SCENES = [
         "Or by feature — orders, payments, shipping — when teams own features.",
         "Layered-only packages can become anemic and tangled.",
         "Pick a structure that mirrors how people own the code.",
+        "Feature teams and domain packages often fit better than pure layers.",
     ]),
     ("spring", "spring", [
         "Spring Boot tip — scanning starts from the main class package downward.",
@@ -69,6 +72,7 @@ SCENES = [
         "Two — cyclic dependencies between packages — architecture spaghetti.",
         "Three — main class buried so component scanning misses half the app.",
         "Also — package names that lie about contents.",
+        "Honest names reduce wrong imports and wrong ownership.",
     ]),
     ("interview", "interview", [
         "Interview question — why do packages matter?",
