@@ -1,0 +1,203 @@
+1
+00:00:00,000 --> 00:00:04,256
+In the last episode, we saw why Java survived.
+
+2
+00:00:04,256 --> 00:00:08,419
+But here's where most beginners get confused.
+
+3
+00:00:08,419 --> 00:00:13,785
+People say install Java… download the JDK… run on the JVM…
+
+4
+00:00:13,785 --> 00:00:20,724
+Are those the same thing? No. And this tiny distinction changes everything.
+
+5
+00:00:20,724 --> 00:00:22,214
+Episode Two.
+
+6
+00:00:22,214 --> 00:00:29,417
+JDK, JRE, and JVM — the three layers of the Java platform.
+
+7
+00:00:29,417 --> 00:00:32,105
+Here's the real-world problem.
+
+8
+00:00:32,105 --> 00:00:36,408
+Teams mix up development tools with the runtime.
+
+9
+00:00:36,408 --> 00:00:42,682
+That leads to oversized containers, missing diagnostics in production,
+
+10
+00:00:42,682 --> 00:00:47,521
+and different Java versions between build and runtime.
+
+11
+00:00:47,521 --> 00:00:49,224
+Painful. Avoidable.
+
+12
+00:00:49,224 --> 00:00:53,184
+Think about it this way — three layers.
+
+13
+00:00:53,184 --> 00:00:57,550
+The JVM executes bytecode. It's the engine.
+
+14
+00:00:57,550 --> 00:01:04,150
+The JRE is the runtime — libraries and launchers to run programs.
+
+15
+00:01:04,150 --> 00:01:11,765
+The JDK is the developer toolkit — compiler, jar, jlink, jcmd, diagnostics.
+
+16
+00:01:11,765 --> 00:01:17,349
+JDK for develop. JRE for run. JVM is the engine inside.
+
+17
+00:01:17,349 --> 00:01:19,184
+Quick history note.
+
+18
+00:01:19,184 --> 00:01:23,143
+Older Java setups shipped a separate JRE.
+
+19
+00:01:23,143 --> 00:01:27,006
+Modern distributions usually ship a JDK.
+
+20
+00:01:27,006 --> 00:01:33,766
+Production images can be trimmed with jlink — keep only what you need.
+
+21
+00:01:33,766 --> 00:01:37,200
+Let's visualize what actually happens.
+
+22
+00:01:37,200 --> 00:01:41,990
+javac compiles your .java files into .class bytecode.
+
+23
+00:01:41,990 --> 00:01:45,063
+The launcher starts a JVM process.
+
+24
+00:01:45,063 --> 00:01:51,209
+It creates memory areas, loads the main class, and begins execution.
+
+25
+00:01:51,209 --> 00:01:55,999
+Watch carefully — the JVM is doing the heavy lifting.
+
+26
+00:01:55,999 --> 00:02:01,247
+Most people run HotSpot — the common JVM implementation.
+
+27
+00:02:01,247 --> 00:02:07,525
+It loads classes, interprets bytecode, then JIT-compiles hot paths.
+
+28
+00:02:07,525 --> 00:02:16,334
+It also manages garbage collection and deep diagnostics — Flight Recorder, jmap, thread dumps.
+
+29
+00:02:16,334 --> 00:02:23,550
+Other JVMs exist — OpenJ9, GraalVM — optimizing for startup or native images.
+
+30
+00:02:23,550 --> 00:02:27,392
+But the bytecode contract stays the same.
+
+31
+00:02:27,392 --> 00:02:29,784
+Here's a production gotcha.
+
+32
+00:02:29,784 --> 00:02:32,972
+Runtime memory is not just the heap.
+
+33
+00:02:32,972 --> 00:02:39,438
+You've got heap, metaspace, thread stacks, code cache, and native memory.
+
+34
+00:02:39,438 --> 00:02:46,524
+If you set dash X m x equal to your container limit — you're already in trouble.
+
+35
+00:02:46,524 --> 00:02:48,561
+Leave headroom. Always.
+
+36
+00:02:48,561 --> 00:02:49,955
+Common mistakes.
+
+37
+00:02:49,955 --> 00:02:56,922
+One: shipping a full JDK into every tiny container when a slim runtime would do.
+
+38
+00:02:56,922 --> 00:03:04,325
+Two: compiling with Java twenty-one in CI… then running Java seventeen in production.
+
+39
+00:03:04,325 --> 00:03:09,811
+Three: treating the JVM as a black box until production breaks.
+
+40
+00:03:09,811 --> 00:03:15,820
+Don't worry — once you see the layers, these mistakes become obvious.
+
+41
+00:03:15,820 --> 00:03:17,774
+Interview question.
+
+42
+00:03:17,774 --> 00:03:22,713
+What's the difference between JDK, JRE, and JVM?
+
+43
+00:03:22,713 --> 00:03:26,623
+Answer cleanly: JVM executes bytecode.
+
+44
+00:03:26,623 --> 00:03:30,945
+JRE provides the runtime to run Java apps.
+
+45
+00:03:30,945 --> 00:03:35,986
+JDK adds development and diagnostic tools on top.
+
+46
+00:03:35,986 --> 00:03:44,217
+In modern Java, you often install a JDK — and still think in these three layers.
+
+47
+00:03:44,217 --> 00:03:47,522
+Now you can stop mixing the terms.
+
+48
+00:03:47,522 --> 00:03:51,604
+JDK. JRE. JVM. Three layers. One platform.
+
+49
+00:03:51,604 --> 00:03:55,298
+Next episode — Java program structure.
+
+50
+00:03:55,298 --> 00:04:01,616
+public class, main, packages — what every line is actually doing.
+
+51
+00:04:01,616 --> 00:04:05,114
+That's Episode Three. See you there.
