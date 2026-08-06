@@ -26,7 +26,7 @@ Rule: **one episode → one branch → one PR**
 | 18 | 18 | Records | Done (separate PR) |
 | 19 | 19 | Sealed Classes | Done (separate PR) |
 | 20 | 20 | Modules and JPMS | Done (separate PR) |
-| 21 | 21 | Lists | **This PR** |
+| 21 | 21 | Lists | Done (separate PR) |
 | 22 | 22 | Sets | Planned |
 | 23 | 23 | Maps | Planned |
 | 24–35 | 24–35 | Collections & Streams (continued) | Planned |
