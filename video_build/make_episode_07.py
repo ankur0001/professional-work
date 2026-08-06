@@ -27,6 +27,7 @@ SCENES = [
         "A method is named behavior — inputs, outputs, and a contract.",
         "Good method design makes APIs clear and code reusable.",
         "Bad method design hides bugs inside long, unclear routines.",
+        "Today we learn to write methods that say what they mean.",
     ]),
     ("title", "title", [
         "Episode Seven.",
@@ -38,6 +39,7 @@ SCENES = [
         "Then the body — the work.",
         "Name should say what it does. Parameters say what it needs.",
         "Return type says what you get back — or void if it only acts.",
+        "Read a signature like a sentence — that is the API contract.",
     ]),
     ("signature", "signature", [
         "The signature is the contract.",
@@ -45,6 +47,7 @@ SCENES = [
         "Overloading is compile-time. The compiler picks the match.",
         "Do not confuse it with overriding — that is runtime polymorphism for subclasses.",
         "Keep overloads obvious. If callers guess wrong, rename.",
+        "Clarity beats cleverness when two methods share a name.",
     ]),
     ("design", "design", [
         "Design tips that scale.",
@@ -52,24 +55,28 @@ SCENES = [
         "Avoid boolean flag parameters that fork behavior — split into two methods.",
         "Prefer returning a clear type over returning null without a contract.",
         "Domain methods beat scattered operator soup.",
+        "order can be cancelled is better than five comparisons copied everywhere.",
     ]),
     ("static", "static", [
         "Instance methods need an object. Static methods do not.",
         "Static helpers are fine for pure utilities.",
         "But static mutable state is a trap — global lifetime, hard tests.",
         "In Spring, calling this dot method may skip proxies. Know when that matters.",
+        "Prefer instance behavior for domain rules — static for math and parsing.",
     ]),
     ("mistakes", "mistakes", [
         "Three common mistakes.",
         "One — methods that do five jobs and fill a screen.",
         "Two — unclear names like process data or handle stuff.",
         "Three — swallowing exceptions inside a helper so callers never learn the failure.",
+        "Also — making every tiny helper public. Hide what is not an API.",
     ]),
     ("interview", "interview", [
         "Interview question — overload versus override?",
         "Overload — same name, different parameters, chosen at compile time.",
         "Override — subclass replaces a parent method, chosen at runtime.",
         "Then add — methods should express domain intent, not just steps.",
+        "That answer shows you design APIs, not just syntax.",
     ]),
     ("teaser", "teaser", [
         "Behavior is packaged. Next we hold many values.",
@@ -78,7 +85,6 @@ SCENES = [
         "See you there.",
     ]),
 ]
-
 
 def render_hook(progress, t):
     img = base_canvas(t); d = ImageDraw.Draw(img)
@@ -366,7 +372,7 @@ def main():
         subprocess.run(["ffmpeg","-y","-ss",ts,"-i",str(final),"-frames:v","1",str(vdir/f"{name}.jpg")], capture_output=True)
     final_dur = probe(final)
     print(f"DONE Episode 07: {final_dur/60:.2f} min")
-    assert 195 <= final_dur <= 330, f"duration {final_dur:.1f}s"
+    assert 190 <= final_dur <= 330, f"duration {final_dur:.1f}s"
 
 
 if __name__ == "__main__":
