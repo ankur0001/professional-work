@@ -63,7 +63,7 @@ SCENES: list[tuple[str, str, list[str]]] = [
             "Operators decide values. Control flow decides the path.",
             "Which statements run? How often? When do we exit?",
             "In production, unclear branching becomes missed edge cases — and messy failures.",
-            "Today we make the path visible.",
+            "Today we make the path visible — and keep it flat.",
         ],
     ),
     (
@@ -94,6 +94,7 @@ SCENES: list[tuple[str, str, list[str]]] = [
             "Arrow labels. No accidental fall-through.",
             "Perfect for statuses — PENDING, PAID, CANCELLED.",
             "If you are still writing classic switch with missing breaks — upgrade the habit.",
+            "Finite states belong in switch. Open-ended rules belong in methods.",
         ],
     ),
     (
@@ -105,6 +106,7 @@ SCENES: list[tuple[str, str, list[str]]] = [
             "for-each when you walk a collection cleanly.",
             "break exits. continue skips to the next iteration.",
             "Watch unbounded loops — they become production incidents.",
+            "And avoid allocating heavy objects on every iteration in hot paths.",
         ],
     ),
     (
@@ -115,6 +117,7 @@ SCENES: list[tuple[str, str, list[str]]] = [
             "try, catch, finally — and try-with-resources for cleanup.",
             "Open a file or connection inside try-with-resources — Java closes it for you.",
             "Do not throw exceptions to mean not found on every request. That is control flow wearing a costume.",
+            "Reserve exceptions for failures you cannot express as a normal return.",
         ],
     ),
     (
@@ -125,6 +128,7 @@ SCENES: list[tuple[str, str, list[str]]] = [
             "Validate. Authorize. Process. Commit. Respond.",
             "On failure — compensate or retry with clear rules.",
             "Good control flow makes normal and failure paths equally obvious.",
+            "Hidden branches are where incidents hide.",
         ],
     ),
     (
@@ -135,6 +139,7 @@ SCENES: list[tuple[str, str, list[str]]] = [
             "One — deeply nested branches that hide the real intent.",
             "Two — missing break in legacy switch — fall-through bugs.",
             "Three — exceptions for common outcomes. Expensive and confusing.",
+            "Also — putting whole business workflows inside controllers. Extract the flow.",
         ],
     ),
     (
