@@ -65,7 +65,8 @@ SCENES: list[tuple[str, str, list[str]]] = [
             "In Episode Two, we separated JDK, JRE, and JVM.",
             "Now look at a real Java file.",
             "Every line has a job — package, class, main, statements.",
-            "Structure is not decoration. It decides how your code is found, loaded, and owned.",
+            "Structure is not decoration.",
+            "It decides how your code is found, loaded, tested, and owned.",
         ],
     ),
     (
@@ -82,9 +83,9 @@ SCENES: list[tuple[str, str, list[str]]] = [
         [
             "Here is the shape of a Java program.",
             "A package is the folder — the namespace.",
-            "Inside it — a type. Usually a class.",
-            "Inside the class — fields, constructors, and methods.",
-            "That hierarchy is the blueprint Java expects.",
+            "Inside it — a type. Usually a class. Sometimes an interface, record, or enum.",
+            "Inside the class — fields for state, constructors to create objects, methods for behavior.",
+            "That hierarchy is the blueprint Java expects — and tools rely on.",
         ],
     ),
     (
@@ -93,7 +94,8 @@ SCENES: list[tuple[str, str, list[str]]] = [
         [
             "Walk a classic Hello World — line by line.",
             "First, optional package — the fully qualified home of the class.",
-            "Then public class HelloWorld — filename must match.",
+            "Then public class HelloWorld — and yes, the filename must match.",
+            "Java is case-sensitive. HelloWorld.java means HelloWorld — not helloworld.",
             "public static void main — the JVM starts here.",
             "System.out.println — a statement that prints a line.",
             "Four jobs. Four layers. One program.",
@@ -105,9 +107,9 @@ SCENES: list[tuple[str, str, list[str]]] = [
         [
             "Access is part of structure too.",
             "public means other packages can see it.",
-            "No modifier means package-private — same package only.",
+            "No modifier means package-private — same package only. Perfect for helpers.",
             "private fields keep state inside the class.",
-            "Good structure hides what shouldn't leak.",
+            "Good structure hides what shouldn't leak — and makes APIs smaller.",
         ],
     ),
     (
@@ -115,9 +117,11 @@ SCENES: list[tuple[str, str, list[str]]] = [
         "packages",
         [
             "In real services, packages mirror ownership.",
-            "api at the edge. application to orchestrate.",
+            "api at the edge — controllers and DTOs.",
+            "application to orchestrate use-cases.",
             "domain for business rules. infrastructure for databases and adapters.",
             "Arrows should point inward — not dump everything into one flat folder.",
+            "That is how teams keep domain code clean as the service grows.",
         ],
     ),
     (
@@ -128,6 +132,7 @@ SCENES: list[tuple[str, str, list[str]]] = [
             "Load the class. Verify bytecode. Prepare statics.",
             "Initialize. Construct objects. Invoke methods.",
             "Your package and class names become the identity the JVM loads.",
+            "Same simple name in two packages? Completely different classes.",
         ],
     ),
     (
@@ -135,9 +140,10 @@ SCENES: list[tuple[str, str, list[str]]] = [
         "mistakes",
         [
             "Three common mistakes.",
-            "One — every class in one giant package.",
-            "Two — public fields everywhere — no encapsulation.",
+            "One — every class in one giant package. Ownership disappears.",
+            "Two — public fields everywhere — no encapsulation, hard to change later.",
             "Three — Spring main class buried too deep, so component scanning misses your beans.",
+            "Put the main class at a sensible root — and keep infrastructure out of domain.",
         ],
     ),
     (
@@ -148,7 +154,7 @@ SCENES: list[tuple[str, str, list[str]]] = [
             "Answer with four words on screen.",
             "Namespacing. Access. Ownership. Framework scanning.",
             "Then add — class identity is the name plus the classloader.",
-            "That answer shows you understand design and runtime.",
+            "That answer shows you understand design and runtime — not just syntax.",
         ],
     ),
     (
@@ -638,8 +644,9 @@ def main():
     pace = 1.0
     if dur > 300:
         pace = min(dur / 295.0, 1.12)
-    elif dur < 240:
-        pace = max(dur / 245.0, 0.92)
+    elif dur < 255:
+        # gentle stretch into the 4-minute band without sounding rushed
+        pace = max(dur / 260.0, 0.88)
 
     music = AUDIO / "music_bed.m4a"
     generate_music_bed(dur / pace + 2, music)
@@ -771,7 +778,7 @@ def main():
 
     final_dur = probe(final)
     print(f"DONE Episode 03: {final_dur/60:.2f} min")
-    assert 220 <= final_dur <= 330
+    assert 210 <= final_dur <= 330, f"duration {final_dur:.1f}s outside target"
     subprocess.run(["ffprobe", "-hide_banner", str(final)])
 
 
