@@ -24,7 +24,7 @@ Rule: **one episode → one branch → one PR**
 | 16 | 16 | Annotations | Done (separate PR) |
 | 17 | 17 | Reflection | Done (separate PR) |
 | 18 | 18 | Records | Done (separate PR) |
-| 19 | 19 | Sealed Classes | Planned |
+| 19 | 19 | Sealed Classes | **This PR** |
 | 20 | 20 | Modules and JPMS | Planned |
 | 21–35 | 21–35 | Collections & Streams | Planned |
 | 36–55 | 36–55 | Concurrency & Advanced Java | Planned |
