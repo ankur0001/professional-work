@@ -334,10 +334,10 @@ SCENES: list[Scene] = [
     ),
     Scene(
         "teaser",
-        "But one huge mystery still remains. If Java code doesn't run directly on your computer… what exactly does the JVM do inside memory? Heap, stack, garbage collection, JIT compilation — what's actually happening when you press Run? That's what we'll uncover in Episode Two.",
+        "But one mystery remains. When people say install Java… what are they actually installing? JDK. JRE. JVM — three names beginners mix up every day. That's what we'll unpack in Episode Two.",
         "teaser",
         "Next Episode",
-        "Inside the JVM — Memory, Stack & Heap",
+        "JDK, JRE & JVM — Develop, Run, Engine",
     ),
 ]
 
@@ -1091,11 +1091,11 @@ def render_teaser(progress: float, t: float) -> Image.Image:
     f = font(FONT_BOLD, 28)
     d.text((W // 2 - 80, 200), "NEXT EPISODE", font=f, fill=MUTED)
     f2 = font(FONT_SERIF, 64)
-    title = "Inside the JVM"
+    title = "JDK, JRE & JVM"
     bbox = d.textbbox((0, 0), title, font=f2)
     d.text(((W - (bbox[2] - bbox[0])) // 2, H // 2 - 40), title, font=f2, fill=WHITE)
     f3 = font(FONT_REG, 32)
-    sub = "Memory · Stack · Heap · Garbage Collection"
+    sub = "Develop · Run · The Engine Inside"
     bbox = d.textbbox((0, 0), sub, font=f3)
     d.text(((W - (bbox[2] - bbox[0])) // 2, H // 2 + 60), sub, font=f3, fill=BLUE)
     # question mark

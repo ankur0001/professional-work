@@ -547,20 +547,18 @@ You now understand **why** Java became one of the most successful programming la
 ### SCENE 24 — CLIFFHANGER
 **13:25 – 13:45**
 
-**[VISUAL]** JVM orb glows. Question mark forms inside. "Episode 2" card slides in: *Inside the JVM*.
+**[VISUAL]** Three layered orbs — JDK, JRE, JVM. Question mark forms. "Episode 2" card slides in: *JDK, JRE & JVM*.
 
 **NARRATION:**  
-But one huge mystery still remains.
+But one mystery remains.
 
-If Java code doesn't run directly on your computer…
+When people say install Java… what are they actually installing?
 
-**what exactly does the JVM do** inside memory?
+**JDK. JRE. JVM** — three names beginners mix up every day.
 
-Heap, stack, garbage collection, JIT compilation — what's actually happening when you press Run?
+**That's what we'll unpack in Episode 2.**
 
-**That's what we'll uncover in Episode 2.**
-
-**[ON-SCREEN TEXT]** *Next: Inside the JVM — Memory, Stack & Heap*
+**[ON-SCREEN TEXT]** *Next: JDK, JRE & JVM — Develop · Run · The Engine Inside*
 
 **[MUSIC]** Inspirational swell → fade  
 **[VISUAL]** Fade to black. Subscribe animation (subtle, not cheesy).
@@ -827,7 +825,7 @@ No textbook. No fluff. Just the story — told like a documentary.
 • Hello World — line by line
 • "Why is Java platform independent?" — interview answer
 
-▶️ NEXT: Episode 2 — Inside the JVM (Stack, Heap, Garbage Collection)
+▶️ NEXT: Episode 2 — JDK, JRE & JVM (Develop · Run · Engine)
 
 #Java #LearnJava #Programming #JVM #SoftwareEngineering
 ```

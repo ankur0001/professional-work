@@ -73,10 +73,10 @@ EXTRA_SCENES = [
     ),
     Scene(
         "closing_cta",
-        "If this video helped something click for you, subscribe for Episode Two. We're going inside the JVM — stack, heap, garbage collection — the stuff interviewers love to ask about. I'll see you there.",
+        "If this video helped something click for you, subscribe for Episode Two. We'll unpack JDK, JRE, and JVM — the three names everyone confuses. I'll see you there.",
         "teaser",
         "Subscribe for Episode 2",
-        "Inside the JVM",
+        "JDK, JRE & JVM",
     ),
 ]
 

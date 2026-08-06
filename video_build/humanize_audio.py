@@ -244,16 +244,14 @@ BEATS: dict[str, list[str]] = {
         "You now understand why Java became one of the most successful languages ever created.",
     ],
     "teaser": [
-        "But one huge mystery still remains.",
-        "If Java code doesn't run directly on your computer…",
-        "what exactly is the JVM doing inside memory?",
-        "Heap. Stack. Garbage collection. JIT compilation.",
-        "What's actually happening when you press Run?",
-        "That's what we'll uncover in Episode Two.",
+        "But one mystery remains.",
+        "When people say install Java… what are they actually installing?",
+        "JDK. JRE. JVM — three names beginners mix up every day.",
+        "That's what we'll unpack in Episode Two.",
     ],
     "closing_cta": [
         "If something clicked for you today — stick around for Episode Two.",
-        "We're going inside the JVM. Stack, heap, garbage collection — the stuff interviewers love.",
+        "We'll unpack JDK, JRE, and JVM — the three names everyone confuses.",
         "I'll see you there.",
     ],
 }
