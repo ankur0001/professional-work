@@ -13,8 +13,8 @@ Rule: **one episode → one branch → one PR**
 | 05 | 5 | Operators | Done (separate PR) |
 | 06 | 6 | Control Flow | Done (separate PR) |
 | 07 | 7 | Methods | Done (separate PR) |
-| 08 | 8 | Arrays | **This PR** |
-| 09 | 9 | Strings | Planned |
+| 08 | 8 | Arrays | Done (separate PR) |
+| 09 | 9 | Strings | **This PR** |
 | 10 | 10 | Object-Oriented Programming | Planned |
 | 11 | 11 | Access Modifiers | Planned |
 | 12 | 12 | Packages | Planned |
