@@ -26,7 +26,10 @@ Rule: **one episode → one branch → one PR**
 | 18 | 18 | Records | Done (separate PR) |
 | 19 | 19 | Sealed Classes | Done (separate PR) |
 | 20 | 20 | Modules and JPMS | Done (separate PR) |
-| 21–35 | 21–35 | Collections & Streams | Planned |
+| 21 | 21 | Lists | **This PR** |
+| 22 | 22 | Sets | Planned |
+| 23 | 23 | Maps | Planned |
+| 24–35 | 24–35 | Collections & Streams (continued) | Planned |
 | 36–55 | 36–55 | Concurrency & Advanced Java | Planned |
 | 56–70 | 56–70 | JVM Internals (Class Loading, Bytecode, Heap, Stack, GC) | Planned |
 | 71–80 | 71–80 | Spring, Microservices, Architecture Interviews | Planned |
