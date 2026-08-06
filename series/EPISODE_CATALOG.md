@@ -18,8 +18,8 @@ Rule: **one episode → one branch → one PR**
 | 10 | 10 | Object-Oriented Programming | Done (separate PR) |
 | 11 | 11 | Access Modifiers | Done (separate PR) |
 | 12 | 12 | Packages | Done (separate PR) |
-| 13 | 13 | Enums | **This PR** |
-| 14 | 14 | Wrappers and Autoboxing | Planned |
+| 13 | 13 | Enums | Done (separate PR) |
+| 14 | 14 | Wrappers and Autoboxing | **This PR** |
 | 15 | 15 | Generics | Planned |
 | 16 | 16 | Annotations | Planned |
 | 17 | 17 | Reflection | Planned |
