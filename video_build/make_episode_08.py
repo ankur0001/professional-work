@@ -28,6 +28,7 @@ SCENES = [
         "An array is fixed-size, indexed, and homogeneous — same type in every slot.",
         "Arrays are objects in Java, with special syntax and fast indexed access.",
         "They underpin collections, buffers, and performance-sensitive code.",
+        "Get the mental model right — index, length, bounds.",
     ]),
     ("title", "title", [
         "Episode Eight.",
@@ -39,6 +40,7 @@ SCENES = [
         "Length is five. Valid indices are zero through four.",
         "Remember — zero-based indexing. The last index is length minus one.",
         "Once created, the length never grows. Fixed size means fixed size.",
+        "If you need growth — that is a list conversation, coming soon.",
     ]),
     ("access", "access", [
         "Access is by index.",
@@ -60,6 +62,7 @@ SCENES = [
         "ArrayList — grows, richer API, clearer for most application code.",
         "Prefer collections when intent is a growing list of domain objects.",
         "Prefer arrays for tight buffers, primitives, and interoperability.",
+        "Choose the structure that matches how the size changes.",
     ]),
     ("mistakes", "mistakes", [
         "Three common mistakes.",
