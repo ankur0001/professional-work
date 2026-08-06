@@ -23,7 +23,7 @@ Rule: **one episode → one branch → one PR**
 | 15 | 15 | Generics | Done (separate PR) |
 | 16 | 16 | Annotations | Done (separate PR) |
 | 17 | 17 | Reflection | Done (separate PR) |
-| 18 | 18 | Records | Planned |
+| 18 | 18 | Records | **This PR** |
 | 19 | 19 | Sealed Classes | Planned |
 | 20 | 20 | Modules and JPMS | Planned |
 | 21–35 | 21–35 | Collections & Streams | Planned |
