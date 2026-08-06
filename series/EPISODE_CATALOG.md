@@ -8,8 +8,8 @@ Rule: **one episode → one branch → one PR**
 |---:|---:|---|---|
 | 01 | 1 | Why Java Exists / Introduction to Java | Done (separate PR) |
 | 02 | 2 | JDK, JRE, and JVM | Done (separate PR) |
-| 03 | 3 | Java Program Structure | **This PR** |
-| 04 | 4 | Variables and Data Types | Planned |
+| 03 | 3 | Java Program Structure | Done (separate PR) |
+| 04 | 4 | Variables and Data Types | **This PR** |
 | 05 | 5 | Operators | Planned |
 | 06 | 6 | Control Flow | Planned |
 | 07 | 7 | Methods | Planned |
