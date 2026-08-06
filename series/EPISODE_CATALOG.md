@@ -28,7 +28,7 @@ Rule: **one episode → one branch → one PR**
 | 20 | 20 | Modules and JPMS | Done (separate PR) |
 | 21 | 21 | Lists | Done (separate PR) |
 | 22 | 22 | Sets | Done (separate PR) |
-| 23 | 23 | Maps | Planned |
+| 23 | 23 | Maps | **This PR** |
 | 24 | 24 | Queues and Deques | Planned |
 | 25 | 25 | Sorting and Comparators | Planned |
 | 26 | 26 | Streams Intro | Planned |
