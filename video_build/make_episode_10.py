@@ -27,6 +27,7 @@ SCENES = [
         "Object-oriented programming — state, behavior, and identity working together.",
         "In Java, OOP is how we manage domain complexity — not just a syntax style.",
         "Classes define blueprints. Objects are living instances.",
+        "Get this mental model right — everything else in OOP builds on it.",
     ]),
     ("title", "title", [
         "Episode Ten.",
@@ -45,6 +46,7 @@ SCENES = [
         "Callers should not poke amountInCents directly if rules apply.",
         "Hide data. Expose intention — like isHighValue or applyDiscount.",
         "That is how objects stay consistent as the system grows.",
+        "Encapsulation is not ceremony — it is protection.",
     ]),
     ("pillars", "pillars", [
         "Four ideas you will hear forever.",
@@ -60,6 +62,7 @@ SCENES = [
         "Small objects collaborating beat one god class that knows everything.",
         "Anemic models — data bags with all logic in services — often lose domain clarity.",
         "Put behavior next to the data it protects.",
+        "That is domain modeling that survives real change.",
     ]),
     ("mistakes", "mistakes", [
         "Three common mistakes.",
