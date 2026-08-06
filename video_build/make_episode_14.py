@@ -28,6 +28,7 @@ SCENES = [
         "Autoboxing hides the conversion — and can hide costs and crashes.",
         "Today we make that invisible work visible.",
         "Get this mental model right — collections depend on it.",
+        "Lists and maps need objects — wrappers bridge that gap.",
     ]),
     ("title", "title", [
         "Episode Fourteen.",
@@ -39,6 +40,7 @@ SCENES = [
         "Wrappers live on the heap. They have identity. They can be null.",
         "Primitives cannot be null — and that alone prevents many bugs.",
         "Choose intentionally — do not default to wrappers everywhere.",
+        "Default to primitives unless nullability is required.",
     ]),
     ("autobox", "autobox", [
         "Autoboxing converts automatically.",
@@ -54,6 +56,7 @@ SCENES = [
         "A List of Integer can thrash the heap versus an int array.",
         "Hot loops that box every iteration pay a quiet tax.",
         "Prefer primitives in hot paths. Use wrappers when null is a real signal.",
+        "Measure before you box every number in a tight loop.",
     ]),
     ("cache", "cache", [
         "One more quirk — Integer caching.",
@@ -76,6 +79,7 @@ SCENES = [
         "Wrapper — object, nullable, overhead, autoboxing risk.",
         "Then mention NullPointerException on unboxing.",
         "That lands the production-level detail.",
+        "Interviewers listen for null and allocation awareness.",
     ]),
     ("teaser", "teaser", [
         "Objects around values. Next — type-safe containers.",
