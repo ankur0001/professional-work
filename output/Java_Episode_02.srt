@@ -1,203 +1,191 @@
 1
-00:00:00,000 --> 00:00:04,256
-In the last episode, we saw why Java survived.
+00:00:00,000 --> 00:00:04,186
+In Episode One, we learned why Java survived.
 
 2
-00:00:04,256 --> 00:00:08,419
-But here's where most beginners get confused.
+00:00:04,186 --> 00:00:09,395
+But beginners still mix three names — JDK, JRE, and JVM.
 
 3
-00:00:08,419 --> 00:00:13,785
-People say install Java… download the JDK… run on the JVM…
+00:00:09,395 --> 00:00:12,000
+They are not the same thing.
 
 4
-00:00:13,785 --> 00:00:20,724
-Are those the same thing? No. And this tiny distinction changes everything.
+00:00:12,000 --> 00:00:16,186
+Today we separate them — clearly — on screen.
 
 5
-00:00:20,724 --> 00:00:22,214
+00:00:16,186 --> 00:00:17,636
 Episode Two.
 
 6
-00:00:22,214 --> 00:00:29,417
+00:00:17,636 --> 00:00:24,644
 JDK, JRE, and JVM — the three layers of the Java platform.
 
 7
-00:00:29,417 --> 00:00:32,105
-Here's the real-world problem.
+00:00:24,644 --> 00:00:27,151
+Look at these three boxes.
 
 8
-00:00:32,105 --> 00:00:36,408
-Teams mix up development tools with the runtime.
+00:00:27,151 --> 00:00:31,491
+At the top — the JDK. Your developer toolkit.
 
 9
-00:00:36,408 --> 00:00:42,682
-That leads to oversized containers, missing diagnostics in production,
+00:00:31,491 --> 00:00:36,892
+In the middle — the JRE. What you need to run Java apps.
 
 10
-00:00:42,682 --> 00:00:47,521
-and different Java versions between build and runtime.
+00:00:36,892 --> 00:00:42,582
+At the bottom — the JVM. The engine that executes bytecode.
 
 11
-00:00:47,521 --> 00:00:49,224
-Painful. Avoidable.
-
-12
-00:00:49,224 --> 00:00:53,184
-Think about it this way — three layers.
-
-13
-00:00:53,184 --> 00:00:57,550
-The JVM executes bytecode. It's the engine.
-
-14
-00:00:57,550 --> 00:01:04,150
-The JRE is the runtime — libraries and launchers to run programs.
-
-15
-00:01:04,150 --> 00:01:11,765
-The JDK is the developer toolkit — compiler, jar, jlink, jcmd, diagnostics.
-
-16
-00:01:11,765 --> 00:01:17,349
+00:00:42,582 --> 00:00:47,886
 JDK for develop. JRE for run. JVM is the engine inside.
 
+12
+00:00:47,886 --> 00:00:49,669
+Zoom into the JDK.
+
+13
+00:00:49,669 --> 00:00:53,731
+This is where javac lives — the compiler.
+
+14
+00:00:53,731 --> 00:00:59,675
+Also jar, jlink, jcmd, jmap, and Java Flight Recorder tools.
+
+15
+00:00:59,675 --> 00:01:06,016
+If you write code or debug production issues — you want the JDK.
+
+16
+00:01:06,016 --> 00:01:08,711
+The JRE is the runtime layer.
+
 17
-00:01:17,349 --> 00:01:19,184
-Quick history note.
+00:01:08,711 --> 00:01:15,030
+Libraries, launchers, and everything needed to start a Java process.
 
 18
-00:01:19,184 --> 00:01:23,143
-Older Java setups shipped a separate JRE.
+00:01:15,030 --> 00:01:18,097
+It does not include the compiler.
 
 19
-00:01:23,143 --> 00:01:27,006
-Modern distributions usually ship a JDK.
+00:01:18,097 --> 00:01:24,602
+Modern installs often ship a JDK — but the runtime idea still matters.
 
 20
-00:01:27,006 --> 00:01:33,766
-Production images can be trimmed with jlink — keep only what you need.
+00:01:24,602 --> 00:01:26,438
+And here is the JVM.
 
 21
-00:01:33,766 --> 00:01:37,200
-Let's visualize what actually happens.
+00:01:26,438 --> 00:01:32,222
+It loads class files, verifies bytecode, and runs your program.
 
 22
-00:01:37,200 --> 00:01:41,990
-javac compiles your .java files into .class bytecode.
+00:01:32,222 --> 00:01:39,199
+HotSpot is the common implementation — interpreter, JIT, garbage collection.
 
 23
-00:01:41,990 --> 00:01:45,063
-The launcher starts a JVM process.
+00:01:39,199 --> 00:01:44,340
+Same bytecode contract. Different machines. Same result.
 
 24
-00:01:45,063 --> 00:01:51,209
-It creates memory areas, loads the main class, and begins execution.
+00:01:44,340 --> 00:01:46,031
+Follow the arrows.
 
 25
-00:01:51,209 --> 00:01:55,999
-Watch carefully — the JVM is doing the heavy lifting.
+00:01:46,031 --> 00:01:51,949
+Your .java file goes into javac — that tool comes from the JDK.
 
 26
-00:01:55,999 --> 00:02:01,247
-Most people run HotSpot — the common JVM implementation.
+00:01:51,949 --> 00:01:55,237
+Out comes a .class file — bytecode.
 
 27
-00:02:01,247 --> 00:02:07,525
-It loads classes, interprets bytecode, then JIT-compiles hot paths.
+00:01:55,237 --> 00:01:58,901
+The java launcher starts a JVM process.
 
 28
-00:02:07,525 --> 00:02:16,334
-It also manages garbage collection and deep diagnostics — Flight Recorder, jmap, thread dumps.
+00:01:58,901 --> 00:02:02,189
+The JVM reads bytecode and runs it.
 
 29
-00:02:16,334 --> 00:02:23,550
-Other JVMs exist — OpenJ9, GraalVM — optimizing for startup or native images.
+00:02:02,189 --> 00:02:06,886
+That is the full path — develop, package, execute.
 
 30
-00:02:23,550 --> 00:02:27,392
-But the bytecode contract stays the same.
+00:02:06,886 --> 00:02:09,206
+Now the production gotcha.
 
 31
-00:02:27,392 --> 00:02:29,784
-Here's a production gotcha.
+00:02:09,206 --> 00:02:13,220
+On screen — heap is only one slice of memory.
 
 32
-00:02:29,784 --> 00:02:32,972
-Runtime memory is not just the heap.
+00:02:13,220 --> 00:02:18,662
+Also metaspace, thread stacks, code cache, and native memory.
 
 33
-00:02:32,972 --> 00:02:39,438
-You've got heap, metaspace, thread stacks, code cache, and native memory.
+00:02:18,662 --> 00:02:24,551
+If dash X m x equals your container limit — you leave no headroom.
 
 34
-00:02:39,438 --> 00:02:46,524
-If you set dash X m x equal to your container limit — you're already in trouble.
+00:02:24,551 --> 00:02:27,584
+Always leave room beyond the heap.
 
 35
-00:02:46,524 --> 00:02:48,561
-Leave headroom. Always.
+00:02:27,584 --> 00:02:29,450
+Three common mistakes.
 
 36
-00:02:48,561 --> 00:02:49,955
-Common mistakes.
+00:02:29,450 --> 00:02:36,319
+One — shipping a full JDK into every tiny container when a slim runtime would do.
 
 37
-00:02:49,955 --> 00:02:56,922
-One: shipping a full JDK into every tiny container when a slim runtime would do.
+00:02:36,319 --> 00:02:43,612
+Two — compiling with Java twenty-one in CI, then running Java seventeen in production.
 
 38
-00:02:56,922 --> 00:03:04,325
-Two: compiling with Java twenty-one in CI… then running Java seventeen in production.
+00:02:43,612 --> 00:02:48,954
+Three — treating the JVM as a black box until something breaks.
 
 39
-00:03:04,325 --> 00:03:09,811
-Three: treating the JVM as a black box until production breaks.
+00:02:48,954 --> 00:02:55,626
+Interview question — what's the difference between JDK, JRE, and JVM?
 
 40
-00:03:09,811 --> 00:03:15,820
-Don't worry — once you see the layers, these mistakes become obvious.
+00:02:55,626 --> 00:02:57,657
+Point to the diagram.
 
 41
-00:03:15,820 --> 00:03:17,774
-Interview question.
+00:02:57,657 --> 00:02:59,784
+JVM executes bytecode.
 
 42
-00:03:17,774 --> 00:03:22,713
-What's the difference between JDK, JRE, and JVM?
+00:02:59,784 --> 00:03:03,653
+JRE provides the runtime to launch apps.
 
 43
-00:03:22,713 --> 00:03:26,623
-Answer cleanly: JVM executes bytecode.
+00:03:03,653 --> 00:03:07,714
+JDK adds compilers and diagnostics on top.
 
 44
-00:03:26,623 --> 00:03:30,945
-JRE provides the runtime to run Java apps.
+00:03:07,714 --> 00:03:13,516
+Answer that calmly — and you sound like you've shipped Java.
 
 45
-00:03:30,945 --> 00:03:35,986
-JDK adds development and diagnostic tools on top.
+00:03:13,516 --> 00:03:18,130
+Now the three names finally line up with the picture.
 
 46
-00:03:35,986 --> 00:03:44,217
-In modern Java, you often install a JDK — and still think in these three layers.
-
-47
-00:03:44,217 --> 00:03:47,522
-Now you can stop mixing the terms.
-
-48
-00:03:47,522 --> 00:03:51,604
-JDK. JRE. JVM. Three layers. One platform.
-
-49
-00:03:51,604 --> 00:03:55,298
+00:03:18,130 --> 00:03:21,438
 Next episode — Java program structure.
 
-50
-00:03:55,298 --> 00:04:01,616
-public class, main, packages — what every line is actually doing.
+47
+00:03:21,438 --> 00:03:26,313
+public class, main, packages — what every line is doing.
 
-51
-00:04:01,616 --> 00:04:05,114
-That's Episode Three. See you there.
+48
+00:03:26,313 --> 00:03:28,838
+Episode Three. See you there.
