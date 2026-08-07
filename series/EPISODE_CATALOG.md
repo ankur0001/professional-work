@@ -45,7 +45,7 @@ Rule: **one episode → one branch → one PR**
 | 37 | 37 | Synchronization | Done (separate PR) |
 | 38 | 38 | volatile and Happens-Before | Done (separate PR) |
 | 39 | 39 | Explicit Locks | Done (separate PR) |
-| 40 | 40 | ExecutorService | **This PR** |
+| 40 | 40 | ExecutorService | Done (separate PR) |
 | 41 | 41 | Callable, Future & CompletableFuture | Planned |
 | 42–55 | 42–55 | Concurrency & Advanced Java (continued) | Planned |
 | 56–70 | 56–70 | JVM Internals (Class Loading, Bytecode, Heap, Stack, GC) | Planned |
