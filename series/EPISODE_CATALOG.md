@@ -52,8 +52,13 @@ Rule: **one episode → one branch → one PR**
 | 44 | 44 | Synchronizers | Done (separate PR) |
 | 45 | 45 | BlockingQueue | Done (separate PR) |
 | 46 | 46 | CompletableFuture | Done (separate PR) |
-| 47–55 | 47–55 | Concurrency & Advanced Java (continued) | Planned |
-| 56–70 | 56–70 | JVM Internals (Class Loading, Bytecode, Heap, Stack, GC) | Planned |
+| 47 | 47 | ForkJoinPool | **This PR** |
+| 48 | 48 | ThreadLocal | Planned |
+| 49 | 49 | Deadlocks | Planned |
+| 50 | 50 | Virtual Threads (Project Loom) | Planned |
+| 51 | 51 | Class Loading Basics | Planned |
+| 52–55 | 52–55 | JVM Internals (Bytecode, Heap, Stack, GC) | Planned |
+| 56–70 | 56–70 | JVM Internals (continued) | Planned |
 | 71–80 | 71–80 | Spring, Microservices, Architecture Interviews | Planned |
 
 **Continuity:** Episode N ends with a teaser for Episode N+1.
