@@ -43,7 +43,7 @@ Rule: **one episode → one branch → one PR**
 | 35 | 35 | Readers and Writers | Done (separate PR) |
 | 36 | 36 | Threads Intro | Done (separate PR) |
 | 37 | 37 | Synchronization | Done (separate PR) |
-| 38 | 38 | volatile and Happens-Before | **This PR** |
+| 38 | 38 | volatile and Happens-Before | Done (separate PR) |
 | 39 | 39 | Explicit Locks | Planned |
 | 40 | 40 | ExecutorService & Thread Pools | Planned |
 | 41 | 41 | Callable, Future & CompletableFuture | Planned |
