@@ -39,7 +39,7 @@ Rule: **one episode → one branch → one PR**
 | 31 | 31 | java.time | Done (separate PR) |
 | 32 | 32 | Exceptions | Done (separate PR) |
 | 33 | 33 | try-with-resources | Done (separate PR) |
-| 34 | 34 | Files and NIO.2 | Planned |
+| 34 | 34 | Files and NIO.2 | **This PR** |
 | 35 | 35 | Readers, Writers & Text I/O | Planned |
 | 36 | 36 | Threads Introduction | Planned |
 | 37–55 | 37–55 | Concurrency & Advanced Java (continued) | Planned |
