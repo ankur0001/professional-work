@@ -48,7 +48,7 @@ Rule: **one episode → one branch → one PR**
 | 40 | 40 | ExecutorService | Done (separate PR) |
 | 41 | 41 | Callable and Future | Done (separate PR) |
 | 42 | 42 | Concurrent Collections | Done (separate PR) |
-| 43 | 43 | Atomic Variables | Planned |
+| 43 | 43 | Atomics | **This PR** |
 | 44 | 44 | Synchronizers | Planned |
 | 45 | 45 | BlockingQueue and Producer-Consumer | Planned |
 | 46 | 46 | CompletableFuture Deep Dive | Planned |
