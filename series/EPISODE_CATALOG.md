@@ -71,7 +71,7 @@ Rule: **one episode → one branch → one PR**
 | 63 | 63 | Object Layout | Done (separate PR) |
 | 64 | 64 | Safepoints | Done (separate PR) |
 | 65 | 65 | JVM Startup | Done (separate PR) |
-| 66 | 66 | JVM Interview Wrap-Up | Planned |
+| 66 | 66 | JVM Interview Wrap | **This PR** |
 | 67–70 | 67–70 | JVM Internals (continued) | Planned |
 | 71–80 | 71–80 | Spring, Microservices, Architecture Interviews | Planned |
 
