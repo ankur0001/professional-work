@@ -55,7 +55,7 @@ Rule: **one episode → one branch → one PR**
 | 47 | 47 | ForkJoinPool | Done (separate PR) |
 | 48 | 48 | ThreadLocal | Done (separate PR) |
 | 49 | 49 | Deadlocks | Done (separate PR) |
-| 50 | 50 | Virtual Threads (Project Loom) | Planned |
+| 50 | 50 | Virtual Threads | **This PR** |
 | 51 | 51 | Class Loading Basics | Planned |
 | 52–55 | 52–55 | JVM Internals (Bytecode, Heap, Stack, GC) | Planned |
 | 56–70 | 56–70 | JVM Internals (continued) | Planned |
