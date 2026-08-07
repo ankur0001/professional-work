@@ -57,8 +57,12 @@ Rule: **one episode → one branch → one PR**
 | 49 | 49 | Deadlocks | Done (separate PR) |
 | 50 | 50 | Virtual Threads | Done (separate PR) |
 | 51 | 51 | Class Loading | Done (separate PR) |
-| 52–55 | 52–55 | JVM Internals (Bytecode, Heap, Stack, GC) | Planned |
-| 56–70 | 56–70 | JVM Internals (continued) | Planned |
+| 52 | 52 | Bytecode Basics | **This PR** |
+| 53 | 53 | Heap and Stack | Planned |
+| 54 | 54 | Garbage Collection Intro | Planned |
+| 55 | 55 | JIT Compilation | Planned |
+| 56 | 56 | GC Collectors | Planned |
+| 57–70 | 57–70 | JVM Internals (continued) | Planned |
 | 71–80 | 71–80 | Spring, Microservices, Architecture Interviews | Planned |
 
 **Continuity:** Episode N ends with a teaser for Episode N+1.
