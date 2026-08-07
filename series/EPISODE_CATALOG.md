@@ -66,7 +66,7 @@ Rule: **one episode → one branch → one PR**
 | 58 | 58 | Diagnostic Tools | Done (separate PR) |
 | 59 | 59 | Escape Analysis | Done (separate PR) |
 | 60 | 60 | Metaspace and Native Memory | Done (separate PR) |
-| 61 | 61 | Soft, Weak & Phantom References | Planned |
+| 61 | 61 | Reference Types | **This PR** |
 | 62–70 | 62–70 | JVM Internals (continued) | Planned |
 | 71–80 | 71–80 | Spring, Microservices, Architecture Interviews | Planned |
 
