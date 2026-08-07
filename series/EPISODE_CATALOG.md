@@ -32,8 +32,12 @@ Rule: **one episode → one branch → one PR**
 | 24 | 24 | Queues and Deques | Done (separate PR) |
 | 25 | 25 | Sorting and Comparators | Done (separate PR) |
 | 26 | 26 | Streams Intro | Done (separate PR) |
-| 27 | 27 | Stream Collectors | Planned |
-| 28–35 | 28–35 | Collections & Streams (continued) | Planned |
+| 27 | 27 | Stream Collectors | **This PR** |
+| 28 | 28 | flatMap & Composition | Planned |
+| 29 | 29 | Parallel Streams | Planned |
+| 30 | 30 | Optional | Planned |
+| 31 | 31 | java.time | Planned |
+| 32–35 | 32–35 | Collections & Streams (continued) | Planned |
 | 36–55 | 36–55 | Concurrency & Advanced Java | Planned |
 | 56–70 | 56–70 | JVM Internals (Class Loading, Bytecode, Heap, Stack, GC) | Planned |
 | 71–80 | 71–80 | Spring, Microservices, Architecture Interviews | Planned |
