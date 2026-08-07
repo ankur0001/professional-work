@@ -36,7 +36,7 @@ Rule: **one episode → one branch → one PR**
 | 28 | 28 | flatMap & Composition | Done (separate PR) |
 | 29 | 29 | Parallel Streams | Done (separate PR) |
 | 30 | 30 | Optional | Done (separate PR) |
-| 31 | 31 | java.time | Planned |
+| 31 | 31 | java.time | **This PR** |
 | 32–35 | 32–35 | Collections & Streams (continued) | Planned |
 | 36–55 | 36–55 | Concurrency & Advanced Java | Planned |
 | 56–70 | 56–70 | JVM Internals (Class Loading, Bytecode, Heap, Stack, GC) | Planned |
