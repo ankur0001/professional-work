@@ -67,7 +67,12 @@ Rule: **one episode → one branch → one PR**
 | 59 | 59 | Escape Analysis | Done (separate PR) |
 | 60 | 60 | Metaspace and Native Memory | Done (separate PR) |
 | 61 | 61 | Reference Types | Done (separate PR) |
-| 62–70 | 62–70 | JVM Internals (continued) | Planned |
+| 62 | 62 | JVM Flags and Tuning | **This PR** |
+| 63 | 63 | Object Layout & Compressed Oops | Planned |
+| 64 | 64 | Safepoints | Planned |
+| 65 | 65 | JVM Startup & Warmup | Planned |
+| 66 | 66 | JVM Interview Wrap-Up | Planned |
+| 67–70 | 67–70 | JVM Internals (continued) | Planned |
 | 71–80 | 71–80 | Spring, Microservices, Architecture Interviews | Planned |
 
 **Continuity:** Episode N ends with a teaser for Episode N+1.
