@@ -33,7 +33,7 @@ Rule: **one episode → one branch → one PR**
 | 25 | 25 | Sorting and Comparators | Done (separate PR) |
 | 26 | 26 | Streams Intro | Done (separate PR) |
 | 27 | 27 | Stream Collectors | Done (separate PR) |
-| 28 | 28 | flatMap & Composition | Planned |
+| 28 | 28 | flatMap & Composition | **This PR** |
 | 29 | 29 | Parallel Streams | Planned |
 | 30 | 30 | Optional | Planned |
 | 31 | 31 | java.time | Planned |
