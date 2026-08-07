@@ -47,7 +47,12 @@ Rule: **one episode → one branch → one PR**
 | 39 | 39 | Explicit Locks | Done (separate PR) |
 | 40 | 40 | ExecutorService | Done (separate PR) |
 | 41 | 41 | Callable and Future | Done (separate PR) |
-| 42–55 | 42–55 | Concurrency & Advanced Java (continued) | Planned |
+| 42 | 42 | Concurrent Collections | **This PR** |
+| 43 | 43 | Atomic Variables | Planned |
+| 44 | 44 | Synchronizers | Planned |
+| 45 | 45 | BlockingQueue and Producer-Consumer | Planned |
+| 46 | 46 | CompletableFuture Deep Dive | Planned |
+| 47–55 | 47–55 | Concurrency & Advanced Java (continued) | Planned |
 | 56–70 | 56–70 | JVM Internals (Class Loading, Bytecode, Heap, Stack, GC) | Planned |
 | 71–80 | 71–80 | Spring, Microservices, Architecture Interviews | Planned |
 
