@@ -63,7 +63,7 @@ Rule: **one episode → one branch → one PR**
 | 55 | 55 | JIT Compilation | Done (separate PR) |
 | 56 | 56 | GC Collectors | Done (separate PR) |
 | 57 | 57 | Memory Leaks and Profiling | Done (separate PR) |
-| 58 | 58 | Diagnostic Tools | **This PR** |
+| 58 | 58 | Diagnostic Tools | Done (separate PR) |
 | 59 | 59 | Escape Analysis | Planned |
 | 60 | 60 | Metaspace & Native Memory | Planned |
 | 61 | 61 | Soft, Weak & Phantom References | Planned |
