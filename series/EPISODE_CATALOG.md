@@ -51,7 +51,7 @@ Rule: **one episode → one branch → one PR**
 | 43 | 43 | Atomics | Done (separate PR) |
 | 44 | 44 | Synchronizers | Done (separate PR) |
 | 45 | 45 | BlockingQueue | Done (separate PR) |
-| 46 | 46 | CompletableFuture | **This PR** |
+| 46 | 46 | CompletableFuture | Done (separate PR) |
 | 47–55 | 47–55 | Concurrency & Advanced Java (continued) | Planned |
 | 56–70 | 56–70 | JVM Internals (Class Loading, Bytecode, Heap, Stack, GC) | Planned |
 | 71–80 | 71–80 | Spring, Microservices, Architecture Interviews | Planned |
