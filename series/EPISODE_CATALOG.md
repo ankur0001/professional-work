@@ -52,7 +52,7 @@ Rule: **one episode → one branch → one PR**
 | 44 | 44 | Synchronizers | Done (separate PR) |
 | 45 | 45 | BlockingQueue | Done (separate PR) |
 | 46 | 46 | CompletableFuture | Done (separate PR) |
-| 47 | 47 | ForkJoinPool | **This PR** |
+| 47 | 47 | ForkJoinPool | Done (separate PR) |
 | 48 | 48 | ThreadLocal | Planned |
 | 49 | 49 | Deadlocks | Planned |
 | 50 | 50 | Virtual Threads (Project Loom) | Planned |
