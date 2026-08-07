@@ -37,8 +37,12 @@ Rule: **one episode → one branch → one PR**
 | 29 | 29 | Parallel Streams | Done (separate PR) |
 | 30 | 30 | Optional | Done (separate PR) |
 | 31 | 31 | java.time | Done (separate PR) |
-| 32–35 | 32–35 | Collections & Streams (continued) | Planned |
-| 36–55 | 36–55 | Concurrency & Advanced Java | Planned |
+| 32 | 32 | Exceptions | **This PR** |
+| 33 | 33 | try-with-resources | Planned |
+| 34 | 34 | Files and NIO.2 | Planned |
+| 35 | 35 | Readers, Writers & Text I/O | Planned |
+| 36 | 36 | Threads Introduction | Planned |
+| 37–55 | 37–55 | Concurrency & Advanced Java (continued) | Planned |
 | 56–70 | 56–70 | JVM Internals (Class Loading, Bytecode, Heap, Stack, GC) | Planned |
 | 71–80 | 71–80 | Spring, Microservices, Architecture Interviews | Planned |
 
