@@ -42,7 +42,7 @@ Rule: **one episode → one branch → one PR**
 | 34 | 34 | Files and NIO.2 | Done (separate PR) |
 | 35 | 35 | Readers and Writers | Done (separate PR) |
 | 36 | 36 | Threads Intro | Done (separate PR) |
-| 37 | 37 | Synchronization | **This PR** |
+| 37 | 37 | Synchronization | Done (separate PR) |
 | 38 | 38 | volatile & Happens-Before | Planned |
 | 39 | 39 | Explicit Locks | Planned |
 | 40 | 40 | ExecutorService & Thread Pools | Planned |
