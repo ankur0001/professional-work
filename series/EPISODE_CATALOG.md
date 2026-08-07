@@ -37,7 +37,7 @@ Rule: **one episode → one branch → one PR**
 | 29 | 29 | Parallel Streams | Done (separate PR) |
 | 30 | 30 | Optional | Done (separate PR) |
 | 31 | 31 | java.time | Done (separate PR) |
-| 32 | 32 | Exceptions | **This PR** |
+| 32 | 32 | Exceptions | Done (separate PR) |
 | 33 | 33 | try-with-resources | Planned |
 | 34 | 34 | Files and NIO.2 | Planned |
 | 35 | 35 | Readers, Writers & Text I/O | Planned |
