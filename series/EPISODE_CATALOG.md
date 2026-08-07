@@ -53,7 +53,7 @@ Rule: **one episode → one branch → one PR**
 | 45 | 45 | BlockingQueue | Done (separate PR) |
 | 46 | 46 | CompletableFuture | Done (separate PR) |
 | 47 | 47 | ForkJoinPool | Done (separate PR) |
-| 48 | 48 | ThreadLocal | Planned |
+| 48 | 48 | ThreadLocal | **This PR** |
 | 49 | 49 | Deadlocks | Planned |
 | 50 | 50 | Virtual Threads (Project Loom) | Planned |
 | 51 | 51 | Class Loading Basics | Planned |
