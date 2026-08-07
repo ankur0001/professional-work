@@ -56,7 +56,7 @@ Rule: **one episode → one branch → one PR**
 | 48 | 48 | ThreadLocal | Done (separate PR) |
 | 49 | 49 | Deadlocks | Done (separate PR) |
 | 50 | 50 | Virtual Threads | Done (separate PR) |
-| 51 | 51 | Class Loading Basics | Planned |
+| 51 | 51 | Class Loading | **This PR** |
 | 52–55 | 52–55 | JVM Internals (Bytecode, Heap, Stack, GC) | Planned |
 | 56–70 | 56–70 | JVM Internals (continued) | Planned |
 | 71–80 | 71–80 | Spring, Microservices, Architecture Interviews | Planned |
