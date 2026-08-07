@@ -44,7 +44,7 @@ Rule: **one episode → one branch → one PR**
 | 36 | 36 | Threads Intro | Done (separate PR) |
 | 37 | 37 | Synchronization | Done (separate PR) |
 | 38 | 38 | volatile and Happens-Before | Done (separate PR) |
-| 39 | 39 | Explicit Locks | **This PR** |
+| 39 | 39 | Explicit Locks | Done (separate PR) |
 | 40 | 40 | ExecutorService & Thread Pools | Planned |
 | 41 | 41 | Callable, Future & CompletableFuture | Planned |
 | 42–55 | 42–55 | Concurrency & Advanced Java (continued) | Planned |
