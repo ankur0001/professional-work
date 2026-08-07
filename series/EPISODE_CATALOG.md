@@ -32,7 +32,7 @@ Rule: **one episode → one branch → one PR**
 | 24 | 24 | Queues and Deques | Done (separate PR) |
 | 25 | 25 | Sorting and Comparators | Done (separate PR) |
 | 26 | 26 | Streams Intro | Done (separate PR) |
-| 27 | 27 | Stream Collectors | **This PR** |
+| 27 | 27 | Stream Collectors | Done (separate PR) |
 | 28 | 28 | flatMap & Composition | Planned |
 | 29 | 29 | Parallel Streams | Planned |
 | 30 | 30 | Optional | Planned |
