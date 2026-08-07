@@ -40,7 +40,7 @@ Rule: **one episode → one branch → one PR**
 | 32 | 32 | Exceptions | Done (separate PR) |
 | 33 | 33 | try-with-resources | Done (separate PR) |
 | 34 | 34 | Files and NIO.2 | Done (separate PR) |
-| 35 | 35 | Readers and Writers | **This PR** |
+| 35 | 35 | Readers and Writers | Done (separate PR) |
 | 36 | 36 | Threads Introduction | Planned |
 | 37–55 | 37–55 | Concurrency & Advanced Java (continued) | Planned |
 | 56–70 | 56–70 | JVM Internals (Class Loading, Bytecode, Heap, Stack, GC) | Planned |
