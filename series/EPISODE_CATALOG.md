@@ -67,7 +67,7 @@ Rule: **one episode → one branch → one PR**
 | 59 | 59 | Escape Analysis | Done (separate PR) |
 | 60 | 60 | Metaspace and Native Memory | Done (separate PR) |
 | 61 | 61 | Reference Types | Done (separate PR) |
-| 62 | 62 | JVM Flags and Tuning | **This PR** |
+| 62 | 62 | JVM Flags and Tuning | Done (separate PR) |
 | 63 | 63 | Object Layout & Compressed Oops | Planned |
 | 64 | 64 | Safepoints | Planned |
 | 65 | 65 | JVM Startup & Warmup | Planned |
