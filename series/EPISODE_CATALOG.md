@@ -69,7 +69,7 @@ Rule: **one episode → one branch → one PR**
 | 61 | 61 | Reference Types | Done (separate PR) |
 | 62 | 62 | JVM Flags and Tuning | Done (separate PR) |
 | 63 | 63 | Object Layout | Done (separate PR) |
-| 64 | 64 | Safepoints | **This PR** |
+| 64 | 64 | Safepoints | Done (separate PR) |
 | 65 | 65 | JVM Startup & Warmup | Planned |
 | 66 | 66 | JVM Interview Wrap-Up | Planned |
 | 67–70 | 67–70 | JVM Internals (continued) | Planned |
