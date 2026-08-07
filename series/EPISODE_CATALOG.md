@@ -50,7 +50,7 @@ Rule: **one episode → one branch → one PR**
 | 42 | 42 | Concurrent Collections | Done (separate PR) |
 | 43 | 43 | Atomics | Done (separate PR) |
 | 44 | 44 | Synchronizers | Done (separate PR) |
-| 45 | 45 | BlockingQueue and Producer-Consumer | Planned |
+| 45 | 45 | BlockingQueue | **This PR** |
 | 46 | 46 | CompletableFuture Deep Dive | Planned |
 | 47–55 | 47–55 | Concurrency & Advanced Java (continued) | Planned |
 | 56–70 | 56–70 | JVM Internals (Class Loading, Bytecode, Heap, Stack, GC) | Planned |
