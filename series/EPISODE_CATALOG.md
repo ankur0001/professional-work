@@ -59,7 +59,7 @@ Rule: **one episode → one branch → one PR**
 | 51 | 51 | Class Loading | Done (separate PR) |
 | 52 | 52 | Bytecode Basics | Done (separate PR) |
 | 53 | 53 | Heap and Stack | Done (separate PR) |
-| 54 | 54 | Garbage Collection Intro | Planned |
+| 54 | 54 | Garbage Collection | **This PR** |
 | 55 | 55 | JIT Compilation | Planned |
 | 56 | 56 | GC Collectors | Planned |
 | 57–70 | 57–70 | JVM Internals (continued) | Planned |
