@@ -64,7 +64,7 @@ Rule: **one episode → one branch → one PR**
 | 56 | 56 | GC Collectors | Done (separate PR) |
 | 57 | 57 | Memory Leaks and Profiling | Done (separate PR) |
 | 58 | 58 | Diagnostic Tools | Done (separate PR) |
-| 59 | 59 | Escape Analysis | Planned |
+| 59 | 59 | Escape Analysis | **This PR** |
 | 60 | 60 | Metaspace & Native Memory | Planned |
 | 61 | 61 | Soft, Weak & Phantom References | Planned |
 | 62–70 | 62–70 | JVM Internals (continued) | Planned |
