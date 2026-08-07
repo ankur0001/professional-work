@@ -62,7 +62,7 @@ Rule: **one episode → one branch → one PR**
 | 54 | 54 | Garbage Collection | Done (separate PR) |
 | 55 | 55 | JIT Compilation | Done (separate PR) |
 | 56 | 56 | GC Collectors | Done (separate PR) |
-| 57 | 57 | Memory Leaks and Profiling | **This PR** |
+| 57 | 57 | Memory Leaks and Profiling | Done (separate PR) |
 | 58 | 58 | Diagnostic Tools | Planned |
 | 59 | 59 | Escape Analysis | Planned |
 | 60 | 60 | Metaspace & Native Memory | Planned |
