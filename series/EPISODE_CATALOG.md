@@ -42,7 +42,12 @@ Rule: **one episode → one branch → one PR**
 | 34 | 34 | Files and NIO.2 | Done (separate PR) |
 | 35 | 35 | Readers and Writers | Done (separate PR) |
 | 36 | 36 | Threads Intro | Done (separate PR) |
-| 37–55 | 37–55 | Concurrency & Advanced Java (continued) | Planned |
+| 37 | 37 | Synchronization | **This PR** |
+| 38 | 38 | volatile & Happens-Before | Planned |
+| 39 | 39 | Explicit Locks | Planned |
+| 40 | 40 | ExecutorService & Thread Pools | Planned |
+| 41 | 41 | Callable, Future & CompletableFuture | Planned |
+| 42–55 | 42–55 | Concurrency & Advanced Java (continued) | Planned |
 | 56–70 | 56–70 | JVM Internals (Class Loading, Bytecode, Heap, Stack, GC) | Planned |
 | 71–80 | 71–80 | Spring, Microservices, Architecture Interviews | Planned |
 
