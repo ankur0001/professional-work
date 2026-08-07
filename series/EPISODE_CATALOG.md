@@ -49,7 +49,7 @@ Rule: **one episode → one branch → one PR**
 | 41 | 41 | Callable and Future | Done (separate PR) |
 | 42 | 42 | Concurrent Collections | Done (separate PR) |
 | 43 | 43 | Atomics | Done (separate PR) |
-| 44 | 44 | Synchronizers | Planned |
+| 44 | 44 | Synchronizers | **This PR** |
 | 45 | 45 | BlockingQueue and Producer-Consumer | Planned |
 | 46 | 46 | CompletableFuture Deep Dive | Planned |
 | 47–55 | 47–55 | Concurrency & Advanced Java (continued) | Planned |
