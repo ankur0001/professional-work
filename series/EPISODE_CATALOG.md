@@ -84,7 +84,7 @@ Rule: **one episode → one branch → one PR**
 | 76 | 76 | Spring Security | Done (separate PR) |
 | 77 | 77 | Spring Testing | Done (separate PR) |
 | 78 | 78 | Microservices Basics | Done (separate PR) |
-| 79 | 79 | Observability and Resilience | Planned |
+| 79 | 79 | Observability and Resilience | **This PR** |
 | 80 | 80 | Architecture Interview Wrap | Planned |
 
 **Continuity:** Episode N ends with a teaser for Episode N+1.
