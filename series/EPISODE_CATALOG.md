@@ -91,7 +91,7 @@ Rule: **one episode → one branch → one PR**
 
 | Ep | Track | Title | Status |
 |---:|---|---|---|
-| 81 | S2 | Caching Strategies | **This PR** |
+| 81 | S2 | Caching Strategies | Done (separate PR) |
 | 82 | S2 | API Design Deep Dive | Planned |
 | 83 | S2 | Event-Driven Architecture | Planned |
 | 84 | S2 | Performance Playbook | Planned |
