@@ -73,7 +73,7 @@ Rule: **one episode → one branch → one PR**
 | 65 | 65 | JVM Startup | Done (separate PR) |
 | 66 | 66 | JVM Interview Wrap | Done (separate PR) |
 | 67 | 67 | Design Patterns Intro | Done (separate PR) |
-| 68 | 68 | Creational Patterns | Planned |
+| 68 | 68 | Creational Patterns | **This PR** |
 | 69 | 69 | Structural Patterns | Planned |
 | 70 | 70 | Behavioral Patterns | Planned |
 | 71–80 | 71–80 | Spring, Microservices, Architecture Interviews | Planned |
