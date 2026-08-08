@@ -75,7 +75,7 @@ Rule: **one episode → one branch → one PR**
 | 67 | 67 | Design Patterns Intro | Done (separate PR) |
 | 68 | 68 | Creational Patterns | Done (separate PR) |
 | 69 | 69 | Structural Patterns | Done (separate PR) |
-| 70 | 70 | Behavioral Patterns | Planned |
+| 70 | 70 | Behavioral Patterns | **This PR** |
 | 71–80 | 71–80 | Spring, Microservices, Architecture Interviews | Planned |
 
 **Continuity:** Episode N ends with a teaser for Episode N+1.
