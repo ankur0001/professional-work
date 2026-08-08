@@ -81,7 +81,7 @@ Rule: **one episode → one branch → one PR**
 | 73 | 73 | Spring Boot Basics | Done (separate PR) |
 | 74 | 74 | Spring MVC and REST | Done (separate PR) |
 | 75 | 75 | Spring Data and Persistence | Done (separate PR) |
-| 76 | 76 | Spring Security | **This PR** |
+| 76 | 76 | Spring Security | Done (separate PR) |
 | 77 | 77 | Spring Testing | Planned |
 | 78 | 78 | Microservices Basics | Planned |
 | 79 | 79 | Observability and Resilience | Planned |
