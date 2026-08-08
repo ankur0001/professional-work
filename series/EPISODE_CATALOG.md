@@ -76,7 +76,7 @@ Rule: **one episode → one branch → one PR**
 | 68 | 68 | Creational Patterns | Done (separate PR) |
 | 69 | 69 | Structural Patterns | Done (separate PR) |
 | 70 | 70 | Behavioral Patterns | Done (separate PR) |
-| 71 | 71 | Spring Framework Intro | **This PR** |
+| 71 | 71 | Spring Framework Intro | Done (separate PR) |
 | 72 | 72 | IoC and Dependency Injection | Planned |
 | 73 | 73 | Spring Boot Basics | Planned |
 | 74 | 74 | Spring MVC and REST | Planned |
