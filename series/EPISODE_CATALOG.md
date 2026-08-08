@@ -95,7 +95,7 @@ Rule: **one episode → one branch → one PR**
 | 82 | S2 | API Design Deep Dive | Done (separate PR) |
 | 83 | S2 | Event-Driven Architecture | Done (separate PR) |
 | 84 | S2 | Performance Playbook | Done (separate PR) |
-| 85 | S2 | Production Readiness Capstone | Planned |
+| 85 | S2 | Production Readiness Capstone | **This PR** |
 
 **Continuity:** Episode N ends with a teaser for Episode N+1.
 
