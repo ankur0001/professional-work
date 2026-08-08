@@ -79,7 +79,7 @@ Rule: **one episode → one branch → one PR**
 | 71 | 71 | Spring Framework Intro | Done (separate PR) |
 | 72 | 72 | IoC and Dependency Injection | Done (separate PR) |
 | 73 | 73 | Spring Boot Basics | Done (separate PR) |
-| 74 | 74 | Spring MVC and REST | **This PR** |
+| 74 | 74 | Spring MVC and REST | Done (separate PR) |
 | 75 | 75 | Spring Data and Persistence | Planned |
 | 76–80 | 76–80 | Spring Security, Testing, Microservices, Architecture Interviews | Planned |
 
