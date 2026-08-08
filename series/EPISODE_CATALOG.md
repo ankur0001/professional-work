@@ -87,6 +87,16 @@ Rule: **one episode → one branch → one PR**
 | 79 | 79 | Observability and Resilience | Done (separate PR) |
 | 80 | 80 | Architecture Interview Wrap | Done (separate PR) |
 
+## Season 2 — Production Systems (bonus)
+
+| Ep | Track | Title | Status |
+|---:|---|---|---|
+| 81 | S2 | Caching Strategies | **This PR** |
+| 82 | S2 | API Design Deep Dive | Planned |
+| 83 | S2 | Event-Driven Architecture | Planned |
+| 84 | S2 | Performance Playbook | Planned |
+| 85 | S2 | Production Readiness Capstone | Planned |
+
 **Continuity:** Episode N ends with a teaser for Episode N+1.
 
 **Cursor limit policy:** Generate one episode per agent run / PR. Stop before limit — do not batch-render the full catalog in one session.
