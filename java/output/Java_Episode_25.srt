@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:05,220
+Queues move work. Sorting decides presentation and priority.
+
+2
+00:00:05,220 --> 00:00:10,874
+Order is not decoration — it is a policy your types must support.
+
+3
+00:00:10,874 --> 00:00:15,746
+Comparable for natural order. Comparator for strategies.
+
+4
+00:00:15,746 --> 00:00:21,227
+Stability, equals consistency, and the APIs that actually sort.
+
+5
+00:00:21,227 --> 00:00:24,619
+Today — making order explicit and safe.
+
+6
+00:00:24,619 --> 00:00:28,882
+Sorted data is a contract — not a happy accident.
+
+7
+00:00:28,882 --> 00:00:31,210
+Episode Twenty-Five.
+
+8
+00:00:31,210 --> 00:00:34,004
+Sorting and Comparators.
+
+9
+00:00:34,004 --> 00:00:37,586
+Comparable defines a type's natural order.
+
+10
+00:00:37,586 --> 00:00:41,510
+compareTo returns negative, zero, or positive.
+
+11
+00:00:41,510 --> 00:00:45,603
+Strings and numbers already have natural orders.
+
+12
+00:00:45,603 --> 00:00:52,086
+Domain types should only implement Comparable when one obvious order exists.
+
+13
+00:00:52,086 --> 00:00:56,862
+TreeSet and TreeMap rely on that ordering for structure.
+
+14
+00:00:56,862 --> 00:01:01,638
+Natural order is a product decision — treat it that way.
+
+15
+00:01:01,638 --> 00:01:04,479
+Comparator lives outside the type.
+
+16
+00:01:04,479 --> 00:01:10,162
+Use it when many sort orders are valid — by name, by date, by score.
+
+17
+00:01:10,162 --> 00:01:14,759
+Comparator.comparing and thenComparing compose cleanly.
+
+18
+00:01:14,759 --> 00:01:18,854
+reversed flips direction without rewriting logic.
+
+19
+00:01:18,854 --> 00:01:23,450
+Pass comparators into sort, TreeMap, and PriorityQueue.
+
+20
+00:01:23,450 --> 00:01:27,712
+Strategy beats stuffing every order into compareTo.
+
+21
+00:01:27,712 --> 00:01:29,960
+Know the sort entry points.
+
+22
+00:01:29,960 --> 00:01:34,205
+List.sort and Collections.sort sort lists in place.
+
+23
+00:01:34,205 --> 00:01:38,284
+Arrays.sort handles object arrays and primitives.
+
+24
+00:01:38,284 --> 00:01:43,944
+Stream.sorted sorts inside a pipeline — useful, not always cheapest.
+
+25
+00:01:43,944 --> 00:01:48,356
+Object sorts use TimSort — stable for equal elements.
+
+26
+00:01:48,356 --> 00:01:53,018
+Pick the API that matches where your data already lives.
+
+27
+00:01:53,018 --> 00:01:57,156
+Stability matters when you sort by secondary keys.
+
+28
+00:01:57,156 --> 00:02:02,536
+A stable sort keeps equal elements in their prior relative order.
+
+29
+00:02:02,536 --> 00:02:07,749
+That lets you sort by last name, then by first name, in stages.
+
+30
+00:02:07,749 --> 00:02:12,963
+Object sorts in the JDK are stable. Primitive sorts may differ.
+
+31
+00:02:12,963 --> 00:02:17,433
+Do not assume stability without knowing the algorithm.
+
+32
+00:02:17,433 --> 00:02:22,812
+Multi-key Comparator.comparing chains make intent clearer anyway.
+
+33
+00:02:22,812 --> 00:02:29,023
+compareTo should be consistent with equals when used in sorted sets and maps.
+
+34
+00:02:29,023 --> 00:02:33,460
+If compareTo says zero, equals should usually say true.
+
+35
+00:02:33,460 --> 00:02:39,267
+Break that and TreeSet may treat unequal business objects as duplicates.
+
+36
+00:02:39,267 --> 00:02:44,268
+If you must diverge, document it loudly and avoid sorted sets.
+
+37
+00:02:44,268 --> 00:02:51,205
+Hash-based collections still need equals and hashCode — sorting does not replace them.
+
+38
+00:02:51,205 --> 00:02:54,190
+Contracts stack. Respect all of them.
+
+39
+00:02:54,190 --> 00:02:56,000
+Three common mistakes.
+
+40
+00:02:56,000 --> 00:03:01,348
+One — compareTo that disagrees with equals without documentation.
+
+41
+00:03:01,348 --> 00:03:07,519
+Two — sorting by mutable fields that change after insertion into a TreeSet.
+
+42
+00:03:07,519 --> 00:03:12,784
+Three — giant compareTo methods instead of composed Comparators.
+
+43
+00:03:12,784 --> 00:03:17,556
+Also — assuming Stream.sorted is free on huge collections.
+
+44
+00:03:17,556 --> 00:03:22,904
+Clear ordering code is easier to trust than clever ordering code.
+
+45
+00:03:22,904 --> 00:03:27,297
+Interview question — Comparable versus Comparator?
+
+46
+00:03:27,297 --> 00:03:32,481
+Comparable — natural order implemented by the class itself.
+
+47
+00:03:32,481 --> 00:03:38,192
+Comparator — external ordering strategy, often multiple per type.
+
+48
+00:03:38,192 --> 00:03:43,288
+Mention stability and equals consistency for bonus points.
+
+49
+00:03:43,288 --> 00:03:49,086
+Give a domain example — sort users by name versus by created date.
+
+50
+00:03:49,086 --> 00:03:51,810
+That answer is interview-ready.
+
+51
+00:03:51,810 --> 00:03:57,694
+Ordering is explicit. Next — processing collections as pipelines.
+
+52
+00:03:57,694 --> 00:04:01,496
+Episode Twenty-Six — Streams introduction.
+
+53
+00:04:01,496 --> 00:04:05,841
+Map, filter, reduce — and laziness that matters.
+
+54
+00:04:05,841 --> 00:04:07,108
+See you there.
