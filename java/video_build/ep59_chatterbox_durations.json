@@ -1,0 +1,12 @@
+{
+  "hook": 25.704,
+  "title": 3.528,
+  "escape_definition": 22.056,
+  "stack_allocation": 26.184,
+  "scalar_replacement": 23.424,
+  "escape_scenarios": 23.016,
+  "jit_flags": 25.104,
+  "mistakes": 28.512,
+  "interview": 23.928,
+  "teaser": 14.016
+}
