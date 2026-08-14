@@ -1,0 +1,12 @@
+{
+  "hook": 30.888,
+  "title": 3.336,
+  "authn_authz": 26.784,
+  "filter_chain": 28.344,
+  "rest_apis": 26.928,
+  "method_security": 27.168,
+  "practices": 23.064,
+  "mistakes": 23.688,
+  "interview": 26.64,
+  "teaser": 11.688
+}

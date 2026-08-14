@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:06,679
+00:00:00,000 --> 00:00:05,511
 Episode Seventy-Five covered Spring Data, transactions, and N-plus-one pitfalls.
 
 2
-00:00:06,679 --> 00:00:13,275
+00:00:05,511 --> 00:00:10,953
 Persistence without security is an open door — every API needs an access story.
 
 3
-00:00:13,275 --> 00:00:20,121
+00:00:10,953 --> 00:00:16,602
 Spring Security is the standard filter chain for authentication and authorization.
 
 4
-00:00:20,121 --> 00:00:25,632
+00:00:16,602 --> 00:00:21,149
 Modern apps mix sessions, JWTs, OAuth two, and method-level rules.
 
 5
-00:00:25,632 --> 00:00:31,226
+00:00:21,149 --> 00:00:25,765
 Interviews expect you to separate who you are from what you may do.
 
 6
-00:00:31,226 --> 00:00:37,738
+00:00:25,765 --> 00:00:31,138
 Today — authn versus authz, the filter chain, securing REST, and common traps.
 
 7
-00:00:37,738 --> 00:00:40,424
+00:00:31,138 --> 00:00:33,130
 Episode Seventy-Six.
 
 8
-00:00:40,424 --> 00:00:42,572
+00:00:33,130 --> 00:00:34,724
 Spring Security.
 
 9
-00:00:42,572 --> 00:00:48,564
+00:00:34,724 --> 00:00:39,506
 Authentication answers who you are — authorization answers what you may do.
 
 10
-00:00:48,564 --> 00:00:54,156
+00:00:39,506 --> 00:00:43,969
 Credentials become a SecurityContext with an Authentication principal.
 
 11
-00:00:54,156 --> 00:01:00,627
+00:00:43,969 --> 00:00:49,134
 Roles and authorities express permissions — ROLE_USER is a convention, not magic.
 
 12
-00:01:00,627 --> 00:01:04,462
+00:00:49,134 --> 00:00:52,194
 Fail closed — deny by default, grant explicitly.
 
 13
-00:01:04,462 --> 00:01:09,975
+00:00:52,194 --> 00:00:56,593
 Never conflate logged-in with allowed — that is the classic auth bug.
 
 14
-00:01:09,975 --> 00:01:16,446
+00:00:56,593 --> 00:01:01,758
 Say authn and authz separately in interviews — interviewers listen for the split.
 
 15
-00:01:16,446 --> 00:01:21,981
+00:01:01,758 --> 00:01:05,843
 Spring Security is a filter chain in front of your servlet stack.
 
 16
-00:01:21,981 --> 00:01:28,538
+00:01:05,843 --> 00:01:10,682
 SecurityFilterChain beans declare which paths need auth and which are public.
 
 17
-00:01:28,538 --> 00:01:36,202
+00:01:10,682 --> 00:01:16,338
 UsernamePasswordAuthenticationFilter, BearerTokenAuthenticationFilter — specialized links.
 
 18
-00:01:36,202 --> 00:01:42,674
+00:01:16,338 --> 00:01:21,114
 Once authenticated, AuthorizationFilter enforces request matchers and rules.
 
 19
-00:01:42,674 --> 00:01:49,146
+00:01:21,114 --> 00:01:25,890
 Order matters — mis-ordered filters create confusing allow or deny behavior.
 
 20
-00:01:49,146 --> 00:01:55,192
+00:01:25,890 --> 00:01:30,352
 Debug with spring-security DEBUG logs when a path is unexpectedly open.
 
 21
-00:01:55,192 --> 00:01:58,064
+00:01:30,352 --> 00:01:32,593
 Securing REST APIs in practice.
 
 22
-00:01:58,064 --> 00:02:04,734
+00:01:32,593 --> 00:01:37,797
 Stateless JWT or opaque tokens for services — sessions for browser apps.
 
 23
-00:02:04,734 --> 00:02:12,331
+00:01:37,797 --> 00:01:43,724
 CSRF protection matters for cookie sessions — often disabled for pure bearer APIs.
 
 24
-00:02:12,331 --> 00:02:18,353
+00:01:43,724 --> 00:01:48,422
 CORS is not security — it only relaxes browser same-origin rules.
 
 25
-00:02:18,353 --> 00:02:23,726
+00:01:48,422 --> 00:01:52,615
 Use HTTPS everywhere — tokens on the wire are credentials.
 
 26
-00:02:23,726 --> 00:02:30,026
+00:01:52,615 --> 00:01:57,530
 Resource servers validate tokens — authorization servers issue them.
 
 27
-00:02:30,026 --> 00:02:33,351
+00:01:57,530 --> 00:02:00,215
 Method security complements URL rules.
 
 28
-00:02:33,351 --> 00:02:38,600
+00:02:00,215 --> 00:02:04,455
 EnableMethodSecurity unlocks PreAuthorize and PostAuthorize.
 
 29
-00:02:38,600 --> 00:02:45,249
+00:02:04,455 --> 00:02:09,826
 Express domain rules — hasRole, hasAuthority, or custom PermissionEvaluator.
 
 30
-00:02:45,249 --> 00:02:51,461
+00:02:09,826 --> 00:02:14,843
 URL rules catch coarse paths — method rules protect service operations.
 
 31
-00:02:51,461 --> 00:02:57,673
+00:02:14,843 --> 00:02:19,860
 SpEL in annotations is powerful — keep expressions readable and tested.
 
 32
-00:02:57,673 --> 00:03:03,972
+00:02:19,860 --> 00:02:24,948
 Defense in depth — never rely on the UI alone to hide forbidden actions.
 
 33
-00:03:03,972 --> 00:03:07,471
+00:02:24,948 --> 00:02:27,643
 Security practices that survive production.
 
 34
-00:03:07,471 --> 00:03:12,192
+00:02:27,643 --> 00:02:31,278
 Least privilege — grant the smallest authority that works.
 
 35
-00:03:12,192 --> 00:03:17,237
+00:02:31,278 --> 00:02:35,164
 Rotate secrets and signing keys — store them outside the repo.
 
 36
-00:03:17,237 --> 00:03:23,992
+00:02:35,164 --> 00:02:40,365
 Log auth failures without leaking whether a username exists when policy forbids it.
 
 37
-00:03:23,992 --> 00:03:28,712
+00:02:40,365 --> 00:02:44,000
 Test both positive and negative authorization paths in CI.
 
 38
-00:03:28,712 --> 00:03:34,246
+00:02:44,000 --> 00:02:48,262
 Threat-model new endpoints — every PostMapping is an attack surface.
 
 39
-00:03:34,246 --> 00:03:36,160
+00:02:48,262 --> 00:02:49,741
 Three common mistakes.
 
 40
-00:03:36,160 --> 00:03:41,902
+00:02:49,741 --> 00:02:54,179
 One — permitAll on a broad ant pattern that swallows admin routes.
 
 41
-00:03:41,902 --> 00:03:47,469
+00:02:54,179 --> 00:02:58,483
 Two — trusting client-sent roles inside an unsigned JWT payload.
 
 42
-00:03:47,469 --> 00:03:53,559
+00:02:58,483 --> 00:03:03,190
 Three — disabling CSRF for cookie apps without understanding the risk.
 
 43
-00:03:53,559 --> 00:03:59,996
+00:03:03,190 --> 00:03:08,166
 Also — putting authorization only in the frontend — backends must enforce.
 
 44
-00:03:59,996 --> 00:04:05,216
+00:03:08,166 --> 00:03:12,200
 Security is a server responsibility — clients are untrusted.
 
 45
-00:04:05,216 --> 00:04:10,252
+00:03:12,200 --> 00:03:16,296
 Interview question — how do you secure a Spring Boot REST API?
 
 46
-00:04:10,252 --> 00:04:16,019
+00:03:16,296 --> 00:03:20,987
 Declare a SecurityFilterChain — authenticate requests, authorize paths.
 
 47
-00:04:16,019 --> 00:04:22,273
+00:03:20,987 --> 00:03:26,074
 Prefer bearer tokens for stateless services — validate signatures and expiry.
 
 48
-00:04:22,273 --> 00:04:26,984
+00:03:26,074 --> 00:03:29,906
 Map authorities to endpoints and critical service methods.
 
 49
-00:04:26,984 --> 00:04:32,507
+00:03:29,906 --> 00:03:34,399
 Keep secrets external — HTTPS in transit, least privilege in design.
 
 50
-00:04:32,507 --> 00:04:38,274
+00:03:34,399 --> 00:03:39,090
 Prove it with tests that assert four-oh-one and four-oh-three outcomes.
 
 51
-00:04:38,274 --> 00:04:42,811
+00:03:39,090 --> 00:03:42,693
 Security holds the line — next we prove the system.
 
 52
-00:04:42,811 --> 00:04:46,280
+00:03:42,693 --> 00:03:45,448
 Episode Seventy-Seven — Spring Testing.
 
 53
-00:04:46,280 --> 00:04:52,063
+00:03:45,448 --> 00:03:50,039
 Unit, slice, and full-context tests that keep Spring apps honest.
 
 54
-00:04:52,063 --> 00:04:53,308
+00:03:50,039 --> 00:03:51,028
 See you there.
