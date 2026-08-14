@@ -1,0 +1,83 @@
+# The Java Story — Episode Catalog
+
+Source curriculum: **Java & JVM Handbook (80 lessons)**  
+Format per episode: **4–5 minutes**, Kokoro narration, motion graphics  
+Rule: **one episode → one branch → one PR**
+
+| Ep | Handbook Lesson | Title | Status |
+|---:|---:|---|---|
+| 01 | 1 | Why Java Exists / Introduction to Java | Done (separate PR) |
+| 02 | 2 | JDK, JRE, and JVM | Done (separate PR) |
+| 03 | 3 | Java Program Structure | Done (separate PR) |
+| 04 | 4 | Variables and Data Types | Done (separate PR) |
+| 05 | 5 | Operators | Done (separate PR) |
+| 06 | 6 | Control Flow | Done (separate PR) |
+| 07 | 7 | Methods | Done (separate PR) |
+| 08 | 8 | Arrays | Done (separate PR) |
+| 09 | 9 | Strings | Done (separate PR) |
+| 10 | 10 | Object-Oriented Programming | Done (separate PR) |
+| 11 | 11 | Access Modifiers | Done (separate PR) |
+| 12 | 12 | Packages | Done (separate PR) |
+| 13 | 13 | Enums | Done (separate PR) |
+| 14 | 14 | Wrappers and Autoboxing | Done (separate PR) |
+| 15 | 15 | Generics | Done (separate PR) |
+| 16 | 16 | Annotations | Done (separate PR) |
+| 17 | 17 | Reflection | Done (separate PR) |
+| 18 | 18 | Records | Done (separate PR) |
+| 19 | 19 | Sealed Classes | Done (separate PR) |
+| 20 | 20 | Modules and JPMS | Done (separate PR) |
+| 21 | 21 | Lists | Done (separate PR) |
+| 22 | 22 | Sets | Done (separate PR) |
+| 23 | 23 | Maps | Done (separate PR) |
+| 24 | 24 | Queues and Deques | Done (separate PR) |
+| 25 | 25 | Sorting and Comparators | Done (separate PR) |
+| 26 | 26 | Streams Intro | Done (separate PR) |
+| 27 | 27 | Stream Collectors | Done (separate PR) |
+| 28 | 28 | flatMap & Composition | Done (separate PR) |
+| 29 | 29 | Parallel Streams | Done (separate PR) |
+| 30 | 30 | Optional | Done (separate PR) |
+| 31 | 31 | java.time | Done (separate PR) |
+| 32 | 32 | Exceptions | Done (separate PR) |
+| 33 | 33 | try-with-resources | Done (separate PR) |
+| 34 | 34 | Files and NIO.2 | Done (separate PR) |
+| 35 | 35 | Readers and Writers | Done (separate PR) |
+| 36 | 36 | Threads Intro | Done (separate PR) |
+| 37 | 37 | Synchronization | Done (separate PR) |
+| 38 | 38 | volatile and Happens-Before | Done (separate PR) |
+| 39 | 39 | Explicit Locks | Done (separate PR) |
+| 40 | 40 | ExecutorService | Done (separate PR) |
+| 41 | 41 | Callable and Future | Done (separate PR) |
+| 42 | 42 | Concurrent Collections | Done (separate PR) |
+| 43 | 43 | Atomics | Done (separate PR) |
+| 44 | 44 | Synchronizers | Done (separate PR) |
+| 45 | 45 | BlockingQueue | Done (separate PR) |
+| 46 | 46 | CompletableFuture | Done (separate PR) |
+| 47 | 47 | ForkJoinPool | Done (separate PR) |
+| 48 | 48 | ThreadLocal | Done (separate PR) |
+| 49 | 49 | Deadlocks | Done (separate PR) |
+| 50 | 50 | Virtual Threads | Done (separate PR) |
+| 51 | 51 | Class Loading | Done (separate PR) |
+| 52 | 52 | Bytecode Basics | Done (separate PR) |
+| 53 | 53 | Heap and Stack | Done (separate PR) |
+| 54 | 54 | Garbage Collection | Done (separate PR) |
+| 55 | 55 | JIT Compilation | Done (separate PR) |
+| 56 | 56 | GC Collectors | Done (separate PR) |
+| 57 | 57 | Memory Leaks and Profiling | Done (separate PR) |
+| 58 | 58 | Diagnostic Tools | Done (separate PR) |
+| 59 | 59 | Escape Analysis | Done (separate PR) |
+| 60 | 60 | Metaspace and Native Memory | Done (separate PR) |
+| 61 | 61 | Reference Types | Done (separate PR) |
+| 62 | 62 | JVM Flags and Tuning | Done (separate PR) |
+| 63 | 63 | Object Layout | Done (separate PR) |
+| 64 | 64 | Safepoints | Done (separate PR) |
+| 65 | 65 | JVM Startup | Done (separate PR) |
+| 66 | 66 | JVM Interview Wrap | Done (separate PR) |
+| 67 | 67 | Design Patterns Intro | Done (separate PR) |
+| 68 | 68 | Creational Patterns | Done (separate PR) |
+| 69 | 69 | Structural Patterns | Planned |
+| 70 | 70 | Behavioral Patterns | Planned |
+| 71–80 | 71–80 | Spring, Microservices, Architecture Interviews | Planned |
+
+**Continuity:** Episode N ends with a teaser for Episode N+1.
+
+**Cursor limit policy:** Generate one episode per agent run / PR. Stop before limit — do not batch-render the full catalog in one session.
