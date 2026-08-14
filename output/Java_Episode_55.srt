@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:06,298
+Episode Fifty-Four showed the garbage collector reclaiming heap objects.
+
+2
+00:00:06,298 --> 00:00:10,584
+But how does bytecode actually run at full speed?
+
+3
+00:00:10,584 --> 00:00:16,356
+The JVM starts with an interpreter — executing opcodes one by one.
+
+4
+00:00:16,356 --> 00:00:22,304
+Hot methods get compiled to native machine code by the JIT compiler.
+
+5
+00:00:22,304 --> 00:00:28,427
+C1 compiles fast with basic optimizations — C2 compiles deep and slow.
+
+6
+00:00:28,427 --> 00:00:33,850
+Today — JIT compilation, tiered execution, and deoptimization.
+
+7
+00:00:33,850 --> 00:00:36,604
+Episode Fifty-Five.
+
+8
+00:00:36,604 --> 00:00:38,924
+JIT Compilation.
+
+9
+00:00:38,924 --> 00:00:44,868
+The interpreter executes bytecode without ahead-of-time compilation.
+
+10
+00:00:44,868 --> 00:00:50,725
+Every method starts in interpreted mode — simple, portable, slower.
+
+11
+00:00:50,725 --> 00:00:56,931
+The JVM profiles execution — counting loop iterations and method calls.
+
+12
+00:00:56,931 --> 00:01:02,001
+Profiling data feeds the JIT — identifying hot code paths.
+
+13
+00:01:02,001 --> 00:01:07,334
+Cold code stays interpreted — no compilation overhead wasted.
+
+14
+00:01:07,334 --> 00:01:13,278
+Interpretation is the safety net when compiled code becomes invalid.
+
+15
+00:01:13,278 --> 00:01:17,437
+Tiered compilation uses multiple JIT compilers.
+
+16
+00:01:17,437 --> 00:01:23,720
+C1 — client compiler — fast compile, basic optimizations, quick warmup.
+
+17
+00:01:23,720 --> 00:01:30,002
+C2 — server compiler — slow compile, aggressive inlining and loop opts.
+
+18
+00:01:30,002 --> 00:01:36,196
+Default on modern JDK — methods escalate from interpreted to C1 to C2.
+
+19
+00:01:36,196 --> 00:01:42,390
+Compilation happens on background threads — application keeps running.
+
+20
+00:01:42,390 --> 00:01:48,496
+Compiled code lives in code cache — native memory separate from heap.
+
+21
+00:01:48,496 --> 00:01:54,468
+A method becomes hot when invocation or loop counters exceed thresholds.
+
+22
+00:01:54,468 --> 00:02:00,523
+CompileThreshold and tiered thresholds control when compilation triggers.
+
+23
+00:02:00,523 --> 00:02:06,080
+Inlining replaces method calls with the callee body — huge speedup.
+
+24
+00:02:06,080 --> 00:02:11,969
+Escape analysis can stack-allocate objects that never leave the method.
+
+25
+00:02:11,969 --> 00:02:17,443
+Dead code elimination and constant folding happen at compile time.
+
+26
+00:02:17,443 --> 00:02:23,498
+Profile-guided optimization uses runtime data for better code generation.
+
+27
+00:02:23,498 --> 00:02:28,643
+Deoptimization reverts compiled code back to the interpreter.
+
+28
+00:02:28,643 --> 00:02:34,462
+Happens when assumptions break — new class loaded, uncommon trap hit.
+
+29
+00:02:34,462 --> 00:02:40,366
+Uncommon traps guard speculative optimizations like monomorphic calls.
+
+30
+00:02:40,366 --> 00:02:45,848
+The JVM patches call sites and re-enters interpreted mode safely.
+
+31
+00:02:45,848 --> 00:02:50,318
+Recompilation may follow with updated profiling data.
+
+32
+00:02:50,318 --> 00:02:55,716
+Deoptimization is normal — not a bug — it preserves correctness.
+
+33
+00:02:55,716 --> 00:02:59,270
+The tiered execution pipeline in order.
+
+34
+00:02:59,270 --> 00:03:03,644
+Level zero — pure interpretation with profiling.
+
+35
+00:03:03,644 --> 00:03:08,291
+Level one — C1 compiled without profiling overhead.
+
+36
+00:03:08,291 --> 00:03:13,576
+Level two and three — C1 with increasing profiling detail.
+
+37
+00:03:13,576 --> 00:03:17,585
+Level four — C2 fully optimized native code.
+
+38
+00:03:17,585 --> 00:03:23,326
+Understanding tiers helps interpret JIT compilation log output.
+
+39
+00:03:23,326 --> 00:03:25,175
+Three common mistakes.
+
+40
+00:03:25,175 --> 00:03:30,888
+One — disabling tiered compilation without measuring — rarely helps.
+
+41
+00:03:30,888 --> 00:03:37,106
+Two — assuming first-run performance equals steady-state — warmup matters.
+
+42
+00:03:37,106 --> 00:03:43,324
+Three — micro-benchmarking without JVM warmup — measures interpreter only.
+
+43
+00:03:43,324 --> 00:03:49,962
+Also — printing deoptimization events in production without understanding them.
+
+44
+00:03:49,962 --> 00:03:55,760
+Benchmark with warmup iterations — let the JIT compile before timing.
+
+45
+00:03:55,760 --> 00:03:59,886
+Interview question — how does the JVM JIT work?
+
+46
+00:03:59,886 --> 00:04:04,977
+Bytecode starts interpreted — profiler counts hot methods.
+
+47
+00:04:04,977 --> 00:04:10,595
+C1 fast compile with basic opts — C2 deep optimize for hot code.
+
+48
+00:04:10,595 --> 00:04:16,038
+Inlining, escape analysis, and loop unrolling at compile time.
+
+49
+00:04:16,038 --> 00:04:21,392
+Deoptimization when assumptions fail — revert to interpreter.
+
+50
+00:04:21,392 --> 00:04:27,186
+Warmup matters — steady-state performance differs from cold start.
+
+51
+00:04:27,186 --> 00:04:33,941
+GC and JIT both shape runtime performance — collectors differ wildly.
+
+52
+00:04:33,941 --> 00:04:37,270
+Episode Fifty-Six — GC Collectors.
+
+53
+00:04:37,270 --> 00:04:42,361
+Serial, Parallel, G1, ZGC — and when to choose each.
+
+54
+00:04:42,361 --> 00:04:43,732
+See you there.

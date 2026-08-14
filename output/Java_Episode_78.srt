@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:06,024
+Episode Seventy-Seven covered testing Spring apps from unit to containers.
+
+2
+00:00:06,024 --> 00:00:11,804
+Architecture interviews often jump next — should this be microservices?
+
+3
+00:00:11,804 --> 00:00:18,561
+Microservices are independently deployable services collaborating over the network.
+
+4
+00:00:18,561 --> 00:00:24,503
+They buy team autonomy and scale axes — they cost operational complexity.
+
+5
+00:00:24,503 --> 00:00:30,202
+The wrong split creates a distributed monolith — worst of both worlds.
+
+6
+00:00:30,202 --> 00:00:36,226
+Today — when to split, boundaries, communication, data, and failure modes.
+
+7
+00:00:36,226 --> 00:00:38,883
+Episode Seventy-Eight.
+
+8
+00:00:38,883 --> 00:00:41,420
+Microservices Basics.
+
+9
+00:00:41,420 --> 00:00:45,208
+Split when forces demand it — not for fashion.
+
+10
+00:00:45,208 --> 00:00:49,820
+Independent deploy cadence across teams is a real force.
+
+11
+00:00:49,820 --> 00:00:53,937
+Different scale or technology needs per subdomain.
+
+12
+00:00:53,937 --> 00:00:59,290
+Strong module boundaries already exist — services formalize them.
+
+13
+00:00:59,290 --> 00:01:06,290
+If one team owns everything and deploys weekly together — a modular monolith may win.
+
+14
+00:01:06,290 --> 00:01:12,054
+Start cohesive — extract services when pain is measured, not imagined.
+
+15
+00:01:12,054 --> 00:01:17,184
+Boundaries follow business capabilities — not technical layers.
+
+16
+00:01:17,184 --> 00:01:24,349
+Think Order Service and Payment Service — not Controller Service and Repository Service.
+
+17
+00:01:24,349 --> 00:01:30,131
+Domain-driven contexts help — a bounded context is a candidate service.
+
+18
+00:01:30,131 --> 00:01:35,912
+Avoid chatty cross-service calls inside one user request when possible.
+
+19
+00:01:35,912 --> 00:01:41,774
+Shared libraries for DTOs can couple release trains — version carefully.
+
+20
+00:01:41,774 --> 00:01:47,800
+Clear ownership beats perfect purity — every service needs an owning team.
+
+21
+00:01:47,800 --> 00:01:51,480
+Communication styles define failure shapes.
+
+22
+00:01:51,480 --> 00:01:57,557
+Synchronous HTTP or gRPC — simple mental model, tight runtime coupling.
+
+23
+00:01:57,557 --> 00:02:04,147
+Asynchronous messaging — Kafka or queues — temporal decoupling, harder flows.
+
+24
+00:02:04,147 --> 00:02:09,283
+Idempotency keys matter when at-least-once delivery retries.
+
+25
+00:02:09,283 --> 00:02:14,932
+Timeouts, retries, and backoff are part of the interface contract.
+
+26
+00:02:14,932 --> 00:02:20,666
+Prefer async for fan-out and sync for queries that must return now.
+
+27
+00:02:20,666 --> 00:02:25,004
+Data ownership is the hard part of microservices.
+
+28
+00:02:25,004 --> 00:02:30,846
+Each service owns its database — no shared tables across services.
+
+29
+00:02:30,846 --> 00:02:36,158
+Cross-service joins become APIs or materialized read models.
+
+30
+00:02:36,158 --> 00:02:41,292
+Sagas or outbox patterns coordinate multi-service changes.
+
+31
+00:02:41,292 --> 00:02:47,577
+Dual writes without a pattern are how distributed inconsistency starts.
+
+32
+00:02:47,577 --> 00:02:53,508
+Eventual consistency is a product decision — set user expectations.
+
+33
+00:02:53,508 --> 00:02:56,692
+Operational cost you must budget for.
+
+34
+00:02:56,692 --> 00:03:02,543
+More deployables — more pipelines, dashboards, and on-call surfaces.
+
+35
+00:03:02,543 --> 00:03:07,448
+Distributed tracing and correlation IDs become mandatory.
+
+36
+00:03:07,448 --> 00:03:12,095
+Local development needs compose files or remote stubs.
+
+37
+00:03:12,095 --> 00:03:17,946
+Network latency and partial failure replace in-process method calls.
+
+38
+00:03:17,946 --> 00:03:24,142
+If you cannot operate it, you do not have microservices — you have hope.
+
+39
+00:03:24,142 --> 00:03:25,966
+Three common mistakes.
+
+40
+00:03:25,966 --> 00:03:32,352
+One — splitting by technical layer — distributed presentation and data tiers.
+
+41
+00:03:32,352 --> 00:03:38,406
+Two — shared database across services — invisible coupling at the schema.
+
+42
+00:03:38,406 --> 00:03:44,045
+Three — chatty sync chains — one click fans into a latency hairball.
+
+43
+00:03:44,045 --> 00:03:50,099
+Also — no idempotency — retries create double charges and duplicate rows.
+
+44
+00:03:50,099 --> 00:03:55,904
+Architecture must match team and ops maturity — not a conference talk.
+
+45
+00:03:55,904 --> 00:04:01,453
+Interview question — monolith or microservices for a new product?
+
+46
+00:04:01,453 --> 00:04:07,855
+Default to a modular monolith until deploy or scale forces argue otherwise.
+
+47
+00:04:07,855 --> 00:04:14,172
+Define domain boundaries first — extract services along those lines later.
+
+48
+00:04:14,172 --> 00:04:20,403
+Budget for observability, CI, and on-call before multiplying deployables.
+
+49
+00:04:20,403 --> 00:04:25,269
+Call out data ownership and consistency model explicitly.
+
+50
+00:04:25,269 --> 00:04:31,074
+Optimize for change — pick the shape that lets the team ship safely.
+
+51
+00:04:31,074 --> 00:04:36,808
+Distributed systems fail in partial ways — next we harden them.
+
+52
+00:04:36,808 --> 00:04:41,541
+Episode Seventy-Nine — Observability and Resilience.
+
+53
+00:04:41,541 --> 00:04:48,458
+Logs, metrics, traces, timeouts, circuit breakers, and graceful degradation.
+
+54
+00:04:48,458 --> 00:04:49,732
+See you there.

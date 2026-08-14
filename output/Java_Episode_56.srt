@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:06,041
+Episode Fifty-Five showed the JIT compiling hot bytecode to native code.
+
+2
+00:00:06,041 --> 00:00:12,166
+Garbage collection algorithms matter just as much for production latency.
+
+3
+00:00:12,166 --> 00:00:17,955
+Different collectors trade throughput against pause time differently.
+
+4
+00:00:17,955 --> 00:00:22,317
+Serial GC — one thread, simple, fine for tiny heaps.
+
+5
+00:00:22,317 --> 00:00:26,512
+G1 and ZGC target low pause times for large heaps.
+
+6
+00:00:26,512 --> 00:00:31,882
+Today — Serial, Parallel, G1, and ZGC — and when to choose each.
+
+7
+00:00:31,882 --> 00:00:34,588
+Episode Fifty-Six.
+
+8
+00:00:34,588 --> 00:00:36,692
+GC Collectors.
+
+9
+00:00:36,692 --> 00:00:41,584
+Serial GC uses a single thread for all collection work.
+
+10
+00:00:41,584 --> 00:00:47,899
+Flag UseSerialGC — good for small client apps and single-core machines.
+
+11
+00:00:47,899 --> 00:00:54,215
+Parallel GC — formerly Parallel Old plus Parallel New — multi-threaded.
+
+12
+00:00:54,215 --> 00:00:59,641
+Flag UseParallelGC — maximizes throughput on batch workloads.
+
+13
+00:00:59,641 --> 00:01:06,223
+Parallel pauses all threads but uses multiple GC threads to finish faster.
+
+14
+00:01:06,223 --> 00:01:12,894
+Default before Java 9 — still valid for compute-heavy, pause-tolerant jobs.
+
+15
+00:01:12,894 --> 00:01:17,966
+G1 — Garbage First — is the default collector since Java 9.
+
+16
+00:01:17,966 --> 00:01:23,726
+Divides heap into equal-sized regions instead of fixed generations.
+
+17
+00:01:23,726 --> 00:01:28,884
+Concurrent marking identifies regions with the most garbage.
+
+18
+00:01:28,884 --> 00:01:34,214
+Mixed collections reclaim both young and old regions together.
+
+19
+00:01:34,214 --> 00:01:40,146
+Target pause time via MaxGCPauseMillis — best-effort, not guaranteed.
+
+20
+00:01:40,146 --> 00:01:46,336
+Good general-purpose choice for heaps from hundreds of MB to tens of GB.
+
+21
+00:01:46,336 --> 00:01:50,958
+ZGC targets sub-millisecond pauses on large heaps.
+
+22
+00:01:50,958 --> 00:01:57,060
+Uses colored pointers and load barriers for concurrent compaction.
+
+23
+00:01:57,060 --> 00:02:01,960
+Most work happens concurrently — STW phases are tiny.
+
+24
+00:02:01,960 --> 00:02:08,616
+Flag UseZGC — available since Java 15, production-ready in LTS releases.
+
+25
+00:02:08,616 --> 00:02:14,903
+Shenandoah is an alternative low-pause collector with similar goals.
+
+26
+00:02:14,903 --> 00:02:20,450
+Choose ZGC when pause latency is critical and heap is large.
+
+27
+00:02:20,450 --> 00:02:24,505
+How to choose a collector for your workload.
+
+28
+00:02:24,505 --> 00:02:29,482
+Small heap, single core — Serial GC, minimal overhead.
+
+29
+00:02:29,482 --> 00:02:34,275
+Batch processing, throughput priority — Parallel GC.
+
+30
+00:02:34,275 --> 00:02:40,450
+General web services, moderate heaps — G1 default is a solid start.
+
+31
+00:02:40,450 --> 00:02:45,150
+Large heap, strict latency SLA — ZGC or Shenandoah.
+
+32
+00:02:45,150 --> 00:02:50,772
+Always validate with GC logs and load tests — not blog posts.
+
+33
+00:02:50,772 --> 00:02:53,130
+Key GC flags to know.
+
+34
+00:02:53,130 --> 00:03:00,653
+UseG1GC, UseParallelGC, UseSerialGC, UseZGC — select the collector.
+
+35
+00:03:00,653 --> 00:03:05,818
+Xms and Xmx set initial and maximum heap size.
+
+36
+00:03:05,818 --> 00:03:10,197
+MaxGCPauseMillis tunes G1 pause target.
+
+37
+00:03:10,197 --> 00:03:15,811
+Xlog:gc* enables unified GC logging in modern JDK.
+
+38
+00:03:15,811 --> 00:03:23,110
+Print flags with java -XX:+PrintFlagsFinal -version for your JVM.
+
+39
+00:03:23,110 --> 00:03:25,050
+Three common mistakes.
+
+40
+00:03:25,050 --> 00:03:31,485
+One — switching to ZGC without measuring — adds overhead for small heaps.
+
+41
+00:03:31,485 --> 00:03:38,186
+Two — setting MaxGCPauseMillis to one millisecond — unrealistic expectation.
+
+42
+00:03:38,186 --> 00:03:44,181
+Three — copying GC flags from another app without matching workload.
+
+43
+00:03:44,181 --> 00:03:48,501
+Also — ignoring GC logs after a collector change.
+
+44
+00:03:48,501 --> 00:03:54,584
+Collector choice is empirical — profile your actual traffic patterns.
+
+45
+00:03:54,584 --> 00:03:59,526
+Interview question — which GC collector would you choose?
+
+46
+00:03:59,526 --> 00:04:05,162
+Serial — tiny single-core apps. Parallel — throughput batch jobs.
+
+47
+00:04:05,162 --> 00:04:10,538
+G1 — default general purpose, region-based, pause-time target.
+
+48
+00:04:10,538 --> 00:04:15,740
+ZGC — large heap, sub-ms pause goals, concurrent compaction.
+
+49
+00:04:15,740 --> 00:04:21,116
+Trade throughput versus latency — no one-size-fits-all answer.
+
+50
+00:04:21,116 --> 00:04:26,058
+Tune with GC logs, heap sizing, and realistic load tests.
+
+51
+00:04:26,058 --> 00:04:30,312
+Even the best collector cannot fix memory leaks.
+
+52
+00:04:30,312 --> 00:04:34,655
+Episode Fifty-Seven — Memory Leaks and Profiling.
+
+53
+00:04:34,655 --> 00:04:39,707
+Heap dumps, MAT, and finding what holds references alive.
+
+54
+00:04:39,707 --> 00:04:40,948
+See you there.

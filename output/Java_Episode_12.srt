@@ -1,0 +1,187 @@
+1
+00:00:00,000 --> 00:00:04,983
+Access needs a neighborhood. Packages are those neighborhoods.
+
+2
+00:00:04,983 --> 00:00:08,359
+A package is a namespace — and a boundary.
+
+3
+00:00:08,359 --> 00:00:12,860
+It prevents name collisions and shapes who collaborates.
+
+4
+00:00:12,860 --> 00:00:17,682
+On disk and at runtime, package plus class name is identity.
+
+5
+00:00:17,682 --> 00:00:21,861
+Treat package structure as architecture you can see.
+
+6
+00:00:21,861 --> 00:00:26,362
+Folders tell the truth about ownership — or they should.
+
+7
+00:00:26,362 --> 00:00:27,866
+Episode Twelve.
+
+8
+00:00:27,866 --> 00:00:32,780
+Packages — namespaces, boundaries, and ownership.
+
+9
+00:00:32,780 --> 00:00:35,451
+package com.acme.orders.domain;
+
+10
+00:00:35,451 --> 00:00:40,621
+That line is not decoration — it is part of the binary name.
+
+11
+00:00:40,621 --> 00:00:46,136
+com.acme.OrderService is not the same as com.other.OrderService.
+
+12
+00:00:46,136 --> 00:00:51,651
+Folders should match the package declaration. Java expects that.
+
+13
+00:00:51,651 --> 00:00:55,356
+Break the mapping and tools get angry fast.
+
+14
+00:00:55,356 --> 00:00:59,406
+Folder path and package declaration must agree.
+
+15
+00:00:59,406 --> 00:01:03,096
+Packages define package-private visibility.
+
+16
+00:01:03,096 --> 00:01:07,388
+Types in the same package can collaborate quietly.
+
+17
+00:01:07,388 --> 00:01:12,537
+Types outside must use the public API — if you designed one.
+
+18
+00:01:12,537 --> 00:01:17,515
+Good packages make invalid dependencies hard to introduce.
+
+19
+00:01:17,515 --> 00:01:21,806
+Bad packages — one giant folder — erase ownership.
+
+20
+00:01:21,806 --> 00:01:25,840
+Boundaries only work if the tree reflects them.
+
+21
+00:01:25,840 --> 00:01:28,852
+Organize by capability when you can.
+
+22
+00:01:28,852 --> 00:01:32,282
+api. application. domain. infrastructure.
+
+23
+00:01:32,282 --> 00:01:38,054
+Or by feature — orders, payments, shipping — when teams own features.
+
+24
+00:01:38,054 --> 00:01:42,404
+Layered-only packages can become anemic and tangled.
+
+25
+00:01:42,404 --> 00:01:46,921
+Pick a structure that mirrors how people own the code.
+
+26
+00:01:46,921 --> 00:01:52,610
+Feature teams and domain packages often fit better than pure layers.
+
+27
+00:01:52,610 --> 00:01:58,596
+Spring Boot tip — scanning starts from the main class package downward.
+
+28
+00:01:58,596 --> 00:02:02,053
+Put OrdersApplication at a sensible root.
+
+29
+00:02:02,053 --> 00:02:06,269
+Bury it too deep and beans disappear mysteriously.
+
+30
+00:02:06,269 --> 00:02:11,497
+Packages are not only organization — frameworks navigate them.
+
+31
+00:02:11,497 --> 00:02:13,773
+Design the root on purpose.
+
+32
+00:02:13,773 --> 00:02:17,652
+A wrong root creates mysterious missing beans.
+
+33
+00:02:17,652 --> 00:02:19,509
+Three common mistakes.
+
+34
+00:02:19,509 --> 00:02:24,152
+One — every class in one package called util or common.
+
+35
+00:02:24,152 --> 00:02:29,892
+Two — cyclic dependencies between packages — architecture spaghetti.
+
+36
+00:02:29,892 --> 00:02:35,633
+Three — main class buried so component scanning misses half the app.
+
+37
+00:02:35,633 --> 00:02:39,431
+Also — package names that lie about contents.
+
+38
+00:02:39,431 --> 00:02:43,990
+Honest names reduce wrong imports and wrong ownership.
+
+39
+00:02:43,990 --> 00:02:47,689
+Interview question — why do packages matter?
+
+40
+00:02:47,689 --> 00:02:53,659
+Namespace uniqueness. Access boundaries. Ownership. Framework scanning.
+
+41
+00:02:53,659 --> 00:02:59,460
+Runtime identity is package plus class name — plus classloader later.
+
+42
+00:02:59,460 --> 00:03:03,664
+Good structure makes illegal dependencies awkward.
+
+43
+00:03:03,664 --> 00:03:08,120
+That is architecture you can feel in the folder tree.
+
+44
+00:03:08,120 --> 00:03:14,226
+Boundaries are set. Next — fixed sets of constants with behavior.
+
+45
+00:03:14,226 --> 00:03:16,574
+Episode Thirteen — enums.
+
+46
+00:03:16,574 --> 00:03:20,519
+Type-safe states instead of magic strings.
+
+47
+00:03:20,519 --> 00:03:21,834
+See you there.
