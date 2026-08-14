@@ -1,0 +1,12 @@
+{
+  "hook": 38.472,
+  "title": 5.16,
+  "heap_stack_crisp": 33.96,
+  "gc_crisp": 34.224,
+  "jit_crisp": 34.776,
+  "tying_together": 34.992,
+  "interview_framework": 30.168,
+  "mistakes": 31.536,
+  "interview": 34.128,
+  "teaser": 17.304
+}
