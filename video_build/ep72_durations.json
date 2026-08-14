@@ -1,0 +1,12 @@
+{
+  "hook": 37.176,
+  "title": 5.856,
+  "ioc_vs_di": 34.32,
+  "injection_styles": 34.344,
+  "scopes": 32.784,
+  "wiring": 33.096,
+  "testing": 31.008,
+  "mistakes": 32.328,
+  "interview": 31.176,
+  "teaser": 16.776
+}

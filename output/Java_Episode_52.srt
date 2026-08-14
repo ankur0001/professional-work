@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,607
+Episode Fifty-One showed how the JVM loads class files.
+
+2
+00:00:04,607 --> 00:00:07,958
+But what is actually inside those bytes?
+
+3
+00:00:07,958 --> 00:00:13,570
+Java source compiles to bytecode — a stack-machine instruction set.
+
+4
+00:00:13,570 --> 00:00:19,014
+Opcodes like iload, invokevirtual, and return drive every method.
+
+5
+00:00:19,014 --> 00:00:24,459
+javap disassembles class files so you can read what the JVM runs.
+
+6
+00:00:24,459 --> 00:00:30,490
+Today — bytecode basics, the constant pool, and the stack machine model.
+
+7
+00:00:30,490 --> 00:00:32,960
+Episode Fifty-Two.
+
+8
+00:00:32,960 --> 00:00:35,156
+Bytecode Basics.
+
+9
+00:00:35,156 --> 00:00:41,269
+A class file is a structured binary format — not human-readable source.
+
+10
+00:00:41,269 --> 00:00:46,434
+Magic number CA FE BA BE identifies a valid Java class file.
+
+11
+00:00:46,434 --> 00:00:52,805
+Constant pool holds strings, class names, method signatures, and literals.
+
+12
+00:00:52,805 --> 00:00:58,057
+Fields, methods, and attributes describe the class structure.
+
+13
+00:00:58,057 --> 00:01:04,342
+Code attribute contains the actual bytecode instructions for each method.
+
+14
+00:01:04,342 --> 00:01:10,110
+The JVM never sees your .java file — only verified .class bytecode.
+
+15
+00:01:10,110 --> 00:01:15,016
+javap is the JDK disassembler — your window into bytecode.
+
+16
+00:01:15,016 --> 00:01:19,329
+javap -c MyClass prints disassembled method bodies.
+
+17
+00:01:19,329 --> 00:01:25,081
+javap -v adds verbose output — constant pool entries and stack maps.
+
+18
+00:01:25,081 --> 00:01:30,917
+javap -p shows private members — useful for debugging generated code.
+
+19
+00:01:30,917 --> 00:01:37,006
+Compare source to javap output — see what the compiler actually emitted.
+
+20
+00:01:37,006 --> 00:01:43,096
+Every senior Java developer should read javap at least once per project.
+
+21
+00:01:43,096 --> 00:01:48,532
+The JVM is a stack machine — operands live on an operand stack.
+
+22
+00:01:48,532 --> 00:01:54,486
+Each method frame has its own operand stack and local variable array.
+
+23
+00:01:54,486 --> 00:01:58,886
+Instructions push values, operate, and pop results.
+
+24
+00:01:58,886 --> 00:02:04,495
+iload pushes a local int — iadd pops two ints and pushes the sum.
+
+25
+00:02:04,495 --> 00:02:09,499
+No general-purpose registers — the stack is the workspace.
+
+26
+00:02:09,499 --> 00:02:15,194
+Think push, operate, pop — that mental model unlocks every opcode.
+
+27
+00:02:15,194 --> 00:02:20,224
+Opcodes are single-byte instructions — some have operands.
+
+28
+00:02:20,224 --> 00:02:25,515
+Constants — iconst_1, ldc, bipush load values onto the stack.
+
+29
+00:02:25,515 --> 00:02:31,152
+Locals — iload, istore, aload, astore read and write local slots.
+
+30
+00:02:31,152 --> 00:02:37,049
+Fields — getfield, putfield, getstatic access object and class data.
+
+31
+00:02:37,049 --> 00:02:42,947
+Methods — invokevirtual, invokestatic, invokespecial dispatch calls.
+
+32
+00:02:42,947 --> 00:02:48,324
+Control flow — ifeq, goto, tableswitch branch on stack values.
+
+33
+00:02:48,324 --> 00:02:52,504
+Walk through a simple method bytecode by bytecode.
+
+34
+00:02:52,504 --> 00:02:57,101
+aload_0 pushes this — getfield reads an instance field.
+
+35
+00:02:57,101 --> 00:03:01,531
+invokevirtual calls a method — return ends the frame.
+
+36
+00:03:01,531 --> 00:03:07,634
+Stack depth must match what verification expects — stack map tables help.
+
+37
+00:03:07,634 --> 00:03:13,318
+Compiler optimizations change bytecode — loops may unroll or inline.
+
+38
+00:03:13,318 --> 00:03:18,166
+Reading bytecode connects source code to runtime behavior.
+
+39
+00:03:18,166 --> 00:03:20,011
+Three common mistakes.
+
+40
+00:03:20,011 --> 00:03:26,217
+One — assuming bytecode matches source line-for-line — compilers optimize.
+
+41
+00:03:26,217 --> 00:03:31,836
+Two — ignoring stack depth errors — VerifyError at class load time.
+
+42
+00:03:31,836 --> 00:03:38,293
+Three — confusing invokevirtual with invokestatic — wrong dispatch semantics.
+
+43
+00:03:38,293 --> 00:03:44,248
+Also — editing .class files by hand without understanding verification.
+
+44
+00:03:44,248 --> 00:03:48,944
+Use javap as a learning tool — not as something to fear.
+
+45
+00:03:48,944 --> 00:03:52,685
+Interview question — what is Java bytecode?
+
+46
+00:03:52,685 --> 00:03:58,166
+Platform-independent instruction set for the JVM stack machine.
+
+47
+00:03:58,166 --> 00:04:02,255
+Compiled from .java by javac into .class files.
+
+48
+00:04:02,255 --> 00:04:07,650
+Constant pool, fields, methods, and Code attributes per class.
+
+49
+00:04:07,650 --> 00:04:13,914
+javap disassembles bytecode — read opcodes like iload and invokevirtual.
+
+50
+00:04:13,914 --> 00:04:20,178
+Verification ensures type safety and stack consistency before execution.
+
+51
+00:04:20,178 --> 00:04:25,954
+Bytecode runs on stacks — but where do objects actually live?
+
+52
+00:04:25,954 --> 00:04:29,457
+Episode Fifty-Three — Heap and Stack.
+
+53
+00:04:29,457 --> 00:04:33,718
+Frames, locals, object layout, and metaspace.
+
+54
+00:04:33,718 --> 00:04:35,044
+See you there.
