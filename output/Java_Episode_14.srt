@@ -1,0 +1,187 @@
+1
+00:00:00,000 --> 00:00:05,216
+Enums gave us type-safe states. Now look at numbers as objects.
+
+2
+00:00:05,216 --> 00:00:11,012
+int is a primitive. Integer is a wrapper — an object that can be null.
+
+3
+00:00:11,012 --> 00:00:16,393
+Autoboxing hides the conversion — and can hide costs and crashes.
+
+4
+00:00:16,393 --> 00:00:19,871
+Today we make that invisible work visible.
+
+5
+00:00:19,871 --> 00:00:24,424
+Get this mental model right — collections depend on it.
+
+6
+00:00:24,424 --> 00:00:28,978
+Lists and maps need objects — wrappers bridge that gap.
+
+7
+00:00:28,978 --> 00:00:30,672
+Episode Fourteen.
+
+8
+00:00:30,672 --> 00:00:35,852
+Wrappers and Autoboxing — objects around primitives.
+
+9
+00:00:35,852 --> 00:00:38,548
+Eight primitives. Eight wrappers.
+
+10
+00:00:38,548 --> 00:00:42,797
+int and Integer. long and Long. boolean and Boolean.
+
+11
+00:00:42,797 --> 00:00:48,026
+Wrappers live on the heap. They have identity. They can be null.
+
+12
+00:00:48,026 --> 00:00:53,092
+Primitives cannot be null — and that alone prevents many bugs.
+
+13
+00:00:53,092 --> 00:00:58,076
+Choose intentionally — do not default to wrappers everywhere.
+
+14
+00:00:58,076 --> 00:01:02,406
+Default to primitives unless nullability is required.
+
+15
+00:01:02,406 --> 00:01:05,559
+Autoboxing converts automatically.
+
+16
+00:01:05,559 --> 00:01:08,990
+Integer x equals ten — boxes the int.
+
+17
+00:01:08,990 --> 00:01:12,421
+int y equals x — unboxes the Integer.
+
+18
+00:01:12,421 --> 00:01:16,779
+Convenient in Lists and Maps that need objects.
+
+19
+00:01:16,779 --> 00:01:22,714
+Dangerous when x is null — unboxing throws NullPointerException.
+
+20
+00:01:22,714 --> 00:01:28,000
+Null plus silent conversion is a classic production trap.
+
+21
+00:01:28,000 --> 00:01:30,946
+Wrappers cost more than primitives.
+
+22
+00:01:30,946 --> 00:01:34,819
+Object header. Indirection. Extra allocations.
+
+23
+00:01:34,819 --> 00:01:39,702
+A List of Integer can thrash the heap versus an int array.
+
+24
+00:01:39,702 --> 00:01:43,995
+Hot loops that box every iteration pay a quiet tax.
+
+25
+00:01:43,995 --> 00:01:50,056
+Prefer primitives in hot paths. Use wrappers when null is a real signal.
+
+26
+00:01:50,056 --> 00:01:54,434
+Measure before you box every number in a tight loop.
+
+27
+00:01:54,434 --> 00:01:57,467
+One more quirk — Integer caching.
+
+28
+00:01:57,467 --> 00:02:04,360
+Small values are often cached — so equals-equals may look true by accident.
+
+29
+00:02:04,360 --> 00:02:08,955
+Do not rely on that. Compare wrappers with equals.
+
+30
+00:02:08,955 --> 00:02:14,378
+Autoboxing is not a reason to forget object equality rules.
+
+31
+00:02:14,378 --> 00:02:16,308
+Be explicit — always.
+
+32
+00:02:16,308 --> 00:02:18,203
+Three common mistakes.
+
+33
+00:02:18,203 --> 00:02:22,251
+One — unboxing a null wrapper into a primitive.
+
+34
+00:02:22,251 --> 00:02:26,988
+Two — using wrappers in hot numeric loops without need.
+
+35
+00:02:26,988 --> 00:02:30,950
+Three — comparing wrappers with equals-equals.
+
+36
+00:02:30,950 --> 00:02:35,170
+Also — Boolean in conditions without null checks.
+
+37
+00:02:35,170 --> 00:02:39,046
+Nullability is a feature — treat it like one.
+
+38
+00:02:39,046 --> 00:02:43,025
+Interview question — primitive versus wrapper?
+
+39
+00:02:43,025 --> 00:02:46,745
+Primitive — value, non-null, compact, fast.
+
+40
+00:02:46,745 --> 00:02:51,416
+Wrapper — object, nullable, overhead, autoboxing risk.
+
+41
+00:02:51,416 --> 00:02:55,395
+Then mention NullPointerException on unboxing.
+
+42
+00:02:55,395 --> 00:02:58,769
+That lands the production-level detail.
+
+43
+00:02:58,769 --> 00:03:03,440
+Interviewers listen for null and allocation awareness.
+
+44
+00:03:03,440 --> 00:03:08,296
+Objects around values. Next — type-safe containers.
+
+45
+00:03:08,296 --> 00:03:10,868
+Episode Fifteen — generics.
+
+46
+00:03:10,868 --> 00:03:15,629
+List of Order — compile-time safety without casts.
+
+47
+00:03:15,629 --> 00:03:16,962
+See you there.

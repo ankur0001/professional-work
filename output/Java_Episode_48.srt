@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,430
+Episode Forty-Seven split work across a ForkJoinPool.
+
+2
+00:00:04,430 --> 00:00:11,032
+Each thread needs its own context — request ID, formatter, database connection.
+
+3
+00:00:11,032 --> 00:00:16,298
+Passing context through every method signature gets noisy fast.
+
+4
+00:00:16,298 --> 00:00:21,229
+ThreadLocal gives each thread a private copy of a variable.
+
+5
+00:00:21,229 --> 00:00:25,742
+SimpleLocal.get on thread A never sees thread B value.
+
+6
+00:00:25,742 --> 00:00:31,258
+Today — ThreadLocal, inheritance, common patterns, and leak traps.
+
+7
+00:00:31,258 --> 00:00:33,267
+Episode Forty-Eight.
+
+8
+00:00:33,267 --> 00:00:36,380
+ThreadLocal — Per-Thread State.
+
+9
+00:00:36,380 --> 00:00:40,505
+ThreadLocal of T stores a value per calling thread.
+
+10
+00:00:40,505 --> 00:00:45,277
+Internally a map from Thread to T — invisible to your code.
+
+11
+00:00:45,277 --> 00:00:48,917
+set assigns the value for the current thread.
+
+12
+00:00:48,917 --> 00:00:53,770
+get returns the current thread value — or the initial value.
+
+13
+00:00:53,770 --> 00:00:57,572
+remove clears the entry for the current thread.
+
+14
+00:00:57,572 --> 00:01:02,910
+No synchronization needed for reads and writes on the same thread.
+
+15
+00:01:02,910 --> 00:01:07,554
+Typical usage — static final ThreadLocal of DateFormat.
+
+16
+00:01:07,554 --> 00:01:12,452
+withInitial supplies a factory — lazy per-thread creation.
+
+17
+00:01:12,452 --> 00:01:16,336
+First get on a thread calls the supplier once.
+
+18
+00:01:16,336 --> 00:01:21,150
+Subsequent gets return the same instance for that thread.
+
+19
+00:01:21,150 --> 00:01:26,132
+DateFormat is not thread-safe — ThreadLocal avoids locking.
+
+20
+00:01:26,132 --> 00:01:32,296
+Same pattern for SimpleDateFormat, Random, StringBuilder scratch buffers.
+
+21
+00:01:32,296 --> 00:01:37,201
+InheritableThreadLocal propagates values to child threads.
+
+22
+00:01:37,201 --> 00:01:43,460
+When you new Thread or pool creates a worker, child inherits parent value.
+
+23
+00:01:43,460 --> 00:01:49,127
+Useful for tracing context — correlation IDs across async handoffs.
+
+24
+00:01:49,127 --> 00:01:54,709
+Child gets a copy at creation time — not live updates from parent.
+
+25
+00:01:54,709 --> 00:02:00,460
+ThreadLocal does not inherit — child starts with initial value only.
+
+26
+00:02:00,460 --> 00:02:07,226
+Modern alternative — pass context explicitly or use scoped values in newer JDKs.
+
+27
+00:02:07,226 --> 00:02:10,613
+Common ThreadLocal uses in production.
+
+28
+00:02:10,613 --> 00:02:15,693
+Per-request user or tenant context in servlet containers.
+
+29
+00:02:15,693 --> 00:02:21,309
+Security principal or locale without method parameter drilling.
+
+30
+00:02:21,309 --> 00:02:26,122
+Transaction or connection context in older frameworks.
+
+31
+00:02:26,122 --> 00:02:31,648
+Diagnostic MDC in logging — map diagnostic context per thread.
+
+32
+00:02:31,648 --> 00:02:36,372
+Keep the scope narrow — set at entry, remove at exit.
+
+33
+00:02:36,372 --> 00:02:40,711
+ThreadLocal leak risk — the classic thread-pool trap.
+
+34
+00:02:40,711 --> 00:02:46,768
+Pool threads live forever — their ThreadLocal map never garbage-collected.
+
+35
+00:02:46,768 --> 00:02:52,662
+If the value references a large object graph, memory grows each request.
+
+36
+00:02:52,662 --> 00:02:57,574
+Always remove in a finally block when borrowing from a pool.
+
+37
+00:02:57,574 --> 00:03:03,386
+Weak references in some implementations help — but do not rely on them.
+
+38
+00:03:03,386 --> 00:03:09,526
+Prefer try-finally or try-with-resources wrappers around ThreadLocal scope.
+
+39
+00:03:09,526 --> 00:03:11,396
+Three common mistakes.
+
+40
+00:03:11,396 --> 00:03:16,579
+One — forgetting remove on pooled threads — slow memory leak.
+
+41
+00:03:16,579 --> 00:03:22,528
+Two — storing heavy mutable singletons — defeats per-thread isolation.
+
+42
+00:03:22,528 --> 00:03:28,646
+Three — assuming InheritableThreadLocal updates propagate — they do not.
+
+43
+00:03:28,646 --> 00:03:33,999
+Also — using ThreadLocal where explicit parameters are clearer.
+
+44
+00:03:33,999 --> 00:03:39,608
+ThreadLocal is convenience — not a substitute for good API design.
+
+45
+00:03:39,608 --> 00:03:44,998
+Interview question — what is ThreadLocal and when is it dangerous?
+
+46
+00:03:44,998 --> 00:03:50,469
+Per-thread variable — each thread has its own copy via get and set.
+
+47
+00:03:50,469 --> 00:03:56,267
+Use for non-thread-safe helpers — formatters, buffers, request context.
+
+48
+00:03:56,267 --> 00:04:01,820
+Danger — thread pools reuse threads — stale values and memory leaks.
+
+49
+00:04:01,820 --> 00:04:05,250
+Always remove after use on pooled threads.
+
+50
+00:04:05,250 --> 00:04:11,130
+Mention InheritableThreadLocal for child-thread propagation at creation.
+
+51
+00:04:11,130 --> 00:04:17,600
+Per-thread state avoids sharing. What when threads block each other forever?
+
+52
+00:04:17,600 --> 00:04:20,239
+Episode Forty-Nine — Deadlocks.
+
+53
+00:04:20,239 --> 00:04:25,092
+Four conditions, detection, avoidance, and lock ordering.
+
+54
+00:04:25,092 --> 00:04:26,284
+See you there.
