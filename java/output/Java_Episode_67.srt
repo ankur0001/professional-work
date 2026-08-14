@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:06,751
+00:00:00,000 --> 00:00:05,955
 Episode Sixty-Six wrapped JVM interview answers — heap, GC, JIT, and measurement.
 
 2
-00:00:06,751 --> 00:00:14,252
+00:00:05,955 --> 00:00:12,572
 Architecture interviews shift next — from how the JVM runs code to how you structure code.
 
 3
-00:00:14,252 --> 00:00:20,669
+00:00:12,572 --> 00:00:18,233
 Design patterns are reusable solutions to recurring software design problems.
 
 4
-00:00:20,669 --> 00:00:27,170
+00:00:18,233 --> 00:00:23,968
 They are not libraries — they are named ideas teams use to communicate intent.
 
 5
-00:00:27,170 --> 00:00:34,337
+00:00:23,968 --> 00:00:30,290
 Junior engineers memorize names — seniors know when a pattern helps and when it hurts.
 
 6
-00:00:34,337 --> 00:00:41,338
+00:00:30,290 --> 00:00:36,466
 Today — what patterns are, the three GoF categories, and how Java already uses them.
 
 7
-00:00:41,338 --> 00:00:43,868
+00:00:36,466 --> 00:00:38,425
 Episode Sixty-Seven.
 
 8
-00:00:43,868 --> 00:00:46,652
+00:00:38,425 --> 00:00:40,580
 Design Patterns Intro.
 
 9
-00:00:46,652 --> 00:00:51,626
+00:00:40,580 --> 00:00:44,458
 A design pattern names a proven structure for a common problem.
 
 10
-00:00:51,626 --> 00:00:57,784
+00:00:44,458 --> 00:00:49,259
 The Gang of Four book cataloged twenty-three classic object-oriented patterns.
 
 11
-00:00:57,784 --> 00:01:03,310
+00:00:49,259 --> 00:00:53,568
 Each pattern has a problem, a structure, consequences, and known uses.
 
 12
-00:01:03,310 --> 00:01:09,547
+00:00:53,568 --> 00:00:58,430
 Patterns create a shared vocabulary — say Adapter and teammates know the shape.
 
 13
-00:01:09,547 --> 00:01:14,837
+00:00:58,430 --> 00:01:02,554
 They are tools for clarity — not badges to sprinkle on every class.
 
 14
-00:01:14,837 --> 00:01:21,942
+00:01:02,554 --> 00:01:08,094
 Prefer the simplest design that communicates intent — patterns when complexity earns them.
 
 15
-00:01:21,942 --> 00:01:25,739
+00:01:08,094 --> 00:01:11,212
 Patterns group into three categories by intent.
 
 16
-00:01:25,739 --> 00:01:31,799
+00:01:11,212 --> 00:01:16,188
 Creational — control how objects are created — Singleton, Factory, Builder.
 
 17
-00:01:31,799 --> 00:01:38,020
+00:01:16,188 --> 00:01:21,296
 Structural — compose classes and objects — Adapter, Decorator, Facade, Proxy.
 
 18
-00:01:38,020 --> 00:01:44,565
+00:01:21,296 --> 00:01:26,669
 Behavioral — organize communication and algorithms — Strategy, Observer, Command.
 
 19
-00:01:44,565 --> 00:01:50,624
+00:01:26,669 --> 00:01:31,645
 Episodes Sixty-Eight through Seventy walk each category with Java examples.
 
 20
-00:01:50,624 --> 00:01:57,088
+00:01:31,645 --> 00:01:36,952
 Category first — then pick the pattern that matches the force you are balancing.
 
 21
-00:01:57,088 --> 00:02:02,013
+00:01:36,952 --> 00:01:40,941
 Java's standard library is full of patterns you already use.
 
 22
-00:02:02,013 --> 00:02:07,758
+00:01:40,941 --> 00:01:45,596
 Iterator — for-each loops walk collections without exposing structure.
 
 23
-00:02:07,758 --> 00:02:13,339
+00:01:45,596 --> 00:01:50,117
 Observer — listeners and reactive streams notify interested parties.
 
 24
-00:02:13,339 --> 00:02:20,233
+00:01:50,117 --> 00:01:55,702
 Decorator — java.io streams wrap streams — BufferedInputStream over FileInputStream.
 
 25
-00:02:20,233 --> 00:02:26,143
+00:01:55,702 --> 00:02:00,489
 Factory — Calendar.getInstance and Paths.get hide concrete construction.
 
 26
-00:02:26,143 --> 00:02:31,970
+00:02:00,489 --> 00:02:05,210
 Recognizing patterns in the JDK trains your eye for application design.
 
 27
-00:02:31,970 --> 00:02:37,881
+00:02:05,210 --> 00:02:09,736
 Use a pattern when the problem matches — not when you want a fancy name.
 
 28
-00:02:37,881 --> 00:02:42,806
+00:02:09,736 --> 00:02:13,508
 Duplicated construction logic — consider Factory or Builder.
 
 29
-00:02:42,806 --> 00:02:47,649
+00:02:13,508 --> 00:02:17,217
 Need to swap algorithms at runtime — Strategy fits cleanly.
 
 30
-00:02:47,649 --> 00:02:52,903
+00:02:17,217 --> 00:02:21,241
 Legacy API mismatch — Adapter bridges without rewriting callers.
 
 31
-00:02:52,903 --> 00:02:57,993
+00:02:21,241 --> 00:02:25,138
 If a pattern adds classes without reducing coupling — skip it.
 
 32
-00:02:57,993 --> 00:03:02,508
+00:02:25,138 --> 00:02:28,596
 Readability for your team beats purity from a textbook.
 
 33
-00:03:02,508 --> 00:03:05,585
+00:02:28,596 --> 00:02:31,013
 Pattern abuse is a real failure mode.
 
 34
-00:03:05,585 --> 00:03:10,657
+00:02:31,013 --> 00:02:34,998
 Singleton everywhere — hidden global state that breaks tests.
 
 35
-00:03:10,657 --> 00:03:16,144
+00:02:34,998 --> 00:02:39,310
 Abstract factory for two concrete types — ceremony without payoff.
 
 36
-00:03:16,144 --> 00:03:21,217
+00:02:39,310 --> 00:02:43,295
 Observer graphs so tangled that change ripples unpredictably.
 
 37
-00:03:21,217 --> 00:03:27,785
+00:02:43,295 --> 00:02:48,456
 Also — renaming a simple method call a Strategy without a family of algorithms.
 
 38
-00:03:27,785 --> 00:03:33,190
+00:02:48,456 --> 00:02:52,702
 Patterns serve design — design does not serve pattern checklists.
 
 39
-00:03:33,190 --> 00:03:35,019
+00:02:52,702 --> 00:02:54,125
 Three common mistakes.
 
 40
-00:03:35,019 --> 00:03:40,424
+00:02:54,125 --> 00:02:58,328
 One — memorizing twenty-three names without a problem they solve.
 
 41
-00:03:40,424 --> 00:03:44,997
+00:02:58,328 --> 00:03:01,885
 Two — forcing patterns into code that is already clear.
 
 42
-00:03:44,997 --> 00:03:51,565
+00:03:01,885 --> 00:03:06,993
 Three — confusing design patterns with architectural styles like microservices.
 
 43
-00:03:51,565 --> 00:03:56,969
+00:03:06,993 --> 00:03:11,197
 Also — skipping trade-offs — every pattern adds indirection cost.
 
 44
-00:03:56,969 --> 00:04:01,376
+00:03:11,197 --> 00:03:14,624
 Name the force, then the pattern — never the reverse.
 
 45
-00:04:01,376 --> 00:04:06,620
+00:03:14,624 --> 00:03:18,731
 Interview question — what is a design pattern and why use one?
 
 46
-00:04:06,620 --> 00:04:11,442
+00:03:18,731 --> 00:03:22,507
 A named, reusable solution to a recurring design problem.
 
 47
-00:04:11,442 --> 00:04:16,601
+00:03:22,507 --> 00:03:26,548
 It improves communication — teams share intent with one word.
 
 48
-00:04:16,601 --> 00:04:22,269
+00:03:26,548 --> 00:03:30,986
 It packages trade-offs — you adopt known consequences deliberately.
 
 49
-00:04:22,269 --> 00:04:27,682
+00:03:30,986 --> 00:03:35,226
 Java's JDK uses patterns heavily — Iterator, Decorator, Factory.
 
 50
-00:04:27,682 --> 00:04:34,026
+00:03:35,226 --> 00:03:40,194
 Use them when they reduce coupling or clarify variation — not for prestige.
 
 51
-00:04:34,026 --> 00:04:37,256
+00:03:40,194 --> 00:03:43,001
 Next we go deep on object creation.
 
 52
-00:04:37,256 --> 00:04:41,132
+00:03:43,001 --> 00:03:46,370
 Episode Sixty-Eight — Creational Patterns.
 
 53
-00:04:41,132 --> 00:04:47,408
+00:03:46,370 --> 00:03:51,825
 Singleton, Factory Method, Abstract Factory, Builder, and Prototype.
 
 54
-00:04:47,408 --> 00:04:48,700
+00:03:51,825 --> 00:03:52,948
 See you there.
