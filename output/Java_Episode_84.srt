@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:06,651
+00:00:00,000 --> 00:00:05,055
 Episode Eighty-Three covered event-driven flows and the transactional outbox.
 
 2
-00:00:06,651 --> 00:00:12,179
+00:00:05,055 --> 00:00:09,257
 Performance work without a method becomes random tuning theater.
 
 3
-00:00:12,179 --> 00:00:18,225
+00:00:09,257 --> 00:00:13,853
 Users feel latency percentiles — not average CPU on a quiet afternoon.
 
 4
-00:00:18,225 --> 00:00:24,444
+00:00:13,853 --> 00:00:18,580
 Java gives you JFR, async profilers, GC logs, and Micrometer — use them.
 
 5
-00:00:24,444 --> 00:00:28,331
+00:00:18,580 --> 00:00:21,535
 Fix the hottest path first — then re-measure.
 
 6
-00:00:28,331 --> 00:00:33,514
+00:00:21,535 --> 00:00:25,474
 Today — a performance playbook from symptom to verified fix.
 
 7
-00:00:33,514 --> 00:00:35,790
+00:00:25,474 --> 00:00:27,305
 Episode Eighty-Four.
 
 8
-00:00:35,790 --> 00:00:38,180
+00:00:27,305 --> 00:00:29,228
 Performance Playbook.
 
 9
-00:00:38,180 --> 00:00:41,895
+00:00:29,228 --> 00:00:32,250
 Start with measurement — never with a hunch.
 
 10
-00:00:41,895 --> 00:00:47,299
+00:00:32,250 --> 00:00:36,645
 Define the SLO — p95 latency, error rate, throughput under load.
 
 11
-00:00:47,299 --> 00:00:51,858
+00:00:36,645 --> 00:00:40,353
 Reproduce with realistic data volumes and concurrency.
 
 12
-00:00:51,858 --> 00:00:56,924
+00:00:40,353 --> 00:00:44,474
 Capture RED metrics — rate, errors, duration — per endpoint.
 
 13
-00:00:56,924 --> 00:01:01,568
+00:00:44,474 --> 00:00:48,251
 Add traces for the slow requests — see where time goes.
 
 14
-00:01:01,568 --> 00:01:05,958
+00:00:48,251 --> 00:00:51,822
 Without a baseline, you cannot claim an improvement.
 
 15
-00:01:05,958 --> 00:01:09,588
+00:00:51,822 --> 00:00:54,834
 Find the bottleneck before changing code.
 
 16
-00:01:09,588 --> 00:01:14,988
+00:00:54,834 --> 00:00:59,315
 CPU-bound — profile methods — hot loops, JSON, crypto, regex.
 
 17
-00:01:14,988 --> 00:01:20,123
+00:00:59,315 --> 00:01:03,576
 IO-bound — watch DB time, remote calls, thread pool waits.
 
 18
-00:01:20,123 --> 00:01:26,320
+00:01:03,576 --> 00:01:08,718
 Allocation pressure — GC logs and allocation profilers tell the story.
 
 19
-00:01:26,320 --> 00:01:31,808
+00:01:08,718 --> 00:01:13,272
 Lock contention — thread dumps and JFR synchronization events.
 
 20
-00:01:31,808 --> 00:01:37,120
+00:01:13,272 --> 00:01:17,680
 One primary bottleneck at a time — resist shotgun refactors.
 
 21
-00:01:37,120 --> 00:01:40,544
+00:01:17,680 --> 00:01:20,435
 Application-level fixes that often win.
 
 22
-00:01:40,544 --> 00:01:45,459
+00:01:20,435 --> 00:01:24,390
 Cut N-plus-one queries — fetch joins or DTO projections.
 
 23
-00:01:45,459 --> 00:01:51,429
+00:01:24,390 --> 00:01:29,193
 Cache correct hot reads — with invalidation from Episode Eighty-One.
 
 24
-00:01:51,429 --> 00:01:56,257
+00:01:29,193 --> 00:01:33,078
 Shrink payloads — less JSON, fewer columns, pagination.
 
 25
-00:01:56,257 --> 00:02:02,051
+00:01:33,078 --> 00:01:37,739
 Reuse connections and HTTP clients — connection setup is not free.
 
 26
-00:02:02,051 --> 00:02:08,810
+00:01:37,739 --> 00:01:43,178
 Move heavy work off the request thread — async or queues when product allows.
 
 27
-00:02:08,810 --> 00:02:11,232
+00:01:43,178 --> 00:01:45,044
 Runtime and platform levers.
 
 28
-00:02:11,232 --> 00:02:17,112
+00:01:45,044 --> 00:01:49,576
 Size heaps and pick collectors from GC evidence — Episode Sixty-Two.
 
 29
-00:02:17,112 --> 00:02:22,820
+00:01:49,576 --> 00:01:53,974
 Tune thread and pool sizes to measured concurrency — not folklore.
 
 30
-00:02:22,820 --> 00:02:27,836
+00:01:53,974 --> 00:01:57,839
 Warm up JIT before load tests that claim peak performance.
 
 31
-00:02:27,836 --> 00:02:33,025
+00:01:57,839 --> 00:02:01,838
 Watch container CPU throttling — limits can fake a slow app.
 
 32
-00:02:33,025 --> 00:02:39,252
+00:02:01,838 --> 00:02:06,636
 Native images and AOT help startup — steady-state still needs profiling.
 
 33
-00:02:39,252 --> 00:02:41,423
+00:02:06,636 --> 00:02:08,290
 Verify like a scientist.
 
 34
-00:02:41,423 --> 00:02:45,674
+00:02:08,290 --> 00:02:11,528
 One change, then re-run the same load scenario.
 
 35
-00:02:45,674 --> 00:02:49,292
+00:02:11,528 --> 00:02:14,284
 Compare p95 and p99 — not only averages.
 
 36
-00:02:49,292 --> 00:02:55,533
+00:02:14,284 --> 00:02:19,038
 Watch error rate — a faster endpoint that five-hundreds is not a win.
 
 37
-00:02:55,533 --> 00:03:00,961
+00:02:19,038 --> 00:02:23,172
 Keep a short performance note — what changed, what improved.
 
 38
-00:03:00,961 --> 00:03:07,654
+00:02:23,172 --> 00:02:28,270
 Automate a smoke performance check in CI for critical paths when feasible.
 
 39
-00:03:07,654 --> 00:03:09,673
+00:02:28,270 --> 00:02:29,925
 Three common mistakes.
 
 40
-00:03:09,673 --> 00:03:15,087
+00:02:29,925 --> 00:02:34,364
 One — optimizing before measuring — classic premature work.
 
 41
-00:03:15,087 --> 00:03:21,969
+00:02:34,364 --> 00:02:40,007
 Two — load testing with tiny datasets — missing real index and GC behavior.
 
 42
-00:03:21,969 --> 00:03:26,465
+00:02:40,007 --> 00:02:43,694
 Three — celebrating mean latency while p99 burns.
 
 43
-00:03:26,465 --> 00:03:31,236
+00:02:43,694 --> 00:02:47,607
 Also — changing five knobs at once — no attribution.
 
 44
-00:03:31,236 --> 00:03:34,448
+00:02:47,607 --> 00:02:50,240
 Method beats folklore — every time.
 
 45
-00:03:34,448 --> 00:03:41,353
+00:02:50,240 --> 00:02:55,771
 Interview question — an endpoint's p99 doubled after a release — what do you do?
 
 46
-00:03:41,353 --> 00:03:46,877
+00:02:55,771 --> 00:03:00,197
 Confirm blast radius — which endpoint, since when, which region.
 
 47
-00:03:46,877 --> 00:03:51,883
+00:03:00,197 --> 00:03:04,207
 Compare metrics and traces before versus after the deploy.
 
 48
-00:03:51,883 --> 00:03:56,803
+00:03:04,207 --> 00:03:08,148
 Profile or pull JFR — classify CPU, IO, GC, or lock wait.
 
 49
-00:03:56,803 --> 00:04:01,464
+00:03:08,148 --> 00:03:11,882
 Fix the top offender — re-measure under the same load.
 
 50
-00:04:01,464 --> 00:04:07,506
+00:03:11,882 --> 00:03:16,722
 Ship with a rollback plan — performance incidents need escape hatches.
 
 51
-00:04:07,506 --> 00:04:12,774
+00:03:16,722 --> 00:03:21,308
 Speed is one production virtue — readiness is the checklist.
 
 52
-00:04:12,774 --> 00:04:17,339
+00:03:21,308 --> 00:03:25,283
 Episode Eighty-Five — Production Readiness Capstone.
 
 53
-00:04:17,339 --> 00:04:22,607
+00:03:25,283 --> 00:03:29,870
 The Season Two finale — ship checklist and staff-level wrap.
 
 54
-00:04:22,607 --> 00:04:23,836
+00:03:29,870 --> 00:03:30,940
 See you there.
