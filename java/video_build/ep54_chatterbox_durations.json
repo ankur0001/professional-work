@@ -1,0 +1,12 @@
+{
+  "hook": 25.704,
+  "title": 3.696,
+  "gc_roots": 22.536,
+  "mark_sweep": 21.144,
+  "generations": 25.224,
+  "stop_the_world": 23.184,
+  "gc_triggers": 23.304,
+  "mistakes": 22.728,
+  "interview": 23.952,
+  "teaser": 12.648
+}
