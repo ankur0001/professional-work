@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:06,382
+Optional modeled absence. java.time models moments — without Calendar pain.
+
+2
+00:00:06,382 --> 00:00:12,594
+Old java.util.Date and Calendar were mutable, confusing, and error-prone.
+
+3
+00:00:12,594 --> 00:00:18,210
+Java eight introduced java.time — immutable, clear, and ISO-based.
+
+4
+00:00:18,210 --> 00:00:25,358
+Instant for machine timestamps. LocalDate for birthdays. ZonedDateTime for meetings.
+
+5
+00:00:25,358 --> 00:00:30,804
+Today — the modern date-time toolkit every Java developer needs.
+
+6
+00:00:30,804 --> 00:00:34,378
+Time is hard. Good APIs make it less hard.
+
+7
+00:00:34,378 --> 00:00:36,274
+Episode Thirty-One.
+
+8
+00:00:36,274 --> 00:00:40,964
+java.time — dates, times, and zones done right.
+
+9
+00:00:40,964 --> 00:00:44,419
+Instant is a point on the UTC timeline.
+
+10
+00:00:44,419 --> 00:00:49,114
+Machine timestamps — logs, events, database instants.
+
+11
+00:00:49,114 --> 00:00:53,278
+Instant.now captures the current moment in UTC.
+
+12
+00:00:53,278 --> 00:00:57,973
+Compare with isBefore and isAfter — natural ordering.
+
+13
+00:00:57,973 --> 00:01:03,554
+Convert to epoch seconds or millis when legacy APIs require it.
+
+14
+00:01:03,554 --> 00:01:07,806
+Think Instant when the zone does not matter yet.
+
+15
+00:01:07,806 --> 00:01:12,225
+ZonedDateTime ties a local date-time to a time zone.
+
+16
+00:01:12,225 --> 00:01:17,323
+ZoneId identifies a region — Europe/Paris, America/New_York.
+
+17
+00:01:17,323 --> 00:01:22,337
+Meetings, flight departures, user-facing clocks need zones.
+
+18
+00:01:22,337 --> 00:01:28,455
+withZoneSameInstant converts between zones without shifting the instant.
+
+19
+00:01:28,455 --> 00:01:33,808
+Daylight saving transitions are handled by the rules in ZoneId.
+
+20
+00:01:33,808 --> 00:01:38,992
+Store Instants in databases — render ZonedDateTime for users.
+
+21
+00:01:38,992 --> 00:01:43,233
+LocalDate is a calendar date without time or zone.
+
+22
+00:01:43,233 --> 00:01:47,303
+LocalTime is a time of day without date or zone.
+
+23
+00:01:47,303 --> 00:01:51,798
+LocalDateTime combines both — still no zone attached.
+
+24
+00:01:51,798 --> 00:01:57,142
+Birthdays, due dates, business hours templates use local types.
+
+25
+00:01:57,142 --> 00:02:01,128
+Do not attach a zone until you know which zone.
+
+26
+00:02:01,128 --> 00:02:06,386
+Parse and format with consistent patterns — DateTimeFormatter.
+
+27
+00:02:06,386 --> 00:02:11,341
+DateTimeFormatter replaces SimpleDateFormat for new code.
+
+28
+00:02:11,341 --> 00:02:15,774
+Predefined constants — ISO_LOCAL_DATE, ISO_INSTANT.
+
+29
+00:02:15,774 --> 00:02:20,990
+ofPattern for custom layouts — but prefer ISO when possible.
+
+30
+00:02:20,990 --> 00:02:25,511
+format and parse are symmetric — define once, reuse.
+
+31
+00:02:25,511 --> 00:02:29,857
+Locale affects human-readable month and day names.
+
+32
+00:02:29,857 --> 00:02:34,812
+Immutable formatters are thread-safe — share them freely.
+
+33
+00:02:34,812 --> 00:02:40,423
+Arithmetic uses clear units — ChronoUnit.DAYS, HOURS, MINUTES.
+
+34
+00:02:40,423 --> 00:02:45,401
+plus and minus on local and zoned types read naturally.
+
+35
+00:02:45,401 --> 00:02:50,560
+Period covers calendar amounts — two months, three years.
+
+36
+00:02:50,560 --> 00:02:55,267
+Duration covers exact time amounts — ninety minutes.
+
+37
+00:02:55,267 --> 00:02:59,249
+between measures the gap between two points.
+
+38
+00:02:59,249 --> 00:03:05,494
+Pick Period versus Duration based on calendar versus clock semantics.
+
+39
+00:03:05,494 --> 00:03:07,397
+Three common mistakes.
+
+40
+00:03:07,397 --> 00:03:13,278
+One — mixing legacy Date with java.time without explicit conversion.
+
+41
+00:03:13,278 --> 00:03:17,949
+Two — assuming LocalDateTime has a zone — it does not.
+
+42
+00:03:17,949 --> 00:03:23,571
+Three — storing zoned strings instead of Instant in the database.
+
+43
+00:03:23,571 --> 00:03:29,192
+Also — ignoring daylight saving when scheduling recurring events.
+
+44
+00:03:29,192 --> 00:03:33,344
+Model instants in UTC. Display in the user zone.
+
+45
+00:03:33,344 --> 00:03:37,852
+Interview question — Instant versus LocalDateTime?
+
+46
+00:03:37,852 --> 00:03:41,909
+Instant — absolute point on the UTC timeline.
+
+47
+00:03:41,909 --> 00:03:46,507
+LocalDateTime — date and time without zone context.
+
+48
+00:03:46,507 --> 00:03:50,565
+Mention ZonedDateTime when user zones matter.
+
+49
+00:03:50,565 --> 00:03:55,253
+Note immutability and DateTimeFormatter for parsing.
+
+50
+00:03:55,253 --> 00:03:59,130
+That answer shows you escaped the Date era.
+
+51
+00:03:59,130 --> 00:04:03,050
+Time is typed. Next — when things go wrong.
+
+52
+00:04:03,050 --> 00:04:05,968
+Episode Thirty-Two — Exceptions.
+
+53
+00:04:05,968 --> 00:04:10,800
+Checked, unchecked, and handling failure with intent.
+
+54
+00:04:10,800 --> 00:04:12,076
+See you there.

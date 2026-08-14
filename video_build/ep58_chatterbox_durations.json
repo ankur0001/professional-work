@@ -1,0 +1,12 @@
+{
+  "hook": 25.224,
+  "title": 3.216,
+  "jcmd_overview": 28.536,
+  "jmap_heap": 30.048,
+  "jstack_threads": 25.104,
+  "jfr_overview": 28.824,
+  "diagnostic_workflow": 27.384,
+  "mistakes": 27.672,
+  "interview": 30.96,
+  "teaser": 13.704
+}
