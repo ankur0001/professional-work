@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:06,547
+00:00:00,000 --> 00:00:05,013
 Episode Seventy closed behavioral patterns — Strategy, Observer, and Command.
 
 2
-00:00:06,547 --> 00:00:14,115
+00:00:05,013 --> 00:00:10,807
 Patterns name design ideas — Spring turns many of those ideas into a production platform.
 
 3
-00:00:14,115 --> 00:00:20,747
+00:00:10,807 --> 00:00:15,886
 Most Java services today start as a Spring application, not a raw main method.
 
 4
-00:00:20,747 --> 00:00:27,124
+00:00:15,886 --> 00:00:20,769
 Spring is not one jar — it is a family of projects around a core container.
 
 5
-00:00:27,124 --> 00:00:33,331
+00:00:20,769 --> 00:00:25,521
 Understanding the container unlocks Boot, MVC, Data, Security, and Cloud.
 
 6
-00:00:33,331 --> 00:00:39,538
+00:00:25,521 --> 00:00:30,274
 Today — what Spring is, why it won, the module map, and the mental model.
 
 7
-00:00:39,538 --> 00:00:41,920
+00:00:30,274 --> 00:00:32,132
 Episode Seventy-One.
 
 8
-00:00:41,920 --> 00:00:44,660
+00:00:32,132 --> 00:00:34,268
 Spring Framework Intro.
 
 9
-00:00:44,660 --> 00:00:50,250
+00:00:34,268 --> 00:00:38,503
 Spring is an application framework centered on inversion of control.
 
 10
-00:00:50,250 --> 00:00:56,744
+00:00:38,503 --> 00:00:43,423
 You declare components — Spring wires their dependencies and manages lifecycle.
 
 11
-00:00:56,744 --> 00:01:02,252
+00:00:43,423 --> 00:00:47,596
 The ApplicationContext is the runtime heart — beans live inside it.
 
 12
-00:01:02,252 --> 00:01:08,253
+00:00:47,596 --> 00:00:52,142
 Around the core sit modules for web, data access, messaging, and testing.
 
 13
-00:01:08,253 --> 00:01:14,337
+00:00:52,142 --> 00:00:56,751
 Spring Boot sits on top — opinionated defaults that start projects faster.
 
 14
-00:01:14,337 --> 00:01:20,502
+00:00:56,751 --> 00:01:01,422
 Think platform, not library — Spring shapes how the whole application runs.
 
 15
-00:01:20,502 --> 00:01:24,705
+00:01:01,422 --> 00:01:04,905
 Why Spring became the default for enterprise Java.
 
 16
-00:01:24,705 --> 00:01:30,756
+00:01:04,905 --> 00:01:09,921
 It replaced heavyweight EJB ceremony with plain objects and annotations.
 
 17
-00:01:30,756 --> 00:01:37,060
+00:01:09,921 --> 00:01:15,146
 Dependency injection made code testable — swap collaborators in unit tests.
 
 18
-00:01:37,060 --> 00:01:43,616
+00:01:15,146 --> 00:01:20,579
 A huge ecosystem — Boot starters, Data, Security, Cloud — compounds the value.
 
 19
-00:01:43,616 --> 00:01:49,332
+00:01:20,579 --> 00:01:25,316
 Consistency across teams — shared conventions lower onboarding cost.
 
 20
-00:01:49,332 --> 00:01:56,392
+00:01:25,316 --> 00:01:31,168
 Alternatives exist — Quarkus, Micronaut — but Spring remains the interview baseline.
 
 21
-00:01:56,392 --> 00:02:00,223
+00:01:31,168 --> 00:01:34,312
 A practical Spring module map for interviews.
 
 22
-00:02:00,223 --> 00:02:05,161
+00:01:34,312 --> 00:01:38,365
 spring-core and spring-context — container, beans, events.
 
 23
-00:02:05,161 --> 00:02:10,525
+00:01:38,365 --> 00:01:42,768
 spring-web and spring-webmvc — HTTP, REST controllers, filters.
 
 24
-00:02:10,525 --> 00:02:15,463
+00:01:42,768 --> 00:01:46,820
 spring-data and spring-tx — repositories and transactions.
 
 25
-00:02:15,463 --> 00:02:20,486
+00:01:46,820 --> 00:01:50,943
 spring-security — authentication and authorization filters.
 
 26
-00:02:20,486 --> 00:02:26,786
+00:01:50,943 --> 00:01:56,114
 Spring Boot stitches these with auto-configuration and an embedded server.
 
 27
-00:02:26,786 --> 00:02:31,431
+00:01:56,114 --> 00:01:59,951
 Carry this mental model into every Spring conversation.
 
 28
-00:02:31,431 --> 00:02:36,330
+00:01:59,951 --> 00:02:03,998
 Your code defines beans — Spring creates and injects them.
 
 29
-00:02:36,330 --> 00:02:42,073
+00:02:03,998 --> 00:02:08,742
 Configuration is code or annotations — not a giant XML file anymore.
 
 30
-00:02:42,073 --> 00:02:48,407
+00:02:08,742 --> 00:02:13,975
 The context starts, beans initialize, then your application serves traffic.
 
 31
-00:02:48,407 --> 00:02:55,417
+00:02:13,975 --> 00:02:19,766
 Cross-cutting concerns — transactions, security, metrics — ride on proxies and AOP.
 
 32
-00:02:55,417 --> 00:03:01,836
+00:02:19,766 --> 00:02:25,068
 When something fails — ask which bean, which config, which phase of startup.
 
 33
-00:03:01,836 --> 00:03:05,956
+00:02:25,068 --> 00:02:28,326
 Spring Boot preview — what changes day to day.
 
 34
-00:03:05,956 --> 00:03:11,867
+00:02:28,326 --> 00:02:33,001
 starters pull curated dependency sets — web, data-jpa, validation.
 
 35
-00:03:11,867 --> 00:03:17,241
+00:02:33,001 --> 00:02:37,250
 auto-configuration turns classpath signals into ready beans.
 
 36
-00:03:17,241 --> 00:03:23,062
+00:02:37,250 --> 00:02:41,854
 application.properties or yaml externalizes environment settings.
 
 37
-00:03:23,062 --> 00:03:28,257
+00:02:41,854 --> 00:02:45,962
 embedded Tomcat or Netty means java -jar is enough to run.
 
 38
-00:03:28,257 --> 00:03:34,078
+00:02:45,962 --> 00:02:50,566
 Episode Seventy-Three goes deep on Boot — first we nail IoC next.
 
 39
-00:03:34,078 --> 00:03:35,918
+00:02:50,566 --> 00:02:51,980
 Three common mistakes.
 
 40
-00:03:35,918 --> 00:03:41,354
+00:02:51,980 --> 00:02:56,159
 One — treating Spring as magic — skip the container mental model.
 
 41
-00:03:41,354 --> 00:03:46,707
+00:02:56,159 --> 00:03:00,274
 Two — putting business logic in controllers instead of services.
 
 42
-00:03:46,707 --> 00:03:52,227
+00:03:00,274 --> 00:03:04,517
 Three — assuming Boot auto-config always matches production needs.
 
 43
-00:03:52,227 --> 00:03:58,500
+00:03:04,517 --> 00:03:09,339
 Also — learning annotations by rote without knowing which module owns them.
 
 44
-00:03:58,500 --> 00:04:02,096
+00:03:09,339 --> 00:03:12,104
 Name the container first — features second.
 
 45
-00:04:02,096 --> 00:04:06,514
+00:03:12,104 --> 00:03:15,562
 Interview question — what is the Spring Framework?
 
 46
-00:04:06,514 --> 00:04:12,434
+00:03:15,562 --> 00:03:20,196
 An IoC container plus a modular ecosystem for enterprise Java apps.
 
 47
-00:04:12,434 --> 00:04:17,471
+00:03:20,196 --> 00:03:24,138
 It manages bean lifecycle and wires dependencies for you.
 
 48
-00:04:17,471 --> 00:04:22,596
+00:03:24,138 --> 00:03:28,149
 Modules cover web, data, security, messaging, and testing.
 
 49
-00:04:22,596 --> 00:04:27,809
+00:03:28,149 --> 00:03:32,230
 Spring Boot adds conventions and auto-configuration on top.
 
 50
-00:04:27,809 --> 00:04:33,906
+00:03:32,230 --> 00:03:37,002
 The value is testability, consistency, and a battle-tested ecosystem.
 
 51
-00:04:33,906 --> 00:04:38,387
+00:03:37,002 --> 00:03:40,614
 The container is the core idea — next we open it.
 
 52
-00:04:38,387 --> 00:04:43,052
+00:03:40,614 --> 00:03:44,373
 Episode Seventy-Two — IoC and Dependency Injection.
 
 53
-00:04:43,052 --> 00:04:49,820
+00:03:44,373 --> 00:03:49,828
 Beans, injection styles, scopes, and how Spring actually wires your graph.
 
 54
-00:04:49,820 --> 00:04:51,100
+00:03:49,828 --> 00:03:50,860
 See you there.
