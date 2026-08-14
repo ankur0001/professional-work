@@ -199,7 +199,8 @@ def run_episode(
     if dur > 300:
         pace = min(dur / 295.0, 1.12)
     elif dur < 245:
-        pace = max(dur / 250.0, 0.85)
+        # Slow down enough to land near 250s (ffmpeg atempo floor is 0.5).
+        pace = max(dur / 250.0, 0.5)
     music = audio_root / "music_bed.m4a"
     generate_music_bed(dur / pace + 2, music)
     base = narrated

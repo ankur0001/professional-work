@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:05,451
+00:00:00,000 --> 00:00:04,315
 Episode Eighty-Four gave a performance playbook from symptom to fix.
 
 2
-00:00:05,451 --> 00:00:10,903
+00:00:04,315 --> 00:00:08,631
 Shipping is not merging — production readiness is a deliberate gate.
 
 3
-00:00:10,903 --> 00:00:15,873
+00:00:08,631 --> 00:00:12,566
 Season Two ends with a checklist staff engineers actually use.
 
 4
-00:00:15,873 --> 00:00:21,164
+00:00:12,566 --> 00:00:16,754
 Security, data, ops, and rollback belong in the same conversation.
 
 5
-00:00:21,164 --> 00:00:26,134
+00:00:16,754 --> 00:00:20,689
 Interviews love candidates who think past the happy-path demo.
 
 6
-00:00:26,134 --> 00:00:31,906
+00:00:20,689 --> 00:00:25,258
 Today — the production readiness capstone for The Java Story Season Two.
 
 7
-00:00:31,906 --> 00:00:34,060
+00:00:25,258 --> 00:00:27,076
 Episode Eighty-Five.
 
 8
-00:00:34,060 --> 00:00:37,292
+00:00:27,076 --> 00:00:29,804
 Production Readiness Capstone.
 
 9
-00:00:37,292 --> 00:00:39,983
+00:00:29,804 --> 00:00:32,036
 A practical readiness checklist.
 
 10
-00:00:39,983 --> 00:00:45,450
+00:00:32,036 --> 00:00:36,570
 SLOs defined — latency, availability, freshness where it matters.
 
 11
-00:00:45,450 --> 00:00:50,916
+00:00:36,570 --> 00:00:41,105
 Dashboards and alerts with runnable runbooks — not vanity graphs.
 
 12
-00:00:50,916 --> 00:00:55,962
+00:00:41,105 --> 00:00:45,290
 Authn, authz, secrets, and dependency upgrades on a cadence.
 
 13
-00:00:55,962 --> 00:01:01,261
+00:00:45,290 --> 00:00:49,685
 Backups, migrations, and a tested rollback or forward-fix path.
 
 14
-00:01:01,261 --> 00:01:05,718
+00:00:49,685 --> 00:00:53,382
 Load and failure tests for the hottest user journeys.
 
 15
-00:01:05,718 --> 00:01:08,959
+00:00:53,382 --> 00:00:55,867
 Release engineering that reduces fear.
 
 16
-00:01:08,959 --> 00:01:13,907
+00:00:55,867 --> 00:00:59,660
 Small, reversible deploys — feature flags for risky paths.
 
 17
-00:01:13,907 --> 00:01:17,916
+00:00:59,660 --> 00:01:02,734
 Canaries and health probes before full traffic.
 
 18
-00:01:17,916 --> 00:01:23,801
+00:01:02,734 --> 00:01:07,246
 Migrations expand then contract — never lock the fleet on a long DDL.
 
 19
-00:01:23,801 --> 00:01:28,237
+00:01:07,246 --> 00:01:10,647
 Config changes are releases — review them like code.
 
 20
-00:01:28,237 --> 00:01:33,184
+00:01:10,647 --> 00:01:14,440
 If you cannot roll back, you have not finished the design.
 
 21
-00:01:33,184 --> 00:01:35,848
+00:01:14,440 --> 00:01:16,392
 On-call is part of architecture.
 
 22
-00:01:35,848 --> 00:01:40,178
+00:01:16,392 --> 00:01:19,564
 Every critical dependency has an owner and an alert.
 
 23
-00:01:40,178 --> 00:01:45,007
+00:01:19,564 --> 00:01:23,102
 Pages should be rare, actionable, and tied to user impact.
 
 24
-00:01:45,007 --> 00:01:51,168
+00:01:23,102 --> 00:01:27,615
 Incident reviews blame process and design — not the person awake at three.
 
 25
-00:01:51,168 --> 00:01:57,079
+00:01:27,615 --> 00:01:31,946
 Game days practice breaker and degrade paths from Episode Seventy-Nine.
 
 26
-00:01:57,079 --> 00:02:03,074
+00:01:31,946 --> 00:01:36,338
 Handoffs need written context — tribal knowledge pages the wrong people.
 
 27
-00:02:03,074 --> 00:02:07,852
+00:01:36,338 --> 00:01:40,476
 Staff-level interview lens — connect the whole series.
 
 28
-00:02:07,852 --> 00:02:12,452
+00:01:40,476 --> 00:01:44,460
 Language and JVM — correct and efficient under load.
 
 29
-00:02:12,452 --> 00:02:16,965
+00:01:44,460 --> 00:01:48,368
 Spring platform — IoC, Boot, data, security, tests.
 
 30
-00:02:16,965 --> 00:02:21,742
+00:01:48,368 --> 00:01:52,506
 Distributed design — boundaries, events, caches, APIs.
 
 31
-00:02:21,742 --> 00:02:26,431
+00:01:52,506 --> 00:01:56,567
 Operate what you propose — observe, degrade, recover.
 
 32
-00:02:26,431 --> 00:02:31,740
+00:01:56,567 --> 00:02:01,164
 Judgment — boring operable designs beat clever fragile ones.
 
 33
-00:02:31,740 --> 00:02:36,413
+00:02:01,164 --> 00:02:04,903
 Capstone narrative — launch a payments-backed checkout.
 
 34
-00:02:36,413 --> 00:02:41,087
+00:02:04,903 --> 00:02:08,642
 Clarify consistency for money — strong where it counts.
 
 35
-00:02:41,087 --> 00:02:46,270
+00:02:08,642 --> 00:02:12,789
 Sync authorize payment — async notify fulfillment via outbox.
 
 36
-00:02:46,270 --> 00:02:51,284
+00:02:12,789 --> 00:02:16,800
 Cache catalog reads — never cache ledger balances casually.
 
 37
-00:02:51,284 --> 00:02:57,147
+00:02:16,800 --> 00:02:21,491
 Secure APIs, trace every request, break circuits on payment timeouts.
 
 38
-00:02:57,147 --> 00:03:01,990
+00:02:21,491 --> 00:02:25,366
 Ship behind a flag — canary, watch SLOs, keep a rollback.
 
 39
-00:03:01,990 --> 00:03:03,927
+00:02:25,366 --> 00:02:26,897
 Three common mistakes.
 
 40
-00:03:03,927 --> 00:03:08,947
+00:02:26,897 --> 00:02:30,865
 One — calling a demo production — no alerts, no rollback.
 
 41
-00:03:08,947 --> 00:03:13,966
+00:02:30,865 --> 00:02:34,833
 Two — toil-heavy on-call — noisy pages nobody can act on.
 
 42
-00:03:13,966 --> 00:03:19,338
+00:02:34,833 --> 00:02:39,079
 Three — architecture slides without a migration or data plan.
 
 43
-00:03:19,338 --> 00:03:24,093
+00:02:39,079 --> 00:02:42,838
 Also — ignoring security until the week before launch.
 
 44
-00:03:24,093 --> 00:03:29,024
+00:02:42,838 --> 00:02:46,736
 Readiness is continuous — not a single checkbox meeting.
 
 45
-00:03:29,024 --> 00:03:33,164
+00:02:46,736 --> 00:02:50,126
 Final interview framing — are you production-ready?
 
 46
-00:03:33,164 --> 00:03:37,060
+00:02:50,126 --> 00:02:53,317
 State SLOs, risks, and the hottest user journey.
 
 47
-00:03:37,060 --> 00:03:41,606
+00:02:53,317 --> 00:02:57,039
 Explain auth, data ownership, and failure modes briefly.
 
 48
-00:03:41,606 --> 00:03:45,827
+00:02:57,039 --> 00:03:00,495
 Describe how you will observe, alert, and roll back.
 
 49
-00:03:45,827 --> 00:03:50,211
+00:03:00,495 --> 00:03:04,085
 Name what you would not build yet — scope is judgment.
 
 50
-00:03:50,211 --> 00:03:54,594
+00:03:04,085 --> 00:03:07,674
 That is the Season Two standard — ship with eyes open.
 
 51
-00:03:54,594 --> 00:03:59,810
+00:03:07,674 --> 00:03:11,759
 Season Two complete — production systems from cache to readiness.
 
 52
-00:03:59,810 --> 00:04:04,785
+00:03:11,759 --> 00:03:15,655
 The Java Story now spans handbook plus production bonus track.
 
 53
-00:04:04,785 --> 00:04:09,760
+00:03:15,655 --> 00:03:19,551
 Rebuild any episode from its script when you need a refresher.
 
 54
-00:04:09,760 --> 00:04:13,852
+00:03:19,551 --> 00:03:22,756
 Go ship something measurable — and operate it well.
