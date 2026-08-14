@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:05,124
+Sealed types close hierarchies. Modules close the classpath.
+
+2
+00:00:05,124 --> 00:00:11,102
+For years, every public type was fair game if the JAR was on the path.
+
+3
+00:00:11,102 --> 00:00:16,739
+JPMS — the Java Platform Module System — adds explicit boundaries.
+
+4
+00:00:16,739 --> 00:00:21,436
+What you require. What you export. What stays internal.
+
+5
+00:00:21,436 --> 00:00:27,927
+Today — module-info, strong encapsulation, and when modules earn their keep.
+
+6
+00:00:27,927 --> 00:00:32,026
+Packages organize names. Modules organize trust.
+
+7
+00:00:32,026 --> 00:00:33,914
+Episode Twenty.
+
+8
+00:00:33,914 --> 00:00:38,948
+Modules and JPMS — strong encapsulation.
+
+9
+00:00:38,948 --> 00:00:40,605
+Why modules exist.
+
+10
+00:00:40,605 --> 00:00:46,312
+The classpath is flat — order and accidents decide visibility.
+
+11
+00:00:46,312 --> 00:00:51,926
+Split packages, accidental API leakage, brittle shading wars.
+
+12
+00:00:51,926 --> 00:00:57,449
+Modules declare dependencies and exported packages up front.
+
+13
+00:00:57,449 --> 00:01:03,800
+The JVM can refuse illegal access instead of hoping conventions hold.
+
+14
+00:01:03,800 --> 00:01:07,206
+Reliability beats classpath folklore.
+
+15
+00:01:07,206 --> 00:01:10,413
+module-info.java is the contract.
+
+16
+00:01:10,413 --> 00:01:12,843
+module com.shop.payments.
+
+17
+00:01:12,843 --> 00:01:17,120
+requires java.sql. requires com.shop.common.
+
+18
+00:01:17,120 --> 00:01:20,036
+exports com.shop.payments.api.
+
+19
+00:01:20,036 --> 00:01:25,382
+Internal packages stay hidden even if types are public.
+
+20
+00:01:25,382 --> 00:01:29,464
+Public no longer means globally reachable.
+
+21
+00:01:29,464 --> 00:01:31,482
+Know the key directives.
+
+22
+00:01:31,482 --> 00:01:37,790
+requires — and requires transitive when consumers need your dependency too.
+
+23
+00:01:37,790 --> 00:01:43,256
+exports — and exports to specific modules when the API is narrow.
+
+24
+00:01:43,256 --> 00:01:48,891
+opens — for reflection frameworks that need deep access at runtime.
+
+25
+00:01:48,891 --> 00:01:54,021
+provides and uses — for service loading with clear providers.
+
+26
+00:01:54,021 --> 00:01:58,226
+Each keyword is a deliberate encapsulation choice.
+
+27
+00:01:58,226 --> 00:02:01,242
+Reality check — the unnamed module.
+
+28
+00:02:01,242 --> 00:02:06,843
+Classic classpath JARs still run. They become the unnamed module.
+
+29
+00:02:06,843 --> 00:02:12,961
+They can read everything, but modular code cannot require them by name.
+
+30
+00:02:12,961 --> 00:02:18,820
+Migration is often incremental — modularize libraries you own first.
+
+31
+00:02:18,820 --> 00:02:23,731
+Automatic modules bridge JARs with a derived module name.
+
+32
+00:02:23,731 --> 00:02:28,212
+Plan the boundary. Do not flip a monolith overnight.
+
+33
+00:02:28,212 --> 00:02:29,722
+When modules help.
+
+34
+00:02:29,722 --> 00:02:36,183
+Platform libraries. Large multi-JAR systems. Clear API versus internal split.
+
+35
+00:02:36,183 --> 00:02:42,476
+When you need reliable encapsulation and smaller runtime images with jlink.
+
+36
+00:02:42,476 --> 00:02:49,188
+When not — tiny apps where classpath simplicity wins and tooling friction hurts.
+
+37
+00:02:49,188 --> 00:02:55,481
+Spring Boot apps often stay on the classpath path unless you have a reason.
+
+38
+00:02:55,481 --> 00:03:01,606
+Use JPMS when boundaries are a product feature — not a fashion statement.
+
+39
+00:03:01,606 --> 00:03:03,464
+Three common mistakes.
+
+40
+00:03:03,464 --> 00:03:08,952
+One — exporting everything — encapsulation theater with no teeth.
+
+41
+00:03:08,952 --> 00:03:15,200
+Two — opens for convenience forever instead of narrowing reflective needs.
+
+42
+00:03:15,200 --> 00:03:21,111
+Three — split packages across modules — the JVM will not forgive that.
+
+43
+00:03:21,111 --> 00:03:27,359
+Also — ignoring transitive requires until consumers break at compile time.
+
+44
+00:03:27,359 --> 00:03:31,328
+Module graphs should be boring and intentional.
+
+45
+00:03:31,328 --> 00:03:36,918
+Interview question — what does JPMS add over packages and JARs?
+
+46
+00:03:36,918 --> 00:03:41,443
+Explicit module dependencies and exported packages.
+
+47
+00:03:41,443 --> 00:03:46,856
+Strong encapsulation — public is not enough to be accessible.
+
+48
+00:03:46,856 --> 00:03:52,445
+Mention module-info, requires, exports, and the unnamed module.
+
+49
+00:03:52,445 --> 00:03:55,462
+Bonus — jlink for custom runtimes.
+
+50
+00:03:55,462 --> 00:04:00,786
+That answer separates classpath history from modular design.
+
+51
+00:04:00,786 --> 00:04:06,905
+Language features are in place. Next — the collections you use every day.
+
+52
+00:04:06,905 --> 00:04:11,682
+Episode Twenty-One — Lists, and the java.util foundation.
+
+53
+00:04:11,682 --> 00:04:16,879
+Interfaces, implementations, and choosing the right structure.
+
+54
+00:04:16,879 --> 00:04:18,052
+See you there.
