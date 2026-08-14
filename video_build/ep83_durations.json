@@ -1,0 +1,12 @@
+{
+  "hook": 35.352,
+  "title": 5.016,
+  "why_async": 26.832,
+  "events_commands": 29.64,
+  "outbox": 32.784,
+  "consumers": 28.848,
+  "when_not": 30.648,
+  "mistakes": 29.424,
+  "interview": 28.248,
+  "teaser": 14.352
+}

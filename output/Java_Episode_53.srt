@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,599
+Episode Fifty-Two decoded bytecode on the operand stack.
+
+2
+00:00:04,599 --> 00:00:09,773
+But where do method frames and objects actually live in memory?
+
+3
+00:00:09,773 --> 00:00:15,522
+Each thread owns a stack of frames — locals and operand stacks inside.
+
+4
+00:00:15,522 --> 00:00:20,450
+The heap holds every object your program allocates with new.
+
+5
+00:00:20,450 --> 00:00:25,871
+Class metadata lives in metaspace — separate from the object heap.
+
+6
+00:00:25,871 --> 00:00:30,634
+Today — heap and stack, frames, locals, and object layout.
+
+7
+00:00:30,634 --> 00:00:33,204
+Episode Fifty-Three.
+
+8
+00:00:33,204 --> 00:00:35,132
+Heap and Stack.
+
+9
+00:00:35,132 --> 00:00:40,728
+Each Java thread has its own call stack — one frame per active method.
+
+10
+00:00:40,728 --> 00:00:47,764
+A frame stores local variables, the operand stack, and a reference to the constant pool.
+
+11
+00:00:47,764 --> 00:00:52,961
+When a method is invoked, a new frame is pushed — return pops it.
+
+12
+00:00:52,961 --> 00:00:59,037
+StackOverflowError means too many nested calls — usually infinite recursion.
+
+13
+00:00:59,037 --> 00:01:04,313
+Frames are thread-local — no sharing between threads on the stack.
+
+14
+00:01:04,313 --> 00:01:09,750
+The stack is fast and automatically reclaimed when a method returns.
+
+15
+00:01:09,750 --> 00:01:14,911
+Local variable slot zero is always this for instance methods.
+
+16
+00:01:14,911 --> 00:01:20,580
+Parameters occupy the next slots — iload and istore reference them.
+
+17
+00:01:20,580 --> 00:01:25,825
+Wide types like long and double consume two consecutive slots.
+
+18
+00:01:25,825 --> 00:01:31,917
+The operand stack is separate from locals — temporary computation space.
+
+19
+00:01:31,917 --> 00:01:36,740
+Compiler assigns slot numbers — visible in javap with -v.
+
+20
+00:01:36,740 --> 00:01:41,224
+Locals die with the frame — no manual cleanup needed.
+
+21
+00:01:41,224 --> 00:01:45,289
+Every new keyword allocates an object on the heap.
+
+22
+00:01:45,289 --> 00:01:50,493
+All threads share the heap — objects are visible across threads.
+
+23
+00:01:50,493 --> 00:01:56,021
+References on the stack or in other objects point to heap instances.
+
+24
+00:01:56,021 --> 00:02:01,631
+Heap memory is managed by the garbage collector — not freed manually.
+
+25
+00:02:01,631 --> 00:02:05,859
+OutOfMemoryError means the heap cannot grow further.
+
+26
+00:02:05,859 --> 00:02:11,306
+Large object graphs live here — caches, collections, domain models.
+
+27
+00:02:11,306 --> 00:02:16,626
+A heap object starts with a mark word and a klass pointer header.
+
+28
+00:02:16,626 --> 00:02:23,093
+Instance fields follow the header — primitives inline, references are pointers.
+
+29
+00:02:23,093 --> 00:02:28,823
+Arrays store length then elements — int arrays pack ints contiguously.
+
+30
+00:02:28,823 --> 00:02:34,143
+Object size depends on header plus fields plus alignment padding.
+
+31
+00:02:34,143 --> 00:02:40,855
+Compressed oops shorten reference fields on 64-bit JVMs with less than 32 GB heap.
+
+32
+00:02:40,855 --> 00:02:47,076
+Understanding layout helps reason about memory footprint and cache behavior.
+
+33
+00:02:47,076 --> 00:02:54,026
+Class metadata — method tables, constant pools, field layouts — lives in metaspace.
+
+34
+00:02:54,026 --> 00:03:00,306
+Metaspace replaced PermGen in Java 8 — native memory, not part of the heap.
+
+35
+00:03:00,306 --> 00:03:05,665
+Grows as classes load — reclaimed when ClassLoader is collected.
+
+36
+00:03:05,665 --> 00:03:11,359
+ClassLoader leaks can exhaust metaspace — a common production issue.
+
+37
+00:03:11,359 --> 00:03:17,137
+Flag MaxMetaspaceSize caps growth — default is effectively unlimited.
+
+38
+00:03:17,137 --> 00:03:21,742
+Heap holds objects — metaspace holds class definitions.
+
+39
+00:03:21,742 --> 00:03:23,606
+Three common mistakes.
+
+40
+00:03:23,606 --> 00:03:30,128
+One — storing large objects on the stack — only references live on the stack.
+
+41
+00:03:30,128 --> 00:03:35,973
+Two — assuming stack variables are thread-safe — only if not escaped.
+
+42
+00:03:35,973 --> 00:03:42,072
+Three — ignoring metaspace when leaking ClassLoaders in hot-reload apps.
+
+43
+00:03:42,072 --> 00:03:47,070
+Also — confusing heap size with total JVM memory footprint.
+
+44
+00:03:47,070 --> 00:03:51,560
+Know which memory region each piece of data occupies.
+
+45
+00:03:51,560 --> 00:03:55,370
+Interview question — heap versus stack in Java?
+
+46
+00:03:55,370 --> 00:04:01,611
+Stack — per-thread frames with locals and operand stacks — automatic cleanup.
+
+47
+00:04:01,611 --> 00:04:05,583
+Heap — shared object storage — garbage collected.
+
+48
+00:04:05,583 --> 00:04:09,231
+References on stack point to objects on heap.
+
+49
+00:04:09,231 --> 00:04:14,500
+Metaspace holds class metadata — separate from heap since Java 8.
+
+50
+00:04:14,500 --> 00:04:21,066
+StackOverflowError versus OutOfMemoryError — different regions, different causes.
+
+51
+00:04:21,066 --> 00:04:27,119
+Objects on the heap outlive their frames — something must reclaim them.
+
+52
+00:04:27,119 --> 00:04:31,041
+Episode Fifty-Four — Garbage Collection Intro.
+
+53
+00:04:31,041 --> 00:04:35,986
+Roots, mark-sweep, generations, and stop-the-world pauses.
+
+54
+00:04:35,986 --> 00:04:37,180
+See you there.

@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:05,777
+Reflection can dig into types. Records make simple data types honest.
+
+2
+00:00:05,777 --> 00:00:12,809
+So much Java was getters, setters, equals, hashCode, toString — for a bag of fields.
+
+3
+00:00:12,809 --> 00:00:16,911
+Records say — this is a transparent data carrier.
+
+4
+00:00:16,911 --> 00:00:19,674
+Less boilerplate. Clearer intent.
+
+5
+00:00:19,674 --> 00:00:25,367
+Today we use records where they shine — and avoid where they do not.
+
+6
+00:00:25,367 --> 00:00:29,218
+Data with a contract — not a ceremony factory.
+
+7
+00:00:29,218 --> 00:00:31,098
+Episode Eighteen.
+
+8
+00:00:31,098 --> 00:00:35,852
+Records — compact, immutable data carriers.
+
+9
+00:00:35,852 --> 00:00:39,459
+A record declaration is short on purpose.
+
+10
+00:00:39,459 --> 00:00:42,978
+record Money of currency and minorUnits.
+
+11
+00:00:42,978 --> 00:00:47,289
+The compiler generates the canonical constructor.
+
+12
+00:00:47,289 --> 00:00:51,424
+Also accessors, equals, hashCode, and toString.
+
+13
+00:00:51,424 --> 00:00:56,439
+Components are final — immutability is the default story.
+
+14
+00:00:56,439 --> 00:01:00,486
+You describe the data. Java handles the noise.
+
+15
+00:01:00,486 --> 00:01:05,707
+Accessors are named after components — currency, minorUnits.
+
+16
+00:01:05,707 --> 00:01:09,796
+Not getCurrency — unless you add that yourself.
+
+17
+00:01:09,796 --> 00:01:15,191
+That style is intentional — records are not classic JavaBeans.
+
+18
+00:01:15,191 --> 00:01:20,412
+Serialization libraries increasingly understand both styles.
+
+19
+00:01:20,412 --> 00:01:24,154
+Read the accessor names as part of the API.
+
+20
+00:01:24,154 --> 00:01:27,112
+Keep component names domain-clear.
+
+21
+00:01:27,112 --> 00:01:29,523
+Records can still validate.
+
+22
+00:01:29,523 --> 00:01:33,809
+Use a compact constructor to enforce invariants.
+
+23
+00:01:33,809 --> 00:01:38,274
+Reject null currency. Reject negative minor units.
+
+24
+00:01:38,274 --> 00:01:42,292
+You get immutability and guardrails together.
+
+25
+00:01:42,292 --> 00:01:46,579
+That is why records work well for value objects.
+
+26
+00:01:46,579 --> 00:01:50,954
+Invalid data should fail at creation — not later.
+
+27
+00:01:50,954 --> 00:01:53,130
+When to choose a record.
+
+28
+00:01:53,130 --> 00:01:58,209
+DTOs. Event payloads. Value objects. Map keys with care.
+
+29
+00:01:58,209 --> 00:02:03,559
+When identity is the data — not a mutable lifecycle entity.
+
+30
+00:02:03,559 --> 00:02:10,269
+When not — JPA entities with mutable state and proxies often want classes.
+
+31
+00:02:10,269 --> 00:02:14,078
+Do not force records into every hierarchy.
+
+32
+00:02:14,078 --> 00:02:17,796
+Use them where transparency is the point.
+
+33
+00:02:17,796 --> 00:02:19,216
+Know the limits.
+
+34
+00:02:19,216 --> 00:02:24,896
+Records are implicitly final — no subclassing the record itself.
+
+35
+00:02:24,896 --> 00:02:27,470
+You can implement interfaces.
+
+36
+00:02:27,470 --> 00:02:32,973
+You can add methods — but do not turn a record into a service.
+
+37
+00:02:32,973 --> 00:02:38,831
+If behavior grows complex, extract a real domain type with intent.
+
+38
+00:02:38,831 --> 00:02:44,422
+Records carry data. Services orchestrate. Keep the roles clean.
+
+39
+00:02:44,422 --> 00:02:46,326
+Three common mistakes.
+
+40
+00:02:46,326 --> 00:02:51,605
+One — mutable components like lists without defensive copies.
+
+41
+00:02:51,605 --> 00:02:57,316
+Two — using records as entities while expecting mutable ORM magic.
+
+42
+00:02:57,316 --> 00:03:02,508
+Three — huge records that should have been structured types.
+
+43
+00:03:02,508 --> 00:03:06,576
+Also — ignoring compact-constructor validation.
+
+44
+00:03:06,576 --> 00:03:11,768
+Immutability is only as strong as the components you expose.
+
+45
+00:03:11,768 --> 00:03:15,516
+Interview question — what is a Java record?
+
+46
+00:03:15,516 --> 00:03:21,183
+A transparent, immutable data carrier with generated boilerplate.
+
+47
+00:03:21,183 --> 00:03:26,500
+Canonical constructor, accessors, equals, hashCode, toString.
+
+48
+00:03:26,500 --> 00:03:32,515
+Great for DTOs and value objects — not a replacement for all classes.
+
+49
+00:03:32,515 --> 00:03:36,351
+Mention compact constructors for invariants.
+
+50
+00:03:36,351 --> 00:03:39,402
+That answer is crisp and practical.
+
+51
+00:03:39,402 --> 00:03:44,710
+Data carriers are clean. Next — restricting hierarchies.
+
+52
+00:03:44,710 --> 00:03:47,933
+Episode Nineteen — sealed classes.
+
+53
+00:03:47,933 --> 00:03:52,293
+Controlled subclasses and exhaustive switches.
+
+54
+00:03:52,293 --> 00:03:53,620
+See you there.

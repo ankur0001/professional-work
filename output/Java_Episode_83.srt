@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:05,393
+Episode Eighty-Two covered API contracts — versioning, idempotency, pagination.
+
+2
+00:00:05,393 --> 00:00:09,352
+Not every collaboration should be a synchronous HTTP call.
+
+3
+00:00:09,352 --> 00:00:14,062
+Event-driven architecture decouples producers from consumers in time.
+
+4
+00:00:14,062 --> 00:00:19,045
+Kafka, queues, and the transactional outbox appear constantly in designs.
+
+5
+00:00:19,045 --> 00:00:23,823
+Async is powerful — and a great way to lose data if you skip patterns.
+
+6
+00:00:23,823 --> 00:00:28,738
+Today — events versus commands, outbox, consumers, and failure handling.
+
+7
+00:00:28,738 --> 00:00:30,576
+Episode Eighty-Three.
+
+8
+00:00:30,576 --> 00:00:32,852
+Event-Driven Architecture.
+
+9
+00:00:32,852 --> 00:00:34,743
+Why teams reach for events.
+
+10
+00:00:34,743 --> 00:00:38,456
+Fan-out — one fact notifies many interested services.
+
+11
+00:00:38,456 --> 00:00:42,940
+Temporal decoupling — producer stays up when a consumer is down.
+
+12
+00:00:42,940 --> 00:00:47,423
+Smooth load — buffers absorb spikes that would melt sync chains.
+
+13
+00:00:47,423 --> 00:00:51,346
+Auditability — a log of facts becomes a product feature.
+
+14
+00:00:51,346 --> 00:00:55,830
+Cost — more moving parts, harder end-to-end debugging — earn it.
+
+15
+00:00:55,830 --> 00:00:58,898
+Events and commands are not the same speech act.
+
+16
+00:00:58,898 --> 00:01:03,308
+A command asks a specific service to do work — often expects a reply.
+
+17
+00:01:03,308 --> 00:01:07,079
+An event states a fact that already happened — OrderPlaced.
+
+18
+00:01:07,079 --> 00:01:11,234
+Name events in past tense — consumers decide their own reactions.
+
+19
+00:01:11,234 --> 00:01:15,005
+Do not hide commands inside topics without clear ownership.
+
+20
+00:01:15,005 --> 00:01:19,096
+Schema evolution — additive fields, careful compatibility rules.
+
+21
+00:01:19,096 --> 00:01:21,804
+Dual-write is the classic distributed bug.
+
+22
+00:01:21,804 --> 00:01:26,254
+Writing the database and publishing a message separately can diverge.
+
+23
+00:01:26,254 --> 00:01:31,284
+Transactional outbox — same DB transaction stores business row and outbox row.
+
+24
+00:01:31,284 --> 00:01:35,347
+A publisher relay reads the outbox and emits to Kafka reliably.
+
+25
+00:01:35,347 --> 00:01:39,216
+Inbox or idempotent consumers handle at-least-once delivery.
+
+26
+00:01:39,216 --> 00:01:43,730
+If you cannot explain outbox, do not claim exactly-once in interviews.
+
+27
+00:01:43,730 --> 00:01:47,390
+Consumer design decides whether async helps or hurts.
+
+28
+00:01:47,390 --> 00:01:50,844
+Make handlers idempotent — duplicates will arrive.
+
+29
+00:01:50,844 --> 00:01:55,194
+Poison messages need a dead-letter path — not infinite retries.
+
+30
+00:01:55,194 --> 00:01:59,200
+Lag is a first-class metric — silent lag is silent outage.
+
+31
+00:01:59,200 --> 00:02:03,758
+Ordering — partition keys preserve per-entity order when required.
+
+32
+00:02:03,758 --> 00:02:07,764
+Backpressure — slow consumers must not silently drop work.
+
+33
+00:02:07,764 --> 00:02:09,586
+When not to go event-driven.
+
+34
+00:02:09,586 --> 00:02:13,946
+A single team, single deployable, simple CRUD — sync may be enough.
+
+35
+00:02:13,946 --> 00:02:18,111
+User needs an immediate answer — keep the request-response path.
+
+36
+00:02:18,111 --> 00:02:22,537
+You lack ops for brokers, schemas, and lag alerts — defer the split.
+
+37
+00:02:22,537 --> 00:02:27,027
+Chatty pseudo-events that are really RPC over topics — worst of both.
+
+38
+00:02:27,027 --> 00:02:32,038
+Choose async for clear fan-out or durability needs — not for resume keywords.
+
+39
+00:02:32,038 --> 00:02:33,550
+Three common mistakes.
+
+40
+00:02:33,550 --> 00:02:38,363
+One — dual-write without outbox — lost or double events under failure.
+
+41
+00:02:38,363 --> 00:02:42,144
+Two — non-idempotent consumers — retries corrupt state.
+
+42
+00:02:42,144 --> 00:02:46,613
+Three — no lag alerts — discover backlog when customers complain.
+
+43
+00:02:46,613 --> 00:02:51,288
+Also — giant event payloads that couple every consumer to internals.
+
+44
+00:02:51,288 --> 00:02:55,688
+Publish stable facts — keep fat details behind APIs when needed.
+
+45
+00:02:55,688 --> 00:02:59,626
+Interview question — how do you publish OrderPlaced safely?
+
+46
+00:02:59,626 --> 00:03:03,296
+Write order and outbox row in one database transaction.
+
+47
+00:03:03,296 --> 00:03:06,900
+Relay publishes to the topic — at-least-once delivery.
+
+48
+00:03:06,900 --> 00:03:10,237
+Consumers key on event ID — idempotent processing.
+
+49
+00:03:10,237 --> 00:03:13,708
+Dead-letter poison messages — alert on consumer lag.
+
+50
+00:03:13,708 --> 00:03:17,178
+That is a senior answer — mechanisms, not buzzwords.
+
+51
+00:03:17,178 --> 00:03:21,103
+Architecture moves data — performance keeps users happy.
+
+52
+00:03:21,103 --> 00:03:24,117
+Episode Eighty-Four — Performance Playbook.
+
+53
+00:03:24,117 --> 00:03:28,183
+Measure, find bottlenecks, and fix the hottest path first.
+
+54
+00:03:28,183 --> 00:03:29,164
+See you there.
