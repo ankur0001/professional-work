@@ -1,0 +1,12 @@
+{
+  "hook": 26.376,
+  "title": 3.528,
+  "interpreter": 25.176,
+  "c1_c2": 26.136,
+  "hot_methods": 25.368,
+  "deoptimization": 23.616,
+  "compilation_tiers": 20.784,
+  "mistakes": 25.152,
+  "interview": 24.72,
+  "teaser": 13.368
+}

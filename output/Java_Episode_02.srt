@@ -1,0 +1,191 @@
+1
+00:00:00,000 --> 00:00:04,186
+In Episode One, we learned why Java survived.
+
+2
+00:00:04,186 --> 00:00:09,395
+But beginners still mix three names — JDK, JRE, and JVM.
+
+3
+00:00:09,395 --> 00:00:12,000
+They are not the same thing.
+
+4
+00:00:12,000 --> 00:00:16,186
+Today we separate them — clearly — on screen.
+
+5
+00:00:16,186 --> 00:00:17,636
+Episode Two.
+
+6
+00:00:17,636 --> 00:00:24,644
+JDK, JRE, and JVM — the three layers of the Java platform.
+
+7
+00:00:24,644 --> 00:00:27,151
+Look at these three boxes.
+
+8
+00:00:27,151 --> 00:00:31,491
+At the top — the JDK. Your developer toolkit.
+
+9
+00:00:31,491 --> 00:00:36,892
+In the middle — the JRE. What you need to run Java apps.
+
+10
+00:00:36,892 --> 00:00:42,582
+At the bottom — the JVM. The engine that executes bytecode.
+
+11
+00:00:42,582 --> 00:00:47,886
+JDK for develop. JRE for run. JVM is the engine inside.
+
+12
+00:00:47,886 --> 00:00:49,669
+Zoom into the JDK.
+
+13
+00:00:49,669 --> 00:00:53,731
+This is where javac lives — the compiler.
+
+14
+00:00:53,731 --> 00:00:59,675
+Also jar, jlink, jcmd, jmap, and Java Flight Recorder tools.
+
+15
+00:00:59,675 --> 00:01:06,016
+If you write code or debug production issues — you want the JDK.
+
+16
+00:01:06,016 --> 00:01:08,711
+The JRE is the runtime layer.
+
+17
+00:01:08,711 --> 00:01:15,030
+Libraries, launchers, and everything needed to start a Java process.
+
+18
+00:01:15,030 --> 00:01:18,097
+It does not include the compiler.
+
+19
+00:01:18,097 --> 00:01:24,602
+Modern installs often ship a JDK — but the runtime idea still matters.
+
+20
+00:01:24,602 --> 00:01:26,438
+And here is the JVM.
+
+21
+00:01:26,438 --> 00:01:32,222
+It loads class files, verifies bytecode, and runs your program.
+
+22
+00:01:32,222 --> 00:01:39,199
+HotSpot is the common implementation — interpreter, JIT, garbage collection.
+
+23
+00:01:39,199 --> 00:01:44,340
+Same bytecode contract. Different machines. Same result.
+
+24
+00:01:44,340 --> 00:01:46,031
+Follow the arrows.
+
+25
+00:01:46,031 --> 00:01:51,949
+Your .java file goes into javac — that tool comes from the JDK.
+
+26
+00:01:51,949 --> 00:01:55,237
+Out comes a .class file — bytecode.
+
+27
+00:01:55,237 --> 00:01:58,901
+The java launcher starts a JVM process.
+
+28
+00:01:58,901 --> 00:02:02,189
+The JVM reads bytecode and runs it.
+
+29
+00:02:02,189 --> 00:02:06,886
+That is the full path — develop, package, execute.
+
+30
+00:02:06,886 --> 00:02:09,206
+Now the production gotcha.
+
+31
+00:02:09,206 --> 00:02:13,220
+On screen — heap is only one slice of memory.
+
+32
+00:02:13,220 --> 00:02:18,662
+Also metaspace, thread stacks, code cache, and native memory.
+
+33
+00:02:18,662 --> 00:02:24,551
+If dash X m x equals your container limit — you leave no headroom.
+
+34
+00:02:24,551 --> 00:02:27,584
+Always leave room beyond the heap.
+
+35
+00:02:27,584 --> 00:02:29,450
+Three common mistakes.
+
+36
+00:02:29,450 --> 00:02:36,319
+One — shipping a full JDK into every tiny container when a slim runtime would do.
+
+37
+00:02:36,319 --> 00:02:43,612
+Two — compiling with Java twenty-one in CI, then running Java seventeen in production.
+
+38
+00:02:43,612 --> 00:02:48,954
+Three — treating the JVM as a black box until something breaks.
+
+39
+00:02:48,954 --> 00:02:55,626
+Interview question — what's the difference between JDK, JRE, and JVM?
+
+40
+00:02:55,626 --> 00:02:57,657
+Point to the diagram.
+
+41
+00:02:57,657 --> 00:02:59,784
+JVM executes bytecode.
+
+42
+00:02:59,784 --> 00:03:03,653
+JRE provides the runtime to launch apps.
+
+43
+00:03:03,653 --> 00:03:07,714
+JDK adds compilers and diagnostics on top.
+
+44
+00:03:07,714 --> 00:03:13,516
+Answer that calmly — and you sound like you've shipped Java.
+
+45
+00:03:13,516 --> 00:03:18,130
+Now the three names finally line up with the picture.
+
+46
+00:03:18,130 --> 00:03:21,438
+Next episode — Java program structure.
+
+47
+00:03:21,438 --> 00:03:26,313
+public class, main, packages — what every line is doing.
+
+48
+00:03:26,313 --> 00:03:28,838
+Episode Three. See you there.
