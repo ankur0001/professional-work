@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:05,892
+00:00:00,000 --> 00:00:04,832
 Threads often need to meet at a point — start together or wait for completion.
 
 2
-00:00:05,892 --> 00:00:12,312
+00:00:04,832 --> 00:00:10,098
 Synchronizers coordinate thread arrival and departure without shared data structures.
 
 3
-00:00:12,312 --> 00:00:17,297
+00:00:10,098 --> 00:00:14,187
 CountDownLatch — one thread waits until others finish a countdown.
 
 4
-00:00:17,297 --> 00:00:22,660
+00:00:14,187 --> 00:00:18,586
 CyclicBarrier — threads rendezvous at a barrier, then release together.
 
 5
-00:00:22,660 --> 00:00:27,268
+00:00:18,586 --> 00:00:22,365
 Semaphore — limit how many threads access a resource at once.
 
 6
-00:00:27,268 --> 00:00:31,498
+00:00:22,365 --> 00:00:25,834
 Today — the three core synchronizers and when each fits.
 
 7
-00:00:31,498 --> 00:00:34,102
+00:00:25,834 --> 00:00:27,760
 Episode Forty-Four.
 
 8
-00:00:34,102 --> 00:00:36,020
+00:00:27,760 --> 00:00:29,180
 Synchronizers.
 
 9
-00:00:36,020 --> 00:00:41,844
+00:00:29,180 --> 00:00:33,499
 CountDownLatch initializes with a count — typically the number of workers.
 
 10
-00:00:41,844 --> 00:00:46,960
+00:00:33,499 --> 00:00:37,293
 Each worker calls countDown when finished — the latch decrements.
 
 11
-00:00:46,960 --> 00:00:52,391
+00:00:37,293 --> 00:00:41,321
 await blocks until the count reaches zero — then all waiters proceed.
 
 12
-00:00:52,391 --> 00:00:56,799
+00:00:41,321 --> 00:00:44,589
 One-shot — cannot reset the count after it reaches zero.
 
 13
-00:00:56,799 --> 00:01:02,229
+00:00:44,589 --> 00:00:48,617
 Classic pattern — main thread waits for parallel startup or shutdown.
 
 14
-00:01:02,229 --> 00:01:08,526
+00:00:48,617 --> 00:00:53,286
 Example — wait for N services to finish initialization before accepting traffic.
 
 15
-00:01:08,526 --> 00:01:14,477
+00:00:53,286 --> 00:00:57,702
 CyclicBarrier sets a party count — the number of threads that must arrive.
 
 16
-00:01:14,477 --> 00:01:20,186
+00:00:57,702 --> 00:01:01,939
 Each thread calls await — the barrier releases when all parties arrive.
 
 17
-00:01:20,186 --> 00:01:25,332
+00:01:01,939 --> 00:01:05,758
 Reusable — after release, the barrier resets for the next cycle.
 
 18
-00:01:25,332 --> 00:01:30,398
+00:01:05,758 --> 00:01:09,518
 Optional barrier action runs once when the last thread arrives.
 
 19
-00:01:30,398 --> 00:01:35,947
+00:01:09,518 --> 00:01:13,635
 Use for phased parallel computation — each phase ends at the barrier.
 
 20
-00:01:35,947 --> 00:01:41,656
+00:01:13,635 --> 00:01:17,872
 BrokenBarrierException if a waiting thread is interrupted or times out.
 
 21
-00:01:41,656 --> 00:01:48,198
+00:01:17,872 --> 00:01:22,958
 Semaphore maintains a set of permits — acquire takes one, release returns one.
 
 22
-00:01:48,198 --> 00:01:52,811
+00:01:22,958 --> 00:01:26,544
 new Semaphore of N allows up to N concurrent accessors.
 
 23
-00:01:52,811 --> 00:01:58,095
+00:01:26,544 --> 00:01:30,652
 acquire blocks when no permits remain — release wakes a waiter.
 
 24
-00:01:58,095 --> 00:02:02,372
+00:01:30,652 --> 00:01:33,977
 tryAcquire with timeout avoids indefinite blocking.
 
 25
-00:02:02,372 --> 00:02:08,327
+00:01:33,977 --> 00:01:38,607
 Binary semaphore with one permit acts like a mutex — but not reentrant.
 
 26
-00:02:08,327 --> 00:02:14,114
+00:01:38,607 --> 00:01:43,106
 Use for connection pools, rate limiting, and bounded resource access.
 
 27
-00:02:14,114 --> 00:02:16,665
+00:01:43,106 --> 00:01:45,139
 Choosing the right synchronizer.
 
 28
-00:02:16,665 --> 00:02:22,005
+00:01:45,139 --> 00:01:49,395
 CountDownLatch — wait for a fixed number of events — one direction.
 
 29
-00:02:22,005 --> 00:02:26,628
+00:01:49,395 --> 00:01:53,080
 CyclicBarrier — threads meet repeatedly at the same point.
 
 30
-00:02:26,628 --> 00:02:31,092
+00:01:53,080 --> 00:01:56,637
 Semaphore — cap concurrent access to a limited resource.
 
 31
-00:02:31,092 --> 00:02:36,751
+00:01:56,637 --> 00:02:01,147
 Phaser offers flexible phase-based coordination — advanced alternative.
 
 32
-00:02:36,751 --> 00:02:42,012
+00:02:01,147 --> 00:02:05,340
 Exchanger swaps objects between two threads at a rendezvous point.
 
 33
-00:02:42,012 --> 00:02:44,504
+00:02:05,340 --> 00:02:07,475
 When to use each synchronizer.
 
 34
-00:02:44,504 --> 00:02:49,653
+00:02:07,475 --> 00:02:11,887
 Service startup gate — CountDownLatch until all workers ready.
 
 35
-00:02:49,653 --> 00:02:54,719
+00:02:11,887 --> 00:02:16,227
 Parallel matrix phases — CyclicBarrier between compute steps.
 
 36
-00:02:54,719 --> 00:02:59,619
+00:02:16,227 --> 00:02:20,426
 Database connection cap — Semaphore with pool size permits.
 
 37
-00:02:59,619 --> 00:03:04,270
+00:02:20,426 --> 00:02:24,411
 Fork-join style shutdown — latch counts completed tasks.
 
 38
-00:03:04,270 --> 00:03:09,502
+00:02:24,411 --> 00:02:28,894
 When not — simple flag — volatile or AtomicBoolean may suffice.
 
 39
-00:03:09,502 --> 00:03:11,264
+00:02:28,894 --> 00:02:30,355
 Three common mistakes.
 
 40
-00:03:11,264 --> 00:03:16,869
+00:02:30,355 --> 00:02:35,002
 One — reusing a CountDownLatch after count hits zero — it is one-shot.
 
 41
-00:03:16,869 --> 00:03:21,993
+00:02:35,002 --> 00:02:39,252
 Two — wrong party count on CyclicBarrier — threads hang forever.
 
 42
-00:03:21,993 --> 00:03:27,278
+00:02:39,252 --> 00:02:43,634
 Three — Semaphore acquire without matching release — permits leak.
 
 43
-00:03:27,278 --> 00:03:32,243
+00:02:43,634 --> 00:02:47,751
 Also — calling await on the only thread that should countDown.
 
 44
-00:03:32,243 --> 00:03:38,168
+00:02:47,751 --> 00:02:52,664
 Synchronizers coordinate timing — they do not protect mutable state alone.
 
 45
-00:03:38,168 --> 00:03:42,853
+00:02:52,664 --> 00:02:56,506
 Interview question — CountDownLatch versus CyclicBarrier?
 
 46
-00:03:42,853 --> 00:03:48,608
+00:02:56,506 --> 00:03:01,223
 CountDownLatch — one or more threads wait for others to finish events.
 
 47
-00:03:48,608 --> 00:03:53,211
+00:03:01,223 --> 00:03:04,998
 Count is decremented — cannot reset after reaching zero.
 
 48
-00:03:53,211 --> 00:03:59,047
+00:03:04,998 --> 00:03:09,783
 CyclicBarrier — threads rendezvous; all must arrive before any proceed.
 
 49
-00:03:59,047 --> 00:04:03,157
+00:03:09,783 --> 00:03:13,153
 Barrier resets and is reusable for the next cycle.
 
 50
-00:04:03,157 --> 00:04:08,418
+00:03:13,153 --> 00:03:17,466
 Semaphore limits concurrent access — different problem entirely.
 
 51
-00:04:08,418 --> 00:04:14,714
+00:03:17,466 --> 00:03:22,575
 Synchronizers coordinate arrival. What about passing work between threads?
 
 52
-00:04:14,714 --> 00:04:19,563
+00:03:22,575 --> 00:03:26,510
 Episode Forty-Five — BlockingQueue and Producer-Consumer.
 
 53
-00:04:19,563 --> 00:04:24,157
+00:03:26,510 --> 00:03:30,238
 Bounded queues, backpressure, and the classic pattern.
 
 54
-00:04:24,157 --> 00:04:25,348
+00:03:30,238 --> 00:03:31,204
 See you there.
