@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:05,974
+Episode Fifty-Seven showed heap dumps and MAT for memory leaks.
+
+2
+00:00:05,974 --> 00:00:11,853
+But production incidents need fast answers from a running JVM.
+
+3
+00:00:11,853 --> 00:00:17,068
+JDK ships diagnostic tools — no extra install required.
+
+4
+00:00:17,068 --> 00:00:22,567
+jcmd is the Swiss Army knife — list, trigger, and inspect.
+
+5
+00:00:22,567 --> 00:00:28,162
+jmap, jstack, and JFR each target a different runtime view.
+
+6
+00:00:28,162 --> 00:00:33,946
+Today — jcmd, jmap, jstack, and JFR for live JVM diagnostics.
+
+7
+00:00:33,946 --> 00:00:36,559
+Episode Fifty-Eight.
+
+8
+00:00:36,559 --> 00:00:38,780
+Diagnostic Tools.
+
+9
+00:00:38,780 --> 00:00:44,389
+jcmd sends diagnostic commands to a running Java process.
+
+10
+00:00:44,389 --> 00:00:49,507
+List JVMs with jcmd — shows PID and main class name.
+
+11
+00:00:49,507 --> 00:00:54,525
+jcmd <pid> help — lists every available subcommand.
+
+12
+00:00:54,525 --> 00:00:59,839
+VM.flags prints active JVM flags — verify your tuning.
+
+13
+00:00:59,839 --> 00:01:05,547
+GC.heap_info and GC.class_histogram — quick heap snapshot.
+
+14
+00:01:05,547 --> 00:01:11,550
+JFR.start and JFR.dump — record and export flight recordings.
+
+15
+00:01:11,550 --> 00:01:15,791
+jmap inspects heap layout and creates dumps.
+
+16
+00:01:15,791 --> 00:01:20,802
+jmap -heap <pid> — summary of generations and usage.
+
+17
+00:01:20,802 --> 00:01:26,585
+jmap -histo:live <pid> — object histogram of live instances.
+
+18
+00:01:26,585 --> 00:01:32,271
+jmap -dump:live,format=b,file=heap.hprof <pid> — full dump.
+
+19
+00:01:32,271 --> 00:01:38,632
+Prefer jcmd GC.heap_dump on modern JDK — same result, cleaner API.
+
+20
+00:01:38,632 --> 00:01:44,896
+Histogram first — confirms leak class before multi-gigabyte dump.
+
+21
+00:01:44,896 --> 00:01:50,452
+jstack captures thread stacks — essential for deadlocks and hangs.
+
+22
+00:01:50,452 --> 00:01:55,841
+jstack <pid> — prints every thread name, state, and stack trace.
+
+23
+00:01:55,841 --> 00:02:00,555
+Look for BLOCKED threads and circular lock dependencies.
+
+24
+00:02:00,555 --> 00:02:05,438
+jcmd <pid> Thread.print — equivalent output on modern JDK.
+
+25
+00:02:05,438 --> 00:02:10,994
+Take multiple samples seconds apart — distinguish transient waits.
+
+26
+00:02:10,994 --> 00:02:16,130
+Thread dump alone does not show heap — pair with jmap or JFR.
+
+27
+00:02:16,130 --> 00:02:23,047
+Java Flight Recorder — low-overhead event recorder built into the JDK.
+
+28
+00:02:23,047 --> 00:02:27,988
+Enable with -XX:+FlightRecorder or jcmd JFR.start.
+
+29
+00:02:27,988 --> 00:02:34,115
+Records GC, allocation, lock, and method samples continuously.
+
+30
+00:02:34,115 --> 00:02:41,032
+jcmd <pid> JFR.dump filename=rec.jfr — export for JDK Mission Control.
+
+31
+00:02:41,032 --> 00:02:47,554
+Allocation and OldObjectSample events help find leak sources live.
+
+32
+00:02:47,554 --> 00:02:54,372
+Production-safe when configured — microseconds of overhead per event.
+
+33
+00:02:54,372 --> 00:02:58,034
+A practical on-call diagnostic workflow.
+
+34
+00:02:58,034 --> 00:03:03,527
+Step one — jcmd <pid> help and VM.flags — confirm JVM state.
+
+35
+00:03:03,527 --> 00:03:08,929
+Step two — high CPU? async-profiler or JFR MethodProfiling.
+
+36
+00:03:08,929 --> 00:03:14,880
+Step three — high heap? GC.heap_info then histogram or heap dump.
+
+37
+00:03:14,880 --> 00:03:20,465
+Step four — stuck threads? Thread.print twice, check BLOCKED.
+
+38
+00:03:20,465 --> 00:03:26,782
+Document PID, timestamp, and command output for post-incident review.
+
+39
+00:03:26,782 --> 00:03:28,837
+Three common mistakes.
+
+40
+00:03:28,837 --> 00:03:35,375
+One — running jmap -heap on a 32-gig heap under load — long STW pause.
+
+41
+00:03:35,375 --> 00:03:42,474
+Two — single thread dump for deadlock — need two samples or JFR lock events.
+
+42
+00:03:42,474 --> 00:03:49,106
+Three — leaving JFR recording forever without rotation — disk fills up.
+
+43
+00:03:49,106 --> 00:03:55,457
+Also — using tools from a different JDK version than the target JVM.
+
+44
+00:03:55,457 --> 00:04:00,968
+Match JDK major version — diagnostic output formats change.
+
+45
+00:04:00,968 --> 00:04:06,768
+Interview question — how do you diagnose a production JVM issue?
+
+46
+00:04:06,768 --> 00:04:12,205
+jcmd — list processes, VM.flags, GC.heap_info, Thread.print.
+
+47
+00:04:12,205 --> 00:04:18,459
+jmap histogram or heap dump for memory — jstack for thread deadlocks.
+
+48
+00:04:18,459 --> 00:04:24,802
+JFR for continuous low-overhead profiling — export to Mission Control.
+
+49
+00:04:24,802 --> 00:04:31,146
+Sample under load — idle JVM hides contention and allocation hotspots.
+
+50
+00:04:31,146 --> 00:04:37,218
+Always capture timestamp, PID, and JDK version with every artifact.
+
+51
+00:04:37,218 --> 00:04:44,662
+Diagnostics show what the JVM does at runtime — the compiler optimizes before that.
+
+52
+00:04:44,662 --> 00:04:47,980
+Episode Fifty-Nine — Escape Analysis.
+
+53
+00:04:47,980 --> 00:04:53,540
+Stack allocation, scalar replacement, and when objects escape.
+
+54
+00:04:53,540 --> 00:04:54,796
+See you there.
