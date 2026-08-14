@@ -1,0 +1,179 @@
+1
+00:00:00,000 --> 00:00:04,378
+Packages organize types. Enums organize fixed choices.
+
+2
+00:00:04,378 --> 00:00:10,297
+PENDING. PAID. CANCELLED — states that should never be free-form strings.
+
+3
+00:00:10,297 --> 00:00:16,053
+An enum is a type-safe set of named constants — with room for behavior.
+
+4
+00:00:16,053 --> 00:00:20,513
+Today we replace magic strings with real domain states.
+
+5
+00:00:20,513 --> 00:00:26,026
+Treat enum structure as architecture you can see in the type system.
+
+6
+00:00:26,026 --> 00:00:27,697
+Episode Thirteen.
+
+7
+00:00:27,697 --> 00:00:32,612
+Enums — type-safe states instead of magic strings.
+
+8
+00:00:32,612 --> 00:00:35,709
+Declare an enum like a special class.
+
+9
+00:00:35,709 --> 00:00:40,146
+enum OrderStatus — PENDING, PAID, SHIPPED, CANCELLED.
+
+10
+00:00:40,146 --> 00:00:44,834
+Each constant is a singleton instance of that enum type.
+
+11
+00:00:44,834 --> 00:00:49,438
+Compare with equals-equals safely — identity is stable.
+
+12
+00:00:49,438 --> 00:00:55,046
+Switch expressions love enums — finite cases, clear exhaustiveness.
+
+13
+00:00:55,046 --> 00:01:00,822
+Folder path and package declaration must agree — same for enum files.
+
+14
+00:01:00,822 --> 00:01:03,762
+Enums can carry fields and methods.
+
+15
+00:01:03,762 --> 00:01:08,129
+Attach a display label. Attach a canTransition rule.
+
+16
+00:01:08,129 --> 00:01:12,329
+That keeps status logic next to the status itself.
+
+17
+00:01:12,329 --> 00:01:16,949
+Better than scattering string compares across services.
+
+18
+00:01:16,949 --> 00:01:24,676
+Feature teams and domain packages often fit better than pure layers — enums fit domains too.
+
+19
+00:01:24,676 --> 00:01:27,616
+Put behavior where the state lives.
+
+20
+00:01:27,616 --> 00:01:30,663
+Why not String status equals PAID?
+
+21
+00:01:30,663 --> 00:01:36,577
+Typos compile. Invalid states sneak in. Refactors miss call sites.
+
+22
+00:01:36,577 --> 00:01:40,698
+Enums make illegal states harder to represent.
+
+23
+00:01:40,698 --> 00:01:45,448
+Serialization still needs care — name versus ordinal.
+
+24
+00:01:45,448 --> 00:01:49,749
+Prefer name for APIs. Ordinal is a storage trap.
+
+25
+00:01:49,749 --> 00:01:56,738
+Honest names reduce wrong imports and wrong ownership — same for status names.
+
+26
+00:01:56,738 --> 00:02:00,765
+Need a set of flags? EnumSet is built for enums.
+
+27
+00:02:00,765 --> 00:02:02,863
+Fast. Compact. Type-safe.
+
+28
+00:02:02,863 --> 00:02:07,813
+Permission READ, WRITE, ADMIN — store combinations cleanly.
+
+29
+00:02:07,813 --> 00:02:14,105
+Better than bit masks scattered as magic ints — unless you truly need bits.
+
+30
+00:02:14,105 --> 00:02:18,636
+Choose the structure that matches how the set changes.
+
+31
+00:02:18,636 --> 00:02:20,581
+Three common mistakes.
+
+32
+00:02:20,581 --> 00:02:25,622
+One — Stringly typed statuses that drift across services.
+
+33
+00:02:25,622 --> 00:02:29,866
+Two — depending on ordinal in databases or APIs.
+
+34
+00:02:29,866 --> 00:02:35,349
+Three — stuffing volatile business config into enum constants.
+
+35
+00:02:35,349 --> 00:02:40,124
+Also — giant enums that should have been a data table.
+
+36
+00:02:40,124 --> 00:02:45,430
+Enums model fixed vocabularies — not every changing catalog.
+
+37
+00:02:45,430 --> 00:02:50,619
+Interview question — why prefer enums over string constants?
+
+38
+00:02:50,619 --> 00:02:55,634
+Type safety. Exhaustive switches. Refactor-friendly names.
+
+39
+00:02:55,634 --> 00:02:59,698
+Constants are real objects — can hold behavior.
+
+40
+00:02:59,698 --> 00:03:04,973
+Avoid ordinal for persistence. Prefer name or explicit codes.
+
+41
+00:03:04,973 --> 00:03:08,000
+That answer shows production sense.
+
+42
+00:03:08,000 --> 00:03:13,675
+Fixed states are clear. Next — when primitives become objects.
+
+43
+00:03:13,675 --> 00:03:17,610
+Episode Fourteen — wrappers and autoboxing.
+
+44
+00:03:17,610 --> 00:03:21,729
+Integer, nullability, and hidden allocations.
+
+45
+00:03:21,729 --> 00:03:23,010
+See you there.

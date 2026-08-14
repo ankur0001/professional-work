@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:05,332
+Episode Sixty-Nine covered structural patterns — adapting, wrapping, and composing.
+
+2
+00:00:05,332 --> 00:00:10,087
+Behavioral patterns focus on algorithms and communication between objects.
+
+3
+00:00:10,087 --> 00:00:14,648
+They let you vary what happens without rewriting call sites every time.
+
+4
+00:00:14,648 --> 00:00:19,788
+Strategy swaps algorithms — Observer broadcasts events — Command queues actions.
+
+5
+00:00:19,788 --> 00:00:24,221
+These patterns dominate service code and interview whiteboards alike.
+
+6
+00:00:24,221 --> 00:00:29,746
+Today — Strategy, Observer, Command, Template Method, and Iterator — then Spring next.
+
+7
+00:00:29,746 --> 00:00:31,308
+Episode Seventy.
+
+8
+00:00:31,308 --> 00:00:33,260
+Behavioral Patterns.
+
+9
+00:00:33,260 --> 00:00:37,725
+Strategy defines a family of algorithms and makes them interchangeable.
+
+10
+00:00:37,725 --> 00:00:42,065
+Clients depend on a strategy interface — concrete strategies plug in.
+
+11
+00:00:42,065 --> 00:00:46,216
+Comparator in Java is Strategy — sort order injected at call time.
+
+12
+00:00:46,216 --> 00:00:51,059
+Payment processors, pricing rules, and retry policies are classic Strategies.
+
+13
+00:00:51,059 --> 00:00:55,147
+Prefer Strategy over deep if-else chains that grow every quarter.
+
+14
+00:00:55,147 --> 00:00:59,046
+Keep strategies focused — one decision axis per strategy type.
+
+15
+00:00:59,046 --> 00:01:03,031
+Observer notifies dependents automatically when a subject changes.
+
+16
+00:01:03,031 --> 00:01:07,198
+Publish-subscribe and event listeners are Observer in modern clothes.
+
+17
+00:01:07,198 --> 00:01:11,485
+Swing listeners, reactive streams, and message topics follow the shape.
+
+18
+00:01:11,485 --> 00:01:15,531
+Decouples producers from consumers — but watch notification storms.
+
+19
+00:01:15,531 --> 00:01:19,455
+Unregister carefully — leaked listeners are memory leak classics.
+
+20
+00:01:19,455 --> 00:01:23,320
+Use Observer when many parties care about the same state change.
+
+21
+00:01:23,320 --> 00:01:26,286
+Command encapsulates a request as an object.
+
+22
+00:01:26,286 --> 00:01:29,926
+You can queue, log, undo, and retry actions uniformly.
+
+23
+00:01:29,926 --> 00:01:34,038
+Runnable and Callable are lightweight command shapes in Java.
+
+24
+00:01:34,038 --> 00:01:38,756
+GUI actions, job queues, and transactional outboxes use Command ideas.
+
+25
+00:01:38,756 --> 00:01:42,464
+Macro commands compose smaller commands into workflows.
+
+26
+00:01:42,464 --> 00:01:46,778
+Command separates invoker from receiver — great for undo stacks.
+
+27
+00:01:46,778 --> 00:01:50,624
+Template Method defines an algorithm skeleton in a base class.
+
+28
+00:01:50,624 --> 00:01:54,594
+Subclasses override steps without changing the overall sequence.
+
+29
+00:01:54,594 --> 00:01:58,812
+JdbcTemplate and many framework hooks follow Template Method spirit.
+
+30
+00:01:58,812 --> 00:02:03,402
+Iterator provides sequential access without exposing collection structure.
+
+31
+00:02:03,402 --> 00:02:07,310
+Enhanced for-loops and Stream pipelines rest on Iterator ideas.
+
+32
+00:02:07,310 --> 00:02:12,396
+Together they show behavior reuse — hooks and traversal, not inheritance for data.
+
+33
+00:02:12,396 --> 00:02:15,120
+Choosing behavioral patterns in practice.
+
+34
+00:02:15,120 --> 00:02:19,106
+Vary an algorithm — Strategy or a simple function parameter.
+
+35
+00:02:19,106 --> 00:02:23,889
+Broadcast state changes — Observer or an event bus with clear ownership.
+
+36
+00:02:23,889 --> 00:02:27,942
+Queue or undo work — Command objects with explicit lifecycle.
+
+37
+00:02:27,942 --> 00:02:32,592
+Framework-defined steps — Template Method or modern composition hooks.
+
+38
+00:02:32,592 --> 00:02:37,774
+Prefer small interfaces — behavioral patterns should shrink switch statements.
+
+39
+00:02:37,774 --> 00:02:39,232
+Three common mistakes.
+
+40
+00:02:39,232 --> 00:02:44,004
+One — Strategy explosion — dozens of one-line classes for dead branches.
+
+41
+00:02:44,004 --> 00:02:48,512
+Two — Observer spaghetti — unclear who listens and who owns cleanup.
+
+42
+00:02:48,512 --> 00:02:52,886
+Three — Command without idempotency — retries double-charge users.
+
+43
+00:02:52,886 --> 00:02:56,996
+Also — Template Method locking teams into brittle inheritance.
+
+44
+00:02:56,996 --> 00:03:01,304
+Behavior patterns need ownership rules — not just class diagrams.
+
+45
+00:03:01,304 --> 00:03:05,453
+Interview question — how do Strategy and Template Method differ?
+
+46
+00:03:05,453 --> 00:03:09,473
+Strategy composes algorithms via interfaces — swap at runtime.
+
+47
+00:03:09,473 --> 00:03:13,557
+Template Method inherits a skeleton — subclasses fill in steps.
+
+48
+00:03:13,557 --> 00:03:17,771
+Strategy favors composition — Template Method favors inheritance.
+
+49
+00:03:17,771 --> 00:03:22,180
+Modern Java often prefers Strategy plus lambdas over deep templates.
+
+50
+00:03:22,180 --> 00:03:27,042
+Say the force — runtime swap versus fixed sequence with customizable steps.
+
+51
+00:03:27,042 --> 00:03:31,988
+Patterns prepared the design vocabulary — frameworks apply it at scale.
+
+52
+00:03:31,988 --> 00:03:35,122
+Episode Seventy-One — Spring Framework Intro.
+
+53
+00:03:35,122 --> 00:03:40,765
+IoC, dependency injection, and why Spring beans feel like patterns in production.
+
+54
+00:03:40,765 --> 00:03:41,740
+See you there.
