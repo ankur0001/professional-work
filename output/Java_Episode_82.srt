@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:06,116
+Episode Eighty-One covered caching layers, invalidation, and stampedes.
+
+2
+00:00:06,116 --> 00:00:12,231
+APIs are long-lived contracts — harder to change than internal classes.
+
+3
+00:00:12,231 --> 00:00:17,227
+Good API design reduces client breakage and on-call pages.
+
+4
+00:00:17,227 --> 00:00:23,601
+Idempotency, pagination, and versioning show up in every senior interview.
+
+5
+00:00:23,601 --> 00:00:28,597
+Spring MVC skills matter — contract thinking matters more.
+
+6
+00:00:28,597 --> 00:00:34,282
+Today — resources, versioning, idempotency, errors, and evolution.
+
+7
+00:00:34,282 --> 00:00:36,795
+Episode Eighty-Two.
+
+8
+00:00:36,795 --> 00:00:39,572
+API Design Deep Dive.
+
+9
+00:00:39,572 --> 00:00:45,094
+Model the API around resources and use cases — not your tables.
+
+10
+00:00:45,094 --> 00:00:51,493
+Stable nouns — orders, payments, customers — with HTTP verbs for actions.
+
+11
+00:00:51,493 --> 00:00:57,716
+Prefer coarse resources that match user intents over chatty micro-gets.
+
+12
+00:00:57,716 --> 00:01:03,764
+DTOs are public — never leak JPA entities or internal IDs carelessly.
+
+13
+00:01:03,764 --> 00:01:08,935
+Explicit fields beat magic maps when clients generate code.
+
+14
+00:01:08,935 --> 00:01:15,246
+Design for the reader of the OpenAPI — that reader is a future teammate.
+
+15
+00:01:15,246 --> 00:01:19,694
+Versioning is how you change without stranding clients.
+
+16
+00:01:19,694 --> 00:01:24,546
+URL versions — slash v-one — are obvious and cache-friendly.
+
+17
+00:01:24,546 --> 00:01:29,641
+Header versions keep paths clean — require disciplined clients.
+
+18
+00:01:29,641 --> 00:01:34,898
+Additive changes are safest — new optional fields, new endpoints.
+
+19
+00:01:34,898 --> 00:01:39,912
+Breaking changes need a migration window and dual-run support.
+
+20
+00:01:39,912 --> 00:01:45,088
+Deprecate loudly — metrics on old versions tell you when to cut.
+
+21
+00:01:45,088 --> 00:01:47,634
+Idempotency makes retries safe.
+
+22
+00:01:47,634 --> 00:01:53,054
+PUT and DELETE should be naturally idempotent — POST often is not.
+
+23
+00:01:53,054 --> 00:01:58,638
+Idempotency-Key headers dedupe creates across at-least-once clients.
+
+24
+00:01:58,638 --> 00:02:04,057
+Store the key with the result — replay the same response on retry.
+
+25
+00:02:04,057 --> 00:02:09,477
+Timeouts without idempotency cause double charges — design for it.
+
+26
+00:02:09,477 --> 00:02:15,554
+Document which endpoints are safe to retry — clients will guess otherwise.
+
+27
+00:02:15,554 --> 00:02:19,839
+Pagination and filtering keep collections operable.
+
+28
+00:02:19,839 --> 00:02:25,301
+Cursor pagination scales better than large offsets on hot tables.
+
+29
+00:02:25,301 --> 00:02:30,511
+Always bound page size — never allow unbounded find-all dumps.
+
+30
+00:02:30,511 --> 00:02:35,972
+Stable sort keys prevent missing or duplicated rows across pages.
+
+31
+00:02:35,972 --> 00:02:41,518
+Filter and sort parameters belong in the contract — validate them.
+
+32
+00:02:41,518 --> 00:02:47,316
+Return totals only when cheap — expensive counts need their own path.
+
+33
+00:02:47,316 --> 00:02:50,447
+Error contracts are part of the API.
+
+34
+00:02:50,447 --> 00:02:56,883
+Use correct status codes — four-hundred validation, four-oh-nine conflict.
+
+35
+00:02:56,883 --> 00:03:02,970
+Problem Details or a stable error schema beats ad-hoc message strings.
+
+36
+00:03:02,970 --> 00:03:08,884
+Include a machine-readable code — human text can be localized later.
+
+37
+00:03:08,884 --> 00:03:13,146
+Never leak stack traces or SQL to public clients.
+
+38
+00:03:13,146 --> 00:03:18,190
+Trace IDs in error bodies connect support tickets to logs.
+
+39
+00:03:18,190 --> 00:03:20,129
+Three common mistakes.
+
+40
+00:03:20,129 --> 00:03:24,978
+One — breaking JSON field types without a version bump.
+
+41
+00:03:24,978 --> 00:03:31,061
+Two — POST create with no idempotency — double submits in production.
+
+42
+00:03:31,061 --> 00:03:36,438
+Three — offset pagination on huge tables — p99 death by skip.
+
+43
+00:03:36,438 --> 00:03:41,640
+Also — returning different shapes for the same status code.
+
+44
+00:03:41,640 --> 00:03:46,400
+Contracts are product — treat changes like migrations.
+
+45
+00:03:46,400 --> 00:03:51,807
+Interview question — how do you evolve a public REST API safely?
+
+46
+00:03:51,807 --> 00:03:57,384
+Prefer additive changes — optional fields and new endpoints first.
+
+47
+00:03:57,384 --> 00:04:03,045
+Version when you must break — dual-run with metrics on old clients.
+
+48
+00:04:03,045 --> 00:04:08,368
+Idempotency keys on creates — pagination that scales with data.
+
+49
+00:04:08,368 --> 00:04:11,832
+Stable error schema with correlation IDs.
+
+50
+00:04:11,832 --> 00:04:16,986
+Publish OpenAPI and changelog — silence is how clients break.
+
+51
+00:04:16,986 --> 00:04:21,657
+Request-response is one style — events are another.
+
+52
+00:04:21,657 --> 00:04:26,145
+Episode Eighty-Three — Event-Driven Architecture.
+
+53
+00:04:26,145 --> 00:04:30,450
+Topics, outbox, consumers, and when async wins.
+
+54
+00:04:30,450 --> 00:04:31,732
+See you there.
