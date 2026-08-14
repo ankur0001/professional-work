@@ -29,6 +29,26 @@ Season 2 thumbnails:
 python3 java/video_build/make_s2_thumbnails.py
 ```
 
+## More realistic narration (Sarvam TTS)
+
+Default builds still use local Kokoro. To pilot Sarvam Bulbul v3 (`en-IN`):
+
+```bash
+export SARVAM_API_KEY='your-api-subscription-key'   # from https://dashboard.sarvam.ai
+export TTS_PROVIDER=sarvam
+export SARVAM_SPEAKER=shubh    # optional; bulbul:v3 voices
+export SARVAM_PACE=0.97
+python3 java/video_build/make_episode_81_sarvam_pilot.py
+```
+
+Smoke-test the key:
+
+```bash
+python3 java/video_build/sarvam_tts.py
+```
+
+Free credits are limited — pilot one episode before batch re-renders.
+
 ## Rules
 
 - One episode → one git branch → one PR
