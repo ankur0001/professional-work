@@ -1,0 +1,12 @@
+{
+  "hook": 25.344,
+  "title": 3.528,
+  "concurrent_hashmap": 24.264,
+  "copy_on_write": 22.704,
+  "thread_safe_queues": 27.456,
+  "vs_synchronized": 24.864,
+  "when_use": 20.616,
+  "mistakes": 23.832,
+  "interview": 23.928,
+  "teaser": 12.384
+}
