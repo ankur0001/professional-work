@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:06,098
+00:00:00,000 --> 00:00:04,904
 Episode Eighty closed the handbook arc with architecture interview framing.
 
 2
-00:00:06,098 --> 00:00:11,709
+00:00:04,904 --> 00:00:09,416
 Season Two begins where production systems get their speed — caching.
 
 3
-00:00:11,709 --> 00:00:18,051
+00:00:09,416 --> 00:00:14,516
 A cache stores expensive results closer to the reader — memory, Redis, or CDN.
 
 4
-00:00:18,051 --> 00:00:21,954
+00:00:14,516 --> 00:00:17,655
 Done well — latency drops and databases breathe.
 
 5
-00:00:21,954 --> 00:00:27,484
+00:00:17,655 --> 00:00:22,102
 Done poorly — stale data, stampedes, and mysterious inconsistencies.
 
 6
-00:00:27,484 --> 00:00:33,826
+00:00:22,102 --> 00:00:27,202
 Today — cache layers, invalidation, stampedes, and interview-ready trade-offs.
 
 7
-00:00:33,826 --> 00:00:36,171
+00:00:27,202 --> 00:00:29,055
 Episode Eighty-One.
 
 8
-00:00:36,171 --> 00:00:38,516
+00:00:29,055 --> 00:00:30,908
 Caching Strategies.
 
 9
-00:00:38,516 --> 00:00:42,482
+00:00:30,908 --> 00:00:34,170
 Think in layers — each cache has a different job.
 
 10
-00:00:42,482 --> 00:00:48,391
+00:00:34,170 --> 00:00:39,029
 Client and CDN caches cut round trips for static and semi-static content.
 
 11
-00:00:48,391 --> 00:00:53,733
+00:00:39,029 --> 00:00:43,423
 Application local caches — Caffeine — are ultra-fast per instance.
 
 12
-00:00:53,733 --> 00:00:59,076
+00:00:43,423 --> 00:00:47,816
 Distributed caches — Redis or Memcached — share state across pods.
 
 13
-00:00:59,076 --> 00:01:04,742
+00:00:47,816 --> 00:00:52,476
 Database buffer pools are caches too — do not ignore them when tuning.
 
 14
-00:01:04,742 --> 00:01:11,622
+00:00:52,476 --> 00:00:58,134
 Place the cache where the expensive work lives — measure before stacking five layers.
 
 15
-00:01:11,622 --> 00:01:15,787
+00:00:58,134 --> 00:01:01,604
 Common access patterns you should name in interviews.
 
 16
-00:01:15,787 --> 00:01:20,974
+00:01:01,604 --> 00:01:05,924
 Cache-aside — app reads cache, on miss loads DB, then fills cache.
 
 17
-00:01:20,974 --> 00:01:25,925
+00:01:05,924 --> 00:01:10,048
 Read-through — cache library loads on miss behind a single API.
 
 18
-00:01:25,925 --> 00:01:30,247
+00:01:10,048 --> 00:01:13,649
 Write-through — writes update cache and store together.
 
 19
-00:01:30,247 --> 00:01:36,063
+00:01:13,649 --> 00:01:18,493
 Write-behind — writes hit cache first, flush asynchronously — higher risk.
 
 20
-00:01:36,063 --> 00:01:41,800
+00:01:18,493 --> 00:01:23,272
 Pick the pattern that matches consistency needs — not the trendiest name.
 
 21
-00:01:41,800 --> 00:01:46,989
+00:01:23,272 --> 00:01:27,178
 Invalidation is the hard problem — and the interview favorite.
 
 22
-00:01:46,989 --> 00:01:51,509
+00:01:27,178 --> 00:01:30,580
 TTL expiry is simple — eventual staleness is explicit.
 
 23
-00:01:51,509 --> 00:01:57,535
+00:01:30,580 --> 00:01:35,116
 Event-driven invalidation deletes keys when the source of truth changes.
 
 24
-00:01:57,535 --> 00:02:03,477
+00:01:35,116 --> 00:01:39,590
 Versioned keys avoid mutating in place — readers fetch the new version.
 
 25
-00:02:03,477 --> 00:02:09,503
+00:01:39,590 --> 00:01:44,126
 Thundering herds after expiry — use soft TTL plus single-flight refresh.
 
 26
-00:02:09,503 --> 00:02:15,194
+00:01:44,126 --> 00:01:48,410
 Document your staleness budget — product and engineering must agree.
 
 27
-00:02:15,194 --> 00:02:19,386
+00:01:48,410 --> 00:01:51,865
 Cache stampedes and hot keys destroy p99 latency.
 
 28
-00:02:19,386 --> 00:02:25,460
+00:01:51,865 --> 00:01:56,870
 Many requests miss at once — every instance hits the database together.
 
 29
-00:02:25,460 --> 00:02:31,534
+00:01:56,870 --> 00:02:01,876
 Mitigations — request coalescing, probabilistic early refresh, locking.
 
 30
-00:02:31,534 --> 00:02:37,265
+00:02:01,876 --> 00:02:06,600
 Hot keys — shard the key, local cache in front, or replicate reads.
 
 31
-00:02:37,265 --> 00:02:42,912
+00:02:06,600 --> 00:02:11,253
 Negative caching — remember short-lived misses for absent records.
 
 32
-00:02:42,912 --> 00:02:48,900
+00:02:11,253 --> 00:02:16,188
 Load-test cache failure modes — a Redis blip should not melt Postgres.
 
 33
-00:02:48,900 --> 00:02:52,887
+00:02:16,188 --> 00:02:19,274
 Consistency trade-offs you must voice out loud.
 
 34
-00:02:52,887 --> 00:02:57,469
+00:02:19,274 --> 00:02:22,819
 Stronger freshness costs more invalidation complexity.
 
 35
-00:02:57,469 --> 00:03:03,068
+00:02:22,819 --> 00:02:27,152
 Multi-region caches amplify replication lag — name the lag budget.
 
 36
-00:03:03,068 --> 00:03:08,837
+00:02:27,152 --> 00:02:31,616
 Never treat the cache as the source of truth for money or inventory.
 
 37
-00:03:08,837 --> 00:03:14,098
+00:02:31,616 --> 00:02:35,687
 Idempotent rebuilds matter when you flush an entire namespace.
 
 38
-00:03:14,098 --> 00:03:20,206
+00:02:35,687 --> 00:02:40,414
 Observability — hit ratio, eviction rate, and origin load after deploys.
 
 39
-00:03:20,206 --> 00:03:22,068
+00:02:40,414 --> 00:02:42,003
 Three common mistakes.
 
 40
-00:03:22,068 --> 00:03:27,991
+00:02:42,003 --> 00:02:47,060
 One — caching without a TTL or invalidation story — eternal staleness.
 
 41
-00:03:27,991 --> 00:03:33,407
+00:02:47,060 --> 00:02:51,683
 Two — caching user-specific private data in a shared public key.
 
 42
-00:03:33,407 --> 00:03:39,500
+00:02:51,683 --> 00:02:56,885
 Three — measuring only hit ratio — ignoring stampede behavior on expiry.
 
 43
-00:03:39,500 --> 00:03:45,170
+00:02:56,885 --> 00:03:01,725
 Also — putting a cache in front of a wrong query — caching the bug.
 
 44
-00:03:45,170 --> 00:03:49,232
+00:03:01,725 --> 00:03:05,192
 Cache after the query is correct — never before.
 
 45
-00:03:49,232 --> 00:03:54,673
+00:03:05,192 --> 00:03:09,460
 Interview question — how would you cache a product catalog API?
 
 46
-00:03:54,673 --> 00:04:00,718
+00:03:09,460 --> 00:03:14,201
 Cache-aside with Redis for hot product pages — TTL plus update events.
 
 47
-00:04:00,718 --> 00:04:05,986
+00:03:14,201 --> 00:03:18,333
 Local Caffeine layer for ultra-hot keys inside each instance.
 
 48
-00:04:05,986 --> 00:04:10,477
+00:03:18,333 --> 00:03:21,856
 Protect origin with single-flight refresh on expiry.
 
 49
-00:04:10,477 --> 00:04:15,573
+00:03:21,856 --> 00:03:25,852
 Never cache personalized prices under a shared product key.
 
 50
-00:04:15,573 --> 00:04:21,618
+00:03:25,852 --> 00:03:30,594
 Watch hit ratio and origin QPS — prove the cache earns its complexity.
 
 51
-00:04:21,618 --> 00:04:26,921
+00:03:30,594 --> 00:03:35,070
 Caches accelerate reads — APIs shape how clients evolve.
 
 52
-00:04:26,921 --> 00:04:30,899
+00:03:35,070 --> 00:03:38,426
 Episode Eighty-Two — API Design Deep Dive.
 
 53
-00:04:30,899 --> 00:04:37,054
+00:03:38,426 --> 00:03:43,621
 Versioning, idempotency, pagination, and contracts that age well.
 
 54
-00:04:37,054 --> 00:04:38,380
+00:03:43,621 --> 00:03:44,740
 See you there.
