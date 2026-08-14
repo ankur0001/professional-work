@@ -1,0 +1,12 @@
+{
+  "hook": 25.368,
+  "title": 3.408,
+  "atomic_integer": 23.664,
+  "cas": 23.976,
+  "atomic_reference": 22.968,
+  "vs_locks": 23.448,
+  "when_atomics": 20.736,
+  "mistakes": 24.672,
+  "interview": 23.592,
+  "teaser": 11.856
+}

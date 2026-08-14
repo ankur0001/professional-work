@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:06,220
+00:00:00,000 --> 00:00:04,824
 Incrementing a shared counter with a lock works — but locks block threads.
 
 2
-00:00:06,220 --> 00:00:10,843
+00:00:04,824 --> 00:00:08,409
 For a single variable, atomics offer lock-free updates.
 
 3
-00:00:10,843 --> 00:00:16,559
+00:00:08,409 --> 00:00:12,842
 AtomicInteger wraps an int with hardware-supported compare-and-swap.
 
 4
-00:00:16,559 --> 00:00:22,695
+00:00:12,842 --> 00:00:17,600
 CAS reads the current value, computes a new one, swaps only if unchanged.
 
 5
-00:00:22,695 --> 00:00:27,654
+00:00:17,600 --> 00:00:21,446
 AtomicReference applies the same idea to object references.
 
 6
-00:00:27,654 --> 00:00:33,034
+00:00:21,446 --> 00:00:25,618
 Today — atomic variables, CAS, and when lock-free beats locking.
 
 7
-00:00:33,034 --> 00:00:35,660
+00:00:25,618 --> 00:00:27,595
 Episode Forty-Three.
 
 8
-00:00:35,660 --> 00:00:37,892
+00:00:27,595 --> 00:00:29,276
 Atomic Variables.
 
 9
-00:00:37,892 --> 00:00:42,151
+00:00:29,276 --> 00:00:32,590
 AtomicInteger lives in java.util.concurrent.atomic.
 
 10
-00:00:42,151 --> 00:00:47,161
+00:00:32,590 --> 00:00:36,489
 get and set are atomic — no external synchronization needed.
 
 11
-00:00:47,161 --> 00:00:52,756
+00:00:36,489 --> 00:00:40,843
 incrementAndGet and addAndGet combine read-modify-write atomically.
 
 12
-00:00:52,756 --> 00:00:58,100
+00:00:40,843 --> 00:00:45,002
 compareAndSet expects the current value — swaps only on a match.
 
 13
-00:00:58,100 --> 00:01:02,693
+00:00:45,002 --> 00:00:48,576
 Use for counters, sequence numbers, and shared tallies.
 
 14
-00:01:02,693 --> 00:01:08,622
+00:00:48,576 --> 00:00:53,190
 One atomic variable — one contention point — still cheaper than a lock.
 
 15
-00:01:08,622 --> 00:01:13,539
+00:00:53,190 --> 00:00:57,106
 Compare-and-swap is the foundation of lock-free algorithms.
 
 16
-00:01:13,539 --> 00:01:18,039
+00:00:57,106 --> 00:01:00,690
 Read the current value. Compute the desired new value.
 
 17
-00:01:18,039 --> 00:01:23,873
+00:01:00,690 --> 00:01:05,336
 Atomically swap only if the current value still matches what you read.
 
 18
-00:01:23,873 --> 00:01:28,706
+00:01:05,336 --> 00:01:09,186
 If another thread changed it — retry with the fresh value.
 
 19
-00:01:28,706 --> 00:01:33,623
+00:01:09,186 --> 00:01:13,102
 Hardware guarantees the swap is atomic — no mutex required.
 
 20
-00:01:33,623 --> 00:01:39,040
+00:01:13,102 --> 00:01:17,416
 CAS loops power AtomicInteger, AtomicLong, and concurrent queues.
 
 21
-00:01:39,040 --> 00:01:43,992
+00:01:17,416 --> 00:01:21,017
 AtomicReference of T holds a reference updated atomically.
 
 22
-00:01:43,992 --> 00:01:49,456
+00:01:21,017 --> 00:01:24,990
 compareAndSet swaps the reference when the expected match holds.
 
 23
-00:01:49,456 --> 00:01:54,322
+00:01:24,990 --> 00:01:28,528
 getAndSet returns the old reference and stores a new one.
 
 24
-00:01:54,322 --> 00:01:59,957
+00:01:28,528 --> 00:01:32,626
 Useful for lazy initialization and swapping configuration objects.
 
 25
-00:01:59,957 --> 00:02:04,994
+00:01:32,626 --> 00:01:36,288
 AtomicStampedReference adds a stamp to detect ABA problems.
 
 26
-00:02:04,994 --> 00:02:10,970
+00:01:36,288 --> 00:01:40,634
 AtomicMarkableReference tracks a boolean mark alongside the reference.
 
 27
-00:02:10,970 --> 00:02:14,706
+00:01:40,634 --> 00:01:43,580
 Atomics versus locks for simple shared state.
 
 28
-00:02:14,706 --> 00:02:19,938
+00:01:43,580 --> 00:01:47,704
 Locks — block threads, risk deadlock, heavier under contention.
 
 29
-00:02:19,938 --> 00:02:24,837
+00:01:47,704 --> 00:01:51,567
 Atomics — optimistic retries, no blocking on the fast path.
 
 30
-00:02:24,837 --> 00:02:29,902
+00:01:51,567 --> 00:01:55,560
 Best for single variables — counters, flags, reference swaps.
 
 31
-00:02:29,902 --> 00:02:35,299
+00:01:55,560 --> 00:01:59,815
 Not for protecting arbitrary multi-step invariants across fields.
 
 32
-00:02:35,299 --> 00:02:41,028
+00:01:59,815 --> 00:02:04,332
 Combine atomics with careful design — not a blanket lock replacement.
 
 33
-00:02:41,028 --> 00:02:43,581
+00:02:04,332 --> 00:02:06,283
 When to use atomic variables.
 
 34
-00:02:43,581 --> 00:02:48,687
+00:02:06,283 --> 00:02:10,184
 Shared counters and metrics — AtomicInteger or AtomicLong.
 
 35
-00:02:48,687 --> 00:02:52,736
+00:02:10,184 --> 00:02:13,278
 One-shot initialization flags — AtomicBoolean.
 
 36
-00:02:52,736 --> 00:02:57,490
+00:02:13,278 --> 00:02:16,910
 Swapping immutable config snapshots — AtomicReference.
 
 37
-00:02:57,490 --> 00:03:02,596
+00:02:16,910 --> 00:02:20,811
 Building lock-free data structures — CAS loops internally.
 
 38
-00:03:02,596 --> 00:03:08,494
+00:02:20,811 --> 00:02:25,318
 When not — complex multi-field updates — use locks or synchronized.
 
 39
-00:03:08,494 --> 00:03:10,392
+00:02:25,318 --> 00:02:26,772
 Three common mistakes.
 
 40
-00:03:10,392 --> 00:03:16,432
+00:02:26,772 --> 00:02:31,400
 One — using volatile int plus manual increment — not atomic as a unit.
 
 41
-00:03:16,432 --> 00:03:23,163
+00:02:31,400 --> 00:02:36,556
 Two — AtomicReference for mutable objects — reference swap does not deep-copy.
 
 42
-00:03:23,163 --> 00:03:29,548
+00:02:36,556 --> 00:02:41,448
 Three — infinite CAS retry loops without backoff under extreme contention.
 
 43
-00:03:29,548 --> 00:03:35,588
+00:02:41,448 --> 00:02:46,075
 Also — assuming compareAndSet alone fixes logical races across fields.
 
 44
-00:03:35,588 --> 00:03:41,024
+00:02:46,075 --> 00:02:50,240
 Atomics solve atomicity — your algorithm must still be correct.
 
 45
-00:03:41,024 --> 00:03:45,072
+00:02:50,240 --> 00:02:53,347
 Interview question — what is compare-and-swap?
 
 46
-00:03:45,072 --> 00:03:50,881
+00:02:53,347 --> 00:02:57,805
 Hardware-supported atomic read-compare-write on a single location.
 
 47
-00:03:50,881 --> 00:03:56,689
+00:02:57,805 --> 00:03:02,262
 Swap succeeds only if the current value equals the expected value.
 
 48
-00:03:56,689 --> 00:04:02,233
+00:03:02,262 --> 00:03:06,517
 Failed CAS means another thread won — retry with updated value.
 
 49
-00:04:02,233 --> 00:04:06,634
+00:03:06,517 --> 00:03:09,894
 AtomicInteger incrementAndGet uses CAS internally.
 
 50
-00:04:06,634 --> 00:04:12,090
+00:03:09,894 --> 00:03:14,082
 Contrast with synchronized — blocking versus optimistic retry.
 
 51
-00:04:12,090 --> 00:04:18,456
+00:03:14,082 --> 00:03:19,249
 Atomics update single variables. What about coordinating many threads?
 
 52
-00:04:18,456 --> 00:04:21,639
+00:03:19,249 --> 00:03:21,833
 Episode Forty-Four — Synchronizers.
 
 53
-00:04:21,639 --> 00:04:25,731
+00:03:21,833 --> 00:03:25,155
 CountDownLatch, CyclicBarrier, and Semaphore.
 
 54
-00:04:25,731 --> 00:04:27,004
+00:03:25,155 --> 00:03:26,188
 See you there.
