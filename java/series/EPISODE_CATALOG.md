@@ -1,7 +1,7 @@
 # The Java Story — Episode Catalog
 
 Source curriculum: **Java & JVM Handbook (80 lessons)**  
-Format per episode: **4–5 minutes**, Kokoro narration, motion graphics  
+Format per episode: **4–5 minutes**, Chatterbox (preferred) or Kokoro narration, motion graphics  
 Rule: **one episode → one branch → one PR**
 
 | Ep | Handbook Lesson | Title | Status |
