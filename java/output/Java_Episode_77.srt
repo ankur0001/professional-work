@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:05,897
+00:00:00,000 --> 00:00:04,605
 Episode Seventy-Six secured APIs with Spring Security's filter chain.
 
 2
-00:00:05,897 --> 00:00:12,905
+00:00:04,605 --> 00:00:10,078
 Security and features both need proof — Spring's test story is a first-class tool.
 
 3
-00:00:12,905 --> 00:00:20,341
+00:00:10,078 --> 00:00:15,885
 The pyramid still applies — many fast unit tests, fewer slice tests, few full contexts.
 
 4
-00:00:20,341 --> 00:00:25,981
+00:00:15,885 --> 00:00:20,290
 Misusing at SpringBootTest for everything makes CI slow and flaky.
 
 5
-00:00:25,981 --> 00:00:32,135
+00:00:20,290 --> 00:00:25,096
 Good tests document contracts — bad tests freeze implementation details.
 
 6
-00:00:32,135 --> 00:00:37,690
+00:00:25,096 --> 00:00:29,434
 Today — unit, slice, MockMvc, Testcontainers, and what to assert.
 
 7
-00:00:37,690 --> 00:00:40,564
+00:00:29,434 --> 00:00:31,566
 Episode Seventy-Seven.
 
 8
-00:00:40,564 --> 00:00:42,524
+00:00:31,566 --> 00:00:33,020
 Spring Testing.
 
 9
-00:00:42,524 --> 00:00:46,298
+00:00:33,020 --> 00:00:36,087
 Start with the test pyramid for Spring apps.
 
 10
-00:00:46,298 --> 00:00:52,387
+00:00:36,087 --> 00:00:41,036
 Unit tests — pure Java, mocks for collaborators, no ApplicationContext.
 
 11
-00:00:52,387 --> 00:00:58,476
+00:00:41,036 --> 00:00:45,985
 Slice tests — WebMvcTest, DataJpaTest — load only the layer under test.
 
 12
-00:00:58,476 --> 00:01:04,480
+00:00:45,985 --> 00:00:50,864
 Integration tests — SpringBootTest with a real or containerized stack.
 
 13
-00:01:04,480 --> 00:01:10,484
+00:00:50,864 --> 00:00:55,744
 End-to-end tests — few, precious, against a deployed-like environment.
 
 14
-00:01:10,484 --> 00:01:16,230
+00:00:55,744 --> 00:01:00,414
 Push assertions down the pyramid — speed is a feature of the suite.
 
 15
-00:01:16,230 --> 00:01:19,179
+00:01:00,414 --> 00:01:02,616
 Unit and slice testing patterns.
 
 16
-00:01:19,179 --> 00:01:25,815
+00:01:02,616 --> 00:01:07,570
 Constructor injection makes unit tests trivial — new Service with mocks.
 
 17
-00:01:25,815 --> 00:01:32,451
+00:01:07,570 --> 00:01:12,524
 WebMvcTest stands up controllers — MockMvc drives HTTP without a server.
 
 18
-00:01:32,451 --> 00:01:39,087
+00:01:12,524 --> 00:01:17,479
 DataJpaTest boots repositories against an embedded or Testcontainers DB.
 
 19
-00:01:39,087 --> 00:01:44,249
+00:01:17,479 --> 00:01:21,332
 MockBean replaces a collaborator inside a slice context.
 
 20
-00:01:44,249 --> 00:01:50,608
+00:01:21,332 --> 00:01:26,080
 Prefer AssertJ fluent assertions — readable failures save debug time.
 
 21
-00:01:50,608 --> 00:01:53,609
+00:01:26,080 --> 00:01:28,338
 When SpringBootTest earns its cost.
 
 22
-00:01:53,609 --> 00:02:00,210
+00:01:28,338 --> 00:01:33,305
 Full context catches wiring mistakes auto-config and security filters create.
 
 23
-00:02:00,210 --> 00:02:05,354
+00:01:33,305 --> 00:01:37,176
 Use RANDOM_PORT only when you truly need a listening server.
 
 24
-00:02:05,354 --> 00:02:11,441
+00:01:37,176 --> 00:01:41,756
 Override properties for tests — never point CI at production databases.
 
 25
-00:02:11,441 --> 00:02:17,699
+00:01:41,756 --> 00:01:46,465
 DirtiesContext sparingly — it is expensive and often hides design smells.
 
 26
-00:02:17,699 --> 00:02:23,186
+00:01:46,465 --> 00:01:50,594
 If every test needs a full boot, your modules are too entangled.
 
 27
-00:02:23,186 --> 00:02:27,525
+00:01:50,594 --> 00:01:53,855
 Testcontainers bring realistic dependencies to CI.
 
 28
-00:02:27,525 --> 00:02:33,166
+00:01:53,855 --> 00:01:58,095
 Postgres, Kafka, LocalStack — same engines your service talks to.
 
 29
-00:02:33,166 --> 00:02:38,634
+00:01:58,095 --> 00:02:02,204
 Reuse containers across a suite when the framework supports it.
 
 30
-00:02:38,634 --> 00:02:44,101
+00:02:02,204 --> 00:02:06,313
 Pair with DynamicPropertySource to inject JDBC URLs at runtime.
 
 31
-00:02:44,101 --> 00:02:49,482
+00:02:06,313 --> 00:02:10,357
 Slower than H2 — faster than debugging prod-only SQL dialects.
 
 32
-00:02:49,482 --> 00:02:55,644
+00:02:10,357 --> 00:02:14,988
 Use them for persistence and messaging contracts — not every unit test.
 
 33
-00:02:55,644 --> 00:02:59,207
+00:02:14,988 --> 00:02:17,900
 Assert behavior, not framework internals.
 
 34
-00:02:59,207 --> 00:03:04,596
+00:02:17,900 --> 00:02:22,304
 HTTP status, response body shape, and headers clients rely on.
 
 35
-00:03:04,596 --> 00:03:08,855
+00:02:22,304 --> 00:02:25,785
 Database side effects after a successful command.
 
 36
-00:03:08,855 --> 00:03:15,200
+00:02:25,785 --> 00:02:30,970
 Security — anonymous gets four-oh-one, forbidden role gets four-oh-three.
 
 37
-00:03:15,200 --> 00:03:19,545
+00:02:30,970 --> 00:02:34,522
 Avoid asserting log lines or private field values.
 
 38
-00:03:19,545 --> 00:03:24,934
+00:02:34,522 --> 00:02:38,926
 Name tests as contracts — createOrder_rejectsNegativeQuantity.
 
 39
-00:03:24,934 --> 00:03:26,787
+00:02:38,926 --> 00:02:40,421
 Three common mistakes.
 
 40
-00:03:26,787 --> 00:03:31,671
+00:02:40,421 --> 00:02:44,362
 One — SpringBootTest on every class — hour-long pipelines.
 
 41
-00:03:31,671 --> 00:03:37,986
+00:02:44,362 --> 00:02:49,458
 Two — shared mutable database state between tests — order-dependent flakes.
 
 42
-00:03:37,986 --> 00:03:43,628
+00:02:49,458 --> 00:02:54,010
 Three — testing only the happy path — auth and validation unproven.
 
 43
-00:03:43,628 --> 00:03:49,691
+00:02:54,010 --> 00:02:58,902
 Also — over-mocking until the test only proves the mock framework works.
 
 44
-00:03:49,691 --> 00:03:53,144
+00:02:58,902 --> 00:03:01,688
 Test the risk — not the annotation count.
 
 45
-00:03:53,144 --> 00:03:58,315
+00:03:01,688 --> 00:03:05,747
 Interview question — how do you test a Spring Boot service?
 
 46
-00:03:58,315 --> 00:04:03,223
+00:03:05,747 --> 00:03:09,599
 Unit-test domain and services with mocks — no container.
 
 47
-00:04:03,223 --> 00:04:08,657
+00:03:09,599 --> 00:03:13,864
 Slice-test web and JPA layers with WebMvcTest and DataJpaTest.
 
 48
-00:04:08,657 --> 00:04:15,318
+00:03:13,864 --> 00:03:19,091
 Reserve SpringBootTest plus Testcontainers for wiring and persistence truth.
 
 49
-00:04:15,318 --> 00:04:20,226
+00:03:19,091 --> 00:03:22,944
 Always cover authz negative paths and validation errors.
 
 50
-00:04:20,226 --> 00:04:26,274
+00:03:22,944 --> 00:03:27,690
 Optimize for fast feedback — full context is a scalpel, not a hammer.
 
 51
-00:04:26,274 --> 00:04:30,612
+00:03:27,690 --> 00:03:31,073
 One service is solid — next we split the system.
 
 52
-00:04:30,612 --> 00:04:34,680
+00:03:31,073 --> 00:03:34,244
 Episode Seventy-Eight — Microservices Basics.
 
 53
-00:04:34,680 --> 00:04:41,459
+00:03:34,244 --> 00:03:39,529
 When to split, service boundaries, sync versus async, and operational cost.
 
 54
-00:04:41,459 --> 00:04:42,724
+00:03:39,529 --> 00:03:40,516
 See you there.
