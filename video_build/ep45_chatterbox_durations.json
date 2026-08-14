@@ -1,0 +1,12 @@
+{
+  "hook": 27.696,
+  "title": 3.888,
+  "blocking_queue": 19.704,
+  "producer_consumer": 23.568,
+  "array_blocking": 20.208,
+  "linked_blocking": 25.224,
+  "when_blocking": 19.728,
+  "mistakes": 25.752,
+  "interview": 22.44,
+  "teaser": 13.584
+}
