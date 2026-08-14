@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:05,181
+00:00:00,000 --> 00:00:03,939
 Programs fail. Networks drop. Files vanish. Users type nonsense.
 
 2
-00:00:05,181 --> 00:00:10,281
+00:00:03,939 --> 00:00:07,816
 Exceptions are Java way of signaling that something went wrong.
 
 3
-00:00:10,281 --> 00:00:15,382
+00:00:07,816 --> 00:00:11,694
 Not every error is a crash — some are expected and recoverable.
 
 4
-00:00:15,382 --> 00:00:20,644
+00:00:11,694 --> 00:00:15,694
 Checked exceptions force you to acknowledge risk at compile time.
 
 5
-00:00:20,644 --> 00:00:25,987
+00:00:15,694 --> 00:00:19,756
 Unchecked exceptions flag programming bugs and broken assumptions.
 
 6
-00:00:25,987 --> 00:00:31,330
+00:00:19,756 --> 00:00:23,818
 Today — how Java models failure, and how to handle it with intent.
 
 7
-00:00:31,330 --> 00:00:33,069
+00:00:23,818 --> 00:00:25,295
 Episode Thirty-Two.
 
 8
-00:00:33,069 --> 00:00:38,012
+00:00:25,295 --> 00:00:29,492
 Exceptions — checked, unchecked, and handling failure.
 
 9
-00:00:38,012 --> 00:00:42,118
+00:00:29,492 --> 00:00:32,578
 Throwable sits at the root of the error hierarchy.
 
 10
-00:00:42,118 --> 00:00:46,963
+00:00:32,578 --> 00:00:36,220
 Error is for serious JVM problems — you rarely catch these.
 
 11
-00:00:46,963 --> 00:00:51,398
+00:00:36,220 --> 00:00:39,553
 Exception is what application code usually deals with.
 
 12
-00:00:51,398 --> 00:00:55,504
+00:00:39,553 --> 00:00:42,639
 RuntimeException and its subclasses are unchecked.
 
 13
-00:00:55,504 --> 00:01:01,745
+00:00:42,639 --> 00:00:47,330
 Everything else under Exception is checked — the compiler enforces handling.
 
 14
-00:01:01,745 --> 00:01:05,358
+00:00:47,330 --> 00:00:50,046
 Know the hierarchy before you catch broadly.
 
 15
-00:01:05,358 --> 00:01:07,986
+00:00:50,046 --> 00:00:52,106
 try wraps code that might throw.
 
 16
-00:01:07,986 --> 00:01:14,311
+00:00:52,106 --> 00:00:57,063
 catch handles a specific exception type — order matters, most specific first.
 
 17
-00:01:14,311 --> 00:01:19,157
+00:00:57,063 --> 00:01:00,862
 You can catch multiple types in one block since Java seven.
 
 18
-00:01:19,157 --> 00:01:25,070
+00:01:00,862 --> 00:01:05,497
 Handle what you can recover from — log, retry, or return a safe default.
 
 19
-00:01:25,070 --> 00:01:29,506
+00:01:05,497 --> 00:01:08,974
 Swallowing exceptions silently is almost always wrong.
 
 20
-00:01:29,506 --> 00:01:33,448
+00:01:08,974 --> 00:01:12,064
 A narrow catch beats catch Exception everywhere.
 
 21
-00:01:33,448 --> 00:01:37,974
+00:01:12,064 --> 00:01:15,711
 throws declares that a method may propagate an exception.
 
 22
-00:01:37,974 --> 00:01:43,453
+00:01:15,711 --> 00:01:20,126
 Callers must handle checked exceptions — try-catch or declare throws.
 
 23
-00:01:43,453 --> 00:01:47,582
+00:01:20,126 --> 00:01:23,453
 Unchecked exceptions do not require a throws clause.
 
 24
-00:01:47,582 --> 00:01:52,347
+00:01:23,453 --> 00:01:27,292
 Document what can go wrong — throws is part of the contract.
 
 25
-00:01:52,347 --> 00:01:56,555
+00:01:27,292 --> 00:01:30,683
 Do not use throws to push problems up without a plan.
 
 26
-00:01:56,555 --> 00:02:02,114
+00:01:30,683 --> 00:01:35,162
 Sometimes wrapping a checked exception in an unchecked one is cleaner.
 
 27
-00:02:02,114 --> 00:02:06,632
+00:01:35,162 --> 00:01:38,565
 finally runs whether the try block succeeds or throws.
 
 28
-00:02:06,632 --> 00:02:10,899
+00:01:38,565 --> 00:01:41,778
 Classic use — release resources in a finally block.
 
 29
-00:02:10,899 --> 00:02:16,588
+00:01:41,778 --> 00:01:46,063
 Modern code prefers try-with-resources — we cover that next episode.
 
 30
-00:02:16,588 --> 00:02:21,608
+00:01:46,063 --> 00:01:49,844
 Do not return from finally — it can mask the real exception.
 
 31
-00:02:21,608 --> 00:02:26,210
+00:01:49,844 --> 00:01:53,309
 finally is for cleanup that must happen no matter what.
 
 32
-00:02:26,210 --> 00:02:29,724
+00:01:53,309 --> 00:01:55,956
 Keep finally blocks short and predictable.
 
 33
-00:02:29,724 --> 00:02:34,795
+00:01:55,956 --> 00:01:59,705
 Define custom exceptions when domain errors need clear names.
 
 34
-00:02:34,795 --> 00:02:39,865
+00:01:59,705 --> 00:02:03,455
 Extend Exception for checked, RuntimeException for unchecked.
 
 35
-00:02:39,865 --> 00:02:44,437
+00:02:03,455 --> 00:02:06,835
 Provide meaningful constructors — message, cause, both.
 
 36
-00:02:44,437 --> 00:02:50,090
+00:02:06,835 --> 00:02:11,015
 BankAccountOverdrawnException beats a generic IllegalStateException.
 
 37
-00:02:50,090 --> 00:02:54,745
+00:02:11,015 --> 00:02:14,457
 Do not create an exception class for every trivial case.
 
 38
-00:02:54,745 --> 00:02:59,566
+00:02:14,457 --> 00:02:18,022
 Good exception names read like answers to what went wrong.
 
 39
-00:02:59,566 --> 00:03:01,374
+00:02:18,022 --> 00:02:19,441
 Three common mistakes.
 
 40
-00:03:01,374 --> 00:03:06,550
+00:02:19,441 --> 00:02:23,503
 One — catching Exception or Throwable and doing nothing useful.
 
 41
-00:03:06,550 --> 00:03:12,137
+00:02:23,503 --> 00:02:27,888
 Two — using exceptions for normal control flow — they are expensive.
 
 42
-00:03:12,137 --> 00:03:17,642
+00:02:27,888 --> 00:02:32,209
 Three — throwing generic RuntimeException without context or cause.
 
 43
-00:03:17,642 --> 00:03:21,914
+00:02:32,209 --> 00:02:35,562
 Also — empty catch blocks that hide production bugs.
 
 44
-00:03:21,914 --> 00:03:27,008
+00:02:35,562 --> 00:02:39,560
 Fail loudly in development. Handle deliberately in production.
 
 45
-00:03:27,008 --> 00:03:31,535
+00:02:39,560 --> 00:02:42,925
 Interview question — checked versus unchecked exceptions?
 
 46
-00:03:31,535 --> 00:03:36,063
+00:02:42,925 --> 00:02:46,289
 Checked — compiler requires handling or declaring throws.
 
 47
-00:03:36,063 --> 00:03:41,305
+00:02:46,289 --> 00:02:50,185
 Unchecked — extends RuntimeException, no compile-time enforcement.
 
 48
-00:03:41,305 --> 00:03:46,150
+00:02:50,185 --> 00:02:53,786
 Checked for recoverable conditions callers should know about.
 
 49
-00:03:46,150 --> 00:03:50,519
+00:02:53,786 --> 00:02:57,032
 Unchecked for programming errors and broken invariants.
 
 50
-00:03:50,519 --> 00:03:55,602
+00:02:57,032 --> 00:03:00,810
 Mention try-with-resources for cleanup — that shows modern Java.
 
 51
-00:03:55,602 --> 00:04:01,472
+00:03:00,810 --> 00:03:05,819
 You know how to catch failure. Next — how to close resources safely.
 
 52
-00:04:01,472 --> 00:04:05,097
+00:03:05,819 --> 00:03:08,912
 Episode Thirty-Three — try-with-resources.
 
 53
-00:04:05,097 --> 00:04:09,931
+00:03:08,912 --> 00:03:13,037
 AutoCloseable, suppressed exceptions, and leak-free I/O.
 
 54
-00:04:09,931 --> 00:04:11,140
+00:03:13,037 --> 00:03:14,068
 See you there.
