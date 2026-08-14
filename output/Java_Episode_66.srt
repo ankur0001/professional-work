@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:06,553
+00:00:00,000 --> 00:00:05,615
 Episode Sixty-Five covered JVM startup, class loading, and warmup strategies.
 
 2
-00:00:06,553 --> 00:00:13,191
+00:00:05,615 --> 00:00:11,302
 You have studied heap, stack, GC, JIT, flags, layout, safepoints, and startup.
 
 3
-00:00:13,191 --> 00:00:19,489
+00:00:11,302 --> 00:00:16,698
 Interviewers do not want a textbook — they want crisp, structured answers.
 
 4
-00:00:19,489 --> 00:00:26,212
+00:00:16,698 --> 00:00:22,459
 The best JVM answers connect concepts — heap holds objects, stack holds frames.
 
 5
-00:00:26,212 --> 00:00:33,020
+00:00:22,459 --> 00:00:28,292
 GC reclaims unreachable heap objects — JIT compiles hot bytecode to native code.
 
 6
-00:00:33,020 --> 00:00:38,722
+00:00:28,292 --> 00:00:33,178
 Today — how to explain JVM internals crisply in interview settings.
 
 7
-00:00:38,722 --> 00:00:41,157
+00:00:33,178 --> 00:00:35,094
 Episode Sixty-Six.
 
 8
-00:00:41,157 --> 00:00:44,132
+00:00:35,094 --> 00:00:37,436
 JVM Interview Wrap-Up.
 
 9
-00:00:44,132 --> 00:00:47,603
+00:00:37,436 --> 00:00:40,254
 Heap versus stack — the foundation answer.
 
 10
-00:00:47,603 --> 00:00:54,544
+00:00:40,254 --> 00:00:45,890
 Stack — per-thread, stores method frames, local primitives, and reference variables.
 
 11
-00:00:54,544 --> 00:01:00,328
+00:00:45,890 --> 00:00:50,587
 Heap — shared, stores all objects and arrays — GC manages this region.
 
 12
-00:01:00,328 --> 00:01:07,021
+00:00:50,587 --> 00:00:56,022
 Reference on stack points to object on heap — Episodes Fifty-Three and Sixty-One.
 
 13
-00:01:07,021 --> 00:01:11,566
+00:00:56,022 --> 00:00:59,712
 Stack is fast and automatic — pops when method returns.
 
 14
-00:01:11,566 --> 00:01:18,342
+00:00:59,712 --> 00:01:05,214
 Heap objects live until GC proves them unreachable — no deterministic destruction.
 
 15
-00:01:18,342 --> 00:01:22,413
+00:01:05,214 --> 00:01:08,491
 Garbage collection — concise interview framing.
 
 16
-00:01:22,413 --> 00:01:29,256
+00:01:08,491 --> 00:01:14,000
 GC finds reachable objects from roots — stack refs, static fields, JNI handles.
 
 17
-00:01:29,256 --> 00:01:34,453
+00:01:14,000 --> 00:01:18,184
 Everything else is garbage — memory reclaimed automatically.
 
 18
-00:01:34,453 --> 00:01:41,036
+00:01:18,184 --> 00:01:23,484
 Generational hypothesis — most objects die young — Eden and survivor spaces.
 
 19
-00:01:41,036 --> 00:01:47,532
+00:01:23,484 --> 00:01:28,714
 Collectors trade throughput versus pause — G1 default, ZGC for low latency.
 
 20
-00:01:47,532 --> 00:01:52,816
+00:01:28,714 --> 00:01:32,968
 Tune with GC logs and measurement — not memorized flag lists.
 
 21
-00:01:52,816 --> 00:01:56,337
+00:01:32,968 --> 00:01:35,639
 JIT compilation — why Java can be fast.
 
 22
-00:01:56,337 --> 00:02:02,114
+00:01:35,639 --> 00:01:40,023
 Interpreter runs bytecode immediately — no upfront compile wait.
 
 23
-00:02:02,114 --> 00:02:08,614
+00:01:40,023 --> 00:01:44,955
 HotSpot profiles execution — frequently called methods get JIT compiled.
 
 24
-00:02:08,614 --> 00:02:16,016
+00:01:44,955 --> 00:01:50,572
 C1 quick compile first — C2 optimizes hot paths with inlining and escape analysis.
 
 25
-00:02:16,016 --> 00:02:21,794
+00:01:50,572 --> 00:01:54,956
 Deoptimization falls back to interpreter when assumptions break.
 
 26
-00:02:21,794 --> 00:02:27,842
+00:01:54,956 --> 00:01:59,546
 Warmup matters — first requests run interpreted until JIT kicks in.
 
 27
-00:02:27,842 --> 00:02:32,156
+00:01:59,546 --> 00:02:02,928
 Tie the internals story together for interview depth.
 
 28
-00:02:32,156 --> 00:02:38,423
+00:02:02,928 --> 00:02:07,843
 Class loading puts metadata in metaspace — objects on heap reference classes.
 
 29
-00:02:38,423 --> 00:02:44,690
+00:02:07,843 --> 00:02:12,757
 Object layout — headers, padding, compressed oops — affects memory footprint.
 
 30
-00:02:44,690 --> 00:02:50,875
+00:02:12,757 --> 00:02:17,607
 Safepoints coordinate GC and deoptimization — sync time can dominate pauses.
 
 31
-00:02:50,875 --> 00:02:57,143
+00:02:17,607 --> 00:02:22,521
 Flags tune heap, collector, and diagnostics — always measure before changing.
 
 32
-00:02:57,143 --> 00:03:03,084
+00:02:22,521 --> 00:02:27,180
 This stack of knowledge is what separates junior from senior JVM answers.
 
 33
-00:03:03,084 --> 00:03:07,502
+00:02:27,180 --> 00:02:30,681
 A reusable framework for any JVM interview question.
 
 34
-00:03:07,502 --> 00:03:13,195
+00:02:30,681 --> 00:02:35,193
 Define the concept in one sentence — what it is and where it lives.
 
 35
-00:03:13,195 --> 00:03:18,463
+00:02:35,193 --> 00:02:39,368
 Explain why it exists — the problem it solves for the runtime.
 
 36
-00:03:18,463 --> 00:03:23,731
+00:02:39,368 --> 00:02:43,542
 Give a concrete example — code snippet or production scenario.
 
 37
-00:03:23,731 --> 00:03:27,809
+00:02:43,542 --> 00:02:46,775
 Mention trade-offs — nothing in the JVM is free.
 
 38
-00:03:27,809 --> 00:03:33,502
+00:02:46,775 --> 00:02:51,286
 Close with how you would investigate — logs, JFR, profilers, flags.
 
 39
-00:03:33,502 --> 00:03:36,103
+00:02:51,286 --> 00:02:53,345
 Three common interview mistakes.
 
 40
-00:03:36,103 --> 00:03:41,306
+00:02:53,345 --> 00:02:57,464
 One — reciting flags without explaining what problem they solve.
 
 41
-00:03:41,306 --> 00:03:46,428
+00:02:57,464 --> 00:03:01,518
 Two — conflating heap and metaspace — different memory regions.
 
 42
-00:03:46,428 --> 00:03:52,444
+00:03:01,518 --> 00:03:06,280
 Three — claiming Java is always slow — ignoring JIT and modern collectors.
 
 43
-00:03:52,444 --> 00:03:58,784
+00:03:06,280 --> 00:03:11,300
 Also — diving into implementation details before answering the question asked.
 
 44
-00:03:58,784 --> 00:04:05,288
+00:03:11,300 --> 00:03:16,448
 Structure beats depth — interviewers reward clarity over encyclopedic knowledge.
 
 45
-00:04:05,288 --> 00:04:10,331
+00:03:16,448 --> 00:03:20,579
 Capstone question — explain how the JVM runs a Java program.
 
 46
-00:04:10,331 --> 00:04:16,467
+00:03:20,579 --> 00:03:25,606
 Source compiles to bytecode — class loader brings classes into metaspace.
 
 47
-00:04:16,467 --> 00:04:22,351
+00:03:25,606 --> 00:03:30,426
 Interpreter executes — stack frames on thread stacks, objects on heap.
 
 48
-00:04:22,351 --> 00:04:27,730
+00:03:30,426 --> 00:03:34,832
 JIT compiles hot methods — GC reclaims unreachable heap objects.
 
 49
-00:04:27,730 --> 00:04:33,698
+00:03:34,832 --> 00:03:39,721
 Safepoints coordinate pauses — flags tune heap, collector, and logging.
 
 50
-00:04:33,698 --> 00:04:39,666
+00:03:39,721 --> 00:03:44,610
 Measurement validates every claim — that is the senior engineer answer.
 
 51
-00:04:39,666 --> 00:04:45,856
+00:03:44,610 --> 00:03:49,243
 JVM internals complete — next we shift to application architecture.
 
 52
-00:04:45,856 --> 00:04:49,921
+00:03:49,243 --> 00:03:52,285
 Episode Sixty-Seven — Design Patterns Intro.
 
 53
-00:04:49,921 --> 00:04:55,927
+00:03:52,285 --> 00:03:56,780
 Reusable solutions before we reach Spring at Episode Seventy-One.
 
 54
-00:04:55,927 --> 00:04:57,220
+00:03:56,780 --> 00:03:57,748
 See you there.
