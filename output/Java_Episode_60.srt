@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:06,076
+00:00:00,000 --> 00:00:04,739
 Episode Fifty-Nine showed escape analysis eliminating heap allocations.
 
 2
-00:00:06,076 --> 00:00:12,665
+00:00:04,739 --> 00:00:09,878
 But JVM memory is more than the heap — classes and native buffers matter too.
 
 3
-00:00:12,665 --> 00:00:18,398
+00:00:09,878 --> 00:00:14,349
 Before Java 8, PermGen held class metadata with a fixed size limit.
 
 4
-00:00:18,398 --> 00:00:24,817
+00:00:14,349 --> 00:00:19,355
 Metaspace replaced PermGen — class metadata in native memory, auto-growing.
 
 5
-00:00:24,817 --> 00:00:30,807
+00:00:19,355 --> 00:00:24,027
 Direct ByteBuffers and JNI allocations live outside the heap entirely.
 
 6
-00:00:30,807 --> 00:00:35,770
+00:00:24,027 --> 00:00:27,898
 Today — metaspace, native memory, direct buffers, and NMT.
 
 7
-00:00:35,770 --> 00:00:37,565
+00:00:27,898 --> 00:00:29,429
 Episode Sixty.
 
 8
-00:00:37,565 --> 00:00:41,156
+00:00:29,429 --> 00:00:32,492
 Metaspace and Native Memory.
 
 9
-00:00:41,156 --> 00:00:47,237
+00:00:32,492 --> 00:00:37,188
 PermGen — Permanent Generation — stored class metadata until Java 7.
 
 10
-00:00:47,237 --> 00:00:53,585
+00:00:37,188 --> 00:00:42,091
 Fixed maximum size — PermGenSpace OutOfMemoryError on class-heavy apps.
 
 11
-00:00:53,585 --> 00:00:59,129
+00:00:42,091 --> 00:00:46,372
 Hot redeploy in app servers leaked class loaders into PermGen.
 
 12
-00:00:59,129 --> 00:01:04,494
+00:00:46,372 --> 00:00:50,515
 Java 8 removed PermGen — metadata moved to native metaspace.
 
 13
-00:01:04,494 --> 00:01:09,949
+00:00:50,515 --> 00:00:54,728
 Metaspace grows on demand — limited by MaxMetaspaceSize flag.
 
 14
-00:01:09,949 --> 00:01:16,566
+00:00:54,728 --> 00:00:59,838
 Understanding the history explains old PermGen tuning advice still online.
 
 15
-00:01:16,566 --> 00:01:23,295
+00:00:59,838 --> 00:01:05,119
 Metaspace stores class metadata — method tables, constant pools, annotations.
 
 16
-00:01:23,295 --> 00:01:28,975
+00:01:05,119 --> 00:01:09,576
 Allocated from native OS memory — not counted in -Xmx heap limit.
 
 17
-00:01:28,975 --> 00:01:35,092
+00:01:09,576 --> 00:01:14,377
 Grows as classes load — shrinks when class loaders become unreachable.
 
 18
-00:01:35,092 --> 00:01:40,597
+00:01:14,377 --> 00:01:18,697
 MaxMetaspaceSize caps growth — default unlimited on 64-bit JVM.
 
 19
-00:01:40,597 --> 00:01:47,326
+00:01:18,697 --> 00:01:23,978
 Compressed class pointers — UseCompressedClassPointers saves space on 64-bit.
 
 20
-00:01:47,326 --> 00:01:54,928
+00:01:23,978 --> 00:01:29,944
 Class unloading requires collecting the defining ClassLoader — rare in long-lived apps.
 
 21
-00:01:54,928 --> 00:01:59,867
+00:01:29,944 --> 00:01:33,805
 Direct ByteBuffers allocate memory outside the Java heap.
 
 22
-00:01:59,867 --> 00:02:05,760
+00:01:33,805 --> 00:01:38,412
 ByteBuffer.allocateDirect — native memory for zero-copy I/O with OS.
 
 23
-00:02:05,760 --> 00:02:11,219
+00:01:38,412 --> 00:01:42,680
 Not tracked by heap -Xmx — can exhaust process memory silently.
 
 24
-00:02:11,219 --> 00:02:18,238
+00:01:42,680 --> 00:01:48,167
 Cleaner or explicit free releases native memory when buffer is garbage collected.
 
 25
-00:02:18,238 --> 00:02:24,564
+00:01:48,167 --> 00:01:53,113
 Netty and NIO frameworks use direct buffers heavily — watch native usage.
 
 26
-00:02:24,564 --> 00:02:30,890
+00:01:53,113 --> 00:01:58,058
 MaxDirectMemorySize flag sets the cap — default is roughly max heap size.
 
 27
-00:02:30,890 --> 00:02:36,935
+00:01:58,058 --> 00:02:02,748
 Native Memory Tracking — NMT — accounts for JVM native allocations.
 
 28
-00:02:36,935 --> 00:02:42,890
+00:02:02,748 --> 00:02:07,367
 Enable with -XX:NativeMemoryTracking=summary or detail at startup.
 
 29
-00:02:42,890 --> 00:02:48,304
+00:02:07,367 --> 00:02:11,567
 jcmd <pid> VM.native_memory summary — breakdown by category.
 
 30
-00:02:48,304 --> 00:02:54,439
+00:02:11,567 --> 00:02:16,327
 Categories include Java Heap, Metaspace, Code, Thread, and Internal.
 
 31
-00:02:54,439 --> 00:03:01,748
+00:02:16,327 --> 00:02:21,996
 Compare baseline versus after load test — spot metaspace or direct buffer growth.
 
 32
-00:03:01,748 --> 00:03:08,244
+00:02:21,996 --> 00:02:27,036
 Detail mode has overhead — use summary in production, detail in staging.
 
 33
-00:03:08,244 --> 00:03:12,390
+00:02:27,036 --> 00:02:30,252
 Sizing native memory for production workloads.
 
 34
-00:03:12,390 --> 00:03:18,880
+00:02:30,252 --> 00:02:35,286
 Set MaxMetaspaceSize if class loaders leak or dynamic codegen runs wild.
 
 35
-00:03:18,880 --> 00:03:24,648
+00:02:35,286 --> 00:02:39,761
 Set MaxDirectMemorySize when using heavy NIO or off-heap caches.
 
 36
-00:03:24,648 --> 00:03:31,499
+00:02:39,761 --> 00:02:45,075
 Monitor RSS process size — heap plus metaspace plus code cache plus threads.
 
 37
-00:03:31,499 --> 00:03:37,808
+00:02:45,075 --> 00:02:49,969
 NMT diff before and after deployment catches class loader leaks early.
 
 38
-00:03:37,808 --> 00:03:43,126
+00:02:49,969 --> 00:02:54,094
 Native OOM kills the process — no catchable Java exception.
 
 39
-00:03:43,126 --> 00:03:45,105
+00:02:54,094 --> 00:02:55,607
 Three common mistakes.
 
 40
-00:03:45,105 --> 00:03:50,861
+00:02:55,607 --> 00:03:00,009
 One — sizing only -Xmx and ignoring metaspace and direct memory.
 
 41
-00:03:50,861 --> 00:03:57,697
+00:03:00,009 --> 00:03:05,237
 Two — assuming GC frees direct buffer memory immediately — Cleaner is async.
 
 42
-00:03:57,697 --> 00:04:03,453
+00:03:05,237 --> 00:03:09,639
 Three — enabling NMT detail in production — measurable overhead.
 
 43
-00:04:03,453 --> 00:04:09,749
+00:03:09,639 --> 00:03:14,454
 Also — redeploying without restarting — class loader leaks accumulate.
 
 44
-00:04:09,749 --> 00:04:15,056
+00:03:14,454 --> 00:03:18,512
 Watch RSS and NMT — heap metrics alone miss half the story.
 
 45
-00:04:15,056 --> 00:04:21,927
+00:03:18,512 --> 00:03:23,995
 Interview question — what is metaspace and how does it differ from the heap?
 
 46
-00:04:21,927 --> 00:04:27,984
+00:03:23,995 --> 00:03:28,828
 Metaspace holds class metadata in native memory — not Java objects.
 
 47
-00:04:27,984 --> 00:04:34,584
+00:03:28,828 --> 00:03:34,095
 Replaced PermGen in Java 8 — grows on demand, capped by MaxMetaspaceSize.
 
 48
-00:04:34,584 --> 00:04:39,828
+00:03:34,095 --> 00:03:38,279
 Direct buffers and code cache also live outside -Xmx heap.
 
 49
-00:04:39,828 --> 00:04:45,885
+00:03:38,279 --> 00:03:43,113
 NMT with jcmd VM.native_memory tracks native allocation categories.
 
 50
-00:04:45,885 --> 00:04:51,762
+00:03:43,113 --> 00:03:47,802
 RSS is the real process limit — heap plus all native JVM regions.
 
 51
-00:04:51,762 --> 00:04:58,260
+00:03:47,802 --> 00:03:53,139
 Not all references are strong — the JVM offers softer cleanup contracts.
 
 52
-00:04:58,260 --> 00:05:03,223
+00:03:53,139 --> 00:03:57,215
 Episode Sixty-One — Soft, Weak, and Phantom References.
 
 53
-00:05:03,223 --> 00:05:07,285
+00:03:57,215 --> 00:04:00,550
 ReferenceQueue, caches, and cleanup patterns.
 
 54
-00:05:07,285 --> 00:05:08,548
+00:04:00,550 --> 00:04:01,588
 See you there.
