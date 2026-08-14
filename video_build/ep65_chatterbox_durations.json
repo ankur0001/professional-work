@@ -1,0 +1,12 @@
+{
+  "hook": 28.776,
+  "title": 3.984,
+  "startup_phases": 27.816,
+  "class_loading_cost": 26.616,
+  "cds_appcds": 28.608,
+  "warmup_strategies": 29.664,
+  "measurement_startup": 24.144,
+  "mistakes": 24.648,
+  "interview": 27.288,
+  "teaser": 14.352
+}
