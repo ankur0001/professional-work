@@ -1,0 +1,12 @@
+{
+  "hook": 19.632,
+  "title": 6.0,
+  "guards": 22.128,
+  "switch": 27.12,
+  "loops": 24.432,
+  "exceptions": 29.448,
+  "pipeline": 20.208,
+  "mistakes": 22.536,
+  "interview": 20.208,
+  "teaser": 13.896
+}

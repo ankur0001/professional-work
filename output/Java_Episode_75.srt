@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:05,236
+Episode Seventy-Four covered Spring MVC and REST boundaries.
+
+2
+00:00:05,236 --> 00:00:12,217
+Most services persist state — Spring Data makes repositories a first-class idea.
+
+3
+00:00:12,217 --> 00:00:18,762
+JPA and Hibernate remain the common relational stack under Spring Data JPA.
+
+4
+00:00:18,762 --> 00:00:25,220
+Transactions define consistency boundaries — get them wrong and data lies.
+
+5
+00:00:25,220 --> 00:00:31,590
+Performance interviews often land on lazy loading and N-plus-one queries.
+
+6
+00:00:31,590 --> 00:00:37,786
+Today — repositories, entities, transactions, and persistence pitfalls.
+
+7
+00:00:37,786 --> 00:00:40,166
+Episode Seventy-Five.
+
+8
+00:00:40,166 --> 00:00:43,340
+Spring Data and Persistence.
+
+9
+00:00:43,340 --> 00:00:49,216
+Spring Data repositories declare persistence intent as interfaces.
+
+10
+00:00:49,216 --> 00:00:55,715
+JpaRepository gives CRUD, paging, and sorting with almost no boilerplate.
+
+11
+00:00:55,715 --> 00:01:01,859
+Query methods derive SQL from method names — findByEmail, existsById.
+
+12
+00:01:01,859 --> 00:01:07,646
+Query annotation or specs handle complex predicates deliberately.
+
+13
+00:01:07,646 --> 00:01:13,522
+Keep repositories focused on persistence — not business workflows.
+
+14
+00:01:13,522 --> 00:01:19,398
+Custom fragments extend repositories when derived queries run out.
+
+15
+00:01:19,398 --> 00:01:23,087
+Entities map tables to objects — carefully.
+
+16
+00:01:23,087 --> 00:01:29,778
+Id and GeneratedValue define identity — equals should respect it thoughtfully.
+
+17
+00:01:29,778 --> 00:01:35,870
+Relationships — OneToMany, ManyToOne — model cardinality and ownership.
+
+18
+00:01:35,870 --> 00:01:41,875
+FetchType lazy is the default for many associations — for good reason.
+
+19
+00:01:41,875 --> 00:01:47,794
+DTOs or projections keep API models separate from persistence models.
+
+20
+00:01:47,794 --> 00:01:54,400
+Schema migrations belong in Flyway or Liquibase — not hope and hibernate-ddl.
+
+21
+00:01:54,400 --> 00:01:57,898
+Transactional marks a consistency boundary.
+
+22
+00:01:57,898 --> 00:02:03,105
+On a service facade — one use case, one transaction, by default.
+
+23
+00:02:03,105 --> 00:02:09,288
+Propagation and isolation settings change when nested calls join or suspend.
+
+24
+00:02:09,288 --> 00:02:15,146
+Read-only transactions can help readers — still measure before assuming.
+
+25
+00:02:15,146 --> 00:02:20,922
+Checked exceptions do not roll back by default — RuntimeException does.
+
+26
+00:02:20,922 --> 00:02:26,210
+Keep transactions short — no remote calls while holding DB locks.
+
+27
+00:02:26,210 --> 00:02:31,491
+The N-plus-one problem — classic interview and production trap.
+
+28
+00:02:31,491 --> 00:02:37,192
+One query loads parents — N more queries load each child collection.
+
+29
+00:02:37,192 --> 00:02:42,474
+Symptoms — fine in tests with two rows, painful with thousands.
+
+30
+00:02:42,474 --> 00:02:47,420
+Fixes — join fetch, entity graphs, or dedicated query DTOs.
+
+31
+00:02:47,420 --> 00:02:52,534
+Open Session in View can hide the issue until you disable it.
+
+32
+00:02:52,534 --> 00:02:57,396
+Log SQL in staging — count queries for critical endpoints.
+
+33
+00:02:57,396 --> 00:03:00,099
+Practical persistence practices.
+
+34
+00:03:00,099 --> 00:03:04,577
+Index for the queries you run — not for every column.
+
+35
+00:03:04,577 --> 00:03:09,223
+Paginate at the database — not in memory after findAll.
+
+36
+00:03:09,223 --> 00:03:14,207
+Optimistic locking with Version prevents silent overwrites.
+
+37
+00:03:14,207 --> 00:03:19,698
+Separate read models when query shapes diverge from write models.
+
+38
+00:03:19,698 --> 00:03:24,598
+Measure with realistic data volumes — microbenchmarks lie.
+
+39
+00:03:24,598 --> 00:03:26,529
+Three common mistakes.
+
+40
+00:03:26,529 --> 00:03:32,586
+One — calling findAll and filtering in Java — database should filter.
+
+41
+00:03:32,586 --> 00:03:38,291
+Two — lazy loads in JSON serialization — accidental query storms.
+
+42
+00:03:38,291 --> 00:03:43,558
+Three — huge transactional methods that call other services.
+
+43
+00:03:43,558 --> 00:03:49,527
+Also — exposing entities over REST — persistence leaks into clients.
+
+44
+00:03:49,527 --> 00:03:55,496
+Persistence is a boundary — protect it with clear services and DTOs.
+
+45
+00:03:55,496 --> 00:04:01,371
+Interview question — how do you avoid N-plus-one with Spring Data JPA?
+
+46
+00:04:01,371 --> 00:04:06,827
+Detect it — enable SQL logging and watch query counts under load.
+
+47
+00:04:06,827 --> 00:04:12,619
+Fetch joins or entity graphs load required associations deliberately.
+
+48
+00:04:12,619 --> 00:04:17,738
+DTO projections query exactly the columns the use case needs.
+
+49
+00:04:17,738 --> 00:04:23,026
+Avoid Open Session in View masking lazy loads during rendering.
+
+50
+00:04:23,026 --> 00:04:28,482
+Fix the query shape — do not just raise the connection pool size.
+
+51
+00:04:28,482 --> 00:04:32,204
+Data is safe — next we lock the doors.
+
+52
+00:04:32,204 --> 00:04:35,926
+Episode Seventy-Six — Spring Security.
+
+53
+00:04:35,926 --> 00:04:42,097
+Authentication, authorization, filters, and securing REST APIs.
+
+54
+00:04:42,097 --> 00:04:43,468
+See you there.

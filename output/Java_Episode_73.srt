@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:05,504
+Episode Seventy-Two covered IoC, injection styles, and bean scopes.
+
+2
+00:00:05,504 --> 00:00:11,418
+Spring Boot is how most teams actually start a Spring application today.
+
+3
+00:00:11,418 --> 00:00:17,743
+Boot is still Spring — it adds conventions, starters, and auto-configuration.
+
+4
+00:00:17,743 --> 00:00:23,411
+The goal — a production-ready app with less XML and less boilerplate.
+
+5
+00:00:23,411 --> 00:00:29,325
+Misunderstanding Boot leads to fighting auto-config instead of using it.
+
+6
+00:00:29,325 --> 00:00:35,650
+Today — starters, auto-configuration, properties, actuators, and the fat jar.
+
+7
+00:00:35,650 --> 00:00:38,334
+Episode Seventy-Three.
+
+8
+00:00:38,334 --> 00:00:40,652
+Spring Boot Basics.
+
+9
+00:00:40,652 --> 00:00:44,571
+Starters are curated dependency descriptors.
+
+10
+00:00:44,571 --> 00:00:51,161
+spring-boot-starter-web pulls MVC, Tomcat, Jackson, and validation basics.
+
+11
+00:00:51,161 --> 00:00:56,237
+starter-data-jpa brings Hibernate and repository support.
+
+12
+00:00:56,237 --> 00:01:01,581
+starter-test lands JUnit, Mockito, AssertJ, and Spring Test.
+
+13
+00:01:01,581 --> 00:01:07,904
+You choose capabilities — Boot chooses compatible versions via the BOM.
+
+14
+00:01:07,904 --> 00:01:13,782
+Prefer official starters over hand-picking twenty transitive jars.
+
+15
+00:01:13,782 --> 00:01:18,471
+Auto-configuration creates beans when conditions match.
+
+16
+00:01:18,471 --> 00:01:23,075
+Classpath present — DataSource auto-config may engage.
+
+17
+00:01:23,075 --> 00:01:28,957
+A user-defined bean of the same type usually wins — you can override.
+
+18
+00:01:28,957 --> 00:01:34,754
+ConditionalOnClass and ConditionalOnMissingBean drive the decisions.
+
+19
+00:01:34,754 --> 00:01:40,381
+debug equals true or ConditionEvaluationReport shows what matched.
+
+20
+00:01:40,381 --> 00:01:45,496
+Auto-config is opinionated defaults — not untouchable magic.
+
+21
+00:01:45,496 --> 00:01:50,577
+Externalized configuration keeps code environment-agnostic.
+
+22
+00:01:50,577 --> 00:01:55,485
+application.properties or application.yaml hold defaults.
+
+23
+00:01:55,485 --> 00:02:01,858
+Profile-specific files — application-prod.yaml — override per environment.
+
+24
+00:02:01,858 --> 00:02:07,369
+Environment variables and command-line args outrank file values.
+
+25
+00:02:07,369 --> 00:02:12,708
+ConfigurationProperties maps typed settings into beans safely.
+
+26
+00:02:12,708 --> 00:02:18,650
+Never hardcode secrets — inject them from the environment or a vault.
+
+27
+00:02:18,650 --> 00:02:21,340
+The Boot run model in practice.
+
+28
+00:02:21,340 --> 00:02:26,720
+SpringBootApplication enables scanning and auto-configuration.
+
+29
+00:02:26,720 --> 00:02:31,927
+SpringApplication.run boots the context and embedded server.
+
+30
+00:02:31,927 --> 00:02:37,481
+Executable jar packaging ships dependencies — java -jar app.jar.
+
+31
+00:02:37,481 --> 00:02:43,381
+Actuator exposes health, info, and metrics endpoints for operations.
+
+32
+00:02:43,381 --> 00:02:48,588
+Devtools and docker compose support speed local inner loops.
+
+33
+00:02:48,588 --> 00:02:51,792
+Customization without abandoning Boot.
+
+34
+00:02:51,792 --> 00:02:57,021
+Define your own Bean when defaults are wrong — Boot backs off.
+
+35
+00:02:57,021 --> 00:03:02,249
+Exclude specific auto-config classes only with a clear reason.
+
+36
+00:03:02,249 --> 00:03:07,983
+Use application properties before writing custom configuration code.
+
+37
+00:03:07,983 --> 00:03:14,054
+Keep SpringBootApplication on a root package so scanning sees your code.
+
+38
+00:03:14,054 --> 00:03:19,198
+Read starter docs — each starter documents keys you can tune.
+
+39
+00:03:19,198 --> 00:03:21,096
+Three common mistakes.
+
+40
+00:03:21,096 --> 00:03:27,134
+One — excluding auto-config to fix a symptom — hide the real conflict.
+
+41
+00:03:27,134 --> 00:03:32,741
+Two — giant application.yaml with unused keys nobody understands.
+
+42
+00:03:32,741 --> 00:03:39,469
+Three — putting SpringBootApplication in a nested package — components missed.
+
+43
+00:03:39,469 --> 00:03:45,507
+Also — mixing Boot versions manually — always use the BOM managed set.
+
+44
+00:03:45,507 --> 00:03:51,632
+Work with Boot's conventions — override deliberately, not accidentally.
+
+45
+00:03:51,632 --> 00:03:56,966
+Interview question — what does Spring Boot add on top of Spring?
+
+46
+00:03:56,966 --> 00:04:01,301
+Starters for curated dependencies and a managed BOM.
+
+47
+00:04:01,301 --> 00:04:06,552
+Auto-configuration that wires common stacks from the classpath.
+
+48
+00:04:06,552 --> 00:04:11,553
+Externalized config and production-ready Actuator endpoints.
+
+49
+00:04:11,553 --> 00:04:16,471
+Embedded servers and executable jars for simple deployment.
+
+50
+00:04:16,471 --> 00:04:22,722
+Same Spring container underneath — Boot accelerates the path to production.
+
+51
+00:04:22,722 --> 00:04:26,962
+Boot starts the app — next we handle HTTP.
+
+52
+00:04:26,962 --> 00:04:31,303
+Episode Seventy-Four — Spring MVC and REST.
+
+53
+00:04:31,303 --> 00:04:37,663
+Controllers, request mapping, validation, and clean API design.
+
+54
+00:04:37,663 --> 00:04:39,076
+See you there.
