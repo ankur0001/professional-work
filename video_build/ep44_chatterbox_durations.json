@@ -1,0 +1,12 @@
+{
+  "hook": 25.584,
+  "title": 3.096,
+  "countdown_latch": 23.856,
+  "cyclic_barrier": 24.336,
+  "semaphore": 24.984,
+  "coordination": 21.984,
+  "when_sync": 23.304,
+  "mistakes": 23.52,
+  "interview": 24.552,
+  "teaser": 13.488
+}
