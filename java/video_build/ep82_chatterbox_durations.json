@@ -1,0 +1,12 @@
+{
+  "hook": 26.616,
+  "title": 3.936,
+  "resources": 29.304,
+  "versioning": 23.088,
+  "idempotency": 24.768,
+  "pagination": 23.904,
+  "errors": 23.424,
+  "mistakes": 23.112,
+  "interview": 25.848,
+  "teaser": 10.608
+}
