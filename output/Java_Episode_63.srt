@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:06,210
+Episode Sixty-Two covered JVM flags and a measurement-first tuning mindset.
+
+2
+00:00:06,210 --> 00:00:12,917
+Flags control runtime behavior — object layout controls per-instance memory cost.
+
+3
+00:00:12,917 --> 00:00:18,795
+A million small objects can dominate heap even when each field is tiny.
+
+4
+00:00:18,795 --> 00:00:25,088
+Every Java object carries a header, alignment padding, and reference fields.
+
+5
+00:00:25,088 --> 00:00:30,801
+On 64-bit JVMs, compressed oops shrink pointer overhead dramatically.
+
+6
+00:00:30,801 --> 00:00:36,514
+Today — object headers, field layout, padding, and UseCompressedOops.
+
+7
+00:00:36,514 --> 00:00:38,580
+Episode Sixty-Three.
+
+8
+00:00:38,580 --> 00:00:42,092
+Object Layout and Compressed Oops.
+
+9
+00:00:42,092 --> 00:00:47,311
+Every heap object starts with a header — metadata the JVM needs.
+
+10
+00:00:47,311 --> 00:00:52,857
+Mark word — stores hash code, GC age, lock state, and identity bits.
+
+11
+00:00:52,857 --> 00:00:57,261
+Klass pointer — points to class metadata in metaspace.
+
+12
+00:00:57,261 --> 00:01:04,356
+On 64-bit HotSpot, the header is typically twelve bytes with compressed class pointers.
+
+13
+00:01:04,356 --> 00:01:09,331
+Arrays add a length field — four bytes — before element data.
+
+14
+00:01:09,331 --> 00:01:14,958
+Headers are invisible in source code but count toward heap footprint.
+
+15
+00:01:14,958 --> 00:01:21,141
+Instance fields are laid out by the JVM — not in source declaration order.
+
+16
+00:01:21,141 --> 00:01:26,656
+HotSpot reorders fields to minimize padding — widest fields first.
+
+17
+00:01:26,656 --> 00:01:32,004
+long and double take eight bytes — int and references take four.
+
+18
+00:01:32,004 --> 00:01:37,436
+boolean and byte pack into remaining slots when alignment allows.
+
+19
+00:01:37,436 --> 00:01:43,619
+Subclass fields append after superclass layout — inheritance affects size.
+
+20
+00:01:43,619 --> 00:01:49,552
+Use jol-core or JVM object layout tools to inspect real instance sizes.
+
+21
+00:01:49,552 --> 00:01:54,194
+Objects align to eight-byte boundaries on 64-bit JVMs.
+
+22
+00:01:54,194 --> 00:02:00,384
+If fields leave three bytes free, the JVM may add five bytes of padding.
+
+23
+00:02:00,384 --> 00:02:06,230
+An object with one boolean field can still cost sixteen bytes total.
+
+24
+00:02:06,230 --> 00:02:12,334
+Padding is why micro-optimizing field order rarely beats fewer objects.
+
+25
+00:02:12,334 --> 00:02:18,696
+Array of small objects multiplies header cost — consider primitive arrays.
+
+26
+00:02:18,696 --> 00:02:24,026
+Alignment rules apply per object — not per field in isolation.
+
+27
+00:02:24,026 --> 00:02:30,200
+Compressed Oops — compressed ordinary object pointers — save heap space.
+
+28
+00:02:30,200 --> 00:02:37,231
+Flag -XX:+UseCompressedOops — enabled by default on most 64-bit heaps under 32 GB.
+
+29
+00:02:37,231 --> 00:02:44,777
+References stored as 32-bit offsets from a base address instead of full 64-bit pointers.
+
+30
+00:02:44,777 --> 00:02:51,637
+Cuts reference field size in half — huge savings for reference-heavy structures.
+
+31
+00:02:51,637 --> 00:02:58,583
+Heap base must fit in 32 GB for compression — larger heaps use uncompressed oops.
+
+32
+00:02:58,583 --> 00:03:05,700
+Compressed class pointers — UseCompressedClassPointers — shrink klass pointers too.
+
+33
+00:03:05,700 --> 00:03:09,500
+Layout knowledge informs real design decisions.
+
+34
+00:03:09,500 --> 00:03:15,484
+Linked lists of boxed Integers — header plus box plus pointer per element.
+
+35
+00:03:15,484 --> 00:03:20,740
+int[] stores primitives densely — one header, four bytes per int.
+
+36
+00:03:20,740 --> 00:03:27,047
+Records and value-oriented designs reduce pointer chasing and header overhead.
+
+37
+00:03:27,047 --> 00:03:32,384
+Cache-friendly layouts matter more than saving one byte per field.
+
+38
+00:03:32,384 --> 00:03:38,206
+Profile allocation rate — layout explains why some structures cost more.
+
+39
+00:03:38,206 --> 00:03:40,143
+Three common mistakes.
+
+40
+00:03:40,143 --> 00:03:45,160
+One — assuming declared field order equals memory layout.
+
+41
+00:03:45,160 --> 00:03:51,234
+Two — disabling compressed oops on heaps under 32 GB — wastes memory.
+
+42
+00:03:51,234 --> 00:03:56,516
+Three — optimizing field order before reducing object count.
+
+43
+00:03:56,516 --> 00:04:02,326
+Also — ignoring boxing overhead — Integer costs far more than int.
+
+44
+00:04:02,326 --> 00:04:07,520
+Measure with JOL or heap dumps — do not guess object sizes.
+
+45
+00:04:07,520 --> 00:04:12,678
+Interview question — how is a Java object laid out in memory?
+
+46
+00:04:12,678 --> 00:04:18,852
+Header — mark word plus klass pointer — typically twelve bytes on 64-bit.
+
+47
+00:04:18,852 --> 00:04:23,672
+Fields reordered by JVM for alignment — not source order.
+
+48
+00:04:23,672 --> 00:04:30,099
+Eight-byte alignment adds padding — small objects can be surprisingly large.
+
+49
+00:04:30,099 --> 00:04:35,511
+Compressed oops store 32-bit offsets — default under 32 GB heap.
+
+50
+00:04:35,511 --> 00:04:41,346
+Arrays add length field — primitive arrays avoid per-element headers.
+
+51
+00:04:41,346 --> 00:04:48,239
+Object layout explains memory cost — safepoints explain when the JVM pauses.
+
+52
+00:04:48,239 --> 00:04:51,141
+Episode Sixty-Four — Safepoints.
+
+53
+00:04:51,141 --> 00:04:56,310
+Stop-the-world coordination, polling, and safepoint bias.
+
+54
+00:04:56,310 --> 00:04:57,580
+See you there.
