@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:05,201
+00:00:00,000 --> 00:00:04,038
 Episode Sixty-One covered soft, weak, and phantom references.
 
 2
-00:00:05,201 --> 00:00:11,426
+00:00:04,038 --> 00:00:08,870
 Reference types shape object lifetime — JVM flags shape runtime behavior.
 
 3
-00:00:11,426 --> 00:00:16,627
+00:00:08,870 --> 00:00:12,908
 Every production JVM starts with dozens of implicit defaults.
 
 4
-00:00:16,627 --> 00:00:23,108
+00:00:12,908 --> 00:00:17,938
 Heap size, collector choice, and logging flags change latency and stability.
 
 5
-00:00:23,108 --> 00:00:29,588
+00:00:17,938 --> 00:00:22,969
 Copying flags from a blog post without measurement is a common failure mode.
 
 6
-00:00:29,588 --> 00:00:36,154
+00:00:22,969 --> 00:00:28,066
 Today — JVM flags, heap sizing, GC switches, and a measurement-first mindset.
 
 7
-00:00:36,154 --> 00:00:38,431
+00:00:28,066 --> 00:00:29,911
 Episode Sixty-Two.
 
 8
-00:00:38,431 --> 00:00:41,972
+00:00:29,911 --> 00:00:32,780
 JVM Flags and Tuning Basics.
 
 9
-00:00:41,972 --> 00:00:45,565
+00:00:32,780 --> 00:00:35,630
 Heap sizing starts with -Xms and -Xmx.
 
 10
-00:00:45,565 --> 00:00:51,615
+00:00:35,630 --> 00:00:40,430
 -Xms sets initial heap — -Xmx sets maximum heap the JVM may use.
 
 11
-00:00:51,615 --> 00:00:57,382
+00:00:40,430 --> 00:00:45,005
 Matching Xms to Xmx avoids resize pauses during steady state.
 
 12
-00:00:57,382 --> 00:01:02,676
+00:00:45,005 --> 00:00:49,206
 Too small — frequent GC and OutOfMemoryError under load.
 
 13
-00:01:02,676 --> 00:01:08,160
+00:00:49,206 --> 00:00:53,556
 Too large — long GC pauses and wasted RAM on shared hosts.
 
 14
-00:01:08,160 --> 00:01:15,534
+00:00:53,556 --> 00:00:59,406
 Start from observed usage under realistic traffic — add headroom, not guesses.
 
 15
-00:01:15,534 --> 00:01:21,350
+00:00:59,406 --> 00:01:04,105
 Collector flags select the garbage collector implementation.
 
 16
-00:01:21,350 --> 00:01:27,361
+00:01:04,105 --> 00:01:08,960
 -XX:+UseG1GC — default general-purpose collector since Java 9.
 
 17
-00:01:27,361 --> 00:01:34,050
+00:01:08,960 --> 00:01:14,364
 -XX:+UseZGC — low-pause collector for large heaps and strict latency.
 
 18
-00:01:34,050 --> 00:01:39,963
+00:01:14,364 --> 00:01:19,142
 -XX:+UseParallelGC — throughput-oriented for batch workloads.
 
 19
-00:01:39,963 --> 00:01:46,749
+00:01:19,142 --> 00:01:24,624
 MaxGCPauseMillis tunes G1 pause target — best effort, not a guarantee.
 
 20
-00:01:46,749 --> 00:01:53,632
+00:01:24,624 --> 00:01:30,184
 Collector choice is empirical — validate with GC logs on your workload.
 
 21
-00:01:53,632 --> 00:01:58,417
+00:01:30,184 --> 00:01:33,843
 Diagnostic flags make invisible behavior visible.
 
 22
-00:01:58,417 --> 00:02:04,275
+00:01:33,843 --> 00:01:38,324
 -Xlog:gc* enables unified GC logging in modern JDK releases.
 
 23
-00:02:04,275 --> 00:02:09,939
+00:01:38,324 --> 00:01:42,655
 -XX:+HeapDumpOnOutOfMemoryError writes a heap dump on OOM.
 
 24
-00:02:09,939 --> 00:02:15,016
+00:01:42,655 --> 00:01:46,539
 -XX:ErrorFile=path captures fatal JVM error details.
 
 25
-00:02:15,016 --> 00:02:21,656
+00:01:46,539 --> 00:01:51,617
 PrintFlagsFinal lists every flag and its effective value at startup.
 
 26
-00:02:21,656 --> 00:02:29,858
+00:01:51,617 --> 00:01:57,890
 Flight Recorder and async profilers complement flags — use them before tuning blind.
 
 27
-00:02:29,858 --> 00:02:33,061
+00:01:57,890 --> 00:02:00,356
 Tuning without measurement is guessing.
 
 28
-00:02:33,061 --> 00:02:38,891
+00:02:00,356 --> 00:02:04,845
 Establish a baseline — latency, throughput, GC pause times, heap usage.
 
 29
-00:02:38,891 --> 00:02:43,982
+00:02:04,845 --> 00:02:08,765
 Change one variable at a time — flag, heap size, or collector.
 
 30
-00:02:43,982 --> 00:02:49,649
+00:02:08,765 --> 00:02:13,128
 Replay production traffic or run load tests that match real patterns.
 
 31
-00:02:49,649 --> 00:02:54,576
+00:02:13,128 --> 00:02:16,922
 Compare before and after with the same dataset and duration.
 
 32
-00:02:54,576 --> 00:03:00,324
+00:02:16,922 --> 00:02:21,348
 Document what you changed and why — future you will thank present you.
 
 33
-00:03:00,324 --> 00:03:05,067
+00:02:21,348 --> 00:02:25,173
 A practical starter flag set for services.
 
 34
-00:03:05,067 --> 00:03:11,503
+00:02:25,173 --> 00:02:30,364
 java -Xms4g -Xmx4g -XX:+UseG1GC -XX:MaxGCPauseMillis=200.
 
 35
-00:03:11,503 --> 00:03:18,843
+00:02:30,364 --> 00:02:36,284
 Add -Xlog:gc*:file=gc.log:time,uptime,level,tags for GC analysis.
 
 36
-00:03:18,843 --> 00:03:27,763
+00:02:36,284 --> 00:02:43,478
 Container deployments — respect cgroup memory limits with -XX:MaxRAMPercentage.
 
 37
-00:03:27,763 --> 00:03:34,651
+00:02:43,478 --> 00:02:49,033
 Never set flags you cannot explain in an incident postmortem.
 
 38
-00:03:34,651 --> 00:03:41,878
+00:02:49,033 --> 00:02:54,862
 Flags are tools — the goal is reliable behavior under real load.
 
 39
-00:03:41,878 --> 00:03:43,787
+00:02:54,862 --> 00:02:56,295
 Three common mistakes.
 
 40
-00:03:43,787 --> 00:03:49,774
+00:02:56,295 --> 00:03:00,789
 One — copying another team's flags without matching workload or heap.
 
 41
-00:03:49,774 --> 00:03:56,282
+00:03:00,789 --> 00:03:05,674
 Two — setting Xmx to all available RAM — no room for metaspace or OS cache.
 
 42
-00:03:56,282 --> 00:04:02,530
+00:03:05,674 --> 00:03:10,364
 Three — tuning GC before fixing allocation hotspots in application code.
 
 43
-00:04:02,530 --> 00:04:08,951
+00:03:10,364 --> 00:03:15,183
 Also — changing five flags at once — impossible to attribute improvements.
 
 44
-00:04:08,951 --> 00:04:14,504
+00:03:15,183 --> 00:03:19,352
 Measure first, tune second, verify third — always in that order.
 
 45
-00:04:14,504 --> 00:04:19,879
+00:03:19,352 --> 00:03:23,613
 Interview question — how do you tune JVM flags for a service?
 
 46
-00:04:19,879 --> 00:04:26,136
+00:03:23,613 --> 00:03:28,573
 Start with baseline metrics — latency percentiles, GC logs, heap usage.
 
 47
-00:04:26,136 --> 00:04:32,745
+00:03:28,573 --> 00:03:33,813
 Size heap from observed peak plus headroom — match Xms and Xmx when stable.
 
 48
-00:04:32,745 --> 00:04:39,002
+00:03:33,813 --> 00:03:38,773
 Choose collector for workload — G1 default, ZGC for strict pause goals.
 
 49
-00:04:39,002 --> 00:04:44,465
+00:03:38,773 --> 00:03:43,104
 Enable GC logging and OOM heap dumps before changing anything.
 
 50
-00:04:44,465 --> 00:04:50,634
+00:03:43,104 --> 00:03:47,994
 Change one knob, re-test, document — never tune from blog posts alone.
 
 51
-00:04:50,634 --> 00:04:58,098
+00:03:47,994 --> 00:03:53,536
 Flags control the JVM — object layout controls how much memory each instance uses.
 
 52
-00:04:58,098 --> 00:05:03,195
+00:03:53,536 --> 00:03:57,321
 Episode Sixty-Three — Object Layout and Compressed Oops.
 
 53
-00:05:03,195 --> 00:05:08,474
+00:03:57,321 --> 00:04:01,242
 Headers, padding, and pointer compression on 64-bit heaps.
 
 54
-00:05:08,474 --> 00:05:09,748
+00:04:01,242 --> 00:04:02,188
 See you there.
