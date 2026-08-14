@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:05,383
+Episode Sixty covered metaspace and native memory beyond the heap.
+
+2
+00:00:05,383 --> 00:00:10,767
+Strong references keep objects alive until nothing points to them.
+
+3
+00:00:10,767 --> 00:00:16,232
+But Java offers weaker reference types with different GC contracts.
+
+4
+00:00:16,232 --> 00:00:22,267
+Soft, Weak, and Phantom references let you build caches and cleanup hooks.
+
+5
+00:00:22,267 --> 00:00:27,080
+ReferenceQueue notifies you when the referent is collected.
+
+6
+00:00:27,080 --> 00:00:33,034
+Today — soft, weak, and phantom references, caches, and cleanup patterns.
+
+7
+00:00:33,034 --> 00:00:34,994
+Episode Sixty-One.
+
+8
+00:00:34,994 --> 00:00:38,804
+Soft, Weak, and Phantom References.
+
+9
+00:00:38,804 --> 00:00:42,849
+Four reference strengths from strongest to weakest.
+
+10
+00:00:42,849 --> 00:00:49,193
+Strong reference — normal variable assignment — never collected while reachable.
+
+11
+00:00:49,193 --> 00:00:54,824
+Soft reference — collected only when memory is tight — good for caches.
+
+12
+00:00:54,824 --> 00:01:00,217
+Weak reference — collected at next GC regardless of memory pressure.
+
+13
+00:01:00,217 --> 00:01:06,482
+Phantom reference — collected after finalization — for native resource cleanup.
+
+14
+00:01:06,482 --> 00:01:11,478
+Each type extends Reference<T> with different enqueue behavior.
+
+15
+00:01:11,478 --> 00:01:15,594
+SoftReference — ideal for memory-sensitive caches.
+
+16
+00:01:15,594 --> 00:01:21,275
+JVM keeps soft referents until heap is nearly full, then clears them.
+
+17
+00:01:21,275 --> 00:01:26,956
+LinkedHashMap plus SoftReference — simple image or parsed-data cache.
+
+18
+00:01:26,956 --> 00:01:32,060
+WeakReference — canonical mappings that should not prevent GC.
+
+19
+00:01:32,060 --> 00:01:38,481
+WeakHashMap uses weak keys — entries vanish when key is only weakly reachable.
+
+20
+00:01:38,481 --> 00:01:44,656
+Do not rely on reference clearing for correctness — always have a fallback.
+
+21
+00:01:44,656 --> 00:01:50,926
+PhantomReference — referent is not accessible through the reference itself.
+
+22
+00:01:50,926 --> 00:01:56,444
+Used with ReferenceQueue to run cleanup after object is finalized.
+
+23
+00:01:56,444 --> 00:02:02,630
+Pattern — allocate native handle, wrap in PhantomReference, enqueue on GC.
+
+24
+00:02:02,630 --> 00:02:08,483
+Cleaner thread polls queue and releases native memory or file handles.
+
+25
+00:02:08,483 --> 00:02:14,251
+Alternative to finalize — no resurrection risk, predictable ordering.
+
+26
+00:02:14,251 --> 00:02:20,354
+java.lang.ref.Cleaner in Java 9 — modern API built on phantom references.
+
+27
+00:02:20,354 --> 00:02:25,963
+ReferenceQueue receives enqueued references when referent is cleared.
+
+28
+00:02:25,963 --> 00:02:32,222
+Poll or remove blocks until a reference is ready — background cleanup thread.
+
+29
+00:02:32,222 --> 00:02:36,936
+Soft and weak references optionally register with a queue.
+
+30
+00:02:36,936 --> 00:02:43,033
+Phantom references require a queue — referent is never directly accessible.
+
+31
+00:02:43,033 --> 00:02:48,642
+Do not do heavy work in the GC thread — poll from a dedicated thread.
+
+32
+00:02:48,642 --> 00:02:53,844
+Missed queue processing can leak native resources even after GC.
+
+33
+00:02:53,844 --> 00:02:57,588
+Practical cache patterns with reference types.
+
+34
+00:02:57,588 --> 00:03:02,635
+SoftReference cache — keep parsed objects while memory allows.
+
+35
+00:03:02,635 --> 00:03:08,496
+WeakReference intern pool — deduplicate without pinning strings forever.
+
+36
+00:03:08,496 --> 00:03:15,414
+Caffeine and Guava caches use smarter eviction — often better than raw SoftReference.
+
+37
+00:03:15,414 --> 00:03:21,926
+Combine size limits with soft references — unbounded soft caches still risk OOM.
+
+38
+00:03:21,926 --> 00:03:28,438
+Measure hit rate and memory — reference caches are a tuning tool, not a default.
+
+39
+00:03:28,438 --> 00:03:30,267
+Three common mistakes.
+
+40
+00:03:30,267 --> 00:03:36,421
+One — using SoftReference as a leak fix — masks the real strong reference.
+
+41
+00:03:36,421 --> 00:03:42,158
+Two — no ReferenceQueue consumer thread — phantom cleanup never runs.
+
+42
+00:03:42,158 --> 00:03:48,145
+Three — expecting immediate weak reference clearing — GC must run first.
+
+43
+00:03:48,145 --> 00:03:53,467
+Also — storing large objects only in soft refs without size cap.
+
+44
+00:03:53,467 --> 00:03:59,288
+Prefer explicit cache libraries with eviction policies for production.
+
+45
+00:03:59,288 --> 00:04:04,553
+Interview question — explain soft, weak, and phantom references.
+
+46
+00:04:04,553 --> 00:04:08,994
+Soft — cleared under memory pressure — cache use case.
+
+47
+00:04:08,994 --> 00:04:13,519
+Weak — cleared at next GC — WeakHashMap canonical keys.
+
+48
+00:04:13,519 --> 00:04:19,606
+Phantom — post-finalization cleanup — native resources via ReferenceQueue.
+
+49
+00:04:19,606 --> 00:04:25,117
+ReferenceQueue delivers notification — poll from background thread.
+
+50
+00:04:25,117 --> 00:04:31,122
+Strong refs dominate — weak types only affect GC reachability, not magic.
+
+51
+00:04:31,122 --> 00:04:38,124
+Reference types shape object lifetime — JVM flags shape runtime behavior.
+
+52
+00:04:38,124 --> 00:04:42,729
+Episode Sixty-Two — JVM Flags and Tuning Basics.
+
+53
+00:04:42,729 --> 00:04:47,237
+Heap sizing, GC flags, and diagnostic switches.
+
+54
+00:04:47,237 --> 00:04:48,580
+See you there.
