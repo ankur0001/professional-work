@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:05,485
+00:00:00,000 --> 00:00:04,328
 Multiple threads reading and writing the same HashMap can corrupt it.
 
 2
-00:00:05,485 --> 00:00:11,368
+00:00:04,328 --> 00:00:08,970
 Synchronized wrappers lock the entire collection — every operation blocks.
 
 3
-00:00:11,368 --> 00:00:17,250
+00:00:08,970 --> 00:00:13,612
 Concurrent collections offer finer-grained safety without one global lock.
 
 4
-00:00:17,250 --> 00:00:22,577
+00:00:13,612 --> 00:00:17,815
 ConcurrentHashMap scales reads and writes across internal segments.
 
 5
-00:00:22,577 --> 00:00:27,823
+00:00:17,815 --> 00:00:21,956
 CopyOnWriteArrayList snapshots the backing array on each mutation.
 
 6
-00:00:27,823 --> 00:00:32,434
+00:00:21,956 --> 00:00:25,594
 Today — thread-safe collections and when each design wins.
 
 7
-00:00:32,434 --> 00:00:34,514
+00:00:25,594 --> 00:00:27,253
 Episode Forty-Two.
 
 8
-00:00:34,514 --> 00:00:37,172
+00:00:27,253 --> 00:00:29,372
 Concurrent Collections.
 
 9
-00:00:37,172 --> 00:00:41,696
+00:00:29,372 --> 00:00:32,930
 ConcurrentHashMap is the go-to concurrent map in Java.
 
 10
-00:00:41,696 --> 00:00:47,476
+00:00:32,930 --> 00:00:37,477
 It never throws ConcurrentModificationException on concurrent access.
 
 11
-00:00:47,476 --> 00:00:53,088
+00:00:37,477 --> 00:00:41,893
 Internal locking is segment-based — not one lock for the whole map.
 
 12
-00:00:53,088 --> 00:00:58,198
+00:00:41,893 --> 00:00:45,912
 get is usually lock-free. put and remove lock only a segment.
 
 13
-00:00:58,198 --> 00:01:03,308
+00:00:45,912 --> 00:00:49,932
 null keys and null values are not permitted — unlike HashMap.
 
 14
-00:01:03,308 --> 00:01:08,334
+00:00:49,932 --> 00:00:53,886
 Use ConcurrentHashMap when many threads share a mutable map.
 
 15
-00:01:08,334 --> 00:01:13,437
+00:00:53,886 --> 00:00:57,777
 CopyOnWriteArrayList copies the entire array on every write.
 
 16
-00:01:13,437 --> 00:01:18,539
+00:00:57,777 --> 00:01:01,667
 Reads iterate a stable snapshot — no locks during traversal.
 
 17
-00:01:18,539 --> 00:01:23,217
+00:01:01,667 --> 00:01:05,233
 Writes are expensive — copy plus replace the reference.
 
 18
-00:01:23,217 --> 00:01:29,000
+00:01:05,233 --> 00:01:09,643
 Perfect when reads vastly outnumber writes — listener lists, caches.
 
 19
-00:01:29,000 --> 00:01:33,592
+00:01:09,643 --> 00:01:13,144
 Iterator never throws ConcurrentModificationException.
 
 20
-00:01:33,592 --> 00:01:38,440
+00:01:13,144 --> 00:01:16,840
 Do not use for write-heavy workloads — copying dominates.
 
 21
-00:01:38,440 --> 00:01:44,177
+00:01:16,840 --> 00:01:21,586
 ConcurrentLinkedQueue — lock-free linked nodes for high-throughput queues.
 
 22
-00:01:44,177 --> 00:01:50,068
+00:01:21,586 --> 00:01:26,460
 BlockingQueue variants add wait and notify semantics — covered next episode.
 
 23
-00:01:50,068 --> 00:01:56,193
+00:01:26,460 --> 00:01:31,527
 ConcurrentSkipListMap and ConcurrentSkipListSet offer sorted concurrent access.
 
 24
-00:01:56,193 --> 00:02:01,464
+00:01:31,527 --> 00:01:35,888
 Collections.synchronizedList wraps with a mutex — simple but coarse.
 
 25
-00:02:01,464 --> 00:02:06,891
+00:01:35,888 --> 00:01:40,377
 Prefer java.util.concurrent types over synchronized wrappers at scale.
 
 26
-00:02:06,891 --> 00:02:11,930
+00:01:40,377 --> 00:01:44,546
 Match the collection to your read-write ratio and ordering needs.
 
 27
-00:02:11,930 --> 00:02:16,407
+00:01:44,546 --> 00:01:48,239
 Synchronized collections versus concurrent collections.
 
 28
-00:02:16,407 --> 00:02:21,616
+00:01:48,239 --> 00:01:52,537
 SynchronizedMap — one lock per operation — simple but contended.
 
 29
-00:02:21,616 --> 00:02:26,907
+00:01:52,537 --> 00:01:56,902
 ConcurrentHashMap — segmented or striped locking — scales better.
 
 30
-00:02:26,907 --> 00:02:32,279
+00:01:56,902 --> 00:02:01,333
 CopyOnWriteArrayList — no read locks — ideal for read-heavy lists.
 
 31
-00:02:32,279 --> 00:02:37,488
+00:02:01,333 --> 00:02:05,631
 Vector and synchronized ArrayList block every reader and writer.
 
 32
-00:02:37,488 --> 00:02:42,372
+00:02:05,631 --> 00:02:09,660
 Legacy wrappers still appear — know the modern replacements.
 
 33
-00:02:42,372 --> 00:02:45,845
+00:02:09,660 --> 00:02:12,562
 When to choose each concurrent collection.
 
 34
-00:02:45,845 --> 00:02:49,565
+00:02:12,562 --> 00:02:15,671
 Shared cache or registry — ConcurrentHashMap.
 
 35
-00:02:49,565 --> 00:02:54,444
+00:02:15,671 --> 00:02:19,748
 Event listeners or config snapshots — CopyOnWriteArrayList.
 
 36
-00:02:54,444 --> 00:02:58,743
+00:02:19,748 --> 00:02:23,340
 High-throughput work queues — ConcurrentLinkedQueue.
 
 37
-00:02:58,743 --> 00:03:02,546
+00:02:23,340 --> 00:02:26,519
 Sorted concurrent map — ConcurrentSkipListMap.
 
 38
-00:03:02,546 --> 00:03:07,342
+00:02:26,519 --> 00:02:30,526
 When not — single-threaded code — plain HashMap is faster.
 
 39
-00:03:07,342 --> 00:03:09,160
+00:02:30,526 --> 00:02:31,990
 Three common mistakes.
 
 40
-00:03:09,160 --> 00:03:14,697
+00:02:31,990 --> 00:02:36,447
 One — using HashMap from multiple threads without external locking.
 
 41
-00:03:14,697 --> 00:03:20,150
+00:02:36,447 --> 00:02:40,837
 Two — CopyOnWriteArrayList for write-heavy lists — copies explode.
 
 42
-00:03:20,150 --> 00:03:26,183
+00:02:40,837 --> 00:02:45,694
 Three — assuming compound actions are atomic — check-then-act needs care.
 
 43
-00:03:26,183 --> 00:03:31,306
+00:02:45,694 --> 00:02:49,818
 Also — iterating a synchronized list without holding its lock.
 
 44
-00:03:31,306 --> 00:03:37,256
+00:02:49,818 --> 00:02:54,608
 Concurrent collections help — but logical consistency is still your job.
 
 45
-00:03:37,256 --> 00:03:42,890
+00:02:54,608 --> 00:02:58,699
 Interview question — ConcurrentHashMap versus synchronized HashMap?
 
 46
-00:03:42,890 --> 00:03:49,196
+00:02:58,699 --> 00:03:03,278
 ConcurrentHashMap uses finer locking — better scalability under contention.
 
 47
-00:03:49,196 --> 00:03:54,914
+00:03:03,278 --> 00:03:07,430
 No ConcurrentModificationException on concurrent iteration patterns.
 
 48
-00:03:54,914 --> 00:03:59,539
+00:03:07,430 --> 00:03:10,788
 Null keys and values forbidden — enforced at API level.
 
 49
-00:03:59,539 --> 00:04:04,416
+00:03:10,788 --> 00:03:14,329
 CopyOnWriteArrayList for read-heavy, rarely mutated lists.
 
 50
-00:04:04,416 --> 00:04:10,554
+00:03:14,329 --> 00:03:18,786
 Mention when synchronized wrappers are still acceptable — low contention.
 
 51
-00:04:10,554 --> 00:04:16,311
+00:03:18,786 --> 00:03:23,578
 Collections protect shared structures. What about single counters?
 
 52
-00:04:16,311 --> 00:04:19,713
+00:03:23,578 --> 00:03:26,410
 Episode Forty-Three — Atomic Variables.
 
 53
-00:04:19,713 --> 00:04:24,511
+00:03:26,410 --> 00:03:30,403
 AtomicInteger, compare-and-swap, and lock-free updates.
 
 54
-00:04:24,511 --> 00:04:25,732
+00:03:30,403 --> 00:03:31,420
 See you there.
