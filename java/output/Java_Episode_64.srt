@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:06,503
+00:00:00,000 --> 00:00:05,238
 Episode Sixty-Three showed how object headers and padding affect heap footprint.
 
 2
-00:00:06,503 --> 00:00:13,007
+00:00:05,238 --> 00:00:10,477
 Memory layout is static — safepoints are dynamic coordination points in the JVM.
 
 3
-00:00:13,007 --> 00:00:19,917
+00:00:10,477 --> 00:00:16,043
 GC, deoptimization, and some JVM operations need every thread to reach a known state.
 
 4
-00:00:19,917 --> 00:00:26,745
+00:00:16,043 --> 00:00:21,543
 That coordination is called a safepoint — and it can pause your application threads.
 
 5
-00:00:26,745 --> 00:00:32,273
+00:00:21,543 --> 00:00:25,996
 Long-running loops without safepoint polls can delay GC for seconds.
 
 6
-00:00:32,273 --> 00:00:37,882
+00:00:25,996 --> 00:00:30,514
 Today — what safepoints are, when the JVM pauses, and safepoint bias.
 
 7
-00:00:37,882 --> 00:00:40,624
+00:00:30,514 --> 00:00:33,013
 Episode Sixty-Four.
 
 8
-00:00:40,624 --> 00:00:42,212
+00:00:33,013 --> 00:00:34,460
 Safepoints.
 
 9
-00:00:42,212 --> 00:00:49,429
+00:00:34,460 --> 00:00:40,003
 A safepoint is a point in compiled code where the JVM can safely inspect thread state.
 
 10
-00:00:49,429 --> 00:00:55,554
+00:00:40,003 --> 00:00:44,708
 At a safepoint, the JVM knows every live reference and every stack frame.
 
 11
-00:00:55,554 --> 00:01:02,100
+00:00:44,708 --> 00:00:49,736
 GC roots are scanned, biased locking is revoked, and deoptimization can occur.
 
 12
-00:01:02,100 --> 00:01:08,142
+00:00:49,736 --> 00:00:54,377
 Threads not at a safepoint must be brought there before STW work begins.
 
 13
-00:01:08,142 --> 00:01:13,512
+00:00:54,377 --> 00:00:58,502
 Safepoints are not GC-only — many JVM subsystems depend on them.
 
 14
-00:01:13,512 --> 00:01:19,470
+00:00:58,502 --> 00:01:03,078
 Think of them as coordinated parking spots for all application threads.
 
 15
-00:01:19,470 --> 00:01:24,797
+00:01:03,078 --> 00:01:07,263
 Stop-the-world phases require all mutator threads at safepoints.
 
 16
-00:01:24,797 --> 00:01:30,957
+00:01:07,263 --> 00:01:12,102
 Young GC often pauses briefly — all threads must park at safepoints first.
 
 17
-00:01:30,957 --> 00:01:37,117
+00:01:12,102 --> 00:01:16,940
 Full GC and some old-gen collections extend STW while roots are processed.
 
 18
-00:01:37,117 --> 00:01:43,693
+00:01:16,940 --> 00:01:22,106
 Deoptimization — switching compiled code back to interpreter — uses safepoints.
 
 19
-00:01:43,693 --> 00:01:50,602
+00:01:22,106 --> 00:01:27,533
 Biased lock revocation and some JVMTI operations trigger safepoint synchronization.
 
 20
-00:01:50,602 --> 00:01:56,512
+00:01:27,533 --> 00:01:32,176
 Pause time includes time waiting for slow threads to reach a safepoint.
 
 21
-00:01:56,512 --> 00:02:02,348
+00:01:32,176 --> 00:01:37,329
 Safepoint bias — JVM prefers certain code locations for safepoint polls.
 
 22
-00:02:02,348 --> 00:02:08,428
+00:01:37,329 --> 00:01:42,697
 Counted loops have safepoint back-edges — every N iterations thread checks.
 
 23
-00:02:08,428 --> 00:02:13,372
+00:01:42,697 --> 00:01:47,063
 Non-counted loops and JNI calls may lack frequent poll sites.
 
 24
-00:02:13,372 --> 00:02:19,695
+00:01:47,063 --> 00:01:52,646
 A tight infinite loop without polls can block GC indefinitely — rare but real.
 
 25
-00:02:19,695 --> 00:02:25,450
+00:01:52,646 --> 00:01:57,727
 SafepointSynchronize events in JFR show time spent waiting for threads.
 
 26
-00:02:25,450 --> 00:02:30,962
+00:01:57,727 --> 00:02:02,594
 Long safepoint sync times point to threads stuck between poll sites.
 
 27
-00:02:30,962 --> 00:02:36,016
+00:02:02,594 --> 00:02:06,597
 Threads poll a global safepoint flag at compiled poll sites.
 
 28
-00:02:36,016 --> 00:02:41,828
+00:02:06,597 --> 00:02:11,200
 When a safepoint is requested, running threads trap at the next poll.
 
 29
-00:02:41,828 --> 00:02:47,976
+00:02:11,200 --> 00:02:16,070
 Interpreter and JIT insert polls in method prologues and loop back-edges.
 
 30
-00:02:47,976 --> 00:02:53,956
+00:02:16,070 --> 00:02:20,806
 JNI transitions and blocking I/O eventually reach safepoints on return.
 
 31
-00:02:53,956 --> 00:02:59,347
+00:02:20,806 --> 00:02:25,075
 UseAsyncLogDecoration and some intrinsics affect poll placement.
 
 32
-00:02:59,347 --> 00:03:05,580
+00:02:25,075 --> 00:02:30,012
 Understanding polls explains why CPU-bound loops affect GC responsiveness.
 
 33
-00:03:05,580 --> 00:03:09,528
+00:02:30,012 --> 00:02:33,060
 Practical awareness for production engineers.
 
 34
-00:03:09,528 --> 00:03:16,019
+00:02:33,060 --> 00:02:38,071
 JFR SafepointBegin and SafepointEnd events measure sync plus STW duration.
 
 35
-00:03:16,019 --> 00:03:22,511
+00:02:38,071 --> 00:02:43,083
 High sync time — look for long non-polling loops or JNI critical sections.
 
 36
-00:03:22,511 --> 00:03:29,003
+00:02:43,083 --> 00:02:48,095
 ZGC and Shenandoah reduce but do not eliminate all safepoint coordination.
 
 37
-00:03:29,003 --> 00:03:35,144
+00:02:48,095 --> 00:02:52,836
 Do not micro-optimize poll sites — fix algorithmic long loops instead.
 
 38
-00:03:35,144 --> 00:03:40,846
+00:02:52,836 --> 00:02:57,238
 Safepoint knowledge connects GC pauses to actual thread behavior.
 
 39
-00:03:40,846 --> 00:03:42,771
+00:02:57,238 --> 00:02:58,763
 Three common mistakes.
 
 40
-00:03:42,771 --> 00:03:47,935
+00:02:58,763 --> 00:03:02,854
 One — blaming GC alone for pauses — sync time may dominate.
 
 41
-00:03:47,935 --> 00:03:53,887
+00:03:02,854 --> 00:03:07,568
 Two — writing busy loops without considering safepoint reachability.
 
 42
-00:03:53,887 --> 00:03:59,838
+00:03:07,568 --> 00:03:12,283
 Three — ignoring JFR safepoint events during latency investigations.
 
 43
-00:03:59,838 --> 00:04:06,402
+00:03:12,283 --> 00:03:17,483
 Also — assuming concurrent collectors have zero STW — they still safepoint.
 
 44
-00:04:06,402 --> 00:04:11,216
+00:03:17,483 --> 00:03:21,296
 Measure sync versus STW separately — the cause differs.
 
 45
-00:04:11,216 --> 00:04:16,603
+00:03:21,296 --> 00:03:25,667
 Interview question — what is a safepoint and why does it matter?
 
 46
-00:04:16,603 --> 00:04:22,158
+00:03:25,667 --> 00:03:30,175
 Coordination point where JVM can inspect all thread stacks safely.
 
 47
-00:04:22,158 --> 00:04:28,218
+00:03:30,175 --> 00:03:35,093
 Required for GC root scanning, deoptimization, and lock bias revocation.
 
 48
-00:04:28,218 --> 00:04:34,194
+00:03:35,093 --> 00:03:39,942
 Threads poll at loop back-edges — must reach safepoint before STW work.
 
 49
-00:04:34,194 --> 00:04:40,422
+00:03:39,942 --> 00:03:44,996
 Long sync time means threads slow to park — not always GC algorithm fault.
 
 50
-00:04:40,422 --> 00:04:46,482
+00:03:44,996 --> 00:03:49,914
 JFR safepoint events separate sync wait from actual stop-the-world work.
 
 51
-00:04:46,482 --> 00:04:53,865
+00:03:49,914 --> 00:03:55,907
 Safepoints coordinate runtime — startup decides how fast you reach steady state.
 
 52
-00:04:53,865 --> 00:04:57,926
+00:03:55,907 --> 00:03:59,203
 Episode Sixty-Five — JVM Startup and Warmup.
 
 53
-00:04:57,926 --> 00:05:02,264
+00:03:59,203 --> 00:04:02,723
 Class loading cost, CDS, and warmup strategies.
 
 54
-00:05:02,264 --> 00:05:03,556
+00:04:02,723 --> 00:04:03,772
 See you there.
