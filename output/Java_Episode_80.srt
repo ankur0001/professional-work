@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:06,651
+00:00:00,000 --> 00:00:04,880
 Episode Seventy-Nine covered observability and resilience in distributed systems.
 
 2
-00:00:06,651 --> 00:00:13,137
+00:00:04,880 --> 00:00:09,639
 You have traveled from Java syntax through JVM internals, patterns, and Spring.
 
 3
-00:00:13,137 --> 00:00:19,541
+00:00:09,639 --> 00:00:14,338
 Architecture interviews reward structured thinking more than buzzword density.
 
 4
-00:00:19,541 --> 00:00:25,206
+00:00:14,338 --> 00:00:18,494
 The best answers connect requirements to trade-offs and verification.
 
 5
-00:00:25,206 --> 00:00:31,528
+00:00:18,494 --> 00:00:23,133
 Today — a reusable system-design framework using this series as your toolkit.
 
 6
-00:00:31,528 --> 00:00:35,962
+00:00:23,133 --> 00:00:26,386
 This is Episode Eighty — the finale of The Java Story.
 
 7
-00:00:35,962 --> 00:00:37,707
+00:00:26,386 --> 00:00:27,654
 Episode Eighty.
 
 8
-00:00:37,707 --> 00:00:40,964
+00:00:27,654 --> 00:00:30,020
 Architecture Interview Wrap.
 
 9
-00:00:40,964 --> 00:00:44,711
+00:00:30,020 --> 00:00:32,942
 A reusable architecture interview framework.
 
 10
-00:00:44,711 --> 00:00:51,695
+00:00:32,942 --> 00:00:38,388
 Clarify functional requirements and non-functionals — latency, consistency, scale.
 
 11
-00:00:51,695 --> 00:00:57,657
+00:00:38,388 --> 00:00:43,037
 Sketch a modular monolith first — extract services only with a reason.
 
 12
-00:00:57,657 --> 00:01:02,596
+00:00:43,037 --> 00:00:46,888
 Define APIs, data ownership, and failure modes explicitly.
 
 13
-00:01:02,596 --> 00:01:08,728
+00:00:46,888 --> 00:00:51,670
 Call out security, observability, and test strategy — seniors always do.
 
 14
-00:01:08,728 --> 00:01:14,094
+00:00:51,670 --> 00:00:55,854
 Close with how you would measure success and evolve the design.
 
 15
-00:01:14,094 --> 00:01:17,305
+00:00:55,854 --> 00:00:58,471
 Map the series to interview moments.
 
 16
-00:01:17,305 --> 00:01:22,834
+00:00:58,471 --> 00:01:02,979
 Language and collections — correct, idiomatic building blocks.
 
 17
-00:01:22,834 --> 00:01:28,898
+00:01:02,979 --> 00:01:07,923
 Concurrency and JVM — explain latency, GC, and threading under load.
 
 18
-00:01:28,898 --> 00:01:34,160
+00:01:07,923 --> 00:01:12,213
 Patterns — name structures when they clarify, not decorate.
 
 19
-00:01:34,160 --> 00:01:39,956
+00:01:12,213 --> 00:01:16,939
 Spring — IoC, Boot, MVC, Data, Security as the delivery platform.
 
 20
-00:01:39,956 --> 00:01:45,664
+00:01:16,939 --> 00:01:21,592
 Microservices and resilience — when distribution earns its cost.
 
 21
-00:01:45,664 --> 00:01:48,647
+00:01:21,592 --> 00:01:23,907
 Trade-offs interviewers listen for.
 
 22
-00:01:48,647 --> 00:01:53,931
+00:01:23,907 --> 00:01:28,007
 Consistency versus availability — say which the product needs.
 
 23
-00:01:53,931 --> 00:01:59,214
+00:01:28,007 --> 00:01:32,107
 Sync versus async — latency versus coupling versus complexity.
 
 24
-00:01:59,214 --> 00:02:05,265
+00:01:32,107 --> 00:01:36,803
 Normalization versus read models — write simplicity versus query speed.
 
 25
-00:02:05,265 --> 00:02:09,697
+00:01:36,803 --> 00:01:40,242
 Build versus buy — managed Kafka or a simpler queue.
 
 26
-00:02:09,697 --> 00:02:14,810
+00:01:40,242 --> 00:01:44,210
 State the option you reject and why — that signals judgment.
 
 27
-00:02:14,810 --> 00:02:18,237
+00:01:44,210 --> 00:01:46,809
 How to narrate without drowning the room.
 
 28
-00:02:18,237 --> 00:02:23,336
+00:01:46,809 --> 00:01:50,676
 Lead with the user journey — then zoom into the hottest path.
 
 29
-00:02:23,336 --> 00:02:27,934
+00:01:50,676 --> 00:01:54,163
 Draw boxes sparingly — label ownership and data stores.
 
 30
-00:02:27,934 --> 00:02:32,699
+00:01:54,163 --> 00:01:57,777
 Timebox deep dives — offer to go deeper on one component.
 
 31
-00:02:32,699 --> 00:02:38,466
+00:01:57,777 --> 00:02:02,151
 When stuck — restate constraints and propose a boring working design.
 
 32
-00:02:38,466 --> 00:02:42,228
+00:02:02,151 --> 00:02:05,004
 Boring and operable beats clever and fragile.
 
 33
-00:02:42,228 --> 00:02:45,374
+00:02:05,004 --> 00:02:07,394
 Final checklist before you say done.
 
 34
-00:02:45,374 --> 00:02:50,267
+00:02:07,394 --> 00:02:11,111
 Requirements restated — scale numbers roughly estimated.
 
 35
-00:02:50,267 --> 00:02:53,849
+00:02:11,111 --> 00:02:13,832
 API shapes and primary data models named.
 
 36
-00:02:53,849 --> 00:02:57,694
+00:02:13,832 --> 00:02:16,753
 Authn, authz, and secret handling mentioned.
 
 37
-00:02:57,694 --> 00:03:02,150
+00:02:16,753 --> 00:02:20,138
 Observability and failure injection path mentioned.
 
 38
-00:03:02,150 --> 00:03:06,694
+00:02:20,138 --> 00:02:23,590
 Evolution path — what you would split or cache next.
 
 39
-00:03:06,694 --> 00:03:09,333
+00:02:23,590 --> 00:02:25,510
 Three common interview mistakes.
 
 40
-00:03:09,333 --> 00:03:14,941
+00:02:25,510 --> 00:02:29,589
 One — jumping to Kafka and Kubernetes before requirements are clear.
 
 41
-00:03:14,941 --> 00:03:20,550
+00:02:29,589 --> 00:02:33,669
 Two — ignoring data ownership and consistency until the last minute.
 
 42
-00:03:20,550 --> 00:03:25,993
+00:02:33,669 --> 00:02:37,629
 Three — never mentioning how you would test or operate the design.
 
 43
-00:03:25,993 --> 00:03:31,684
+00:02:37,629 --> 00:02:41,768
 Also — defending a choice you cannot explain under cross-examination.
 
 44
-00:03:31,684 --> 00:03:36,632
+00:02:41,768 --> 00:02:45,368
 Judgment under constraints beats encyclopedic tooling lists.
 
 45
-00:03:36,632 --> 00:03:41,894
+00:02:45,368 --> 00:02:49,561
 Capstone prompt — design an order service for an online store.
 
 46
-00:03:41,894 --> 00:03:47,749
+00:02:49,561 --> 00:02:54,227
 Clarify traffic, consistency for payments, and inventory constraints.
 
 47
-00:03:47,749 --> 00:03:53,180
+00:02:54,227 --> 00:02:58,554
 Propose modular services or modules — Order, Payment, Inventory.
 
 48
-00:03:53,180 --> 00:03:58,866
+00:02:58,554 --> 00:03:03,085
 Sync reserve inventory — async notify shipping — outbox for events.
 
 49
-00:03:58,866 --> 00:04:04,212
+00:03:03,085 --> 00:03:07,345
 Secure APIs, trace requests, break circuit on payment timeouts.
 
 50
-00:04:04,212 --> 00:04:09,474
+00:03:07,345 --> 00:03:11,538
 Ship a boring design first — then scale the measured hotspots.
 
 51
-00:04:09,474 --> 00:04:13,677
+00:03:11,538 --> 00:03:14,719
 That is the end of The Java Story — eighty episodes.
 
 52
-00:04:13,677 --> 00:04:18,932
+00:03:14,719 --> 00:03:18,696
 From hello world to architecture interviews — one continuous arc.
 
 53
-00:04:18,932 --> 00:04:24,995
+00:03:18,696 --> 00:03:23,285
 Rebuild any episode from its make_episode script when you need a refresher.
 
 54
-00:04:24,995 --> 00:04:28,228
+00:03:23,285 --> 00:03:25,732
 Now go build something — and measure it.
