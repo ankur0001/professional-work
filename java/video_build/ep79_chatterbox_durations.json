@@ -1,0 +1,12 @@
+{
+  "hook": 29.688,
+  "title": 4.344,
+  "pillars": 23.736,
+  "actuator": 22.584,
+  "timeouts": 23.664,
+  "breakers": 22.536,
+  "degrade": 22.728,
+  "mistakes": 22.608,
+  "interview": 25.44,
+  "teaser": 12.672
+}
