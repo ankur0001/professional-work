@@ -1,171 +1,171 @@
 1
-00:00:00,000 --> 00:00:04,442
+00:00:00,000 --> 00:00:03,578
 Methods package behavior. Arrays package many values.
 
 2
-00:00:04,442 --> 00:00:10,727
+00:00:03,578 --> 00:00:08,640
 An array is fixed-size, indexed, and homogeneous — same type in every slot.
 
 3
-00:00:10,727 --> 00:00:16,761
+00:00:08,640 --> 00:00:13,501
 Arrays are objects in Java, with special syntax and fast indexed access.
 
 4
-00:00:16,761 --> 00:00:22,376
+00:00:13,501 --> 00:00:18,023
 They underpin collections, buffers, and performance-sensitive code.
 
 5
-00:00:22,376 --> 00:00:26,650
+00:00:18,023 --> 00:00:21,466
 Get the mental model right — index, length, bounds.
 
 6
-00:00:26,650 --> 00:00:28,071
+00:00:21,466 --> 00:00:22,597
 Episode Eight.
 
 7
-00:00:28,071 --> 00:00:33,956
+00:00:22,597 --> 00:00:27,284
 Arrays — fixed size, indexed access, and off-by-one traps.
 
 8
-00:00:33,956 --> 00:00:36,390
+00:00:27,284 --> 00:00:29,299
 Declaration looks like this.
 
 9
-00:00:36,390 --> 00:00:39,347
+00:00:29,299 --> 00:00:31,745
 int scores equals new int of five.
 
 10
-00:00:39,347 --> 00:00:43,868
+00:00:31,745 --> 00:00:35,487
 Length is five. Valid indices are zero through four.
 
 11
-00:00:43,868 --> 00:00:49,693
+00:00:35,487 --> 00:00:40,308
 Remember — zero-based indexing. The last index is length minus one.
 
 12
-00:00:49,693 --> 00:00:55,431
+00:00:40,308 --> 00:00:45,057
 Once created, the length never grows. Fixed size means fixed size.
 
 13
-00:00:55,431 --> 00:01:00,822
+00:00:45,057 --> 00:00:49,518
 If you need growth — that is a list conversation, coming soon.
 
 14
-00:01:00,822 --> 00:01:02,445
+00:00:49,518 --> 00:00:50,805
 Access is by index.
 
 15
-00:01:02,445 --> 00:01:08,166
+00:00:50,805 --> 00:00:55,344
 scores bracket zero equals ninety. Read and write in constant time.
 
 16
-00:01:08,166 --> 00:01:13,375
+00:00:55,344 --> 00:00:59,477
 Ask for scores bracket five — ArrayIndexOutOfBoundsException.
 
 17
-00:01:13,375 --> 00:01:20,719
+00:00:59,477 --> 00:01:05,303
 Off-by-one bugs love loops that use less-than-or-equal when they should use less-than.
 
 18
-00:01:20,719 --> 00:01:25,672
+00:01:05,303 --> 00:01:09,232
 Practice saying length minus one out loud until it sticks.
 
 19
-00:01:25,672 --> 00:01:29,501
+00:01:09,232 --> 00:01:12,180
 Multidimensional arrays are arrays of arrays.
 
 20
-00:01:29,501 --> 00:01:34,522
+00:01:12,180 --> 00:01:16,044
 int bracket bracket grid — rows that each hold a row array.
 
 21
-00:01:34,522 --> 00:01:39,032
+00:01:16,044 --> 00:01:19,516
 Rows can even have different lengths — jagged arrays.
 
 22
-00:01:39,032 --> 00:01:44,563
+00:01:19,516 --> 00:01:23,774
 Do not assume one flat contiguous block the way C sometimes does.
 
 23
-00:01:44,563 --> 00:01:50,690
+00:01:23,774 --> 00:01:28,490
 When you need a true matrix library — use a library. Arrays stay simple.
 
 24
-00:01:50,690 --> 00:01:54,327
+00:01:28,490 --> 00:01:31,369
 When do you choose arrays versus ArrayList?
 
 25
-00:01:54,327 --> 00:01:58,894
+00:01:31,369 --> 00:01:34,985
 Arrays — fixed size, simple, very fast indexed access.
 
 26
-00:01:58,894 --> 00:02:04,391
+00:01:34,985 --> 00:01:39,337
 ArrayList — grows, richer API, clearer for most application code.
 
 27
-00:02:04,391 --> 00:02:10,058
+00:01:39,337 --> 00:01:43,823
 Prefer collections when intent is a growing list of domain objects.
 
 28
-00:02:10,058 --> 00:02:15,640
+00:01:43,823 --> 00:01:48,242
 Prefer arrays for tight buffers, primitives, and interoperability.
 
 29
-00:02:15,640 --> 00:02:20,292
+00:01:48,242 --> 00:01:51,924
 Choose the structure that matches how the size changes.
 
 30
-00:02:20,292 --> 00:02:22,137
+00:01:51,924 --> 00:01:53,388
 Three common mistakes.
 
 31
-00:02:22,137 --> 00:02:25,072
+00:01:53,388 --> 00:01:55,717
 One — off-by-one indexing in loops.
 
 32
-00:02:25,072 --> 00:02:31,614
+00:01:55,717 --> 00:02:00,907
 Two — exposing an internal array from a getter — callers can mutate your guts.
 
 33
-00:02:31,614 --> 00:02:37,568
+00:02:00,907 --> 00:02:05,632
 Three — returning huge arrays from APIs when a stream or page would do.
 
 34
-00:02:37,568 --> 00:02:44,110
+00:02:05,632 --> 00:02:10,822
 Also — using Object arrays when a typed collection communicates intent better.
 
 35
-00:02:44,110 --> 00:02:48,052
+00:02:10,822 --> 00:02:13,991
 Interview question — are arrays objects in Java?
 
 36
-00:02:48,052 --> 00:02:52,323
+00:02:13,991 --> 00:02:17,423
 Yes — they live on the heap and have a length field.
 
 37
-00:02:52,323 --> 00:02:58,648
+00:02:17,423 --> 00:02:22,507
 But they have special syntax — brackets — and covariant quirks to know later.
 
 38
-00:02:58,648 --> 00:03:03,247
+00:02:22,507 --> 00:02:26,203
 Length for arrays. Size for lists. Do not mix the words.
 
 39
-00:03:03,247 --> 00:03:06,368
+00:02:26,203 --> 00:02:28,712
 Zero-based indexing is non-negotiable.
 
 40
-00:03:06,368 --> 00:03:10,258
+00:02:28,712 --> 00:02:31,944
 Many values, fixed slots. Next — text.
 
 41
-00:03:10,258 --> 00:03:12,613
+00:02:31,944 --> 00:02:33,901
 Episode Nine — Strings.
 
 42
-00:03:12,613 --> 00:03:17,425
+00:02:33,901 --> 00:02:37,899
 Immutability, equals, and careful construction.
 
 43
-00:03:17,425 --> 00:03:18,858
+00:02:37,899 --> 00:02:39,090
 See you there.
