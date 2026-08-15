@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,012
+synchronized is built in — but sometimes you need more control.
+
+2
+00:00:04,012 --> 00:00:08,216
+What if you want to try acquiring a lock without blocking forever?
+
+3
+00:00:08,216 --> 00:00:11,974
+What if you need multiple wait conditions on the same lock?
+
+4
+00:00:11,974 --> 00:00:15,922
+Explicit locks in java.util.concurrent give you those options.
+
+5
+00:00:15,922 --> 00:00:19,807
+ReentrantLock, tryLock, and Condition — the flexible toolkit.
+
+6
+00:00:19,807 --> 00:00:22,546
+Today — explicit locks beyond synchronized.
+
+7
+00:00:22,546 --> 00:00:24,240
+Episode Thirty-Nine.
+
+8
+00:00:24,240 --> 00:00:28,052
+Explicit Locks — ReentrantLock and Condition.
+
+9
+00:00:28,052 --> 00:00:32,029
+ReentrantLock is a mutual-exclusion lock with explicit API.
+
+10
+00:00:32,029 --> 00:00:36,612
+lock acquires. unlock releases — you must unlock in a finally block.
+
+11
+00:00:36,612 --> 00:00:41,331
+Reentrant — the same thread can lock again without deadlocking itself.
+
+12
+00:00:41,331 --> 00:00:44,970
+Fair mode optional — threads acquire in arrival order.
+
+13
+00:00:44,970 --> 00:00:48,273
+Use try-finally — never forget unlock after lock.
+
+14
+00:00:48,273 --> 00:00:53,598
+ReentrantLock provides the same exclusion as synchronized — with more features.
+
+15
+00:00:53,598 --> 00:00:57,107
+tryLock attempts acquisition without indefinite blocking.
+
+16
+00:00:57,107 --> 00:01:00,986
+Returns true if the lock was acquired — false if not available.
+
+17
+00:01:00,986 --> 00:01:04,618
+tryLock with timeout — wait up to a duration, then give up.
+
+18
+00:01:04,618 --> 00:01:08,928
+Useful for avoiding deadlocks — back off and retry or fail gracefully.
+
+19
+00:01:08,928 --> 00:01:12,868
+lockInterruptibly responds to thread interruption while waiting.
+
+20
+00:01:12,868 --> 00:01:16,624
+Explicit locks shine when blocking forever is not acceptable.
+
+21
+00:01:16,624 --> 00:01:19,894
+Condition replaces wait and notify with a clearer API.
+
+22
+00:01:19,894 --> 00:01:23,891
+lock.newCondition creates a condition variable bound to that lock.
+
+23
+00:01:23,891 --> 00:01:27,463
+await releases the lock and waits. signal wakes one waiter.
+
+24
+00:01:27,463 --> 00:01:31,581
+Multiple conditions per lock — separate queues for different events.
+
+25
+00:01:31,581 --> 00:01:36,184
+Always await inside a loop checking the predicate — spurious wakeups happen.
+
+26
+00:01:36,184 --> 00:01:39,938
+Condition variables enable producer-consumer patterns cleanly.
+
+27
+00:01:39,938 --> 00:01:42,068
+ReentrantLock versus synchronized.
+
+28
+00:01:42,068 --> 00:01:45,325
+Both provide mutual exclusion and memory visibility.
+
+29
+00:01:45,325 --> 00:01:49,397
+synchronized is simpler — automatic release, no forgotten unlock.
+
+30
+00:01:49,397 --> 00:01:54,345
+ReentrantLock adds tryLock, fairness, interruptible waits, multiple conditions.
+
+31
+00:01:54,345 --> 00:01:58,855
+synchronized is fine for most cases — do not reach for locks by default.
+
+32
+00:01:58,855 --> 00:02:02,676
+Use explicit locks when you need their specific capabilities.
+
+33
+00:02:02,676 --> 00:02:04,547
+When to choose explicit locks.
+
+34
+00:02:04,547 --> 00:02:08,227
+Timed or non-blocking lock attempts — tryLock with timeout.
+
+35
+00:02:08,227 --> 00:02:11,221
+Fair ordering when starvation is a real concern.
+
+36
+00:02:11,221 --> 00:02:14,214
+Multiple condition variables on one lock object.
+
+37
+00:02:14,214 --> 00:02:18,081
+When not — simple critical sections — synchronized is cleaner.
+
+38
+00:02:18,081 --> 00:02:21,262
+Measure contention before optimizing lock strategy.
+
+39
+00:02:21,262 --> 00:02:22,685
+Three common mistakes.
+
+40
+00:02:22,685 --> 00:02:26,371
+One — forgetting unlock in finally — lock leaked forever.
+
+41
+00:02:26,371 --> 00:02:30,769
+Two — locking without holding the lock when calling await or signal.
+
+42
+00:02:30,769 --> 00:02:34,714
+Three — using tryLock but not handling the false return path.
+
+43
+00:02:34,714 --> 00:02:38,594
+Also — fair locks cost throughput — enable only when needed.
+
+44
+00:02:38,594 --> 00:02:42,992
+Explicit locks demand discipline — synchronized is harder to misuse.
+
+45
+00:02:42,992 --> 00:02:46,440
+Interview question — ReentrantLock versus synchronized?
+
+46
+00:02:46,440 --> 00:02:50,201
+Both provide mutual exclusion and happens-before visibility.
+
+47
+00:02:50,201 --> 00:02:55,216
+ReentrantLock offers tryLock, fairness, interruptible lock, multiple Conditions.
+
+48
+00:02:55,216 --> 00:02:59,166
+synchronized is simpler — JVM-managed, always released on exit.
+
+49
+00:02:59,166 --> 00:03:03,491
+Prefer synchronized unless you need a specific ReentrantLock feature.
+
+50
+00:03:03,491 --> 00:03:07,002
+Mention always unlocking in finally with explicit locks.
+
+51
+00:03:07,002 --> 00:03:11,463
+Locks coordinate threads. Who manages the threads themselves?
+
+52
+00:03:11,463 --> 00:03:15,047
+Episode Forty — ExecutorService and Thread Pools.
+
+53
+00:03:15,047 --> 00:03:18,996
+Submit tasks, reuse threads, and shut down gracefully.
+
+54
+00:03:18,996 --> 00:03:20,020
+See you there.

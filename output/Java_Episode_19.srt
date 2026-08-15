@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,872
+Records cleaned up data carriers. Hierarchies still sprawl.
+
+2
+00:00:04,872 --> 00:00:10,239
+Anyone can subclass. Switches stay incomplete. Domain rules leak.
+
+3
+00:00:10,239 --> 00:00:14,450
+Sealed classes close the set of permitted subtypes.
+
+4
+00:00:14,450 --> 00:00:19,404
+You design the family. The compiler enforces the guest list.
+
+5
+00:00:19,404 --> 00:00:25,844
+Today — sealed types, permits, and exhaustive switches that finally trust you.
+
+6
+00:00:25,844 --> 00:00:29,890
+Controlled inheritance — not inheritance theater.
+
+7
+00:00:29,890 --> 00:00:31,661
+Episode Nineteen.
+
+8
+00:00:31,661 --> 00:00:35,828
+Sealed Classes — controlled hierarchies.
+
+9
+00:00:35,828 --> 00:00:41,570
+A sealed class or interface restricts who may extend or implement it.
+
+10
+00:00:41,570 --> 00:00:44,981
+You list permitted subtypes with permits.
+
+11
+00:00:44,981 --> 00:00:51,222
+Those subtypes must be in the same module — or the same package if unnamed.
+
+12
+00:00:51,222 --> 00:00:57,130
+Final, sealed, or non-sealed — each child declares how open it remains.
+
+13
+00:00:57,130 --> 00:01:01,374
+The hierarchy becomes a deliberate design artifact.
+
+14
+00:01:01,374 --> 00:01:05,118
+Open by accident is the bug sealed types fix.
+
+15
+00:01:05,118 --> 00:01:06,646
+Look at the shape.
+
+16
+00:01:06,646 --> 00:01:11,656
+sealed interface Shape permits Circle, Rectangle, Triangle.
+
+17
+00:01:11,656 --> 00:01:18,534
+Circle can be final. Rectangle can be sealed further. Triangle can be non-sealed.
+
+18
+00:01:18,534 --> 00:01:22,779
+non-sealed reopens extension for that branch only.
+
+19
+00:01:22,779 --> 00:01:28,383
+You keep control at the root and choose where flexibility returns.
+
+20
+00:01:28,383 --> 00:01:32,968
+That is intentional polymorphism — not a free-for-all.
+
+21
+00:01:32,968 --> 00:01:35,587
+Exhaustive switch is the payoff.
+
+22
+00:01:35,587 --> 00:01:40,579
+Switch on a sealed Shape — cover Circle, Rectangle, Triangle.
+
+23
+00:01:40,579 --> 00:01:45,243
+No default required when every permitted type is handled.
+
+24
+00:01:45,243 --> 00:01:51,217
+Add a new subtype later — the compiler forces you to update the switches.
+
+25
+00:01:51,217 --> 00:01:56,536
+That is safer evolution than hoping teams remember every if-else.
+
+26
+00:01:56,536 --> 00:02:01,610
+Pattern matching and sealed types were built to work together.
+
+27
+00:02:01,610 --> 00:02:03,592
+When sealed types shine.
+
+28
+00:02:03,592 --> 00:02:09,705
+Domain models with a closed set of variants — payments, events, AST nodes.
+
+29
+00:02:09,705 --> 00:02:14,330
+APIs where third parties should not invent new subtypes.
+
+30
+00:02:14,330 --> 00:02:21,599
+When not — frameworks that need open extension points, or libraries that invite plugins.
+
+31
+00:02:21,599 --> 00:02:26,803
+Sealed is a design decision, not a default for every interface.
+
+32
+00:02:26,803 --> 00:02:32,172
+Close the hierarchy when completeness matters more than openness.
+
+33
+00:02:32,172 --> 00:02:35,923
+Records and sealed types pair beautifully.
+
+34
+00:02:35,923 --> 00:02:39,496
+sealed interface Result permits Ok, Err.
+
+35
+00:02:39,496 --> 00:02:43,247
+record Ok of value. record Err of message.
+
+36
+00:02:43,247 --> 00:02:46,730
+Compact data plus a closed variant set.
+
+37
+00:02:46,730 --> 00:02:51,999
+Your switch becomes documentation that the compiler checks.
+
+38
+00:02:51,999 --> 00:02:57,358
+That is modern Java modeling — small, explicit, enforceable.
+
+39
+00:02:57,358 --> 00:02:59,161
+Three common mistakes.
+
+40
+00:02:59,161 --> 00:03:04,734
+One — sealing too early, then fighting every new legitimate subtype.
+
+41
+00:03:04,734 --> 00:03:10,389
+Two — forgetting non-sealed when a branch truly needs open extension.
+
+42
+00:03:10,389 --> 00:03:16,453
+Three — relying on default in switches and losing exhaustiveness warnings.
+
+43
+00:03:16,453 --> 00:03:21,535
+Also — putting permitted types in the wrong package or module.
+
+44
+00:03:21,535 --> 00:03:26,288
+Sealed types reward careful package and module boundaries.
+
+45
+00:03:26,288 --> 00:03:31,116
+Interview question — what problem do sealed classes solve?
+
+46
+00:03:31,116 --> 00:03:35,195
+They restrict which types may extend a hierarchy.
+
+47
+00:03:35,195 --> 00:03:40,107
+That enables exhaustive switches and safer domain modeling.
+
+48
+00:03:40,107 --> 00:03:45,767
+Mention permits, and final versus sealed versus non-sealed subtypes.
+
+49
+00:03:45,767 --> 00:03:49,680
+Tie it to pattern matching for a modern answer.
+
+50
+00:03:49,680 --> 00:03:54,258
+That shows language design awareness — not just syntax.
+
+51
+00:03:54,258 --> 00:04:01,048
+Hierarchies can be closed. Next — how code is packaged for the JVM.
+
+52
+00:04:01,048 --> 00:04:04,494
+Episode Twenty — modules and JPMS.
+
+53
+00:04:04,494 --> 00:04:08,953
+Requires, exports, and strong encapsulation.
+
+54
+00:04:08,953 --> 00:04:10,372
+See you there.
