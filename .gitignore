@@ -1,0 +1,17 @@
+video_build/frames/
+video_build/clips/
+video_build/clips_*/
+video_build/assets/
+video_build/audio/
+video_build/audio_*/
+video_build/*.log
+video_build/concat*.txt
+video_build/*_list.txt
+video_build/sample_list.txt
+video_build/previews/
+__pycache__/
+*.pyc
+output/java_ep*.mp4
+output/*_tmp.mp4
+output/*_paced.mp4
+output/*_narrated.mp4
