@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:03,953
+00:00:00,000 --> 00:00:03,281
 Maps associate. Queues sequence work over time.
 
 2
-00:00:03,953 --> 00:00:09,419
+00:00:03,281 --> 00:00:07,819
 First in, first out — producers and consumers meet in the middle.
 
 3
-00:00:09,419 --> 00:00:14,297
+00:00:07,819 --> 00:00:11,868
 Deque goes further — both ends open for stacks and queues.
 
 4
-00:00:14,297 --> 00:00:20,436
+00:00:11,868 --> 00:00:16,964
 ArrayDeque. PriorityQueue. Knowing the failure modes of offer versus add.
 
 5
-00:00:20,436 --> 00:00:23,968
+00:00:16,964 --> 00:00:19,896
 Today — waiting lines with explicit rules.
 
 6
-00:00:23,968 --> 00:00:29,098
+00:00:19,896 --> 00:00:24,154
 Order of arrival — or order of priority. Choose deliberately.
 
 7
-00:00:29,098 --> 00:00:31,090
+00:00:24,154 --> 00:00:25,795
 Episode Twenty-Four.
 
 8
-00:00:31,090 --> 00:00:34,676
+00:00:25,795 --> 00:00:28,748
 Queues and Deques — flow structures.
 
 9
-00:00:34,676 --> 00:00:37,065
+00:00:28,748 --> 00:00:30,483
 Queue models a waiting line.
 
 10
-00:00:37,065 --> 00:00:40,564
+00:00:30,483 --> 00:00:33,023
 Insert at the tail. Remove from the head.
 
 11
-00:00:40,564 --> 00:00:44,660
+00:00:33,023 --> 00:00:35,997
 offer and poll return special values on failure.
 
 12
-00:00:44,660 --> 00:00:49,353
+00:00:35,997 --> 00:00:39,405
 add and remove throw when the operation cannot proceed.
 
 13
-00:00:49,353 --> 00:00:54,643
+00:00:39,405 --> 00:00:43,247
 peek inspects without removing — element is the throwing twin.
 
 14
-00:00:54,643 --> 00:01:00,702
+00:00:43,247 --> 00:00:47,646
 Pick the style that matches capacity constraints and call-site clarity.
 
 15
-00:01:00,702 --> 00:01:02,847
+00:00:47,646 --> 00:00:49,343
 Remember the paired APIs.
 
 16
-00:01:02,847 --> 00:01:08,079
+00:00:49,343 --> 00:00:53,483
 Special-value methods suit bounded buffers and optional work.
 
 17
-00:01:08,079 --> 00:01:13,141
+00:00:53,483 --> 00:00:57,487
 Exception methods suit invariants — failure should be loud.
 
 18
-00:01:13,141 --> 00:01:18,202
+00:00:57,487 --> 00:01:01,491
 Mixing them casually makes empty-queue bugs harder to read.
 
 19
-00:01:18,202 --> 00:01:21,462
+00:01:01,491 --> 00:01:04,070
 Document which style your module uses.
 
 20
-00:01:21,462 --> 00:01:25,408
+00:01:04,070 --> 00:01:07,192
 Consistency beats cleverness at the call site.
 
 21
-00:01:25,408 --> 00:01:27,971
+00:01:07,192 --> 00:01:09,396
 Deque means double-ended queue.
 
 22
-00:01:27,971 --> 00:01:30,533
+00:01:09,396 --> 00:01:11,600
 Add and remove at head or tail.
 
 23
-00:01:30,533 --> 00:01:35,245
+00:01:11,600 --> 00:01:15,652
 That makes Deque a clean stack — push and pop at one end.
 
 24
-00:01:35,245 --> 00:01:39,626
+00:01:15,652 --> 00:01:19,420
 It also makes a clean queue — offer last, poll first.
 
 25
-00:01:39,626 --> 00:01:44,421
+00:01:19,420 --> 00:01:23,543
 One interface, two classic structures, fewer legacy types.
 
 26
-00:01:44,421 --> 00:01:48,554
+00:01:23,543 --> 00:01:27,098
 Prefer Deque over the old Stack class in new code.
 
 27
-00:01:48,554 --> 00:01:51,501
+00:01:27,098 --> 00:01:29,411
 ArrayDeque is the usual workhorse.
 
 28
-00:01:51,501 --> 00:01:56,094
+00:01:29,411 --> 00:01:33,016
 Resizable array — no capacity restriction by default.
 
 29
-00:01:56,094 --> 00:02:00,948
+00:01:33,016 --> 00:01:36,825
 Faster than Stack for stack operations in typical cases.
 
 30
-00:02:00,948 --> 00:02:04,848
+00:01:36,825 --> 00:01:39,886
 Often faster than LinkedList as a FIFO queue.
 
 31
-00:02:04,848 --> 00:02:09,701
+00:01:39,886 --> 00:01:43,695
 Null elements are not allowed — fail fast on null offer.
 
 32
-00:02:09,701 --> 00:02:14,988
+00:01:43,695 --> 00:01:47,844
 For single-threaded queues and stacks, start with ArrayDeque.
 
 33
-00:02:14,988 --> 00:02:18,052
+00:01:47,844 --> 00:01:50,322
 PriorityQueue breaks FIFO on purpose.
 
 34
-00:02:18,052 --> 00:02:23,270
+00:01:50,322 --> 00:01:54,541
 The next element is the least — by natural order or Comparator.
 
 35
-00:02:23,270 --> 00:02:29,482
+00:01:54,541 --> 00:01:59,565
 Under the hood it is a heap — peek is cheap, arbitrary index access is not.
 
 36
-00:02:29,482 --> 00:02:34,037
+00:01:59,565 --> 00:02:03,248
 Iteration order is not sorted order — do not be fooled.
 
 37
-00:02:34,037 --> 00:02:37,847
+00:02:03,248 --> 00:02:06,329
 Great for schedulers and best-next algorithms.
 
 38
-00:02:37,847 --> 00:02:41,326
+00:02:06,329 --> 00:02:09,142
 Wrong when you needed a fair waiting line.
 
 39
-00:02:41,326 --> 00:02:43,184
+00:02:09,142 --> 00:02:10,683
 Three common mistakes.
 
 40
-00:02:43,184 --> 00:02:46,563
+00:02:10,683 --> 00:02:13,486
 One — using java.util.Stack in new code.
 
 41
-00:02:46,563 --> 00:02:52,982
+00:02:13,486 --> 00:02:18,811
 Two — ignoring whether your queue is bounded when choosing add versus offer.
 
 42
-00:02:52,982 --> 00:02:58,219
+00:02:18,811 --> 00:02:23,155
 Three — defaulting to LinkedList as a queue without measuring.
 
 43
-00:02:58,219 --> 00:03:03,034
+00:02:23,155 --> 00:02:27,149
 Also — treating PriorityQueue iteration as sorted output.
 
 44
-00:03:03,034 --> 00:03:07,088
+00:02:27,149 --> 00:02:30,512
 Queues are simple. Semantics are the whole game.
 
 45
-00:03:07,088 --> 00:03:12,119
+00:02:30,512 --> 00:02:34,740
 Interview question — Queue versus Deque, and why ArrayDeque?
 
 46
-00:03:12,119 --> 00:03:17,402
+00:02:34,740 --> 00:02:39,180
 Queue — FIFO waiting line with paired success and failure APIs.
 
 47
-00:03:17,402 --> 00:03:21,427
+00:02:39,180 --> 00:02:42,563
 Deque — both ends, covers stack and queue roles.
 
 48
-00:03:21,427 --> 00:03:27,548
+00:02:42,563 --> 00:02:47,707
 ArrayDeque — fast general-purpose implementation for single-threaded use.
 
 49
-00:03:27,548 --> 00:03:32,915
+00:02:47,707 --> 00:02:52,217
 Mention PriorityQueue when ordering is by priority, not arrival.
 
 50
-00:03:32,915 --> 00:03:35,514
+00:02:52,217 --> 00:02:54,402
 That answer shows API judgment.
 
 51
-00:03:35,514 --> 00:03:41,145
+00:02:54,402 --> 00:02:58,881
 Flow structures are clear. Next — how collections decide order.
 
 52
-00:03:41,145 --> 00:03:45,256
+00:02:58,881 --> 00:03:02,152
 Episode Twenty-Five — Sorting and Comparators.
 
 53
-00:03:45,256 --> 00:03:49,993
+00:03:02,152 --> 00:03:05,921
 Comparable, Comparator, and stable sort expectations.
 
 54
-00:03:49,993 --> 00:03:51,244
+00:03:05,921 --> 00:03:06,916
 See you there.
