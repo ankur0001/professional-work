@@ -1,0 +1,12 @@
+{
+  "hook": 25.248,
+  "title": 4.656,
+  "fork_join_basics": 24.024,
+  "work_stealing": 26.136,
+  "recursive_task": 23.688,
+  "recursive_action": 22.608,
+  "when_to_use": 21.744,
+  "mistakes": 22.728,
+  "interview": 23.28,
+  "teaser": 12.408
+}

@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,648
+Collectors gave results shape. Now expand elements inside the pipeline.
+
+2
+00:00:04,648 --> 00:00:08,379
+One input can become many outputs — without nested loops.
+
+3
+00:00:08,379 --> 00:00:12,045
+flatMap is map plus flatten — the one-to-many transform.
+
+4
+00:00:12,045 --> 00:00:15,646
+Composition chains small steps into readable pipelines.
+
+5
+00:00:15,646 --> 00:00:19,377
+Today — flatten complexity instead of hiding it in loops.
+
+6
+00:00:19,377 --> 00:00:22,978
+Streams express structure. flatMap expresses expansion.
+
+7
+00:00:22,978 --> 00:00:24,814
+Episode Twenty-Eight.
+
+8
+00:00:24,814 --> 00:00:29,012
+flatMap and composition — one-to-many pipelines.
+
+9
+00:00:29,012 --> 00:00:32,021
+map transforms one element into one result.
+
+10
+00:00:32,021 --> 00:00:35,940
+flatMap transforms one element into a stream of results.
+
+11
+00:00:35,940 --> 00:00:39,369
+The stream is flattened into the parent pipeline.
+
+12
+00:00:39,369 --> 00:00:42,518
+List of lists becomes a single flat sequence.
+
+13
+00:00:42,518 --> 00:00:46,997
+Optional values become present elements — absent ones drop away.
+
+14
+00:00:46,997 --> 00:00:50,286
+Think expand, then merge — not nested for-each.
+
+15
+00:00:50,286 --> 00:00:53,517
+Composition means chaining focused operations.
+
+16
+00:00:53,517 --> 00:00:57,380
+Each step does one job — filter, map, flatMap, collect.
+
+17
+00:00:57,380 --> 00:01:00,541
+Read pipelines top to bottom like a sentence.
+
+18
+00:01:00,541 --> 00:01:03,983
+Extract a method when a chain grows hard to name.
+
+19
+00:01:03,983 --> 00:01:07,355
+Good composition favors clarity over cleverness.
+
+20
+00:01:07,355 --> 00:01:10,024
+Small steps compose into big behavior.
+
+21
+00:01:10,024 --> 00:01:13,788
+Without flatMap, nested structures invite nested loops.
+
+22
+00:01:13,788 --> 00:01:17,277
+Orders with line items. Departments with employees.
+
+23
+00:01:17,277 --> 00:01:21,041
+A map gives you a stream of collections — still nested.
+
+24
+00:01:21,041 --> 00:01:25,010
+flatMap unwraps each inner collection into the outer flow.
+
+25
+00:01:25,010 --> 00:01:27,542
+One pipeline replaces index juggling.
+
+26
+00:01:27,542 --> 00:01:31,442
+Flatten at the right level — not too early, not too late.
+
+27
+00:01:31,442 --> 00:01:34,896
+One-to-many shows up everywhere in real domains.
+
+28
+00:01:34,896 --> 00:01:38,206
+Split a sentence into words. Parse CSV fields.
+
+29
+00:01:38,206 --> 00:01:41,515
+Expand a user into their roles or permissions.
+
+30
+00:01:41,515 --> 00:01:45,904
+flatMap with Arrays.stream or Collection.stream is idiomatic.
+
+31
+00:01:45,904 --> 00:01:49,934
+Choose flatMap when the natural result is many, not one.
+
+32
+00:01:49,934 --> 00:01:52,596
+If you only need one, map is simpler.
+
+33
+00:01:52,596 --> 00:01:54,984
+Common patterns worth memorizing.
+
+34
+00:01:54,984 --> 00:01:59,036
+flatMap(Optional::stream) drops empty optionals cleanly.
+
+35
+00:01:59,036 --> 00:02:03,087
+flatMap(Collection::stream) flattens nested collections.
+
+36
+00:02:03,087 --> 00:02:06,488
+flatMap(s -> s.lines()) splits text into lines.
+
+37
+00:02:06,488 --> 00:02:10,033
+distinct and sorted still apply after flattening.
+
+38
+00:02:10,033 --> 00:02:14,230
+Compose terminal collectors at the end — shape stays last.
+
+39
+00:02:14,230 --> 00:02:15,677
+Three common mistakes.
+
+40
+00:02:15,677 --> 00:02:20,151
+One — using map when flatMap is required — you get Stream of Stream.
+
+41
+00:02:20,151 --> 00:02:23,900
+Two — flattening too eagerly and losing grouping context.
+
+42
+00:02:23,900 --> 00:02:27,782
+Three — giant flatMap lambdas that should be named methods.
+
+43
+00:02:27,782 --> 00:02:31,992
+Also — forgetting that order is preserved in sequential streams.
+
+44
+00:02:31,992 --> 00:02:34,952
+Readable steps beat one opaque flatMap block.
+
+45
+00:02:34,952 --> 00:02:37,747
+Interview question — map versus flatMap?
+
+46
+00:02:37,747 --> 00:02:41,241
+map — one input, one output element in the stream.
+
+47
+00:02:41,241 --> 00:02:44,944
+flatMap — one input, zero or more outputs, flattened.
+
+48
+00:02:44,944 --> 00:02:48,787
+Give examples — words from a line, items from an order.
+
+49
+00:02:48,787 --> 00:02:52,490
+Mention Optional::stream for filtering absent values.
+
+50
+00:02:52,490 --> 00:02:55,914
+That answer shows you understand stream geometry.
+
+51
+00:02:55,914 --> 00:03:00,161
+Pipelines flatten nicely. Next — parallelism with care.
+
+52
+00:03:00,161 --> 00:03:03,173
+Episode Twenty-Nine — Parallel Streams.
+
+53
+00:03:03,173 --> 00:03:06,339
+When fork-join helps — and when it hurts.
+
+54
+00:03:06,339 --> 00:03:07,420
+See you there.

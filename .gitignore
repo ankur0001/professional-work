@@ -1,0 +1,4 @@
+# Keep repo-root ignore minimal; series build artifacts are ignored in java/.gitignore
+__pycache__/
+*.pyc
+.DS_Store

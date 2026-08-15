@@ -1,0 +1,12 @@
+{
+  "hook": 30.264,
+  "title": 3.696,
+  "what_safepoints": 28.368,
+  "when_pauses": 28.848,
+  "safepoint_bias": 30.168,
+  "safepoint_polling": 27.168,
+  "stw_awareness": 26.976,
+  "mistakes": 23.808,
+  "interview": 28.368,
+  "teaser": 13.608
+}
