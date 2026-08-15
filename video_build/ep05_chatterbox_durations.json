@@ -1,0 +1,12 @@
+{
+  "hook": 12.648,
+  "title": 5.976,
+  "families": 17.544,
+  "equality": 23.784,
+  "shortcircuit": 23.664,
+  "overflow": 19.416,
+  "ternary": 20.088,
+  "mistakes": 18.888,
+  "interview": 16.92,
+  "teaser": 11.328
+}
