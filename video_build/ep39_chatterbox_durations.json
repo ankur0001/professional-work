@@ -1,0 +1,12 @@
+{
+  "hook": 22.296,
+  "title": 5.256,
+  "reentrant": 25.296,
+  "trylock": 22.776,
+  "condition": 23.064,
+  "compare": 22.488,
+  "when_locks": 18.336,
+  "mistakes": 21.48,
+  "interview": 23.76,
+  "teaser": 12.768
+}
