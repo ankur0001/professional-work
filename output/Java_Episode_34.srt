@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:05,519
+00:00:00,000 --> 00:00:04,483
 java.io.File is legacy — platform strings and limited operations.
 
 2
-00:00:05,519 --> 00:00:11,462
+00:00:04,483 --> 00:00:09,310
 Java seven brought NIO point two — Path, Files, and a modern file API.
 
 3
-00:00:11,462 --> 00:00:17,491
+00:00:09,310 --> 00:00:14,207
 Paths are immutable value objects — combine, resolve, normalize safely.
 
 4
-00:00:17,491 --> 00:00:23,604
+00:00:14,207 --> 00:00:19,172
 Files is a static utility class — read, write, copy, delete in one call.
 
 5
-00:00:23,604 --> 00:00:29,463
+00:00:19,172 --> 00:00:23,931
 Works with try-with-resources for streams when you need more control.
 
 6
-00:00:29,463 --> 00:00:34,642
+00:00:23,931 --> 00:00:28,138
 Today — filesystem operations without the old File headaches.
 
 7
-00:00:34,642 --> 00:00:36,791
+00:00:28,138 --> 00:00:29,801
 Episode Thirty-Four.
 
 8
-00:00:36,791 --> 00:00:42,380
+00:00:29,801 --> 00:00:34,124
 Files and NIO point two — the modern filesystem API.
 
 9
-00:00:42,380 --> 00:00:47,019
+00:00:34,124 --> 00:00:38,043
 Path replaces File as the primary filesystem reference.
 
 10
-00:00:47,019 --> 00:00:53,092
+00:00:38,043 --> 00:00:43,173
 Paths.get builds a path from strings — or use Path.of since Java eleven.
 
 11
-00:00:53,092 --> 00:00:58,238
+00:00:43,173 --> 00:00:47,520
 resolve combines segments. normalize removes dot-dot clutter.
 
 12
-00:00:58,238 --> 00:01:02,877
+00:00:47,520 --> 00:00:51,438
 getParent, getFileName, startsWith — rich path algebra.
 
 13
-00:01:02,877 --> 00:01:09,878
+00:00:51,438 --> 00:00:57,352
 Paths are not tied to the default filesystem — use a FileSystem for jars or memory.
 
 14
-00:01:09,878 --> 00:01:13,758
+00:00:57,352 --> 00:01:00,630
 Think Path for location, Files for operations.
 
 15
-00:01:13,758 --> 00:01:18,457
+00:01:00,630 --> 00:01:04,485
 Files.readAllBytes loads an entire file into a byte array.
 
 16
-00:01:18,457 --> 00:01:25,424
+00:01:04,485 --> 00:01:10,200
 Files.readString reads text with a charset — UTF eight by default since Java eighteen.
 
 17
-00:01:25,424 --> 00:01:31,663
+00:01:10,200 --> 00:01:15,317
 Files.writeString and write dump content in one shot — great for small files.
 
 18
-00:01:31,663 --> 00:01:38,144
+00:01:15,317 --> 00:01:20,634
 For large files, use newInputStream and newOutputStream with try-with-resources.
 
 19
-00:01:38,144 --> 00:01:43,005
+00:01:20,634 --> 00:01:24,622
 copy, move, and delete are one-liners with sensible options.
 
 20
-00:01:43,005 --> 00:01:48,352
+00:01:24,622 --> 00:01:29,008
 Choose convenience methods for small files — streams for big data.
 
 21
-00:01:48,352 --> 00:01:53,141
+00:01:29,008 --> 00:01:33,088
 Files.walk traverses a directory tree as a Stream of Path.
 
 22
-00:01:53,141 --> 00:01:59,251
+00:01:33,088 --> 00:01:38,294
 Filter with stream operations — find all dot java files, skip hidden dirs.
 
 23
-00:01:59,251 --> 00:02:03,132
+00:01:38,294 --> 00:01:41,600
 walk with maxDepth limits how deep you recurse.
 
 24
-00:02:03,132 --> 00:02:07,509
+00:01:41,600 --> 00:01:45,328
 Files.list is for a single directory — non-recursive.
 
 25
-00:02:07,509 --> 00:02:13,123
+00:01:45,328 --> 00:01:50,112
 Always close streams from walk and list — or use try-with-resources.
 
 26
-00:02:13,123 --> 00:02:18,986
+00:01:50,112 --> 00:01:55,106
 Tree walking plus Streams is powerful for build tools and log scanners.
 
 27
-00:02:18,986 --> 00:02:24,782
+00:01:55,106 --> 00:01:59,873
 Files.readAttributes returns metadata — size, timestamps, permissions.
 
 28
-00:02:24,782 --> 00:02:29,750
+00:01:59,873 --> 00:02:03,960
 BasicFileAttributes covers the common case across platforms.
 
 29
-00:02:29,750 --> 00:02:35,463
+00:02:03,960 --> 00:02:08,659
 exists, isDirectory, isRegularFile — quick checks without exceptions.
 
 30
-00:02:35,463 --> 00:02:39,685
+00:02:08,659 --> 00:02:12,132
 createDirectories creates parent folders as needed.
 
 31
-00:02:39,685 --> 00:02:44,405
+00:02:12,132 --> 00:02:16,014
 createTempFile and createTempDirectory for scratch space.
 
 32
-00:02:44,405 --> 00:02:48,876
+00:02:16,014 --> 00:02:19,692
 Metadata queries keep you from reinventing stat calls.
 
 33
-00:02:48,876 --> 00:02:54,249
+00:02:19,692 --> 00:02:23,889
 Files.copy transfers data between paths with CopyOption flags.
 
 34
-00:02:54,249 --> 00:02:59,449
+00:02:23,889 --> 00:02:27,951
 REPLACE_EXISTING overwrites the target if it already exists.
 
 35
-00:02:59,449 --> 00:03:04,995
+00:02:27,951 --> 00:02:32,284
 Files.move renames or relocates — atomic on the same filesystem.
 
 36
-00:03:04,995 --> 00:03:11,581
+00:02:32,284 --> 00:02:37,429
 Files.delete and deleteIfExists remove files — IOException if not empty dir.
 
 37
-00:03:11,581 --> 00:03:17,474
+00:02:37,429 --> 00:02:42,033
 StandardCopyOption and LinkOption control behavior across platforms.
 
 38
-00:03:17,474 --> 00:03:23,974
+00:02:42,033 --> 00:02:47,110
 One-liner file operations beat hand-rolled stream copying for common cases.
 
 39
-00:03:23,974 --> 00:03:25,876
+00:02:47,110 --> 00:02:48,545
 Three common mistakes.
 
 40
-00:03:25,876 --> 00:03:31,496
+00:02:48,545 --> 00:02:52,786
 One — using readAllBytes on multi-gigabyte files — out of memory.
 
 41
-00:03:31,496 --> 00:03:37,289
+00:02:52,786 --> 00:02:57,158
 Two — forgetting to close walk or list streams — file handle leaks.
 
 42
-00:03:37,289 --> 00:03:42,908
+00:02:57,158 --> 00:03:01,398
 Three — mixing Path with string concatenation instead of resolve.
 
 43
-00:03:42,908 --> 00:03:49,047
+00:03:01,398 --> 00:03:06,031
 Also — assuming default charset instead of specifying StandardCharsets.
 
 44
-00:03:49,047 --> 00:03:53,024
+00:03:06,031 --> 00:03:09,032
 Match the API to file size and encoding needs.
 
 45
-00:03:53,024 --> 00:03:58,303
+00:03:09,032 --> 00:03:13,238
 Interview question — Path versus File, and when to use Files?
 
 46
-00:03:58,303 --> 00:04:02,543
+00:03:13,238 --> 00:03:16,616
 Path is immutable and NIO-based — File is legacy.
 
 47
-00:04:02,543 --> 00:04:07,390
+00:03:16,616 --> 00:03:20,477
 Files provides static helpers — read, write, copy, walk.
 
 48
-00:04:07,390 --> 00:04:12,063
+00:03:20,477 --> 00:03:24,200
 Mention try-with-resources for streams on large files.
 
 49
-00:04:12,063 --> 00:04:16,130
+00:03:24,200 --> 00:03:27,440
 Note walk returns a Stream that must be closed.
 
 50
-00:04:16,130 --> 00:04:19,938
+00:03:27,440 --> 00:03:30,474
 That answer shows modern filesystem fluency.
 
 51
-00:04:19,938 --> 00:04:25,421
+00:03:30,474 --> 00:03:35,165
 Bytes and paths are covered. Next — text streams the classic way.
 
 52
-00:04:25,421 --> 00:04:29,892
+00:03:35,165 --> 00:03:38,991
 Episode Thirty-Five — Readers, Writers, and Text I/O.
 
 53
-00:04:29,892 --> 00:04:35,207
+00:03:38,991 --> 00:03:43,538
 BufferedReader, PrintWriter, and character encoding done right.
 
 54
-00:04:35,207 --> 00:04:36,388
+00:03:43,538 --> 00:03:44,548
 See you there.
