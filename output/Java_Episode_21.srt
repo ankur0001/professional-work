@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:05,074
+00:00:00,000 --> 00:00:04,202
 Modules draw boundaries. Collections fill the day-to-day work.
 
 2
-00:00:05,074 --> 00:00:10,147
+00:00:04,202 --> 00:00:08,403
 Almost every Java program needs an ordered sequence of values.
 
 3
-00:00:10,147 --> 00:00:15,221
+00:00:08,403 --> 00:00:12,605
 That is the List interface — indexed, ordered, and everywhere.
 
 4
-00:00:15,221 --> 00:00:19,476
+00:00:12,605 --> 00:00:16,129
 ArrayList. LinkedList. When each one earns its keep.
 
 5
-00:00:19,476 --> 00:00:23,240
+00:00:16,129 --> 00:00:19,246
 Today we choose lists with intent — not habit.
 
 6
-00:00:23,240 --> 00:00:29,050
+00:00:19,246 --> 00:00:24,058
 Order with random access — or order with cheap inserts. Know the trade.
 
 7
-00:00:29,050 --> 00:00:31,014
+00:00:24,058 --> 00:00:25,710
 Episode Twenty-One.
 
 8
-00:00:31,014 --> 00:00:35,252
+00:00:25,710 --> 00:00:29,276
 Lists — ordered collections in java.util.
 
 9
-00:00:35,252 --> 00:00:37,904
+00:00:29,276 --> 00:00:31,493
 List is a contract in java.util.
 
 10
-00:00:37,904 --> 00:00:41,633
+00:00:31,493 --> 00:00:34,611
 Elements have positions — zero-based indexes.
 
 11
-00:00:41,633 --> 00:00:47,931
+00:00:34,611 --> 00:00:39,877
 Duplicates are allowed. Null may be allowed depending on the implementation.
 
 12
-00:00:47,931 --> 00:00:53,483
+00:00:39,877 --> 00:00:44,519
 add, get, set, remove, size, contains — the verbs you already know.
 
 13
-00:00:53,483 --> 00:01:00,361
+00:00:44,519 --> 00:00:50,269
 Prefer coding to List, not to a concrete class — until performance forces a choice.
 
 14
-00:01:00,361 --> 00:01:03,510
+00:00:50,269 --> 00:00:52,902
 The interface keeps your API flexible.
 
 15
-00:01:03,510 --> 00:01:06,407
+00:00:52,902 --> 00:00:55,166
 ArrayList is the default workhorse.
 
 16
-00:01:06,407 --> 00:01:12,285
+00:00:55,166 --> 00:00:59,758
 Backed by a resizable array. Amortized constant-time append at the end.
 
 17
-00:01:12,285 --> 00:01:18,162
+00:00:59,758 --> 00:01:04,350
 Random access by index is fast — get and set are essentially array ops.
 
 18
-00:01:18,162 --> 00:01:24,288
+00:01:04,350 --> 00:01:09,136
 Inserts and removes in the middle shift elements — that can get expensive.
 
 19
-00:01:24,288 --> 00:01:28,924
+00:01:09,136 --> 00:01:12,758
 Give an initial capacity when you know the size roughly.
 
 20
-00:01:28,924 --> 00:01:32,152
+00:01:12,758 --> 00:01:15,280
 For most application lists, start here.
 
 21
-00:01:32,152 --> 00:01:35,355
+00:01:15,280 --> 00:01:17,776
 LinkedList is a doubly linked structure.
 
 22
-00:01:35,355 --> 00:01:41,122
+00:01:17,776 --> 00:01:22,268
 Cheap inserts and removes when you already hold the right node position.
 
 23
-00:01:41,122 --> 00:01:46,808
+00:01:22,268 --> 00:01:26,697
 Random access by index walks the chain — do not pretend it is an array.
 
 24
-00:01:46,808 --> 00:01:53,935
+00:01:26,697 --> 00:01:32,250
 It also implements Queue and Deque — useful as a deque more than as a random-access list.
 
 25
-00:01:53,935 --> 00:01:59,141
+00:01:32,250 --> 00:01:36,305
 If you mainly get by index, LinkedList is usually the wrong tool.
 
 26
-00:01:59,141 --> 00:02:03,866
+00:01:36,305 --> 00:01:39,986
 Measure the access pattern before you romanticize pointers.
 
 27
-00:02:03,866 --> 00:02:04,998
+00:01:39,986 --> 00:01:40,884
 How to choose.
 
 28
-00:02:04,998 --> 00:02:09,203
+00:01:40,884 --> 00:01:44,218
 Most reads by index, appends at the end — ArrayList.
 
 29
-00:02:09,203 --> 00:02:16,562
+00:01:44,218 --> 00:01:50,054
 Heavy middle inserts with sequential traversal — consider LinkedList, or rethink the model.
 
 30
-00:02:16,562 --> 00:02:22,385
+00:01:50,054 --> 00:01:54,671
 Often a better answer is a different structure — Queue, Deque, or a map.
 
 31
-00:02:22,385 --> 00:02:26,428
+00:01:54,671 --> 00:01:57,877
 Do not pick LinkedList because it sounds advanced.
 
 32
-00:02:26,428 --> 00:02:30,876
+00:01:57,877 --> 00:02:01,404
 Pick the structure that matches how you touch the data.
 
 33
-00:02:30,876 --> 00:02:33,939
+00:02:01,404 --> 00:02:03,918
 List pitfalls that show up in reviews.
 
 34
-00:02:33,939 --> 00:02:41,032
+00:02:03,918 --> 00:02:09,739
 Modifying a list while iterating with a for-each — ConcurrentModificationException risk.
 
 35
-00:02:41,032 --> 00:02:45,787
+00:02:09,739 --> 00:02:13,642
 Use an Iterator remove, or collect changes and apply after.
 
 36
-00:02:45,787 --> 00:02:53,121
+00:02:13,642 --> 00:02:19,662
 Arrays.asList returns a fixed-size list backed by an array — not a fully mutable ArrayList.
 
 37
-00:02:53,121 --> 00:02:59,972
+00:02:19,662 --> 00:02:25,285
 List.of creates unmodifiable lists — great for constants, surprising if you call add.
 
 38
-00:02:59,972 --> 00:03:04,486
+00:02:25,285 --> 00:02:28,990
 Know whether your list is growable before you mutate it.
 
 39
-00:03:04,486 --> 00:03:06,330
+00:02:28,990 --> 00:02:30,413
 Three common mistakes.
 
 40
-00:03:06,330 --> 00:03:12,366
+00:02:30,413 --> 00:02:35,069
 One — LinkedList everywhere for inserts that never happen in the middle.
 
 41
-00:03:12,366 --> 00:03:17,899
+00:02:35,069 --> 00:02:39,337
 Two — raw types — List without generics — type safety thrown away.
 
 42
-00:03:17,899 --> 00:03:25,359
+00:02:39,337 --> 00:02:45,092
 Three — exposing a mutable ArrayList from an API that should return an unmodifiable view.
 
 43
-00:03:25,359 --> 00:03:30,473
+00:02:45,092 --> 00:02:49,037
 Also — ignoring equals contract when lists hold custom types.
 
 44
-00:03:30,473 --> 00:03:34,832
+00:02:49,037 --> 00:02:52,400
 Lists are simple. Careless APIs make them expensive.
 
 45
-00:03:34,832 --> 00:03:38,936
+00:02:52,400 --> 00:02:55,872
 Interview question — ArrayList versus LinkedList?
 
 46
-00:03:38,936 --> 00:03:44,547
+00:02:55,872 --> 00:03:00,619
 ArrayList — array-backed, fast index access, costly middle inserts.
 
 47
-00:03:44,547 --> 00:03:50,745
+00:03:00,619 --> 00:03:05,863
 LinkedList — node-backed, weak random access, better as a deque sometimes.
 
 48
-00:03:50,745 --> 00:03:54,933
+00:03:05,863 --> 00:03:09,406
 Default choice in apps is almost always ArrayList.
 
 49
-00:03:54,933 --> 00:03:59,958
+00:03:09,406 --> 00:03:13,657
 Mention Big-O briefly, then talk about real access patterns.
 
 50
-00:03:59,958 --> 00:04:03,978
+00:03:13,657 --> 00:03:17,058
 That answer is practical — not textbook theater.
 
 51
-00:04:03,978 --> 00:04:09,383
+00:03:17,058 --> 00:03:21,836
 Ordered sequences are clear. Next — uniqueness and hashing.
 
 52
-00:04:09,383 --> 00:04:11,764
+00:03:21,836 --> 00:03:23,942
 Episode Twenty-Two — Sets.
 
 53
-00:04:11,764 --> 00:04:16,986
+00:03:23,942 --> 00:03:28,558
 HashSet, LinkedHashSet, TreeSet — and when order matters.
 
 54
-00:04:16,986 --> 00:04:18,268
+00:03:28,558 --> 00:03:29,692
 See you there.
