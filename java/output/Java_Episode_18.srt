@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:05,777
+00:00:00,000 --> 00:00:04,790
 Reflection can dig into types. Records make simple data types honest.
 
 2
-00:00:05,777 --> 00:00:12,809
+00:00:04,790 --> 00:00:10,621
 So much Java was getters, setters, equals, hashCode, toString — for a bag of fields.
 
 3
-00:00:12,809 --> 00:00:16,911
+00:00:10,621 --> 00:00:14,022
 Records say — this is a transparent data carrier.
 
 4
-00:00:16,911 --> 00:00:19,674
+00:00:14,022 --> 00:00:16,313
 Less boilerplate. Clearer intent.
 
 5
-00:00:19,674 --> 00:00:25,367
+00:00:16,313 --> 00:00:21,033
 Today we use records where they shine — and avoid where they do not.
 
 6
-00:00:25,367 --> 00:00:29,218
+00:00:21,033 --> 00:00:24,226
 Data with a contract — not a ceremony factory.
 
 7
-00:00:29,218 --> 00:00:31,098
+00:00:24,226 --> 00:00:25,684
 Episode Eighteen.
 
 8
-00:00:31,098 --> 00:00:35,852
+00:00:25,684 --> 00:00:29,372
 Records — compact, immutable data carriers.
 
 9
-00:00:35,852 --> 00:00:39,459
+00:00:29,372 --> 00:00:32,227
 A record declaration is short on purpose.
 
 10
-00:00:39,459 --> 00:00:42,978
+00:00:32,227 --> 00:00:35,012
 record Money of currency and minorUnits.
 
 11
-00:00:42,978 --> 00:00:47,289
+00:00:35,012 --> 00:00:38,425
 The compiler generates the canonical constructor.
 
 12
-00:00:47,289 --> 00:00:51,424
+00:00:38,425 --> 00:00:41,698
 Also accessors, equals, hashCode, and toString.
 
 13
-00:00:51,424 --> 00:00:56,439
+00:00:41,698 --> 00:00:45,667
 Components are final — immutability is the default story.
 
 14
-00:00:56,439 --> 00:01:00,486
+00:00:45,667 --> 00:00:48,870
 You describe the data. Java handles the noise.
 
 15
-00:01:00,486 --> 00:01:05,707
+00:00:48,870 --> 00:00:53,093
 Accessors are named after components — currency, minorUnits.
 
 16
-00:01:05,707 --> 00:01:09,796
+00:00:53,093 --> 00:00:56,401
 Not getCurrency — unless you add that yourself.
 
 17
-00:01:09,796 --> 00:01:15,191
+00:00:56,401 --> 00:01:00,765
 That style is intentional — records are not classic JavaBeans.
 
 18
-00:01:15,191 --> 00:01:20,412
+00:01:00,765 --> 00:01:04,988
 Serialization libraries increasingly understand both styles.
 
 19
-00:01:20,412 --> 00:01:24,154
+00:01:04,988 --> 00:01:08,015
 Read the accessor names as part of the API.
 
 20
-00:01:24,154 --> 00:01:27,112
+00:01:08,015 --> 00:01:10,408
 Keep component names domain-clear.
 
 21
-00:01:27,112 --> 00:01:29,523
+00:01:10,408 --> 00:01:12,270
 Records can still validate.
 
 22
-00:01:29,523 --> 00:01:33,809
+00:01:12,270 --> 00:01:15,582
 Use a compact constructor to enforce invariants.
 
 23
-00:01:33,809 --> 00:01:38,274
+00:01:15,582 --> 00:01:19,031
 Reject null currency. Reject negative minor units.
 
 24
-00:01:38,274 --> 00:01:42,292
+00:01:19,031 --> 00:01:22,135
 You get immutability and guardrails together.
 
 25
-00:01:42,292 --> 00:01:46,579
+00:01:22,135 --> 00:01:25,446
 That is why records work well for value objects.
 
 26
-00:01:46,579 --> 00:01:50,954
+00:01:25,446 --> 00:01:28,826
 Invalid data should fail at creation — not later.
 
 27
-00:01:50,954 --> 00:01:53,130
+00:01:28,826 --> 00:01:30,596
 When to choose a record.
 
 28
-00:01:53,130 --> 00:01:58,209
+00:01:30,596 --> 00:01:34,725
 DTOs. Event payloads. Value objects. Map keys with care.
 
 29
-00:01:58,209 --> 00:02:03,559
+00:01:34,725 --> 00:01:39,075
 When identity is the data — not a mutable lifecycle entity.
 
 30
-00:02:03,559 --> 00:02:10,269
+00:01:39,075 --> 00:01:44,532
 When not — JPA entities with mutable state and proxies often want classes.
 
 31
-00:02:10,269 --> 00:02:14,078
+00:01:44,532 --> 00:01:47,629
 Do not force records into every hierarchy.
 
 32
-00:02:14,078 --> 00:02:17,796
+00:01:47,629 --> 00:01:50,652
 Use them where transparency is the point.
 
 33
-00:02:17,796 --> 00:02:19,216
+00:01:50,652 --> 00:01:51,735
 Know the limits.
 
 34
-00:02:19,216 --> 00:02:24,896
+00:01:51,735 --> 00:01:56,069
 Records are implicitly final — no subclassing the record itself.
 
 35
-00:02:24,896 --> 00:02:27,470
+00:01:56,069 --> 00:01:58,033
 You can implement interfaces.
 
 36
-00:02:27,470 --> 00:02:32,973
+00:01:58,033 --> 00:02:02,231
 You can add methods — but do not turn a record into a service.
 
 37
-00:02:32,973 --> 00:02:38,831
+00:02:02,231 --> 00:02:06,700
 If behavior grows complex, extract a real domain type with intent.
 
 38
-00:02:38,831 --> 00:02:44,422
+00:02:06,700 --> 00:02:10,966
 Records carry data. Services orchestrate. Keep the roles clean.
 
 39
-00:02:44,422 --> 00:02:46,326
+00:02:10,966 --> 00:02:12,404
 Three common mistakes.
 
 40
-00:02:46,326 --> 00:02:51,605
+00:02:12,404 --> 00:02:16,390
 One — mutable components like lists without defensive copies.
 
 41
-00:02:51,605 --> 00:02:57,316
+00:02:16,390 --> 00:02:20,703
 Two — using records as entities while expecting mutable ORM magic.
 
 42
-00:02:57,316 --> 00:03:02,508
+00:02:20,703 --> 00:02:24,624
 Three — huge records that should have been structured types.
 
 43
-00:03:02,508 --> 00:03:06,576
+00:02:24,624 --> 00:02:27,695
 Also — ignoring compact-constructor validation.
 
 44
-00:03:06,576 --> 00:03:11,768
+00:02:27,695 --> 00:02:31,616
 Immutability is only as strong as the components you expose.
 
 45
-00:03:11,768 --> 00:03:15,516
+00:02:31,616 --> 00:02:34,655
 Interview question — what is a Java record?
 
 46
-00:03:15,516 --> 00:03:21,183
+00:02:34,655 --> 00:02:39,248
 A transparent, immutable data carrier with generated boilerplate.
 
 47
-00:03:21,183 --> 00:03:26,500
+00:02:39,248 --> 00:02:43,559
 Canonical constructor, accessors, equals, hashCode, toString.
 
 48
-00:03:26,500 --> 00:03:32,515
+00:02:43,559 --> 00:02:48,435
 Great for DTOs and value objects — not a replacement for all classes.
 
 49
-00:03:32,515 --> 00:03:36,351
+00:02:48,435 --> 00:02:51,545
 Mention compact constructors for invariants.
 
 50
-00:03:36,351 --> 00:03:39,402
+00:02:51,545 --> 00:02:54,018
 That answer is crisp and practical.
 
 51
-00:03:39,402 --> 00:03:44,710
+00:02:54,018 --> 00:02:58,045
 Data carriers are clean. Next — restricting hierarchies.
 
 52
-00:03:44,710 --> 00:03:47,933
+00:02:58,045 --> 00:03:00,490
 Episode Nineteen — sealed classes.
 
 53
-00:03:47,933 --> 00:03:52,293
+00:03:00,490 --> 00:03:03,797
 Controlled subclasses and exhaustive switches.
 
 54
-00:03:52,293 --> 00:03:53,620
+00:03:03,797 --> 00:03:04,804
 See you there.
