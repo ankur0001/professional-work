@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:05,484
+00:00:00,000 --> 00:00:05,065
 Streams build pipelines. Collectors decide the shape of the answer.
 
 2
-00:00:05,484 --> 00:00:10,805
+00:00:05,065 --> 00:00:09,978
 List, Set, Map, string, summary — same stream, different endings.
 
 3
-00:00:10,805 --> 00:00:15,717
+00:00:09,978 --> 00:00:14,513
 groupingBy and partitioningBy turn flat data into structure.
 
 4
-00:00:15,717 --> 00:00:19,810
+00:00:14,513 --> 00:00:18,293
 Downstream collectors nest work inside each group.
 
 5
-00:00:19,810 --> 00:00:24,394
+00:00:18,293 --> 00:00:22,526
 Today — finish pipelines with intent, not afterthoughts.
 
 6
-00:00:24,394 --> 00:00:27,586
+00:00:22,526 --> 00:00:25,474
 Collect is not dump. Collect is design.
 
 7
-00:00:27,586 --> 00:00:29,668
+00:00:25,474 --> 00:00:27,308
 Episode Twenty-Seven.
 
 8
-00:00:29,668 --> 00:00:33,236
+00:00:27,308 --> 00:00:30,452
 Stream Collectors — shaping results.
 
 9
-00:00:33,236 --> 00:00:36,217
+00:00:30,452 --> 00:00:32,723
 Start with the basics in Collectors.
 
 10
-00:00:36,217 --> 00:00:39,364
+00:00:32,723 --> 00:00:35,121
 toList and toSet materialize elements.
 
 11
-00:00:39,364 --> 00:00:45,409
+00:00:35,121 --> 00:00:39,727
 toMap needs a key function, a value function, and often a merge function.
 
 12
-00:00:45,409 --> 00:00:49,964
+00:00:39,727 --> 00:00:43,197
 Duplicate keys without a merge function throw — loudly.
 
 13
-00:00:49,964 --> 00:00:55,595
+00:00:43,197 --> 00:00:47,488
 joining builds delimited strings without manual StringBuilder noise.
 
 14
-00:00:55,595 --> 00:01:00,150
+00:00:47,488 --> 00:00:50,958
 Pick the collector that matches the type you need next.
 
 15
-00:01:00,150 --> 00:01:04,298
+00:00:50,958 --> 00:00:54,254
 groupingBy is the workhorse for classification.
 
 16
-00:01:04,298 --> 00:01:07,475
+00:00:54,254 --> 00:00:56,779
 A classifier function produces keys.
 
 17
-00:01:07,475 --> 00:01:12,417
+00:00:56,779 --> 00:01:00,706
 By default each key maps to a List of matching elements.
 
 18
-00:01:12,417 --> 00:01:16,742
+00:01:00,706 --> 00:01:04,143
 Orders by region. Users by status. Events by day.
 
 19
-00:01:16,742 --> 00:01:21,861
+00:01:04,143 --> 00:01:08,210
 You get a Map whose values are groups — ready for reports.
 
 20
-00:01:21,861 --> 00:01:25,744
+00:01:08,210 --> 00:01:11,296
 Think pivot table — expressed as a pipeline.
 
 21
-00:01:25,744 --> 00:01:30,284
+00:01:11,296 --> 00:01:14,821
 partitioningBy is groupingBy for a boolean question.
 
 22
-00:01:30,284 --> 00:01:34,299
+00:01:14,821 --> 00:01:17,939
 Predicate true goes one side. False the other.
 
 23
-00:01:34,299 --> 00:01:38,751
+00:01:17,939 --> 00:01:21,396
 The result is Map of Boolean to the grouped values.
 
 24
-00:01:38,751 --> 00:01:44,426
+00:01:21,396 --> 00:01:25,802
 Active versus inactive. Valid versus invalid. Paid versus unpaid.
 
 25
-00:01:44,426 --> 00:01:48,267
+00:01:25,802 --> 00:01:28,784
 Two buckets — when two is exactly the model.
 
 26
-00:01:48,267 --> 00:01:52,370
+00:01:28,784 --> 00:01:31,970
 Do not use it when you really needed many keys.
 
 27
-00:01:52,370 --> 00:01:55,952
+00:01:31,970 --> 00:01:34,880
 Downstream collectors avoid second passes.
 
 28
-00:01:55,952 --> 00:01:59,790
+00:01:34,880 --> 00:01:37,998
 groupingBy with counting gives sizes per key.
 
 29
-00:01:59,790 --> 00:02:04,054
+00:01:37,998 --> 00:01:41,462
 summingInt and averagingDouble summarize in place.
 
 30
-00:02:04,054 --> 00:02:07,380
+00:01:41,462 --> 00:01:44,164
 mapping then toSet reshapes each group.
 
 31
-00:02:07,380 --> 00:02:13,521
+00:01:44,164 --> 00:01:49,153
 collectingAndThen applies a finisher — like making the map unmodifiable.
 
 32
-00:02:13,521 --> 00:02:16,932
+00:01:49,153 --> 00:01:51,924
 Nest the work. Keep the pipeline honest.
 
 33
-00:02:16,932 --> 00:02:20,562
+00:01:51,924 --> 00:01:54,871
 Beyond grouping — reducing and summarizing.
 
 34
-00:02:20,562 --> 00:02:24,615
+00:01:54,871 --> 00:01:58,161
 reducing folds with an identity and an operator.
 
 35
-00:02:24,615 --> 00:02:30,186
+00:01:58,161 --> 00:02:02,684
 summarizingInt returns count, sum, min, max, and average together.
 
 36
-00:02:30,186 --> 00:02:36,687
+00:02:02,684 --> 00:02:07,961
 teeing runs two collectors and merges their results — Java sixteen and later.
 
 37
-00:02:36,687 --> 00:02:41,499
+00:02:07,961 --> 00:02:11,867
 Use summaries when dashboards need several stats at once.
 
 38
-00:02:41,499 --> 00:02:47,662
+00:02:11,867 --> 00:02:16,870
 Collectors are a toolbox — learn the shapes, not every overload by heart.
 
 39
-00:02:47,662 --> 00:02:49,499
+00:02:16,870 --> 00:02:18,354
 Three common mistakes.
 
 40
-00:02:49,499 --> 00:02:54,424
+00:02:18,354 --> 00:02:22,332
 One — toMap without a merge function when duplicates exist.
 
 41
-00:02:54,424 --> 00:03:00,434
+00:02:22,332 --> 00:02:27,187
 Two — mutating shared accumulators and hoping parallel collect survives.
 
 42
-00:03:00,434 --> 00:03:07,196
+00:02:27,187 --> 00:02:32,650
 Three — groupingBy then a manual loop that a downstream collector already covers.
 
 43
-00:03:07,196 --> 00:03:13,123
+00:02:32,650 --> 00:02:37,437
 Also — assuming toList is always unmodifiable — know your Java version.
 
 44
-00:03:13,123 --> 00:03:16,880
+00:02:37,437 --> 00:02:40,472
 Clear collectors beat clever post-processing.
 
 45
-00:03:16,880 --> 00:03:21,466
+00:02:40,472 --> 00:02:43,955
 Interview question — groupingBy versus partitioningBy?
 
 46
-00:03:21,466 --> 00:03:25,712
+00:02:43,955 --> 00:02:47,181
 groupingBy — many keys from a classifier function.
 
 47
-00:03:25,712 --> 00:03:30,213
+00:02:47,181 --> 00:02:50,600
 partitioningBy — boolean predicate, always two sides.
 
 48
-00:03:30,213 --> 00:03:35,988
+00:02:50,600 --> 00:02:54,986
 Mention downstream collectors for counting or summing inside groups.
 
 49
-00:03:35,988 --> 00:03:41,678
+00:02:54,986 --> 00:02:59,308
 Give a domain example — orders by region versus paid versus unpaid.
 
 50
-00:03:41,678 --> 00:03:45,330
+00:02:59,308 --> 00:03:02,082
 That answer shows practical stream fluency.
 
 51
-00:03:45,330 --> 00:03:51,182
+00:03:02,082 --> 00:03:06,690
 Results have shape. Next — expanding elements inside the pipeline.
 
 52
-00:03:51,182 --> 00:03:55,350
+00:03:06,690 --> 00:03:09,971
 Episode Twenty-Eight — flatMap and composition.
 
 53
-00:03:55,350 --> 00:04:00,227
+00:03:09,971 --> 00:03:13,811
 One-to-many transforms without nested collections mess.
 
 54
-00:04:00,227 --> 00:04:01,468
+00:03:13,811 --> 00:03:14,788
 See you there.
