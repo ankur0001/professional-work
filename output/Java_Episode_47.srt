@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,002
+Episode Forty-Six showed CompletableFuture on the common pool.
+
+2
+00:00:04,002 --> 00:00:08,585
+That pool is a ForkJoinPool — built for divide-and-conquer parallelism.
+
+3
+00:00:08,585 --> 00:00:12,523
+Workers split big tasks into smaller pieces and join results.
+
+4
+00:00:12,523 --> 00:00:16,396
+Idle threads steal work from busy neighbors — work-stealing.
+
+5
+00:00:16,396 --> 00:00:20,528
+RecursiveTask and RecursiveAction model fork-join decomposition.
+
+6
+00:00:20,528 --> 00:00:25,498
+Today — ForkJoinPool, work-stealing, and when recursive parallelism pays off.
+
+7
+00:00:25,498 --> 00:00:27,422
+Episode Forty-Seven.
+
+8
+00:00:27,422 --> 00:00:30,404
+ForkJoinPool and Work-Stealing.
+
+9
+00:00:30,404 --> 00:00:34,865
+ForkJoinPool is an ExecutorService tuned for parallel decomposition.
+
+10
+00:00:34,865 --> 00:00:39,195
+fork splits a task into subtasks — join waits for subtask results.
+
+11
+00:00:39,195 --> 00:00:42,869
+invoke runs a single task and blocks until it completes.
+
+12
+00:00:42,869 --> 00:00:46,740
+submit returns a ForkJoinTask — use when you need a handle.
+
+13
+00:00:46,740 --> 00:00:51,201
+Pool size defaults to available processors — tune for your workload.
+
+14
+00:00:51,201 --> 00:00:54,678
+Think tree-shaped computation — split down, merge up.
+
+15
+00:00:54,678 --> 00:00:58,803
+Each worker maintains a deque of tasks — LIFO for its own work.
+
+16
+00:00:58,803 --> 00:01:03,452
+When a worker runs dry, it steals from another worker deque — FIFO end.
+
+17
+00:01:03,452 --> 00:01:07,642
+Stealing balances load without a central coordinator bottleneck.
+
+18
+00:01:07,642 --> 00:01:12,290
+Fine-grained tasks keep workers busy — coarse tasks leave threads idle.
+
+19
+00:01:12,290 --> 00:01:16,546
+Work-stealing shines when task sizes are uneven or unpredictable.
+
+20
+00:01:16,546 --> 00:01:21,064
+Too many tiny tasks add overhead — batch until splits are worthwhile.
+
+21
+00:01:21,064 --> 00:01:25,711
+RecursiveTask of V extends ForkJoinTask — compute returns a value.
+
+22
+00:01:25,711 --> 00:01:30,006
+Override compute — fork children, join them, combine results.
+
+23
+00:01:30,006 --> 00:01:34,089
+Example — parallel sum of a large array by halving ranges.
+
+24
+00:01:34,089 --> 00:01:37,187
+fork enqueues a subtask on the current pool.
+
+25
+00:01:37,187 --> 00:01:41,200
+join blocks the current worker until the child completes.
+
+26
+00:01:41,200 --> 00:01:45,002
+Use RecursiveTask when the result is a computed value.
+
+27
+00:01:45,002 --> 00:01:49,187
+RecursiveAction extends ForkJoinTask of Void — side effects only.
+
+28
+00:01:49,187 --> 00:01:52,793
+Override compute — fork subtasks, join, no return value.
+
+29
+00:01:52,793 --> 00:01:56,528
+Example — parallel forEach over a tree or matrix in place.
+
+30
+00:01:56,528 --> 00:02:00,069
+Same fork-join pattern — split work, wait for children.
+
+31
+00:02:00,069 --> 00:02:04,383
+Choose RecursiveAction when you mutate shared structures carefully.
+
+32
+00:02:04,383 --> 00:02:07,860
+Or when each leaf performs independent I/O or logging.
+
+33
+00:02:07,860 --> 00:02:09,476
+When ForkJoinPool fits.
+
+34
+00:02:09,476 --> 00:02:14,395
+CPU-bound divide-and-conquer — mergesort, matrix multiply, tree walks.
+
+35
+00:02:14,395 --> 00:02:18,049
+Parallel streams use the common pool under the hood.
+
+36
+00:02:18,049 --> 00:02:21,352
+Recursive decomposition with cheap merge steps.
+
+37
+00:02:21,352 --> 00:02:25,708
+When not — many blocking I/O tasks — use a cached thread pool.
+
+38
+00:02:25,708 --> 00:02:29,854
+When not — tiny uniform tasks — overhead beats parallelism.
+
+39
+00:02:29,854 --> 00:02:31,328
+Three common mistakes.
+
+40
+00:02:31,328 --> 00:02:35,682
+One — blocking inside compute — pins a worker and kills stealing.
+
+41
+00:02:35,682 --> 00:02:39,769
+Two — shared mutable state without coordination — data races.
+
+42
+00:02:39,769 --> 00:02:44,056
+Three — forking too deep — millions of tasks overwhelm the pool.
+
+43
+00:02:44,056 --> 00:02:48,679
+Also — using commonPool for blocking work — starves parallel streams.
+
+44
+00:02:48,679 --> 00:02:52,832
+Size tasks so fork overhead stays small relative to real work.
+
+45
+00:02:52,832 --> 00:02:56,071
+Interview question — how does work-stealing work?
+
+46
+00:02:56,071 --> 00:02:59,442
+Each thread has a deque — processes own tasks LIFO.
+
+47
+00:02:59,442 --> 00:03:03,870
+Idle threads steal from the opposite end — FIFO — of another deque.
+
+48
+00:03:03,870 --> 00:03:07,902
+Balances load without a global queue lock on every operation.
+
+49
+00:03:07,902 --> 00:03:12,462
+RecursiveTask returns a value — RecursiveAction is void side effects.
+
+50
+00:03:12,462 --> 00:03:16,362
+Mention parallel streams and CompletableFuture common pool.
+
+51
+00:03:16,362 --> 00:03:21,206
+Pools share threads across tasks. What about per-thread state?
+
+52
+00:03:21,206 --> 00:03:23,863
+Episode Forty-Eight — ThreadLocal.
+
+53
+00:03:23,863 --> 00:03:27,926
+Per-thread variables, inheritance, and leak hazards.
+
+54
+00:03:27,926 --> 00:03:29,020
+See you there.
