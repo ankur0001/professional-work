@@ -1,175 +1,175 @@
 1
-00:00:00,000 --> 00:00:04,758
+00:00:00,000 --> 00:00:03,636
 Strings and arrays hold data. Objects model the world.
 
 2
-00:00:04,758 --> 00:00:11,542
+00:00:03,636 --> 00:00:08,821
 Object-oriented programming — state, behavior, and identity working together.
 
 3
-00:00:11,542 --> 00:00:18,061
+00:00:08,821 --> 00:00:13,803
 In Java, OOP is how we manage domain complexity — not just a syntax style.
 
 4
-00:00:18,061 --> 00:00:22,995
+00:00:13,803 --> 00:00:17,574
 Classes define blueprints. Objects are living instances.
 
 5
-00:00:22,995 --> 00:00:28,810
+00:00:17,574 --> 00:00:22,018
 Get this mental model right — everything else in OOP builds on it.
 
 6
-00:00:28,810 --> 00:00:30,023
+00:00:22,018 --> 00:00:23,024
 Episode Ten.
 
 7
-00:00:30,023 --> 00:00:36,692
+00:00:23,024 --> 00:00:28,556
 Object-Oriented Programming — classes, objects, and encapsulation.
 
 8
-00:00:36,692 --> 00:00:38,830
+00:00:28,556 --> 00:00:30,120
 A class is the blueprint.
 
 9
-00:00:38,830 --> 00:00:42,337
+00:00:30,120 --> 00:00:32,685
 Fields hold state. Methods hold behavior.
 
 10
-00:00:42,337 --> 00:00:47,383
+00:00:32,685 --> 00:00:36,375
 new Order creates an object — its own identity on the heap.
 
 11
-00:00:47,383 --> 00:00:53,884
+00:00:36,375 --> 00:00:41,130
 Two Order objects can share the same class and still be different instances.
 
 12
-00:00:53,884 --> 00:01:00,726
+00:00:41,130 --> 00:00:46,134
 Identity matters. Equals can compare values — but identity is the object itself.
 
 13
-00:01:00,726 --> 00:01:04,993
+00:00:46,134 --> 00:00:49,397
 Encapsulation hides internals behind a clear API.
 
 14
-00:01:04,993 --> 00:01:09,782
+00:00:49,397 --> 00:00:53,059
 private fields. public methods that protect invariants.
 
 15
-00:01:09,782 --> 00:01:15,180
+00:00:53,059 --> 00:00:57,187
 Callers should not poke amountInCents directly if rules apply.
 
 16
-00:01:15,180 --> 00:01:20,753
+00:00:57,187 --> 00:01:01,449
 Hide data. Expose intention — like isHighValue or applyDiscount.
 
 17
-00:01:20,753 --> 00:01:25,629
+00:01:01,449 --> 00:01:05,177
 That is how objects stay consistent as the system grows.
 
 18
-00:01:25,629 --> 00:01:29,896
+00:01:05,177 --> 00:01:08,440
 Encapsulation is not ceremony — it is protection.
 
 19
-00:01:29,896 --> 00:01:32,818
+00:01:08,440 --> 00:01:10,839
 Four ideas you will hear forever.
 
 20
-00:01:32,818 --> 00:01:35,385
+00:01:10,839 --> 00:01:12,947
 Encapsulation — hide details.
 
 21
-00:01:35,385 --> 00:01:38,661
+00:01:12,947 --> 00:01:15,636
 Abstraction — show only what matters.
 
 22
-00:01:38,661 --> 00:01:42,822
+00:01:15,636 --> 00:01:19,052
 Inheritance — share and specialize — carefully.
 
 23
-00:01:42,822 --> 00:01:47,248
+00:01:19,052 --> 00:01:22,687
 Polymorphism — one contract, many implementations.
 
 24
-00:01:47,248 --> 00:01:52,826
+00:01:22,687 --> 00:01:27,266
 Prefer composition when inheritance trees get deep and fragile.
 
 25
-00:01:52,826 --> 00:01:54,816
+00:01:27,266 --> 00:01:28,818
 Composition says has-a.
 
 26
-00:01:54,816 --> 00:01:58,797
+00:01:28,818 --> 00:01:31,922
 An Order has Money. A Customer has an Address.
 
 27
-00:01:58,797 --> 00:02:04,769
+00:01:31,922 --> 00:01:36,578
 Small objects collaborating beat one god class that knows everything.
 
 28
-00:02:04,769 --> 00:02:11,778
+00:01:36,578 --> 00:01:42,044
 Anemic models — data bags with all logic in services — often lose domain clarity.
 
 29
-00:02:11,778 --> 00:02:15,413
+00:01:42,044 --> 00:01:44,878
 Put behavior next to the data it protects.
 
 30
-00:02:15,413 --> 00:02:19,740
+00:01:44,878 --> 00:01:48,252
 That is domain modeling that survives real change.
 
 31
-00:02:19,740 --> 00:02:21,613
+00:01:48,252 --> 00:01:49,772
 Three common mistakes.
 
 32
-00:02:21,613 --> 00:02:26,295
+00:01:49,772 --> 00:01:53,573
 One — god services that do every use-case in one class.
 
 33
-00:02:26,295 --> 00:02:30,807
+00:01:53,573 --> 00:01:57,235
 Two — deep inheritance trees nobody can reason about.
 
 34
-00:02:30,807 --> 00:02:36,340
+00:01:57,235 --> 00:02:01,726
 Three — public mutable fields that break encapsulation overnight.
 
 35
-00:02:36,340 --> 00:02:41,278
+00:02:01,726 --> 00:02:05,734
 Also — leaking persistence entities straight through APIs.
 
 36
-00:02:41,278 --> 00:02:44,827
+00:02:05,734 --> 00:02:08,481
 Interview question — class versus object?
 
 37
-00:02:44,827 --> 00:02:50,107
+00:02:08,481 --> 00:02:12,567
 Class — blueprint. Object — instance with identity and state.
 
 38
-00:02:50,107 --> 00:02:54,868
+00:02:12,567 --> 00:02:16,252
 Then encapsulation — hide fields, expose safe behavior.
 
 39
-00:02:54,868 --> 00:03:00,580
+00:02:16,252 --> 00:02:20,673
 Prefer composition over deep inheritance when design gets complex.
 
 40
-00:03:00,580 --> 00:03:05,168
+00:02:20,673 --> 00:02:24,224
 That answer sounds like an engineer, not a memorizer.
 
 41
-00:03:05,168 --> 00:03:09,605
+00:02:24,224 --> 00:02:27,887
 Objects need boundaries. Next — who can see what.
 
 42
-00:03:09,605 --> 00:03:12,683
+00:02:27,887 --> 00:02:30,428
 Episode Eleven — access modifiers.
 
 43
-00:03:12,683 --> 00:03:18,478
+00:02:30,428 --> 00:02:35,212
 private, public, protected, package-private — ownership in code.
 
 44
-00:03:18,478 --> 00:03:19,746
+00:02:35,212 --> 00:02:36,258
 See you there.
