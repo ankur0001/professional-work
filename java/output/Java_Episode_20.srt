@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:05,124
+00:00:00,000 --> 00:00:04,252
 Sealed types close hierarchies. Modules close the classpath.
 
 2
-00:00:05,124 --> 00:00:11,102
+00:00:04,252 --> 00:00:09,214
 For years, every public type was fair game if the JAR was on the path.
 
 3
-00:00:11,102 --> 00:00:16,739
+00:00:09,214 --> 00:00:13,891
 JPMS — the Java Platform Module System — adds explicit boundaries.
 
 4
-00:00:16,739 --> 00:00:21,436
+00:00:13,891 --> 00:00:17,790
 What you require. What you export. What stays internal.
 
 5
-00:00:21,436 --> 00:00:27,927
+00:00:17,790 --> 00:00:23,176
 Today — module-info, strong encapsulation, and when modules earn their keep.
 
 6
-00:00:27,927 --> 00:00:32,026
+00:00:23,176 --> 00:00:26,578
 Packages organize names. Modules organize trust.
 
 7
-00:00:32,026 --> 00:00:33,914
+00:00:26,578 --> 00:00:27,903
 Episode Twenty.
 
 8
-00:00:33,914 --> 00:00:38,948
+00:00:27,903 --> 00:00:31,436
 Modules and JPMS — strong encapsulation.
 
 9
-00:00:38,948 --> 00:00:40,605
+00:00:31,436 --> 00:00:32,645
 Why modules exist.
 
 10
-00:00:40,605 --> 00:00:46,312
+00:00:32,645 --> 00:00:36,811
 The classpath is flat — order and accidents decide visibility.
 
 11
-00:00:46,312 --> 00:00:51,926
+00:00:36,811 --> 00:00:40,909
 Split packages, accidental API leakage, brittle shading wars.
 
 12
-00:00:51,926 --> 00:00:57,449
+00:00:40,909 --> 00:00:44,940
 Modules declare dependencies and exported packages up front.
 
 13
-00:00:57,449 --> 00:01:03,800
+00:00:44,940 --> 00:00:49,576
 The JVM can refuse illegal access instead of hoping conventions hold.
 
 14
-00:01:03,800 --> 00:01:07,206
+00:00:49,576 --> 00:00:52,062
 Reliability beats classpath folklore.
 
 15
-00:01:07,206 --> 00:01:10,413
+00:00:52,062 --> 00:00:54,758
 module-info.java is the contract.
 
 16
-00:01:10,413 --> 00:01:12,843
+00:00:54,758 --> 00:00:56,800
 module com.shop.payments.
 
 17
-00:01:12,843 --> 00:01:17,120
+00:00:56,800 --> 00:01:00,394
 requires java.sql. requires com.shop.common.
 
 18
-00:01:17,120 --> 00:01:20,036
+00:01:00,394 --> 00:01:02,844
 exports com.shop.payments.api.
 
 19
-00:01:20,036 --> 00:01:25,382
+00:01:02,844 --> 00:01:07,337
 Internal packages stay hidden even if types are public.
 
 20
-00:01:25,382 --> 00:01:29,464
+00:01:07,337 --> 00:01:10,768
 Public no longer means globally reachable.
 
 21
-00:01:29,464 --> 00:01:31,482
+00:01:10,768 --> 00:01:12,295
 Know the key directives.
 
 22
-00:01:31,482 --> 00:01:37,790
+00:01:12,295 --> 00:01:17,065
 requires — and requires transitive when consumers need your dependency too.
 
 23
-00:01:37,790 --> 00:01:43,256
+00:01:17,065 --> 00:01:21,200
 exports — and exports to specific modules when the API is narrow.
 
 24
-00:01:43,256 --> 00:01:48,891
+00:01:21,200 --> 00:01:25,461
 opens — for reflection frameworks that need deep access at runtime.
 
 25
-00:01:48,891 --> 00:01:54,021
+00:01:25,461 --> 00:01:29,342
 provides and uses — for service loading with clear providers.
 
 26
-00:01:54,021 --> 00:01:58,226
+00:01:29,342 --> 00:01:32,522
 Each keyword is a deliberate encapsulation choice.
 
 27
-00:01:58,226 --> 00:02:01,242
+00:01:32,522 --> 00:01:34,765
 Reality check — the unnamed module.
 
 28
-00:02:01,242 --> 00:02:06,843
+00:01:34,765 --> 00:01:38,932
 Classic classpath JARs still run. They become the unnamed module.
 
 29
-00:02:06,843 --> 00:02:12,961
+00:01:38,932 --> 00:01:43,483
 They can read everything, but modular code cannot require them by name.
 
 30
-00:02:12,961 --> 00:02:18,820
+00:01:43,483 --> 00:01:47,841
 Migration is often incremental — modularize libraries you own first.
 
 31
-00:02:18,820 --> 00:02:23,731
+00:01:47,841 --> 00:01:51,495
 Automatic modules bridge JARs with a derived module name.
 
 32
-00:02:23,731 --> 00:02:28,212
+00:01:51,495 --> 00:01:54,828
 Plan the boundary. Do not flip a monolith overnight.
 
 33
-00:02:28,212 --> 00:02:29,722
+00:01:54,828 --> 00:01:56,019
 When modules help.
 
 34
-00:02:29,722 --> 00:02:36,183
+00:01:56,019 --> 00:02:01,115
 Platform libraries. Large multi-JAR systems. Clear API versus internal split.
 
 35
-00:02:36,183 --> 00:02:42,476
+00:02:01,115 --> 00:02:06,078
 When you need reliable encapsulation and smaller runtime images with jlink.
 
 36
-00:02:42,476 --> 00:02:49,188
+00:02:06,078 --> 00:02:11,372
 When not — tiny apps where classpath simplicity wins and tooling friction hurts.
 
 37
-00:02:49,188 --> 00:02:55,481
+00:02:11,372 --> 00:02:16,335
 Spring Boot apps often stay on the classpath path unless you have a reason.
 
 38
-00:02:55,481 --> 00:03:01,606
+00:02:16,335 --> 00:02:21,166
 Use JPMS when boundaries are a product feature — not a fashion statement.
 
 39
-00:03:01,606 --> 00:03:03,464
+00:02:21,166 --> 00:02:22,652
 Three common mistakes.
 
 40
-00:03:03,464 --> 00:03:08,952
+00:02:22,652 --> 00:02:27,041
 One — exporting everything — encapsulation theater with no teeth.
 
 41
-00:03:08,952 --> 00:03:15,200
+00:02:27,041 --> 00:02:32,038
 Two — opens for convenience forever instead of narrowing reflective needs.
 
 42
-00:03:15,200 --> 00:03:21,111
+00:02:32,038 --> 00:02:36,765
 Three — split packages across modules — the JVM will not forgive that.
 
 43
-00:03:21,111 --> 00:03:27,359
+00:02:36,765 --> 00:02:41,762
 Also — ignoring transitive requires until consumers break at compile time.
 
 44
-00:03:27,359 --> 00:03:31,328
+00:02:41,762 --> 00:02:44,936
 Module graphs should be boring and intentional.
 
 45
-00:03:31,328 --> 00:03:36,918
+00:02:44,936 --> 00:02:49,319
 Interview question — what does JPMS add over packages and JARs?
 
 46
-00:03:36,918 --> 00:03:41,443
+00:02:49,319 --> 00:02:52,867
 Explicit module dependencies and exported packages.
 
 47
-00:03:41,443 --> 00:03:46,856
+00:02:52,867 --> 00:02:57,111
 Strong encapsulation — public is not enough to be accessible.
 
 48
-00:03:46,856 --> 00:03:52,445
+00:02:57,111 --> 00:03:01,494
 Mention module-info, requires, exports, and the unnamed module.
 
 49
-00:03:52,445 --> 00:03:55,462
+00:03:01,494 --> 00:03:03,860
 Bonus — jlink for custom runtimes.
 
 50
-00:03:55,462 --> 00:04:00,786
+00:03:03,860 --> 00:03:08,034
 That answer separates classpath history from modular design.
 
 51
-00:04:00,786 --> 00:04:06,905
+00:03:08,034 --> 00:03:13,387
 Language features are in place. Next — the collections you use every day.
 
 52
-00:04:06,905 --> 00:04:11,682
+00:03:13,387 --> 00:03:17,567
 Episode Twenty-One — Lists, and the java.util foundation.
 
 53
-00:04:11,682 --> 00:04:16,879
+00:03:17,567 --> 00:03:22,113
 Interfaces, implementations, and choosing the right structure.
 
 54
-00:04:16,879 --> 00:04:18,052
+00:03:22,113 --> 00:03:23,140
 See you there.
