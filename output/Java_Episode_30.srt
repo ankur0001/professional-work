@@ -1,0 +1,219 @@
+1
+00:00:00,000 --> 00:00:04,826
+Parallel streams need thread-safe design. Optional handles absence safely.
+
+2
+00:00:04,826 --> 00:00:09,260
+Null references cause bugs that compile fine and fail in production.
+
+3
+00:00:09,260 --> 00:00:13,172
+Optional is a container that may hold a value — or be empty.
+
+4
+00:00:13,172 --> 00:00:16,889
+It forces callers to acknowledge missing data explicitly.
+
+5
+00:00:16,889 --> 00:00:20,476
+Today — Optional as a design tool, not a silver bullet.
+
+6
+00:00:20,476 --> 00:00:22,954
+Present or empty — choose with intent.
+
+7
+00:00:22,954 --> 00:00:24,095
+Episode Thirty.
+
+8
+00:00:24,095 --> 00:00:27,212
+Optional — modeling absence without null.
+
+9
+00:00:27,212 --> 00:00:29,530
+Optional.of wraps a non-null value.
+
+10
+00:00:29,530 --> 00:00:33,702
+Optional.ofNullable accepts null — producing an empty Optional.
+
+11
+00:00:33,702 --> 00:00:36,814
+Optional.empty is the canonical empty instance.
+
+12
+00:00:36,814 --> 00:00:40,258
+isPresent and isEmpty test state without unwrapping.
+
+13
+00:00:40,258 --> 00:00:44,430
+Never call of with a value that might be null — use ofNullable.
+
+14
+00:00:44,430 --> 00:00:48,006
+Creation methods set expectations from the first line.
+
+15
+00:00:48,006 --> 00:00:51,981
+An empty Optional is not null — it is an explicit absence.
+
+16
+00:00:51,981 --> 00:00:56,779
+get throws NoSuchElementException on empty — avoid in production code.
+
+17
+00:00:56,779 --> 00:00:59,315
+orElse supplies a default when empty.
+
+18
+00:00:59,315 --> 00:01:03,016
+orElseGet takes a supplier — lazy default computation.
+
+19
+00:01:03,016 --> 00:01:06,511
+orElseThrow maps absence to a meaningful exception.
+
+20
+00:01:06,511 --> 00:01:10,144
+Pick the fallback that matches your domain semantics.
+
+21
+00:01:10,144 --> 00:01:13,545
+Optional chains avoid nested if-not-null checks.
+
+22
+00:01:13,545 --> 00:01:17,158
+ifPresent runs a consumer only when a value exists.
+
+23
+00:01:17,158 --> 00:01:20,700
+filter keeps the value only if a predicate passes.
+
+24
+00:01:20,700 --> 00:01:23,675
+map transforms the inner value if present.
+
+25
+00:01:23,675 --> 00:01:28,422
+flatMap transforms into another Optional — no nested Optional mess.
+
+26
+00:01:28,422 --> 00:01:31,610
+Chain fluently — stop when empty at any step.
+
+27
+00:01:31,610 --> 00:01:35,111
+map is for simple transformations — String to Integer.
+
+28
+00:01:35,111 --> 00:01:38,871
+flatMap is for operations that themselves return Optional.
+
+29
+00:01:38,871 --> 00:01:41,983
+Lookup then parse. Find user then fetch profile.
+
+30
+00:01:41,983 --> 00:01:45,419
+flatMap flattens Optional of Optional into one level.
+
+31
+00:01:45,419 --> 00:01:49,114
+Combine with stream flatMap for filtering present values.
+
+32
+00:01:49,114 --> 00:01:52,356
+Readable pipelines replace defensive null ladders.
+
+33
+00:01:52,356 --> 00:01:53,735
+When Optional shines.
+
+34
+00:01:53,735 --> 00:01:57,938
+Return types where absence is normal — findById, parse attempts.
+
+35
+00:01:57,938 --> 00:02:01,812
+Chaining transformations without null checks at every step.
+
+36
+00:02:01,812 --> 00:02:03,060
+When not to use it.
+
+37
+00:02:03,060 --> 00:02:07,525
+Fields on entities — prefer plain nullability discipline or records.
+
+38
+00:02:07,525 --> 00:02:11,530
+Method parameters — often clearer as overloads or validation.
+
+39
+00:02:11,530 --> 00:02:15,142
+Optional is for APIs and return types — not everywhere.
+
+40
+00:02:15,142 --> 00:02:16,721
+Three common mistakes.
+
+41
+00:02:16,721 --> 00:02:19,952
+One — Optional.of with a possibly null value.
+
+42
+00:02:19,952 --> 00:02:24,043
+Two — using get without checking — same as ignoring null.
+
+43
+00:02:24,043 --> 00:02:28,494
+Three — Optional fields in JSON entities — serialization pain.
+
+44
+00:02:28,494 --> 00:02:32,658
+Also — orElse with expensive work — use orElseGet instead.
+
+45
+00:02:32,658 --> 00:02:35,960
+Optional clarifies intent — misuse adds noise.
+
+46
+00:02:35,960 --> 00:02:39,188
+Interview question — why Optional instead of null?
+
+47
+00:02:39,188 --> 00:02:42,868
+Forces explicit handling — isPresent, orElse, map chains.
+
+48
+00:02:42,868 --> 00:02:46,355
+Documents that absence is expected in the return type.
+
+49
+00:02:46,355 --> 00:02:49,906
+Mention ofNullable versus of — null safety at creation.
+
+50
+00:02:49,906 --> 00:02:53,005
+Note it is mainly for return values, not fields.
+
+51
+00:02:53,005 --> 00:02:56,298
+That answer shows modern Java API design awareness.
+
+52
+00:02:56,298 --> 00:03:00,124
+Absence handled. Next — dates and times done right.
+
+53
+00:03:00,124 --> 00:03:02,450
+Episode Thirty-One — java.time.
+
+54
+00:03:02,450 --> 00:03:06,802
+Instant, LocalDate, ZonedDateTime — without Calendar pain.
+
+55
+00:03:06,802 --> 00:03:07,852
+See you there.
