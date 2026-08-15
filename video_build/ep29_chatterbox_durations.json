@@ -1,0 +1,12 @@
+{
+  "hook": 20.808,
+  "title": 5.064,
+  "forkjoin": 18.888,
+  "parallel": 20.184,
+  "ordering": 19.296,
+  "pools": 21.456,
+  "pitfalls": 16.728,
+  "mistakes": 19.032,
+  "interview": 21.168,
+  "teaser": 11.304
+}
