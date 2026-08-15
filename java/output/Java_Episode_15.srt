@@ -1,175 +1,175 @@
 1
-00:00:00,000 --> 00:00:05,822
+00:00:00,000 --> 00:00:04,590
 Wrappers made objects from values. Generics make containers type-safe.
 
 2
-00:00:05,822 --> 00:00:10,564
+00:00:04,590 --> 00:00:08,327
 List of Order — not List of Object with casts everywhere.
 
 3
-00:00:10,564 --> 00:00:16,469
+00:00:08,327 --> 00:00:12,983
 Generics move mistakes from runtime ClassCastException to compile time.
 
 4
-00:00:16,469 --> 00:00:20,212
+00:00:12,983 --> 00:00:15,933
 Today we read angle brackets with confidence.
 
 5
-00:00:20,212 --> 00:00:24,954
+00:00:15,933 --> 00:00:19,671
 This is how modern Java APIs stay both flexible and safe.
 
 6
-00:00:24,954 --> 00:00:29,362
+00:00:19,671 --> 00:00:23,146
 Angle brackets are not ceremony — they are contracts.
 
 7
-00:00:29,362 --> 00:00:30,948
+00:00:23,146 --> 00:00:24,541
 Episode Fifteen.
 
 8
-00:00:30,948 --> 00:00:35,708
+00:00:24,541 --> 00:00:28,724
 Generics — type parameters without the cast tax.
 
 9
-00:00:35,708 --> 00:00:39,329
+00:00:28,724 --> 00:00:31,533
 Before generics — a raw List held anything.
 
 10
-00:00:39,329 --> 00:00:43,875
+00:00:31,533 --> 00:00:35,061
 You cast on the way out. Wrong cast — boom at runtime.
 
 11
-00:00:43,875 --> 00:00:48,085
+00:00:35,061 --> 00:00:38,328
 List angle Order documents intent and enforces it.
 
 12
-00:00:48,085 --> 00:00:51,959
+00:00:38,328 --> 00:00:41,333
 The compiler becomes your first code reviewer.
 
 13
-00:00:51,959 --> 00:00:57,011
+00:00:41,333 --> 00:00:45,253
 That alone earns generics a permanent place in your toolkit.
 
 14
-00:00:57,011 --> 00:01:00,126
+00:00:45,253 --> 00:00:47,670
 Catch type mistakes before they ship.
 
 15
-00:01:00,126 --> 00:01:02,910
+00:00:47,670 --> 00:00:49,906
 Type parameters look like this.
 
 16
-00:01:02,910 --> 00:01:07,400
+00:00:49,906 --> 00:00:53,512
 class Box angle T — T is a placeholder for a type.
 
 17
-00:01:07,400 --> 00:01:12,878
+00:00:53,512 --> 00:00:57,911
 Box angle String holds strings. Box angle Order holds orders.
 
 18
-00:01:12,878 --> 00:01:18,984
+00:00:57,911 --> 00:01:02,815
 Methods can be generic too — static angle T T first of List angle T.
 
 19
-00:01:18,984 --> 00:01:25,360
+00:01:02,815 --> 00:01:07,936
 Name type parameters clearly — T for type, E for element, K V for maps.
 
 20
-00:01:25,360 --> 00:01:27,538
+00:01:07,936 --> 00:01:09,694
 Sometimes T needs limits.
 
 21
-00:01:27,538 --> 00:01:31,371
+00:01:09,694 --> 00:01:12,789
 angle T extends Number — only numeric types.
 
 22
-00:01:31,371 --> 00:01:36,512
+00:01:12,789 --> 00:01:16,938
 Wildcards — question mark extends — for flexible consumers.
 
 23
-00:01:36,512 --> 00:01:41,913
+00:01:16,938 --> 00:01:21,299
 PECS — producer extends, consumer super — when you dig deeper.
 
 24
-00:01:41,913 --> 00:01:47,402
+00:01:21,299 --> 00:01:25,730
 For now — prefer concrete type args at call sites when you can.
 
 25
-00:01:47,402 --> 00:01:50,452
+00:01:25,730 --> 00:01:28,083
 Important JVM truth — type erasure.
 
 26
-00:01:50,452 --> 00:01:53,938
+00:01:28,083 --> 00:01:30,771
 Generics are mainly a compile-time tool.
 
 27
-00:01:53,938 --> 00:01:58,034
+00:01:30,771 --> 00:01:33,931
 At runtime, List angle Order is largely a List.
 
 28
-00:01:58,034 --> 00:02:04,135
+00:01:33,931 --> 00:01:38,636
 You cannot new T easily. You cannot check instanceof List angle Order.
 
 29
-00:02:04,135 --> 00:02:09,015
+00:01:38,636 --> 00:01:42,400
 Design with erasure in mind — do not fight the platform.
 
 30
-00:02:09,015 --> 00:02:12,588
+00:01:42,400 --> 00:01:45,156
 Know the limits so you use the strengths.
 
 31
-00:02:12,588 --> 00:02:14,451
+00:01:45,156 --> 00:01:46,540
 Three common mistakes.
 
 32
-00:02:14,451 --> 00:02:20,126
+00:01:46,540 --> 00:01:50,755
 One — raw types — List without angle brackets — undoing the safety.
 
 33
-00:02:20,126 --> 00:02:25,800
+00:01:50,755 --> 00:01:54,970
 Two — ignoring unchecked warnings until ClassCastExceptions return.
 
 34
-00:02:25,800 --> 00:02:31,982
+00:01:54,970 --> 00:01:59,563
 Three — overcomplicated wildcards where a simple type parameter would do.
 
 35
-00:02:31,982 --> 00:02:37,318
+00:01:59,563 --> 00:02:03,526
 Also — using Object when a generic method would express intent.
 
 36
-00:02:37,318 --> 00:02:40,798
+00:02:03,526 --> 00:02:06,137
 Interview question — what is type erasure?
 
 37
-00:02:40,798 --> 00:02:46,931
+00:02:06,137 --> 00:02:10,736
 Generics checked at compile time; type args are largely erased at runtime.
 
 38
-00:02:46,931 --> 00:02:50,991
+00:02:10,736 --> 00:02:13,782
 Why — backward compatibility with older bytecode.
 
 39
-00:02:50,991 --> 00:02:55,631
+00:02:13,782 --> 00:02:17,263
 Then — prefer parameterized types over raw types always.
 
 40
-00:02:55,631 --> 00:03:00,272
+00:02:17,263 --> 00:02:20,744
 That answer shows language history and daily discipline.
 
 41
-00:03:00,272 --> 00:03:05,150
+00:02:20,744 --> 00:02:24,546
 Containers are type-safe. Next — metadata on code.
 
 42
-00:03:05,150 --> 00:03:08,077
+00:02:24,546 --> 00:02:26,827
 Episode Sixteen — annotations.
 
 43
-00:03:08,077 --> 00:03:13,052
+00:02:26,827 --> 00:02:30,705
 Override, Spring markers, and what retention means.
 
 44
-00:03:13,052 --> 00:03:14,418
+00:02:30,705 --> 00:02:31,770
 See you there.
