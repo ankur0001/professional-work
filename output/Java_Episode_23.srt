@@ -1,215 +1,215 @@
 1
-00:00:00,000 --> 00:00:04,256
+00:00:00,000 --> 00:00:03,618
 Sets answer membership. Maps answer association.
 
 2
-00:00:04,256 --> 00:00:08,157
+00:00:03,618 --> 00:00:06,934
 Given this key — what value belongs with it?
 
 3
-00:00:08,157 --> 00:00:13,654
+00:00:06,934 --> 00:00:11,608
 Lookups, caches, indexes, configuration — maps are everywhere.
 
 4
-00:00:13,654 --> 00:00:19,240
+00:00:11,608 --> 00:00:16,356
 HashMap is the workhorse. Ordering variants exist for a reason.
 
 5
-00:00:19,240 --> 00:00:24,028
+00:00:16,356 --> 00:00:20,426
 Today — Map contracts, null rules, and modern helpers.
 
 6
-00:00:24,028 --> 00:00:28,018
+00:00:20,426 --> 00:00:23,818
 Keys find values. Contracts keep them honest.
 
 7
-00:00:28,018 --> 00:00:30,337
+00:00:23,818 --> 00:00:25,847
 Episode Twenty-Three.
 
 8
-00:00:30,337 --> 00:00:33,980
+00:00:25,847 --> 00:00:29,036
 Maps — key to value in java.util.
 
 9
-00:00:33,980 --> 00:00:38,286
+00:00:29,036 --> 00:00:32,557
 Map is not a Collection — it is its own hierarchy.
 
 10
-00:00:38,286 --> 00:00:41,300
+00:00:32,557 --> 00:00:35,021
 Each key maps to at most one value.
 
 11
-00:00:41,300 --> 00:00:47,414
+00:00:35,021 --> 00:00:40,020
 put replaces. get returns null when absent — or when the value is null.
 
 12
-00:00:47,414 --> 00:00:53,357
+00:00:40,020 --> 00:00:44,878
 Views matter — keySet, values, and entrySet share the underlying map.
 
 13
-00:00:53,357 --> 00:00:59,557
+00:00:44,878 --> 00:00:49,948
 Mutating a view mutates the map. That surprise shows up in code reviews.
 
 14
-00:00:59,557 --> 00:01:04,638
+00:00:49,948 --> 00:00:54,102
 Model associations. Do not stuff pairs into a list forever.
 
 15
-00:01:04,638 --> 00:01:09,051
+00:00:54,102 --> 00:00:57,498
 HashMap is the default map for single-threaded use.
 
 16
-00:01:09,051 --> 00:01:13,809
+00:00:57,498 --> 00:01:01,161
 Average constant-time put and get when hashing behaves.
 
 17
-00:01:13,809 --> 00:01:18,482
+00:01:01,161 --> 00:01:04,758
 Keys need equals and hashCode — same story as HashSet.
 
 18
-00:01:18,482 --> 00:01:23,154
+00:01:04,758 --> 00:01:08,354
 One null key is allowed. Many null values are allowed.
 
 19
-00:01:23,154 --> 00:01:28,864
+00:01:08,354 --> 00:01:12,749
 Prefer computeIfAbsent and merge over get-then-put races of logic.
 
 20
-00:01:28,864 --> 00:01:32,152
+00:01:12,749 --> 00:01:15,280
 For most application maps, start here.
 
 21
-00:01:32,152 --> 00:01:34,716
+00:01:15,280 --> 00:01:17,323
 Ordering and specialized maps.
 
 22
-00:01:34,716 --> 00:01:41,468
+00:01:17,323 --> 00:01:22,702
 LinkedHashMap preserves insertion order — or access order for LRU-style caches.
 
 23
-00:01:41,468 --> 00:01:46,255
+00:01:22,702 --> 00:01:26,515
 TreeMap keeps keys sorted — natural order or Comparator.
 
 24
-00:01:46,255 --> 00:01:51,127
+00:01:26,515 --> 00:01:30,396
 EnumMap is compact and fast when keys are enum constants.
 
 25
-00:01:51,127 --> 00:01:56,170
+00:01:30,396 --> 00:01:34,413
 IdentityHashMap uses reference equality — rare, sharp tool.
 
 26
-00:01:56,170 --> 00:02:01,298
+00:01:34,413 --> 00:01:38,498
 Pick the variant that matches your iteration and key domain.
 
 27
-00:02:01,298 --> 00:02:04,747
+00:01:38,498 --> 00:01:41,034
 Null rules are implementation-specific.
 
 28
-00:02:04,747 --> 00:02:08,903
+00:01:41,034 --> 00:01:44,090
 HashMap tolerates a null key. TreeMap does not.
 
 29
-00:02:08,903 --> 00:02:15,004
+00:01:44,090 --> 00:01:48,577
 Hashtable rejects nulls entirely — and brings legacy synchronization.
 
 30
-00:02:15,004 --> 00:02:19,780
+00:01:48,577 --> 00:01:52,088
 Never assume null policy from the Map interface alone.
 
 31
-00:02:19,780 --> 00:02:24,466
+00:01:52,088 --> 00:01:55,535
 In modern code, ConcurrentHashMap also rejects nulls.
 
 32
-00:02:24,466 --> 00:02:29,772
+00:01:55,535 --> 00:01:59,436
 Read the implementation before you lean on null as a signal.
 
 33
-00:02:29,772 --> 00:02:33,366
+00:01:59,436 --> 00:02:02,168
 Modern Map APIs reduce boilerplate bugs.
 
 34
-00:02:33,366 --> 00:02:38,128
+00:02:02,168 --> 00:02:05,788
 getOrDefault avoids null checks for simple fallbacks.
 
 35
-00:02:38,128 --> 00:02:42,530
+00:02:05,788 --> 00:02:09,135
 computeIfAbsent builds values lazily and cleanly.
 
 36
-00:02:42,530 --> 00:02:47,741
+00:02:09,135 --> 00:02:13,097
 merge combines values with an explicit remapping function.
 
 37
-00:02:47,741 --> 00:02:53,311
+00:02:13,097 --> 00:02:17,332
 Map.of and Map.copyOf create unmodifiable maps for safer APIs.
 
 38
-00:02:53,311 --> 00:02:58,702
+00:02:17,332 --> 00:02:21,430
 Prefer these helpers over fragile get-then-mutate sequences.
 
 39
-00:02:58,702 --> 00:03:00,580
+00:02:21,430 --> 00:02:22,962
 Three common mistakes.
 
 40
-00:03:00,580 --> 00:03:05,873
+00:02:22,962 --> 00:02:27,280
 One — mutable keys whose equals fields change after insertion.
 
 41
-00:03:05,873 --> 00:03:10,996
+00:02:27,280 --> 00:02:31,458
 Two — modifying a map while iterating its keySet carelessly.
 
 42
-00:03:10,996 --> 00:03:15,776
+00:02:31,458 --> 00:02:35,357
 Three — reaching for Hashtable in new code out of habit.
 
 43
-00:03:15,776 --> 00:03:21,923
+00:02:35,357 --> 00:02:40,371
 Also — using null values as a secret third state without documenting it.
 
 44
-00:03:21,923 --> 00:03:26,960
+00:02:40,371 --> 00:02:44,480
 Maps amplify clear key design — and punish sloppy identity.
 
 45
-00:03:26,960 --> 00:03:32,068
+00:02:44,480 --> 00:02:48,734
 Interview question — how does HashMap work, and when TreeMap?
 
 46
-00:03:32,068 --> 00:03:37,093
+00:02:48,734 --> 00:02:52,917
 HashMap — hash buckets, equals for collisions, average O(1).
 
 47
-00:03:37,093 --> 00:03:41,699
+00:02:52,917 --> 00:02:56,753
 TreeMap — red-black tree, sorted keys, logarithmic ops.
 
 48
-00:03:41,699 --> 00:03:45,300
+00:02:56,753 --> 00:02:59,751
 Call out mutable keys and null differences.
 
 49
-00:03:45,300 --> 00:03:50,157
+00:02:59,751 --> 00:03:03,795
 Mention LinkedHashMap if they ask about predictable order.
 
 50
-00:03:50,157 --> 00:03:54,930
+00:03:03,795 --> 00:03:07,770
 That answer is solid for junior and mid-level interviews.
 
 51
-00:03:54,930 --> 00:04:00,922
+00:03:07,770 --> 00:03:12,951
 Associations are clear. Next — waiting lines and two-ended queues.
 
 52
-00:04:00,922 --> 00:04:04,554
+00:03:12,951 --> 00:03:16,091
 Episode Twenty-Four — Queues and Deques.
 
 53
-00:04:04,554 --> 00:04:08,549
+00:03:16,091 --> 00:03:19,545
 FIFO, stacks, and why ArrayDeque wins often.
 
 54
-00:04:08,549 --> 00:04:09,820
+00:03:19,545 --> 00:03:20,644
 See you there.
