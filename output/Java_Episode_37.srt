@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:05,789
+Two threads update the same counter. You expect two — you might get one.
+
+2
+00:00:05,789 --> 00:00:12,383
+Race conditions happen when shared mutable state is accessed without coordination.
+
+3
+00:00:12,383 --> 00:00:16,966
+Synchronization is how Java makes critical sections safe.
+
+4
+00:00:16,966 --> 00:00:21,388
+One thread at a time — mutual exclusion on shared data.
+
+5
+00:00:21,388 --> 00:00:27,338
+Locks, monitors, and the synchronized keyword — the first line of defense.
+
+6
+00:00:27,338 --> 00:00:32,002
+Today — synchronized methods, blocks, and intrinsic locks.
+
+7
+00:00:32,002 --> 00:00:34,113
+Episode Thirty-Seven.
+
+8
+00:00:34,113 --> 00:00:38,636
+Synchronization — safe access to shared data.
+
+9
+00:00:38,636 --> 00:00:43,677
+A race condition — outcome depends on thread scheduling order.
+
+10
+00:00:43,677 --> 00:00:49,286
+count plus plus is not atomic — read, increment, write — three steps.
+
+11
+00:00:49,286 --> 00:00:53,920
+Two threads interleave those steps — updates can be lost.
+
+12
+00:00:53,920 --> 00:00:58,148
+The bug is intermittent — hardest kind to reproduce.
+
+13
+00:00:58,148 --> 00:01:03,676
+You need mutual exclusion — only one thread in the critical section.
+
+14
+00:01:03,676 --> 00:01:08,310
+Synchronization enforces that rule at the language level.
+
+15
+00:01:08,310 --> 00:01:14,411
+synchronized on a method locks the instance — or the Class object for static.
+
+16
+00:01:14,411 --> 00:01:19,403
+Only one thread can execute that synchronized method at a time.
+
+17
+00:01:19,403 --> 00:01:23,126
+Other threads block until the lock is released.
+
+18
+00:01:23,126 --> 00:01:26,930
+Simple and readable for small critical sections.
+
+19
+00:01:26,930 --> 00:01:33,031
+The lock is automatically released when the method exits — even on exception.
+
+20
+00:01:33,031 --> 00:01:38,656
+Use synchronized methods when the whole method is the critical section.
+
+21
+00:01:38,656 --> 00:01:43,303
+synchronized block — finer control over what is protected.
+
+22
+00:01:43,303 --> 00:01:47,309
+synchronized on this — locks the current instance.
+
+23
+00:01:47,309 --> 00:01:52,357
+synchronized on a dedicated lock object — often clearer intent.
+
+24
+00:01:52,357 --> 00:01:56,443
+Protect only the few lines that touch shared state.
+
+25
+00:01:56,443 --> 00:02:01,811
+Smaller critical sections mean less contention — better throughput.
+
+26
+00:02:01,811 --> 00:02:06,458
+Prefer blocks when only part of a method needs protection.
+
+27
+00:02:06,458 --> 00:02:11,826
+Every Java object has an intrinsic lock — also called a monitor.
+
+28
+00:02:11,826 --> 00:02:17,194
+Entering synchronized acquires the monitor. Exiting releases it.
+
+29
+00:02:17,194 --> 00:02:22,562
+Reentrant — the same thread can acquire a lock it already holds.
+
+30
+00:02:22,562 --> 00:02:28,517
+wait and notify operate on the monitor — coordination beyond exclusion.
+
+31
+00:02:28,517 --> 00:02:33,968
+The JVM maps monitors to operating-system mutexes under the hood.
+
+32
+00:02:33,968 --> 00:02:39,420
+Understand monitors — they underpin every synchronized construct.
+
+33
+00:02:39,420 --> 00:02:41,113
+When to synchronize.
+
+34
+00:02:41,113 --> 00:02:45,092
+Any read-modify-write on shared mutable fields.
+
+35
+00:02:45,092 --> 00:02:50,171
+Invariants that must hold while multiple fields are updated.
+
+36
+00:02:50,171 --> 00:02:54,404
+Compound actions — check-then-act on shared state.
+
+37
+00:02:54,404 --> 00:02:59,398
+When not — over-synchronizing everything kills performance.
+
+38
+00:02:59,398 --> 00:03:04,054
+Synchronize the minimum — but synchronize what matters.
+
+39
+00:03:04,054 --> 00:03:05,871
+Three common mistakes.
+
+40
+00:03:05,871 --> 00:03:12,148
+One — synchronizing on the wrong object — String literals or boxed integers.
+
+41
+00:03:12,148 --> 00:03:17,351
+Two — holding locks while doing slow I/O — blocks every waiter.
+
+42
+00:03:17,351 --> 00:03:22,884
+Three — nested locks on different objects — classic deadlock setup.
+
+43
+00:03:22,884 --> 00:03:28,748
+Also — assuming synchronized fixes visibility alone — see next episode.
+
+44
+00:03:28,748 --> 00:03:32,960
+Lock only what you must — for as short as possible.
+
+45
+00:03:32,960 --> 00:03:38,572
+Interview question — synchronized method versus synchronized block?
+
+46
+00:03:38,572 --> 00:03:42,257
+Both acquire an intrinsic lock on an object.
+
+47
+00:03:42,257 --> 00:03:48,623
+Method form locks on this or the Class. Block form lets you choose the lock.
+
+48
+00:03:48,623 --> 00:03:53,062
+Blocks allow finer granularity — protect fewer lines.
+
+49
+00:03:53,062 --> 00:03:57,669
+Mention reentrancy and that locks release on exception.
+
+50
+00:03:57,669 --> 00:04:02,778
+That answer shows you understand monitors, not just keywords.
+
+51
+00:04:02,778 --> 00:04:08,037
+Locks prevent races. But can every thread see your writes?
+
+52
+00:04:08,037 --> 00:04:11,755
+Episode Thirty-Eight — Memory Visibility.
+
+53
+00:04:11,755 --> 00:04:16,470
+volatile, happens-before, and the Java Memory Model.
+
+54
+00:04:16,470 --> 00:04:17,740
+See you there.
