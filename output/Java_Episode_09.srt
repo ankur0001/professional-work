@@ -1,0 +1,183 @@
+1
+00:00:00,000 --> 00:00:06,053
+Arrays hold many values. Strings hold text — and text is everywhere.
+
+2
+00:00:06,053 --> 00:00:10,593
+APIs, logs, JSON, HTTP, configuration, identifiers.
+
+3
+00:00:10,593 --> 00:00:16,468
+String is immutable. That safety is powerful — and easy to misuse.
+
+4
+00:00:16,468 --> 00:00:21,185
+Today we treat String like the production type it is.
+
+5
+00:00:21,185 --> 00:00:26,170
+Small mistakes here show up in security and performance.
+
+6
+00:00:26,170 --> 00:00:27,454
+Episode Nine.
+
+7
+00:00:27,454 --> 00:00:33,284
+Strings — immutability, equality, and careful construction.
+
+8
+00:00:33,284 --> 00:00:38,584
+Immutability means the characters never change after creation.
+
+9
+00:00:38,584 --> 00:00:44,055
+s equals s plus world does not edit s — it creates a new String.
+
+10
+00:00:44,055 --> 00:00:48,585
+That sharing and safety help concurrency and caching.
+
+11
+00:00:48,585 --> 00:00:53,372
+But careless concatenation can allocate again and again.
+
+12
+00:00:53,372 --> 00:00:57,988
+Understand create versus modify — String only creates.
+
+13
+00:00:57,988 --> 00:01:02,262
+That one idea prevents a whole class of confusion.
+
+14
+00:01:02,262 --> 00:01:04,918
+Equality is the classic trap.
+
+15
+00:01:04,918 --> 00:01:09,956
+Equals-equals compares references — same String object?
+
+16
+00:01:09,956 --> 00:01:12,703
+For text content — use equals.
+
+17
+00:01:12,703 --> 00:01:17,649
+Safer pattern — literal first. PAID dot equals status.
+
+18
+00:01:17,649 --> 00:01:22,229
+Null-safe and clear. Interviewers listen for this.
+
+19
+00:01:22,229 --> 00:01:25,984
+Make equals your default reflex for text.
+
+20
+00:01:25,984 --> 00:01:28,273
+Building strings in a loop?
+
+21
+00:01:28,273 --> 00:01:31,665
+Do not use plus repeatedly in hot loops.
+
+22
+00:01:31,665 --> 00:01:36,413
+Use StringBuilder — append in place, then toString once.
+
+23
+00:01:36,413 --> 00:01:42,179
+Modern compilers help simple cases — but builders win when you loop.
+
+24
+00:01:42,179 --> 00:01:47,436
+Measure hot paths. Clarity first — then allocation discipline.
+
+25
+00:01:47,436 --> 00:01:51,506
+Builders are the boring correct tool — use them.
+
+26
+00:01:51,506 --> 00:01:55,305
+Bytes are not characters without a charset.
+
+27
+00:01:55,305 --> 00:01:59,722
+Prefer UTF-8 explicitly when encoding or decoding.
+
+28
+00:01:59,722 --> 00:02:05,730
+toLowerCase without a locale can surprise you in Turkish and beyond.
+
+29
+00:02:05,730 --> 00:02:09,793
+For identifiers, be explicit about case rules.
+
+30
+00:02:09,793 --> 00:02:14,741
+Never assume the platform default will match production.
+
+31
+00:02:14,741 --> 00:02:16,596
+Be explicit — always.
+
+32
+00:02:16,596 --> 00:02:18,523
+Three common mistakes.
+
+33
+00:02:18,523 --> 00:02:21,763
+One — equals-equals for text content.
+
+34
+00:02:21,763 --> 00:02:27,368
+Two — logging secrets inside strings — tokens, passwords, cards.
+
+35
+00:02:27,368 --> 00:02:32,623
+Three — accepting unbounded string input until memory cries.
+
+36
+00:02:32,623 --> 00:02:38,753
+Also — pushing raw strings deep into domain code. Prefer typed values.
+
+37
+00:02:38,753 --> 00:02:44,446
+A CustomerId type beats a naked string passed twelve layers deep.
+
+38
+00:02:44,446 --> 00:02:48,220
+Interview question — why is String immutable?
+
+39
+00:02:48,220 --> 00:02:54,593
+Safety, sharing, hash stability for maps, and simpler concurrency reasoning.
+
+40
+00:02:54,593 --> 00:02:58,869
+Then add — use StringBuilder when you mutate often.
+
+41
+00:02:58,869 --> 00:03:02,391
+And never compare text with equals-equals.
+
+42
+00:03:02,391 --> 00:03:06,752
+That trio covers language design and daily practice.
+
+43
+00:03:06,752 --> 00:03:11,281
+Text is under control. Next we model the world.
+
+44
+00:03:11,281 --> 00:03:15,328
+Episode Ten — object-oriented programming.
+
+45
+00:03:15,328 --> 00:03:20,821
+Classes, objects, encapsulation — how Java scales design.
+
+46
+00:03:20,821 --> 00:03:22,170
+See you there.

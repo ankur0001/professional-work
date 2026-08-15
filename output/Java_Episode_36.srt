@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:06,262
+One CPU core can only do one thing at a time — unless you switch fast enough.
+
+2
+00:00:06,262 --> 00:00:12,117
+Threads let a program do multiple tasks concurrently within one process.
+
+3
+00:00:12,117 --> 00:00:18,460
+Download a file while updating the UI. Process requests while logging metrics.
+
+4
+00:00:18,460 --> 00:00:24,722
+Concurrency is about structure — parallelism is about simultaneous execution.
+
+5
+00:00:24,722 --> 00:00:30,252
+Threads share memory — powerful, but dangerous without coordination.
+
+6
+00:00:30,252 --> 00:00:36,514
+Today — the thread model in Java and how to start your first concurrent task.
+
+7
+00:00:36,514 --> 00:00:38,473
+Episode Thirty-Six.
+
+8
+00:00:38,473 --> 00:00:42,908
+Threads Introduction — concurrency in Java.
+
+9
+00:00:42,908 --> 00:00:48,281
+A Thread is a lightweight unit of execution inside a JVM process.
+
+10
+00:00:48,281 --> 00:00:54,150
+The JVM maps Java threads to OS threads — one-to-one on most platforms.
+
+11
+00:00:54,150 --> 00:00:59,770
+Every Java program starts with a main thread — the one running main.
+
+12
+00:00:59,770 --> 00:01:05,060
+Creating more threads lets work proceed on separate call stacks.
+
+13
+00:01:05,060 --> 00:01:10,681
+Threads share the heap — instance fields are visible across threads.
+
+14
+00:01:10,681 --> 00:01:16,302
+Each thread has its own stack — local variables are thread-confined.
+
+15
+00:01:16,302 --> 00:01:21,691
+Runnable is a functional interface — void run with no arguments.
+
+16
+00:01:21,691 --> 00:01:26,490
+Pass a Runnable to a Thread constructor, then call start.
+
+17
+00:01:26,490 --> 00:01:31,543
+Callable is like Runnable but returns a value and can throw.
+
+18
+00:01:31,543 --> 00:01:37,100
+ExecutorService is the modern way — submit tasks to a thread pool.
+
+19
+00:01:37,100 --> 00:01:41,899
+Prefer Runnable lambdas over subclassing Thread directly.
+
+20
+00:01:41,899 --> 00:01:45,520
+Separate task logic from thread management.
+
+21
+00:01:45,520 --> 00:01:51,414
+Thread states — NEW, RUNNABLE, BLOCKED, WAITING, TIMED_WAITING, TERMINATED.
+
+22
+00:01:51,414 --> 00:01:56,365
+NEW until start is called — then RUNNABLE when eligible to run.
+
+23
+00:01:56,365 --> 00:02:01,002
+BLOCKED waiting for a monitor lock. WAITING until notified.
+
+24
+00:02:01,002 --> 00:02:05,953
+The scheduler decides which RUNNABLE thread runs on which core.
+
+25
+00:02:05,953 --> 00:02:10,668
+You do not control scheduling — design for unpredictability.
+
+26
+00:02:10,668 --> 00:02:15,698
+Understanding states helps you debug stuck and starving threads.
+
+27
+00:02:15,698 --> 00:02:20,588
+Never call run directly — that executes on the current thread.
+
+28
+00:02:20,588 --> 00:02:24,611
+Call start to launch a new thread that invokes run.
+
+29
+00:02:24,611 --> 00:02:29,816
+join waits for another thread to finish — useful for coordination.
+
+30
+00:02:29,816 --> 00:02:35,495
+sleep pauses the current thread for a duration — does not release locks.
+
+31
+00:02:35,495 --> 00:02:40,780
+yield hints the scheduler to let other threads run — rarely needed.
+
+32
+00:02:40,780 --> 00:02:46,380
+Start threads deliberately — unbounded thread creation exhausts memory.
+
+33
+00:02:46,380 --> 00:02:51,567
+Threads share the heap — all threads see the same object fields.
+
+34
+00:02:51,567 --> 00:02:56,915
+Local variables live on each thread stack — no sharing by default.
+
+35
+00:02:56,915 --> 00:03:02,183
+Mutable shared state without coordination causes race conditions.
+
+36
+00:03:02,183 --> 00:03:07,937
+Two threads reading and writing the same field — unpredictable results.
+
+37
+00:03:07,937 --> 00:03:13,609
+Visibility matters — changes by one thread may not be seen by another.
+
+38
+00:03:13,609 --> 00:03:18,958
+Shared memory is the reason synchronization exists — next episode.
+
+39
+00:03:18,958 --> 00:03:20,726
+Three common mistakes.
+
+40
+00:03:20,726 --> 00:03:25,467
+One — calling run instead of start — no new thread created.
+
+41
+00:03:25,467 --> 00:03:31,092
+Two — sharing mutable state without synchronization — race conditions.
+
+42
+00:03:31,092 --> 00:03:36,556
+Three — spawning unlimited threads — one per request does not scale.
+
+43
+00:03:36,556 --> 00:03:42,503
+Also — assuming operations are atomic when they are not — count plus plus.
+
+44
+00:03:42,503 --> 00:03:48,128
+Concurrency bugs are intermittent — design defensively from the start.
+
+45
+00:03:48,128 --> 00:03:52,178
+Interview question — start versus run on a Thread?
+
+46
+00:03:52,178 --> 00:03:56,309
+start creates a new thread and schedules run on it.
+
+47
+00:03:56,309 --> 00:04:01,656
+run called directly — executes synchronously on the caller thread.
+
+48
+00:04:01,656 --> 00:04:06,111
+Mention Runnable, shared heap, and thread-local stacks.
+
+49
+00:04:06,111 --> 00:04:09,999
+Note race conditions when sharing mutable state.
+
+50
+00:04:09,999 --> 00:04:14,778
+That answer opens the door to synchronization next episode.
+
+51
+00:04:14,778 --> 00:04:18,912
+Threads share memory. Next — making that safe.
+
+52
+00:04:18,912 --> 00:04:22,417
+Episode Thirty-Seven — Synchronization.
+
+53
+00:04:22,417 --> 00:04:27,810
+synchronized, locks, and coordinating access to shared data.
+
+54
+00:04:27,810 --> 00:04:29,068
+See you there.
