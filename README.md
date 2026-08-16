@@ -1,39 +1,28 @@
-# all-work
+# professional-work
 
-Repository for personal professional work: freelance profiles, career assets, learning resources, and agent-session outputs.
+Personal professional hub for **Ankur Kumar** — freelance profiles, career assets, learning resources, and agent-session outputs.
+
+**Repository:** https://github.com/ankur0001/professional-work
 
 ## Structure
 
 ```
 all-work/
-├── README.md                 ← this folder index
-└── freelance-profile/        ← digital profile grooming (LinkedIn, Upwork, portfolio)
-    ├── 10-ANKUR-KUMAR-PROFILE-PACK.md   ← personalized copy (from resume)
+├── README.md
+└── freelance-profile/        ← LinkedIn, Upwork, portfolio grooming
+    ├── 10-ANKUR-KUMAR-PROFILE-PACK.md   ← start here (personalized from resume)
     ├── portfolio/index.html
     └── ...
 ```
 
 ## Freelance profile grooming
 
-See **[`all-work/freelance-profile/README.md`](all-work/freelance-profile/README.md)** for the full setup guide.
+- Guide: [`all-work/freelance-profile/README.md`](all-work/freelance-profile/README.md)
+- Your copy-paste pack: [`all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md`](all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md)
 
-Personalized pack: **[`all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md`](all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md)**
+## Cloud Agent environment
 
-## Rename this repository on GitHub
-
-The Cloud Agent token cannot rename the repo automatically. Do this once in GitHub:
-
-1. Open **https://github.com/ankur0001/Curser/settings**
-2. Under **General → Repository name**, change `Curser` → `all-work`
-3. Click **Rename**
-
-Then update your local clone:
-
-```bash
-git remote set-url origin https://github.com/ankur0001/all-work.git
-```
-
-Old URLs redirect, but update bookmarks and GitHub Pages if enabled.
+`.cursor/environment.json` configures future agent runs (Chrome for profile/browser workflows).
 
 ## Author
 
