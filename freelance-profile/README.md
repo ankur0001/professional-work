@@ -21,7 +21,9 @@ Copy-paste ready content to polish your digital presence before job hunting.
 
 ## Before you paste anything
 
-Open `00-placeholders-fill-first.md` and replace every `[PLACEHOLDER]` with your real details.
+1. **Fill `08-PROFILE_INTAKE-SEND-THIS.md`** and send it back (resume paste OK).
+2. **Do not send passwords** — see `09-PLATFORM-SETUP-GUIDE.md`.
+3. Or use `00-placeholders-fill-first.md` for a shorter worksheet.
 
 ## After profiles are live
 
