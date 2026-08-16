@@ -17,6 +17,7 @@ all-work/
 
 ## Freelance profile grooming
 
+- **Laptop setup:** [`all-work/LAPTOP-SETUP.md`](all-work/LAPTOP-SETUP.md)
 - Guide: [`all-work/freelance-profile/README.md`](all-work/freelance-profile/README.md)
 - Your copy-paste pack: [`all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md`](all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md)
 
