@@ -55,7 +55,7 @@ Remote contract / freelance — Solution Architect & Senior Java Consultant
 
 ### 2. `solution-architect-portfolio`
 
-- Host the HTML portfolio (`freelance-profile/portfolio/index.html`)
+- Host the HTML portfolio (`all-work/freelance-profile/portfolio/index.html`)
 - Enable GitHub Pages: Settings → Pages → main branch
 
 ### 3. `aws-spring-boot-starter` (optional)
