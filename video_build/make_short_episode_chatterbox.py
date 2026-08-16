@@ -18,13 +18,143 @@ import soundfile as sf
 
 from chatterbox_tts import SAMPLE_RATE, synth_beat as cb_synth
 from humanize_audio import generate_music_bed, probe
-from make_short_episode import SCENES, clean, remux, write_srt
 
 ROOT = Path("/workspace/video_build")
 AUDIO = ROOT / "audio_chatterbox_short"
+CLIPS_IN = ROOT / "clips"
 CLIPS_OUT = ROOT / "clips_chatterbox_short"
 OUTPUT = Path("/workspace/output")
 ARTIFACTS = Path("/opt/cursor/artifacts")
+
+# Target ~4–5 min spoken — identical beats to make_short_episode.SCENES
+SCENES: list[tuple[str, str, list[str]]] = [
+    (
+        "hook",
+        "hook",
+        [
+            "Okay… imagine this.",
+            "Banks. Airlines. Stock exchanges. Android apps. Enterprise software.",
+            "Nearly all of them depend on one programming language.",
+            "That language is Java.",
+        ],
+    ),
+    (
+        "question",
+        "question",
+        [
+            "But here's what I find fascinating.",
+            "Java was born in the nineteen nineties.",
+            "Hundreds of languages came and went.",
+            "Java stayed.",
+            "So why? Let's find out — in the next few minutes.",
+        ],
+    ),
+    (
+        "cpp_pain",
+        "cpp_pain",
+        [
+            "Go back to the early nineties.",
+            "At Sun Microsystems, James Gosling's team started with C++.",
+            "C++ was powerful — no doubt.",
+            "But it came with pain.",
+            "Manual memory management. One mistake — leak, or crash.",
+            "And platform dependency. Code that worked on Windows could break on Unix.",
+            "For software meant to run on many devices, that was a nightmare.",
+        ],
+    ),
+    (
+        "birth",
+        "birth",
+        [
+            "So they built something new.",
+            "First called Oak. Later renamed Java — yes, after the coffee.",
+            "The mission was clear: safer than C++, simpler to maintain, and portable across platforms.",
+        ],
+    ),
+    (
+        "wora",
+        "wora_intro",
+        [
+            "In nineteen ninety-five, Java arrived with a bold promise.",
+            "Write once. Run anywhere.",
+            "And for an industry tired of rewriting the same code again and again… that promise mattered.",
+        ],
+    ),
+    (
+        "bytecode",
+        "bytecode",
+        [
+            "Here's the secret. Watch carefully.",
+            "Java doesn't run directly on Windows or Mac.",
+            "First, the compiler turns your source into bytecode — like an international language.",
+            "Then the JVM — the Java Virtual Machine — translates that bytecode for your system.",
+            "Windows has a JVM. Mac has a JVM. Linux has a JVM.",
+            "Same bytecode. Different translator. Same result.",
+            "That's Write Once, Run Anywhere — for real.",
+        ],
+    ),
+    (
+        "industry",
+        "industry",
+        [
+            "And that's why Java became infrastructure.",
+            "Banks need stability, not hype.",
+            "Android needed a language millions already knew.",
+            "Large backends needed scale that was battle-tested.",
+            "Enterprise teams don't switch for trends. They switch when failure costs too much.",
+            "Java earned trust — one production system at a time.",
+        ],
+    ),
+    (
+        "code",
+        "code_print",
+        [
+            "Alright — your first program.",
+            "You write a public class. That's the blueprint.",
+            "Inside it, public static void main — the entry point. The JVM starts here.",
+            "Then System.out.println — print a line to the console.",
+            "Filename must match the class name. Java is case-sensitive. Don't forget that.",
+        ],
+    ),
+    (
+        "run",
+        "run",
+        [
+            "Hit Run.",
+            "Compiler to bytecode. JVM loads it. Finds main. Executes println.",
+            "Hello, World.",
+            "Behind the scenes, the JVM did the heavy lifting — not Windows directly.",
+        ],
+    ),
+    (
+        "interview",
+        "interview",
+        [
+            "Quick interview question.",
+            "Why is Java platform independent?",
+            "Answer like this: we compile to bytecode, not machine code.",
+            "Bytecode is platform-neutral.",
+            "The JVM on each OS turns it into native instructions.",
+            "Same class files. Windows, Mac, Linux — as long as a compatible JVM is there.",
+        ],
+    ),
+    (
+        "teaser",
+        "teaser",
+        [
+            "So now you know why Java still runs the world.",
+            "Safer. Portable. Trusted at scale.",
+            "But one mystery remains.",
+            "When people say install Java… what are they actually installing?",
+            "JDK. JRE. JVM — three names beginners mix up every day.",
+            "That's Episode Two. I'll see you there.",
+        ],
+    ),
+]
+
+
+def clean(text: str) -> str:
+    return " ".join(text.split()).strip()
 
 
 def silence(seconds: float, sr: int = SAMPLE_RATE) -> np.ndarray:
@@ -76,6 +206,111 @@ def synth_scene(scene_id: str, beats: list[str]) -> Path:
     return out
 
 
+def remux(scene_id: str, clip_id: str) -> Path:
+    vin = CLIPS_IN / f"{clip_id}.mp4"
+    ain = AUDIO / f"{scene_id}.mp3"
+    vout = CLIPS_OUT / f"{scene_id}.mp4"
+    if not vin.exists():
+        raise FileNotFoundError(vin)
+    vd = probe(vin)
+    ad = probe(ain)
+    target = ad + 0.22
+    if target > vd:
+        pad = target - vd
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(vin),
+            "-i",
+            str(ain),
+            "-filter_complex",
+            f"[0:v]tpad=stop_mode=clone:stop_duration={pad:.3f}[v]",
+            "-map",
+            "[v]",
+            "-map",
+            "1:a",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "veryfast",
+            "-crf",
+            "18",
+            "-pix_fmt",
+            "yuv420p",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "192k",
+            "-ar",
+            "48000",
+            "-shortest",
+            "-movflags",
+            "+faststart",
+            str(vout),
+        ]
+    else:
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(vin),
+            "-i",
+            str(ain),
+            "-map",
+            "0:v",
+            "-map",
+            "1:a",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "veryfast",
+            "-crf",
+            "18",
+            "-pix_fmt",
+            "yuv420p",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "192k",
+            "-ar",
+            "48000",
+            "-t",
+            f"{target:.3f}",
+            "-movflags",
+            "+faststart",
+            str(vout),
+        ]
+    subprocess.run(cmd, check=True, capture_output=True)
+    return vout
+
+
+def write_srt(durations: dict[str, float], out_path: Path):
+    def fmt(ts: float) -> str:
+        h = int(ts // 3600)
+        m = int((ts % 3600) // 60)
+        s = int(ts % 60)
+        ms = int(round((ts - int(ts)) * 1000))
+        if ms == 1000:
+            s += 1
+            ms = 0
+        return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+    t = 0.0
+    idx = 1
+    lines = []
+    for scene_id, _, beats in SCENES:
+        scene_dur = durations[scene_id] + 0.22
+        weights = [max(len(b), 8) for b in beats]
+        tw = sum(weights)
+        for beat, w in zip(beats, weights):
+            slot = scene_dur * (w / tw)
+            lines.append(f"{idx}\n{fmt(t)} --> {fmt(t + slot)}\n{clean(beat)}\n")
+            idx += 1
+            t += slot
+    out_path.write_text("\n".join(lines))
+
+
 def main():
     if AUDIO.exists():
         shutil.rmtree(AUDIO)
@@ -85,12 +320,6 @@ def main():
     CLIPS_OUT.mkdir(parents=True)
     OUTPUT.mkdir(parents=True, exist_ok=True)
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
-
-    # remux() writes into make_short_episode.CLIPS_OUT — redirect by patching module path
-    import make_short_episode as mse
-
-    mse.AUDIO = AUDIO
-    mse.CLIPS_OUT = CLIPS_OUT
 
     print("==> Episode 1 short cut — Chatterbox Turbo")
     for i, (scene_id, _clip, beats) in enumerate(SCENES):
@@ -146,7 +375,6 @@ def main():
     dur = probe(narrated)
     print(f"==> Assembled {dur:.1f}s ({dur/60:.2f} min)")
 
-    # Match series window 240–330s (same pacing approach as tip Chatterbox runner)
     pace = 1.0
     if dur > 300:
         pace = min(dur / 295.0, 1.12)
