@@ -1,29 +1,60 @@
-# Repository rename: Curser → all-work
+# Rename GitHub repository (required)
 
-The agent reorganized files under `all-work/` but **could not rename the GitHub repo** (API 403 — integration lacks admin permission).
+**Current:** https://github.com/ankur0001/Curser  
+**Target:** https://github.com/ankur0001/all-work
 
-## You need to do this manually (2 minutes)
+The Cloud Agent **cannot** rename your GitHub repo automatically. GitHub returns `403 Resource not accessible by integration` — only you (repo owner) can rename it in Settings.
 
-1. Go to: https://github.com/ankur0001/Curser/settings
-2. **Repository name:** `all-work`
-3. **Description (optional):** `Personal work hub — freelance profiles, career assets, project resources`
+---
+
+## Steps on GitHub (2 minutes)
+
+1. Open **https://github.com/ankur0001/Curser/settings**
+2. Under **General → Repository name**, replace `Curser` with:
+
+   **`all-work`**
+
+   Other realistic names if you prefer:
+   - `professional-work`
+   - `career-hub`
+   - `ankur-work`
+
+3. **Description (optional):**
+   `Personal professional work hub — career assets, freelance profiles, and project resources`
+
 4. Click **Rename**
 
-GitHub will redirect `ankur0001/Curser` → `ankur0001/all-work`.
+5. Confirm — old links like `github.com/ankur0001/Curser` will redirect to `all-work`.
 
-## After rename — update local remote
+---
+
+## After you rename — update git remote
+
+On any machine where you clone this repo:
 
 ```bash
 git remote set-url origin https://github.com/ankur0001/all-work.git
 git remote -v
 ```
 
-## What was reorganized
+For SSH:
 
-All conversation files moved from repo root:
-
-```
-freelance-profile/   →   all-work/freelance-profile/
+```bash
+git remote set-url origin git@github.com:ankur0001/all-work.git
 ```
 
-Nothing was deleted — only folder structure changed.
+---
+
+## What this does NOT change
+
+- Folder `all-work/` inside the repo is separate from the **repository name** on GitHub.
+- Repo name = `ankur0001/all-work` on GitHub.
+- Folder = `all-work/` directory holding freelance-profile files.
+
+Both use the same name for consistency.
+
+---
+
+## Tell the agent
+
+Reply **"Repo renamed to all-work"** after you complete the GitHub Settings step.
