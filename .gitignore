@@ -1,0 +1,29 @@
+# Intermediate render artifacts
+video_build/frames/
+video_build/clips/
+video_build/clips_human/
+video_build/assets/
+video_build/audio/
+video_build/audio_human/
+video_build/*.log
+video_build/concat*.txt
+video_build/*_list.txt
+video_build/sample_list.txt
+video_build/previews/
+__pycache__/
+*.pyc
+
+# Temp encodes
+output/java_ep1_*.mp4
+output/*_tmp.mp4
+output/*_paced.mp4
+output/Java_Episode_01_paced.mp4
+video_build/audio_kokoro/
+video_build/clips_kokoro/
+video_build/assets/kokoro_voice_tests/
+video_build/audio_short/
+video_build/clips_short/
+
+video_build/audio_chatterbox_short/
+video_build/clips_chatterbox_short/
+output/java_ep1_chatterbox_*.mp4
