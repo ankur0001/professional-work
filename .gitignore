@@ -23,3 +23,7 @@ video_build/clips_kokoro/
 video_build/assets/kokoro_voice_tests/
 video_build/audio_short/
 video_build/clips_short/
+
+video_build/audio_chatterbox_short/
+video_build/clips_chatterbox_short/
+output/java_ep1_chatterbox_*.mp4
