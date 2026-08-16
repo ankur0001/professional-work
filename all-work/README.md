@@ -16,9 +16,8 @@ This folder holds everything created during the **freelance profile / Solution A
 
 ## Quick start
 
-1. **On your laptop:** see [`LAPTOP-SETUP.md`](LAPTOP-SETUP.md) — clone repo and paste profiles locally
-2. Open `freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md`
-2. Paste into LinkedIn → Upwork → freelancermap
+1. **On your laptop:** [`freelance-profile/SETUP-ON-YOUR-LAPTOP.md`](freelance-profile/SETUP-ON-YOUR-LAPTOP.md) — clone repo, use your own browser
+2. Open `freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md` and paste into LinkedIn → Upwork
 3. Publish `freelance-profile/portfolio/index.html` via GitHub Pages
 
 ## Future sessions
