@@ -1,17 +1,11 @@
-# Optional: rename repository on GitHub
+# Repository name
 
-The GitHub repo is still **`ankur0001/Curser`**. Renaming is optional.
+This repo is **`ankur0001/professional-work`** on GitHub.
 
-If you want a better name later, see suggested names in the conversation or use:
-
-- `all-work`
-- `career-workspace`
-- `ankur-professional`
-
-Steps: GitHub → Repository **Settings** → **General** → change repository name → **Rename**.
-
-After rename:
+If you clone locally, use:
 
 ```bash
-git remote set-url origin https://github.com/ankur0001/<new-name>.git
+git remote set-url origin https://github.com/ankur0001/professional-work.git
 ```
+
+Other names you considered: `all-work`, `career-workspace`, `ankur-professional`.
