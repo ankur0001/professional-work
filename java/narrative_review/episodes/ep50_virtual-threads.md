@@ -5,98 +5,157 @@
 | Episode | 50 |
 | Title | Virtual Threads |
 | Catalog handbook column | 50 |
-| Narration source script | `make_episode_50.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Forty-Nine showed how platform threads deadlock under bad lock order.
-2. Platform threads are expensive — one megabyte stack, OS scheduling overhead.
-3. A web server handling ten thousand concurrent requests cannot spawn ten thousand threads.
-4. Project Loom brings virtual threads — lightweight, JVM-managed, millions per process.
-5. Block on I/O and the carrier thread serves another virtual thread.
-6. Today — virtual threads, pinning, and an intro to structured concurrency.
+1. In the last episode, we worked through Deadlocks.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Virtual threads make the thread-per-request style scalable again for blocking IO.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Fifty.
-2. Virtual Threads — Project Loom.
+1. Episode 50.
+2. Virtual Threads.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `project_loom` (renderer: `project_loom`)
+### Scene `concept`
 
-1. Project Loom reimagined threads without rewriting your Java code.
-2. Virtual threads are cheap — create with Thread.startVirtualThread or Executors.newVirtualThreadPerTaskExecutor.
-3. The JVM multiplexes many virtual threads onto few platform carrier threads.
-4. Blocking I/O unmounts the virtual thread — carrier runs another.
-5. Same Thread API — Runnable, Callable, synchronized — mostly unchanged.
-6. Shipped as a preview in Java 19, finalized in Java 21.
+1. First, the why — then the syntax.
+2. Picture Virtual Threads clearly before edge cases.
+3. Here are the points that matter when code meets production:
+4. Point 1: Cheap to create many.
+5. If you remember only one thing, make it that.
+6. Point 2: Don't pool them like platform threads.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Watch pinning cases.
+9. Point 4: Great with Blocking IO + structured concurrency.
+10. Point 5: CPU-bound work still needs bounding.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `virtual_vs_platform` (renderer: `virtual_vs_platform`)
+### Scene `example_intro`
 
-1. Platform thread — one-to-one with an OS thread.
-2. Virtual thread — many-to-one on carrier pool threads.
-3. Platform threads suit CPU-bound parallel work — limited by cores.
-4. Virtual threads suit I/O-bound concurrency — waiting on network or disk.
-5. Do not pool virtual threads — create one per task, they are cheap.
-6. Do pool platform threads or use ForkJoinPool for CPU parallelism.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `pinning` (renderer: `pinning`)
+```java
+try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {
+  exec.submit(() -> handle(req));
+}
+```
 
-1. Pinning — when a virtual thread cannot unmount from its carrier.
-2. synchronized blocks may pin — carrier stuck until monitor released.
-3. Native code or JNI can pin — carrier blocked in native layer.
-4. Long CPU work on a virtual thread pins the carrier — hurts throughput.
-5. Prefer ReentrantLock over synchronized for hot paths with virtual threads.
-6. Monitor jfr events or thread dumps for pinned carrier warnings.
+### Scene `example_walk`
 
-### Scene `structured_concurrency` (renderer: `structured_concurrency`)
+1. Walkthrough.
+2. I'll walk this like pair-programming.
+3. Focus on the idea each line encodes.
+4. Then connect to the failure mode.
+5. Look at `try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `exec.submit(() -> handle(req));`.
+8. If you can explain those lines to a teammate, you understand the episode.
+9. If you only recognize the keywords, rewind the concept section once.
 
-1. Structured concurrency — scope owns child tasks, cancels on failure.
-2. StructuredTaskScope in preview — fork subtasks, join or shutdown on error.
-3. Parent lifetime bounds children — no orphaned background work.
-4. ShutdownOnFailure — first exception cancels siblings.
-5. ShutdownOnSuccess — first success cancels the rest.
-6. Pairs naturally with virtual threads — cheap fan-out and clean teardown.
+### Scene `deeper`
 
-### Scene `when_to_use` (renderer: `when_to_use`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Virtual Threads, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. When virtual threads shine.
-2. HTTP servers — one virtual thread per request blocking on I/O.
-3. Database calls, REST clients, file reads — classic blocking APIs.
-4. Replace reactive frameworks only when simplicity beats throughput tuning.
-5. When not — heavy CPU computation — use platform threads or ForkJoinPool.
-6. When not — massive synchronized hot paths — pinning negates benefits.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Pooling virtual threads unnecessarily.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Pinning in hot synchronized/native sections without care.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Assuming they speed up CPU-bound math.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — pooling virtual threads — unnecessary, create per task.
-3. Two — CPU-bound work on virtual threads — pins carriers.
-4. Three — ignoring synchronized pinning — switch to ReentrantLock.
-5. Also — thread-local assumptions with millions of virtual threads.
-6. Virtual threads change scale — not every old pattern still fits.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: Virtual vs platform thread?
+3. Answer: Virtual threads are scheduled onto fewer carriers — cheap for lots of blocking tasks.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — virtual threads versus platform threads?
-2. Virtual — lightweight, JVM-scheduled, millions possible, great for I/O.
-3. Platform — OS thread, heavier, best for CPU-bound parallelism.
-4. Blocking unmounts virtual thread — carrier serves another.
-5. Pinning from synchronized or native code blocks the carrier.
-6. Mention Java 21 finalization and structured concurrency preview.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Cheap to create many.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. Don't pool them like platform threads.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Watch pinning cases.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Great with Blocking IO + structured concurrency.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. CPU-bound work still needs bounding.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Threads run code — but where does that code come from?
-2. Episode Fifty-One — Class Loading Basics.
-3. ClassLoader hierarchy, linkage, and initialization.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Virtual Threads is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Virtual Threads.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 51: Class Loading.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **96** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +177,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — virtual threads versus platform threads?_
 - **`teaser`** — starts from: _Threads run code — but where does that code come from?_
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

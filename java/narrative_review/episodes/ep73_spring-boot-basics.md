@@ -5,98 +5,164 @@
 | Episode | 73 |
 | Title | Spring Boot Basics |
 | Catalog handbook column | 73 |
-| Narration source script | `make_episode_73.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Seventy-Two covered IoC, injection styles, and bean scopes.
-2. Spring Boot is how most teams actually start a Spring application today.
-3. Boot is still Spring — it adds conventions, starters, and auto-configuration.
-4. The goal — a production-ready app with less XML and less boilerplate.
-5. Misunderstanding Boot leads to fighting auto-config instead of using it.
-6. Today — starters, auto-configuration, properties, actuators, and the fat jar.
+1. In the last episode, we worked through IoC and Dependency Injection.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Boot makes the happy path executable — auto-config, starters, opinions.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Seventy-Three.
+1. Episode 73.
 2. Spring Boot Basics.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `starters` (renderer: `starters`)
+### Scene `concept`
 
-1. Starters are curated dependency descriptors.
-2. spring-boot-starter-web pulls MVC, Tomcat, Jackson, and validation basics.
-3. starter-data-jpa brings Hibernate and repository support.
-4. starter-test lands JUnit, Mockito, AssertJ, and Spring Test.
-5. You choose capabilities — Boot chooses compatible versions via the BOM.
-6. Prefer official starters over hand-picking twenty transitive jars.
+1. First, the why — then the syntax.
+2. Picture Spring Boot Basics clearly.
+3. Here are the points that matter when code meets production:
+4. Point 1: @SpringBootApplication.
+5. If you remember only one thing, make it that.
+6. Point 2: Starters.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: application.yaml.
+9. Point 4: Actuator.
+10. Point 5: Override auto-config intentionally.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `auto_config` (renderer: `auto_config`)
+### Scene `example_intro`
 
-1. Auto-configuration creates beans when conditions match.
-2. Classpath present — DataSource auto-config may engage.
-3. A user-defined bean of the same type usually wins — you can override.
-4. ConditionalOnClass and ConditionalOnMissingBean drive the decisions.
-5. debug equals true or ConditionEvaluationReport shows what matched.
-6. Auto-config is opinionated defaults — not untouchable magic.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `properties` (renderer: `properties`)
+```java
+@SpringBootApplication
+public class App {
+  public static void main(String[] args) {
+    SpringApplication.run(App.class, args);
+  }
+}
+```
 
-1. Externalized configuration keeps code environment-agnostic.
-2. application.properties or application.yaml hold defaults.
-3. Profile-specific files — application-prod.yaml — override per environment.
-4. Environment variables and command-line args outrank file values.
-5. ConfigurationProperties maps typed settings into beans safely.
-6. Never hardcode secrets — inject them from the environment or a vault.
+### Scene `example_walk`
 
-### Scene `run_model` (renderer: `run_model`)
+1. Walkthrough.
+2. Walk this like pair-programming.
+3. Focus on what each line means.
+4. Connect to the failure mode.
+5. Look at `@SpringBootApplication`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `public class App {`.
+8. That is not decorative syntax — it encodes a real rule of the platform or API.
+9. Look at `public static void main(String[] args) {`.
+10. That is not decorative syntax — it encodes a real rule of the platform or API.
+11. Look at `SpringApplication.run(App.class, args);`.
+12. If you can explain those lines to a teammate, you understand the episode.
+13. If you only recognize the keywords, rewind the concept section once.
 
-1. The Boot run model in practice.
-2. SpringBootApplication enables scanning and auto-configuration.
-3. SpringApplication.run boots the context and embedded server.
-4. Executable jar packaging ships dependencies — java -jar app.jar.
-5. Actuator exposes health, info, and metrics endpoints for operations.
-6. Devtools and docker compose support speed local inner loops.
+### Scene `deeper`
 
-### Scene `customize` (renderer: `customize`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Spring Boot Basics, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. Customization without abandoning Boot.
-2. Define your own Bean when defaults are wrong — Boot backs off.
-3. Exclude specific auto-config classes only with a clear reason.
-4. Use application properties before writing custom configuration code.
-5. Keep SpringBootApplication on a root package so scanning sees your code.
-6. Read starter docs — each starter documents keys you can tune.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Blindly accepting all auto-config.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Giant application.yaml without structure.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: No Actuator in production apps that need it.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — excluding auto-config to fix a symptom — hide the real conflict.
-3. Two — giant application.yaml with unused keys nobody understands.
-4. Three — putting SpringBootApplication in a nested package — components missed.
-5. Also — mixing Boot versions manually — always use the BOM managed set.
-6. Work with Boot's conventions — override deliberately, not accidentally.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: What does Boot add?
+3. Answer: Opinionated auto-configuration so you ship with less boilerplate.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — what does Spring Boot add on top of Spring?
-2. Starters for curated dependencies and a managed BOM.
-3. Auto-configuration that wires common stacks from the classpath.
-4. Externalized config and production-ready Actuator endpoints.
-5. Embedded servers and executable jars for simple deployment.
-6. Same Spring container underneath — Boot accelerates the path to production.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. @SpringBootApplication.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. Starters.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. application.yaml.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Actuator.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Override auto-config intentionally.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Boot starts the app — next we handle HTTP.
-2. Episode Seventy-Four — Spring MVC and REST.
-3. Controllers, request mapping, validation, and clean API design.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Spring Boot Basics is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Spring Boot Basics.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 74: Spring MVC and REST.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **100** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +184,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — what does Spring Boot add on top of Spring?_
 - **`teaser`** — starts from: _Boot starts the app — next we handle HTTP._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

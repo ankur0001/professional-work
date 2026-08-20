@@ -5,98 +5,158 @@
 | Episode | 36 |
 | Title | Threads Intro |
 | Catalog handbook column | 36 |
-| Narration source script | `make_episode_36.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. One CPU core can only do one thing at a time — unless you switch fast enough.
-2. Threads let a program do multiple tasks concurrently within one process.
-3. Download a file while updating the UI. Process requests while logging metrics.
-4. Concurrency is about structure — parallelism is about simultaneous execution.
-5. Threads share memory — powerful, but dangerous without coordination.
-6. Today — the thread model in Java and how to start your first concurrent task.
+1. In the last episode, we worked through Readers and Writers.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. A thread is an independent path of execution — shared memory makes it interesting.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Thirty-Six.
-2. Threads Introduction — concurrency in Java.
+1. Episode 36.
+2. Threads Intro.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `thread` (renderer: `thread`)
+### Scene `concept`
 
-1. A Thread is a lightweight unit of execution inside a JVM process.
-2. The JVM maps Java threads to OS threads — one-to-one on most platforms.
-3. Every Java program starts with a main thread — the one running main.
-4. Creating more threads lets work proceed on separate call stacks.
-5. Threads share the heap — instance fields are visible across threads.
-6. Each thread has its own stack — local variables are thread-confined.
+1. First, the why — then the syntax.
+2. Picture Threads Intro clearly before edge cases.
+3. Here are the points that matter when code meets production:
+4. Point 1: Thread vs Runnable.
+5. If you remember only one thing, make it that.
+6. Point 2: start schedules; run does not.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: join and interrupt basics.
+9. Point 4: Shared mutation needs coordination.
+10. Point 5: Unbounded thread creation hurts.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `runnable` (renderer: `runnable`)
+### Scene `example_intro`
 
-1. Runnable is a functional interface — void run with no arguments.
-2. Pass a Runnable to a Thread constructor, then call start.
-3. Callable is like Runnable but returns a value and can throw.
-4. ExecutorService is the modern way — submit tasks to a thread pool.
-5. Prefer Runnable lambdas over subclassing Thread directly.
-6. Separate task logic from thread management.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `lifecycle` (renderer: `lifecycle`)
+```java
+Thread t = new Thread(() -> doWork());
+t.start();
+t.join();
+```
 
-1. Thread states — NEW, RUNNABLE, BLOCKED, WAITING, TIMED_WAITING, TERMINATED.
-2. NEW until start is called — then RUNNABLE when eligible to run.
-3. BLOCKED waiting for a monitor lock. WAITING until notified.
-4. The scheduler decides which RUNNABLE thread runs on which core.
-5. You do not control scheduling — design for unpredictability.
-6. Understanding states helps you debug stuck and starving threads.
+### Scene `example_walk`
 
-### Scene `starting` (renderer: `starting`)
+1. Walkthrough.
+2. I'll walk this like pair-programming.
+3. Focus on the idea each line encodes.
+4. Then connect to the failure mode.
+5. Look at `Thread t = new Thread(() -> doWork());`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `t.start();`.
+8. Look at `t.join();`.
+9. If you can explain those lines to a teammate, you understand the episode.
+10. If you only recognize the keywords, rewind the concept section once.
 
-1. Never call run directly — that executes on the current thread.
-2. Call start to launch a new thread that invokes run.
-3. join waits for another thread to finish — useful for coordination.
-4. sleep pauses the current thread for a duration — does not release locks.
-5. yield hints the scheduler to let other threads run — rarely needed.
-6. Start threads deliberately — unbounded thread creation exhausts memory.
+### Scene `deeper`
 
-### Scene `shared` (renderer: `shared`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Threads Intro, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. Threads share the heap — all threads see the same object fields.
-2. Local variables live on each thread stack — no sharing by default.
-3. Mutable shared state without coordination causes race conditions.
-4. Two threads reading and writing the same field — unpredictable results.
-5. Visibility matters — changes by one thread may not be seen by another.
-6. Shared memory is the reason synchronization exists — next episode.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Calling run() instead of start().
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Ignoring interrupt status.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Sharing mutable state with no protocol.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — calling run instead of start — no new thread created.
-3. Two — sharing mutable state without synchronization — race conditions.
-4. Three — spawning unlimited threads — one per request does not scale.
-5. Also — assuming operations are atomic when they are not — count plus plus.
-6. Concurrency bugs are intermittent — design defensively from the start.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: start() vs run()?
+3. Answer: start schedules a new thread; run executes on the current thread.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — start versus run on a Thread?
-2. start creates a new thread and schedules run on it.
-3. run called directly — executes synchronously on the caller thread.
-4. Mention Runnable, shared heap, and thread-local stacks.
-5. Note race conditions when sharing mutable state.
-6. That answer opens the door to synchronization next episode.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Thread vs Runnable.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. start schedules; run does not.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. join and interrupt basics.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Shared mutation needs coordination.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Unbounded thread creation hurts.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Threads share memory. Next — making that safe.
-2. Episode Thirty-Seven — Synchronization.
-3. synchronized, locks, and coordinating access to shared data.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Threads Intro is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Threads Intro.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 37: Synchronization.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **97** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +178,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — start versus run on a Thread?_
 - **`teaser`** — starts from: _Threads share memory. Next — making that safe._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

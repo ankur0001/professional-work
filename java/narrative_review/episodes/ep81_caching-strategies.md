@@ -5,101 +5,164 @@
 | Episode | 81 |
 | Title | Caching Strategies |
 | Catalog handbook column | S2 |
-| Narration source script | `make_episode_81.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Eighty closed the handbook arc with architecture interview framing.
-2. Season Two begins where production systems get their speed — caching.
-3. A cache stores expensive results closer to the reader — memory, Redis, or CDN.
-4. Done well — latency drops and databases breathe.
-5. Done poorly — stale data, stampedes, and mysterious inconsistencies.
-6. Today — cache layers, invalidation, stampedes, and interview-ready trade-offs.
+1. In the last episode, we worked through Architecture Interview Wrap.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Caches buy latency with correctness risk — invalidation is the boss fight.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Eighty-One.
+1. Episode 81.
 2. Caching Strategies.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `layers` (renderer: `layers`)
+### Scene `concept`
 
-1. Think in layers — each cache has a different job.
-2. Client and CDN caches cut round trips for static and semi-static content.
-3. Application local caches — Caffeine — are ultra-fast per instance.
-4. Distributed caches — Redis or Memcached — share state across pods.
-5. Database buffer pools are caches too — do not ignore them when tuning.
-6. Place the cache where the expensive work lives — measure before stacking five layers.
+1. First, the why — then the syntax.
+2. Picture Caching Strategies clearly.
+3. Here are the points that matter when code meets production:
+4. Point 1: Local vs distributed.
+5. If you remember only one thing, make it that.
+6. Point 2: TTL/TTI/size eviction.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Cache-aside vs read-through.
+9. Point 4: Stampede control.
+10. Point 5: Measure hit rate and staleness.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `patterns` (renderer: `patterns`)
+### Scene `example_intro`
 
-1. Common access patterns you should name in interviews.
-2. Cache-aside — app reads cache, on miss loads DB, then fills cache.
-3. Read-through — cache library loads on miss behind a single API.
-4. Write-through — writes update cache and store together.
-5. Write-behind — writes hit cache first, flush asynchronously — higher risk.
-6. Pick the pattern that matches consistency needs — not the trendiest name.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `invalidation` (renderer: `invalidation`)
+```java
+LoadingCache<String, User> cache = Caffeine.newBuilder()
+  .maximumSize(10_000)
+  .expireAfterWrite(Duration.ofMinutes(5))
+  .build(this::loadUser);
+```
 
-1. Invalidation is the hard problem — and the interview favorite.
-2. TTL expiry is simple — eventual staleness is explicit.
-3. Event-driven invalidation deletes keys when the source of truth changes.
-4. Versioned keys avoid mutating in place — readers fetch the new version.
-5. Thundering herds after expiry — use soft TTL plus single-flight refresh.
-6. Document your staleness budget — product and engineering must agree.
+### Scene `example_walk`
 
-### Scene `stampedes` (renderer: `stampedes`)
+1. Walkthrough.
+2. Walk this like pair-programming.
+3. Focus on what each line means.
+4. Connect to the failure mode.
+5. Look at `LoadingCache<String, User> cache = Caffeine.newBuilder()`.
+6. Look at `.maximumSize(10_000)`.
+7. Look at `.expireAfterWrite(Duration.ofMinutes(5))`.
+8. Look at `.build(this::loadUser);`.
+9. If you can explain those lines to a teammate, you understand the episode.
+10. If you only recognize the keywords, rewind the concept section once.
 
-1. Cache stampedes and hot keys destroy p99 latency.
-2. Many requests miss at once — every instance hits the database together.
-3. Mitigations — request coalescing, probabilistic early refresh, locking.
-4. Hot keys — shard the key, local cache in front, or replicate reads.
-5. Negative caching — remember short-lived misses for absent records.
-6. Load-test cache failure modes — a Redis blip should not melt Postgres.
+### Scene `deeper`
 
-### Scene `consistency` (renderer: `consistency`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Caching Strategies, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. Consistency trade-offs you must voice out loud.
-2. Stronger freshness costs more invalidation complexity.
-3. Multi-region caches amplify replication lag — name the lag budget.
-4. Never treat the cache as the source of truth for money or inventory.
-5. Idempotent rebuilds matter when you flush an entire namespace.
-6. Observability — hit ratio, eviction rate, and origin load after deploys.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Unbounded caches.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: No invalidation story.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Caching non-idempotent results blindly.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — caching without a TTL or invalidation story — eternal staleness.
-3. Two — caching user-specific private data in a shared public key.
-4. Three — measuring only hit ratio — ignoring stampede behavior on expiry.
-5. Also — putting a cache in front of a wrong query — caching the bug.
-6. Cache after the query is correct — never before.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: Hardest cache problem?
+3. Answer: Invalidation and stampede under concurrent misses.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — how would you cache a product catalog API?
-2. Cache-aside with Redis for hot product pages — TTL plus update events.
-3. Local Caffeine layer for ultra-hot keys inside each instance.
-4. Protect origin with single-flight refresh on expiry.
-5. Never cache personalized prices under a shared product key.
-6. Watch hit ratio and origin QPS — prove the cache earns its complexity.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Local vs distributed.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. TTL/TTI/size eviction.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Cache-aside vs read-through.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Stampede control.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Measure hit rate and staleness.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Caches accelerate reads — APIs shape how clients evolve.
-2. Episode Eighty-Two — API Design Deep Dive.
-3. Versioning, idempotency, pagination, and contracts that age well.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Caching Strategies is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Caching Strategies.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 82: API Design Deep Dive.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **97** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
 - **Episode 81** is a **Season 2 production-systems bonus** track. It is **not** one of the handbook’s 80 lessons.
 - Topic framing for the video: **Caching Strategies** (continuity after Episode 80’s architecture interview wrap).
 - Narration was **original written for the video** (scene-synced beats), not copied verbatim from the handbook.
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

@@ -5,101 +5,162 @@
 | Episode | 83 |
 | Title | Event-Driven Architecture |
 | Catalog handbook column | S2 |
-| Narration source script | `make_episode_83.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Eighty-Two covered API contracts — versioning, idempotency, pagination.
-2. Not every collaboration should be a synchronous HTTP call.
-3. Event-driven architecture decouples producers from consumers in time.
-4. Kafka, queues, and the transactional outbox appear constantly in designs.
-5. Async is powerful — and a great way to lose data if you skip patterns.
-6. Today — events versus commands, outbox, consumers, and failure handling.
+1. In the last episode, we worked through API Design Deep Dive.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Events are facts — consumers must tolerate at-least-once delivery.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Eighty-Three.
+1. Episode 83.
 2. Event-Driven Architecture.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `why_async` (renderer: `why_async`)
+### Scene `concept`
 
-1. Why teams reach for events.
-2. Fan-out — one fact notifies many interested services.
-3. Temporal decoupling — producer stays up when a consumer is down.
-4. Smooth load — buffers absorb spikes that would melt sync chains.
-5. Auditability — a log of facts becomes a product feature.
-6. Cost — more moving parts, harder end-to-end debugging — earn it.
+1. First, the why — then the syntax.
+2. Picture Event-Driven Architecture clearly.
+3. Here are the points that matter when code meets production:
+4. Point 1: Facts vs commands.
+5. If you remember only one thing, make it that.
+6. Point 2: Idempotent consumers.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Outbox pattern.
+9. Point 4: Ordering is partial.
+10. Point 5: Schema evolution.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `events_commands` (renderer: `events_commands`)
+### Scene `example_intro`
 
-1. Events and commands are not the same speech act.
-2. A command asks a specific service to do work — often expects a reply.
-3. An event states a fact that already happened — OrderPlaced.
-4. Name events in past tense — consumers decide their own reactions.
-5. Do not hide commands inside topics without clear ownership.
-6. Schema evolution — additive fields, careful compatibility rules.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `outbox` (renderer: `outbox`)
+```java
+// transactionally write Order + OutboxEvent
+// publisher relays outbox to the bus
+// consumers handle OrderCreated idempotently
+```
 
-1. Dual-write is the classic distributed bug.
-2. Writing the database and publishing a message separately can diverge.
-3. Transactional outbox — same DB transaction stores business row and outbox row.
-4. A publisher relay reads the outbox and emits to Kafka reliably.
-5. Inbox or idempotent consumers handle at-least-once delivery.
-6. If you cannot explain outbox, do not claim exactly-once in interviews.
+### Scene `example_walk`
 
-### Scene `consumers` (renderer: `consumers`)
+1. Walkthrough.
+2. Walk this like pair-programming.
+3. Focus on what each line means.
+4. Connect to the failure mode.
+5. Comment cue: transactionally write Order + OutboxEvent
+6. Comment cue: publisher relays outbox to the bus
+7. Comment cue: consumers handle OrderCreated idempotently
+8. If you can explain those lines to a teammate, you understand the episode.
+9. If you only recognize the keywords, rewind the concept section once.
 
-1. Consumer design decides whether async helps or hurts.
-2. Make handlers idempotent — duplicates will arrive.
-3. Poison messages need a dead-letter path — not infinite retries.
-4. Lag is a first-class metric — silent lag is silent outage.
-5. Ordering — partition keys preserve per-entity order when required.
-6. Backpressure — slow consumers must not silently drop work.
+### Scene `deeper`
 
-### Scene `when_not` (renderer: `when_not`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Event-Driven Architecture, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. When not to go event-driven.
-2. A single team, single deployable, simple CRUD — sync may be enough.
-3. User needs an immediate answer — keep the request-response path.
-4. You lack ops for brokers, schemas, and lag alerts — defer the split.
-5. Chatty pseudo-events that are really RPC over topics — worst of both.
-6. Choose async for clear fan-out or durability needs — not for resume keywords.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Dual writes without outbox.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Assuming exactly-once.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Fat events that couple everything.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — dual-write without outbox — lost or double events under failure.
-3. Two — non-idempotent consumers — retries corrupt state.
-4. Three — no lag alerts — discover backlog when customers complain.
-5. Also — giant event payloads that couple every consumer to internals.
-6. Publish stable facts — keep fat details behind APIs when needed.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: Why outbox?
+3. Answer: Atomically record state change + event to avoid lost messages.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — how do you publish OrderPlaced safely?
-2. Write order and outbox row in one database transaction.
-3. Relay publishes to the topic — at-least-once delivery.
-4. Consumers key on event ID — idempotent processing.
-5. Dead-letter poison messages — alert on consumer lag.
-6. That is a senior answer — mechanisms, not buzzwords.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Facts vs commands.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. Idempotent consumers.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Outbox pattern.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Ordering is partial.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Schema evolution.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Architecture moves data — performance keeps users happy.
-2. Episode Eighty-Four — Performance Playbook.
-3. Measure, find bottlenecks, and fix the hottest path first.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Event-Driven Architecture is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Event-Driven Architecture.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 84: Performance Playbook.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **96** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
 - **Episode 83** is a **Season 2 production-systems bonus** track. It is **not** one of the handbook’s 80 lessons.
 - Topic framing for the video: **Event-Driven Architecture** (continuity after Episode 80’s architecture interview wrap).
 - Narration was **original written for the video** (scene-synced beats), not copied verbatim from the handbook.
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

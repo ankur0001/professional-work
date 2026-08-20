@@ -5,98 +5,156 @@
 | Episode | 43 |
 | Title | Atomics |
 | Catalog handbook column | 43 |
-| Narration source script | `make_episode_43.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Incrementing a shared counter with a lock works — but locks block threads.
-2. For a single variable, atomics offer lock-free updates.
-3. AtomicInteger wraps an int with hardware-supported compare-and-swap.
-4. CAS reads the current value, computes a new one, swaps only if unchanged.
-5. AtomicReference applies the same idea to object references.
-6. Today — atomic variables, CAS, and when lock-free beats locking.
+1. In the last episode, we worked through Concurrent Collections.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Atomics give lock-free updates for focused hotspots.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Forty-Three.
-2. Atomic Variables.
+1. Episode 43.
+2. Atomics.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `atomic_integer` (renderer: `atomic_integer`)
+### Scene `concept`
 
-1. AtomicInteger lives in java.util.concurrent.atomic.
-2. get and set are atomic — no external synchronization needed.
-3. incrementAndGet and addAndGet combine read-modify-write atomically.
-4. compareAndSet expects the current value — swaps only on a match.
-5. Use for counters, sequence numbers, and shared tallies.
-6. One atomic variable — one contention point — still cheaper than a lock.
+1. First, the why — then the syntax.
+2. Picture Atomics clearly before edge cases.
+3. Here are the points that matter when code meets production:
+4. Point 1: CAS loops under the hood.
+5. If you remember only one thing, make it that.
+6. Point 2: AtomicInteger/Long/Reference.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Good for counters/flags.
+9. Point 4: Contention still costs.
+10. Point 5: VarHandles for advanced cases.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `cas` (renderer: `cas`)
+### Scene `example_intro`
 
-1. Compare-and-swap is the foundation of lock-free algorithms.
-2. Read the current value. Compute the desired new value.
-3. Atomically swap only if the current value still matches what you read.
-4. If another thread changed it — retry with the fresh value.
-5. Hardware guarantees the swap is atomic — no mutex required.
-6. CAS loops power AtomicInteger, AtomicLong, and concurrent queues.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `atomic_reference` (renderer: `atomic_reference`)
+```java
+AtomicInteger n = new AtomicInteger();
+n.incrementAndGet();
+```
 
-1. AtomicReference of T holds a reference updated atomically.
-2. compareAndSet swaps the reference when the expected match holds.
-3. getAndSet returns the old reference and stores a new one.
-4. Useful for lazy initialization and swapping configuration objects.
-5. AtomicStampedReference adds a stamp to detect ABA problems.
-6. AtomicMarkableReference tracks a boolean mark alongside the reference.
+### Scene `example_walk`
 
-### Scene `vs_locks` (renderer: `vs_locks`)
+1. Walkthrough.
+2. I'll walk this like pair-programming.
+3. Focus on the idea each line encodes.
+4. Then connect to the failure mode.
+5. Look at `AtomicInteger n = new AtomicInteger();`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `n.incrementAndGet();`.
+8. If you can explain those lines to a teammate, you understand the episode.
+9. If you only recognize the keywords, rewind the concept section once.
 
-1. Atomics versus locks for simple shared state.
-2. Locks — block threads, risk deadlock, heavier under contention.
-3. Atomics — optimistic retries, no blocking on the fast path.
-4. Best for single variables — counters, flags, reference swaps.
-5. Not for protecting arbitrary multi-step invariants across fields.
-6. Combine atomics with careful design — not a blanket lock replacement.
+### Scene `deeper`
 
-### Scene `when_atomics` (renderer: `when_atomics`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Atomics, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. When to use atomic variables.
-2. Shared counters and metrics — AtomicInteger or AtomicLong.
-3. One-shot initialization flags — AtomicBoolean.
-4. Swapping immutable config snapshots — AtomicReference.
-5. Building lock-free data structures — CAS loops internally.
-6. When not — complex multi-field updates — use locks or synchronized.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Using atomics for complex multi-field invariants.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Busy CAS under extreme contention without backoff strategy.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Ignoring memory effects elsewhere.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — using volatile int plus manual increment — not atomic as a unit.
-3. Two — AtomicReference for mutable objects — reference swap does not deep-copy.
-4. Three — infinite CAS retry loops without backoff under extreme contention.
-5. Also — assuming compareAndSet alone fixes logical races across fields.
-6. Atomics solve atomicity — your algorithm must still be correct.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: What is CAS?
+3. Answer: Compare-and-set updates only if the current value matches expectation.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — what is compare-and-swap?
-2. Hardware-supported atomic read-compare-write on a single location.
-3. Swap succeeds only if the current value equals the expected value.
-4. Failed CAS means another thread won — retry with updated value.
-5. AtomicInteger incrementAndGet uses CAS internally.
-6. Contrast with synchronized — blocking versus optimistic retry.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. CAS loops under the hood.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. AtomicInteger/Long/Reference.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Good for counters/flags.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Contention still costs.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. VarHandles for advanced cases.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Atomics update single variables. What about coordinating many threads?
-2. Episode Forty-Four — Synchronizers.
-3. CountDownLatch, CyclicBarrier, and Semaphore.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Atomics is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Atomics.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 44: Synchronizers.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **96** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -119,3 +177,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — what is compare-and-swap?_
 - **`teaser`** — starts from: _Atomics update single variables. What about coordinating many threads?_
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

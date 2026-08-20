@@ -5,98 +5,160 @@
 | Episode | 46 |
 | Title | CompletableFuture |
 | Catalog handbook column | 46 |
-| Narration source script | `make_episode_46.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Forty-One introduced CompletableFuture — supplyAsync and a quick chain.
-2. Production async code needs richer composition and solid error handling.
-3. thenApply transforms a result synchronously on the completion thread.
-4. thenCompose flattens nested futures — the async equivalent of flatMap.
-5. allOf waits for every future — anyOf for the first to complete.
-6. Today — deep dive into composing and recovering CompletableFuture pipelines.
+1. In the last episode, we worked through BlockingQueue.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. CompletableFuture composes async work as a graph of stages.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Forty-Six.
-2. CompletableFuture Deep Dive.
+1. Episode 46.
+2. CompletableFuture.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `then_apply` (renderer: `then_apply`)
+### Scene `concept`
 
-1. thenApply maps the result when the previous stage completes.
-2. Runs on the same executor as the completing thread by default.
-3. thenApplyAsync runs the mapping function on a specified executor.
-4. Use for pure transformations — parse JSON, format strings, map values.
-5. Returns a new CompletableFuture of the transformed type.
-6. Chain multiple thenApply calls — each waits for the prior stage.
+1. First, the why — then the syntax.
+2. Picture CompletableFuture clearly before edge cases.
+3. Here are the points that matter when code meets production:
+4. Point 1: thenApply/thenCompose/thenCombine.
+5. If you remember only one thing, make it that.
+6. Point 2: exceptionally/handle.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: supplyAsync executor choice matters.
+9. Point 4: Don't block the common pool with IO.
+10. Point 5: Timeouts and cancellation.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `then_compose` (renderer: `then_compose`)
+### Scene `example_intro`
 
-1. thenCompose chains when the next step itself returns a CompletableFuture.
-2. Flattens CompletableFuture of CompletableFuture into a single future.
-3. Without compose you nest futures — blocking get inside thenApply.
-4. thenComposeAsync runs the composing function on an executor.
-5. Essential for dependent async calls — fetch then save then notify.
-6. Think flatMap for futures — compose, do not nest.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `all_of` (renderer: `all_of`)
+```java
+CompletableFuture.supplyAsync(this::load)
+  .thenApply(this::transform)
+  .orTimeout(1, TimeUnit.SECONDS)
+  .thenAccept(this::save);
+```
 
-1. allOf accepts an array or collection of CompletableFuture instances.
-2. Returns CompletableFuture of Void — completion means all inputs finished.
-3. Join individual futures after allOf completes to collect results.
-4. anyOf completes when any one input future completes.
-5. Use allOf for parallel fan-out — aggregate when every branch is done.
-6. anyOf for racing alternatives — first successful or fastest response wins.
+### Scene `example_walk`
 
-### Scene `exception_handling` (renderer: `exception_handling`)
+1. Walkthrough.
+2. I'll walk this like pair-programming.
+3. Focus on the idea each line encodes.
+4. Then connect to the failure mode.
+5. Look at `CompletableFuture.supplyAsync(this::load)`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `.thenApply(this::transform)`.
+8. Look at `.orTimeout(1, TimeUnit.SECONDS)`.
+9. Look at `.thenAccept(this::save);`.
+10. If you can explain those lines to a teammate, you understand the episode.
+11. If you only recognize the keywords, rewind the concept section once.
 
-1. exceptionally recovers from failure — returns a fallback value.
-2. handle receives both result and exception — unified success and failure path.
-3. whenComplete is a side-effect hook — does not transform the result.
-4. completeExceptionally manually fails a future you created.
-5. orTimeout and completeOnTimeout add deadline semantics in Java 9+.
-6. Never swallow exceptions — log in whenComplete, recover in handle.
+### Scene `deeper`
 
-### Scene `when_compose` (renderer: `when_compose`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With CompletableFuture, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. When to use each combinator.
-2. thenApply — synchronous transform of a completed value.
-3. thenCompose — next step is itself async — dependent chain.
-4. allOf — parallel independent work — wait for all.
-5. exceptionally or handle — explicit failure recovery.
-6. Avoid blocking get in callbacks — keep the pipeline non-blocking.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Blocking inside common-pool stages.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Swallowing exceptions.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: thenApply where thenCompose was needed.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — thenApply when the lambda returns a Future — use thenCompose.
-3. Two — ignoring exceptions — pipeline fails silently downstream.
-4. Three — blocking get inside thenApply — stalls the executor.
-5. Also — allOf without collecting individual results — Void only signals done.
-6. Compose async work — do not turn CompletableFuture back into blocking code.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: thenApply vs thenCompose?
+3. Answer: thenApply maps values; thenCompose flattens nested futures.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — thenApply versus thenCompose?
-2. thenApply — function returns a plain value — map the result.
-3. thenCompose — function returns CompletableFuture — flatten nested futures.
-4. thenApply nests CompletableFuture of CompletableFuture — compose flattens.
-5. allOf waits for all — anyOf for first completion.
-6. handle and exceptionally for unified error handling in pipelines.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. thenApply/thenCompose/thenCombine.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. exceptionally/handle.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. supplyAsync executor choice matters.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Don't block the common pool with IO.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Timeouts and cancellation.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. CompletableFuture defaults to ForkJoinPool.commonPool.
-2. Episode Forty-Seven — ForkJoinPool and Work-Stealing.
-3. Parallel decomposition, recursive tasks, and the common pool.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what CompletableFuture is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was CompletableFuture.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 47: ForkJoinPool.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **98** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +180,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — thenApply versus thenCompose?_
 - **`teaser`** — starts from: _CompletableFuture defaults to ForkJoinPool.commonPool._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

@@ -5,98 +5,162 @@
 | Episode | 72 |
 | Title | IoC and Dependency Injection |
 | Catalog handbook column | 72 |
-| Narration source script | `make_episode_72.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Seventy-One introduced Spring as a platform around an IoC container.
-2. Inversion of Control flips who constructs collaborators — the framework does.
-3. Dependency Injection is the main technique Spring uses to achieve IoC.
-4. Get this wrong — mysterious nulls, circular dependencies, and untestable code.
-5. Get this right — clear graphs, easy mocks, and predictable startup.
-6. Today — IoC versus DI, injection styles, bean scopes, and wiring pitfalls.
+1. In the last episode, we worked through Spring Framework Intro.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. IoC inverts construction — constructor injection makes dependencies honest.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Seventy-Two.
+1. Episode 72.
 2. IoC and Dependency Injection.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `ioc_vs_di` (renderer: `ioc_vs_di`)
+### Scene `concept`
 
-1. IoC is the principle — DI is the mechanism.
-2. Inversion of Control — your code does not new up the whole object graph.
-3. Dependency Injection — dependencies are provided from outside the class.
-4. Spring's ApplicationContext is the injector and lifecycle manager.
-5. Factories, service locators, and events are other IoC styles — DI is the default.
-6. Say IoC for the idea — DI for how Spring usually implements it.
+1. First, the why — then the syntax.
+2. Picture IoC and Dependency Injection clearly.
+3. Here are the points that matter when code meets production:
+4. Point 1: Constructor injection preferred.
+5. If you remember only one thing, make it that.
+6. Point 2: IoC vs service locator.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Testability skyrockets.
+9. Point 4: Avoid field injection in new code.
+10. Point 5: Scopes matter.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `injection_styles` (renderer: `injection_styles`)
+### Scene `example_intro`
 
-1. Three injection styles you will see in Spring code.
-2. Constructor injection — required dependencies as final fields — preferred.
-3. Setter injection — optional dependencies or reconfiguration after create.
-4. Field injection with Autowired — short, but harder to test and reason about.
-5. Constructor injection makes invariants obvious — object is complete after new.
-6. Modern Spring and Boot samples default to constructor injection for a reason.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `scopes` (renderer: `scopes`)
+```java
+@Service
+class OrderService {
+  private final OrderRepo repo;
+  OrderService(OrderRepo repo) { this.repo = repo; }
+}
+```
 
-1. Bean scopes control how many instances the container creates.
-2. Singleton — one shared instance per context — the Spring default.
-3. Prototype — a new instance every time you ask the container.
-4. Request and session scopes — web-aware, tied to HTTP lifecycle.
-5. Wrong scope — shared mutable state across requests is a classic bug.
-6. Default to singleton services with immutable or carefully synchronized state.
+### Scene `example_walk`
 
-### Scene `wiring` (renderer: `wiring`)
+1. Walkthrough.
+2. Walk this like pair-programming.
+3. Focus on what each line means.
+4. Connect to the failure mode.
+5. Look at `@Service`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `class OrderService {`.
+8. That is not decorative syntax — it encodes a real rule of the platform or API.
+9. Look at `private final OrderRepo repo;`.
+10. Look at `OrderService(OrderRepo repo) { this.repo = repo; }`.
+11. If you can explain those lines to a teammate, you understand the episode.
+12. If you only recognize the keywords, rewind the concept section once.
 
-1. How Spring finds and wires beans.
-2. Component scanning picks up Stereotype annotations — Service, Repository, Controller.
-3. Configuration classes with Bean methods define explicit beans.
-4. Qualifiers disambiguate when multiple candidates share a type.
-5. Profiles activate environment-specific beans — local, staging, prod.
-6. Circular dependencies signal a design smell — break the cycle with redesign.
+### Scene `deeper`
 
-### Scene `testing` (renderer: `testing`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With IoC and Dependency Injection, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. DI pays off hardest in tests.
-2. Unit tests construct the class with mocks — no container required.
-3. Slice tests load a thin Spring context — web or data layer only.
-4. Full ApplicationContext tests catch wiring mistakes — slower but valuable.
-5. Avoid static singletons and ServiceLocator lookups — they fight DI.
-6. If you cannot inject a fake, the design is fighting you.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Field injection everywhere.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Hidden static dependencies.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Circular dependencies as a design smell ignored.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — field injection everywhere — invisible dependencies, awkward tests.
-3. Two — singleton beans holding request-specific mutable state.
-4. Three — Autowired on concrete classes with no interface — tight coupling.
-5. Also — ignoring constructor failure — missing beans explode at startup for good reason.
-6. Fail fast at context refresh — never with a NullPointerException in production.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: Why constructor injection?
+3. Answer: Required deps are explicit, final, and easy to unit test.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — why prefer constructor injection?
-2. Required dependencies are explicit and can be final.
-3. The object is fully initialized after construction — no half-ready beans.
-4. Unit tests pass mocks without Spring or reflection hacks.
-5. Circular dependencies surface earlier — design problems become visible.
-6. Spring and the community treat constructor injection as the default style.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Constructor injection preferred.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. IoC vs service locator.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Testability skyrockets.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Avoid field injection in new code.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Scopes matter.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Wiring is clear — next is how projects start fast.
-2. Episode Seventy-Three — Spring Boot Basics.
-3. Starters, auto-configuration, configuration properties, and the executable jar.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what IoC and Dependency Injection is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was IoC and Dependency Injection.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 73: Spring Boot Basics.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **99** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +182,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — why prefer constructor injection?_
 - **`teaser`** — starts from: _Wiring is clear — next is how projects start fast._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

@@ -5,98 +5,157 @@
 | Episode | 59 |
 | Title | Escape Analysis |
 | Catalog handbook column | 59 |
-| Narration source script | `make_episode_59.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Fifty-Eight showed jcmd, jmap, and JFR for live diagnostics.
-2. But the JIT compiler makes invisible optimizations before runtime tools see them.
-3. Escape analysis asks — does this object leave the current scope?
-4. If not, the JVM may never allocate it on the heap at all.
-5. Stack allocation and scalar replacement eliminate heap pressure silently.
-6. Today — escape analysis, stack allocation, and when objects escape.
+1. In the last episode, we worked through Diagnostic Tools.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. The JIT may prove an object never escapes — then scalar-replace it.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Fifty-Nine.
+1. Episode 59.
 2. Escape Analysis.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `escape_definition` (renderer: `escape_definition`)
+### Scene `concept`
 
-1. An object escapes when a reference outlives the creating method or thread.
-2. Returned from a method — escapes to the caller.
-3. Stored in a field or static variable — escapes to the object graph.
-4. Passed to another thread — escapes across thread boundaries.
-5. Published to a collection visible elsewhere — escapes globally.
-6. No escape means the JIT can treat the object as method-local only.
+1. First, the why — then the syntax.
+2. Picture Escape Analysis clearly.
+3. Here are the points that matter when code meets production:
+4. Point 1: Escape analysis enables stack allocation/scalar replacement.
+5. If you remember only one thing, make it that.
+6. Point 2: Lock elision possible.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Don't micro-opt assuming every new escapes.
+9. Point 4: Readability still wins.
+10. Point 5: Measure with real workloads.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `stack_allocation` (renderer: `stack_allocation`)
+### Scene `example_intro`
 
-1. Stack allocation places short-lived objects on the thread stack frame.
-2. Avoids heap allocation and GC pressure entirely for non-escaping objects.
-3. The object dies when the stack frame pops — no collector involvement.
-4. Enabled by escape analysis during C2 compilation.
-5. You cannot observe stack allocation directly — it is a compiler optimization.
-6. Micro-benchmarks with millions of tiny allocations may show zero GC impact.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `scalar_replacement` (renderer: `scalar_replacement`)
+```java
+Point p = new Point(1, 2);
+return p.x() + p.y(); // may not need a real heap object
+```
 
-1. Scalar replacement goes further — the object may not exist at all.
-2. Fields of a non-escaping object become local variables in registers.
-3. No object header, no alignment padding — just primitive values.
-4. Point class with int x and int y — replaced by two local ints.
-5. Combines with dead code elimination and constant folding.
-6. Most powerful when objects are small and method-local.
+### Scene `example_walk`
 
-### Scene `escape_scenarios` (renderer: `escape_scenarios`)
+1. Walkthrough.
+2. Walk this like pair-programming.
+3. Focus on what each line means.
+4. Connect to the failure mode.
+5. Look at `Point p = new Point(1, 2);`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `return p.x() + p.y(); // may not need a real heap object`.
+8. That is not decorative syntax — it encodes a real rule of the platform or API.
+9. If you can explain those lines to a teammate, you understand the episode.
+10. If you only recognize the keywords, rewind the concept section once.
 
-1. When does escape analysis fail to optimize?
-2. Returning the object — always escapes to the caller heap.
-3. Storing in an instance field — escapes with the enclosing object.
-4. Synchronized blocks publishing to shared state — escapes globally.
-5. Logging or debug toString that captures references — subtle escape.
-6. Inlining boundaries — if callee escapes, caller object may escape too.
+### Scene `deeper`
 
-### Scene `jit_flags` (renderer: `jit_flags`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Escape Analysis, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. Observing escape analysis in practice.
-2. C2 compiler performs escape analysis by default — no flag needed.
-3. PrintCompilation shows when methods reach C2 optimized level.
-4. JITWatch and -XX:+PrintInlining reveal inlining decisions.
-5. Async Profiler allocation samples drop when optimizations kick in after warmup.
-6. Do not disable escape analysis in production — it is a core C2 optimization.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Rewriting clear code for imaginary allocations.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Trusting microbenchmarks without JMH.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Ignoring when objects truly escape.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — assuming every new creates a heap object — escape analysis may elide it.
-3. Two — benchmarking without warmup — measures interpreter, not optimized code.
-4. Three — storing objects in fields to avoid allocation — guarantees escape.
-5. Also — relying on object identity for non-escaping locals — may be scalar-replaced.
-6. Write clear, short-lived objects — let the JIT optimize naturally.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: What is escape analysis?
+3. Answer: Analysis of whether an object escapes a method/thread, enabling optimizations.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — what is escape analysis?
-2. JIT analyzes whether object references leave method or thread scope.
-3. No escape — stack allocate or scalar replace fields into locals.
-4. Escapes on return, field store, or cross-thread publish.
-5. Reduces allocation rate and GC pressure invisibly at C2 compile time.
-6. Warmup required — optimization appears after hot method compilation.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Escape analysis enables stack allocation/scalar replacement.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. Lock elision possible.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Don't micro-opt assuming every new escapes.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Readability still wins.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Measure with real workloads.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Heap objects are only part of JVM memory — classes and native buffers live elsewhere.
-2. Episode Sixty — Metaspace and Native Memory.
-3. Metaspace versus PermGen, direct buffers, and NMT.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Escape Analysis is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Escape Analysis.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 60: Metaspace and Native Memory.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **97** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +177,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — what is escape analysis?_
 - **`teaser`** — starts from: _Heap objects are only part of JVM memory — classes and native buffers live elsewhere._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

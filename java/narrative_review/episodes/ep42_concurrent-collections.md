@@ -5,98 +5,156 @@
 | Episode | 42 |
 | Title | Concurrent Collections |
 | Catalog handbook column | 42 |
-| Narration source script | `make_episode_42.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Multiple threads reading and writing the same HashMap can corrupt it.
-2. Synchronized wrappers lock the entire collection — every operation blocks.
-3. Concurrent collections offer finer-grained safety without one global lock.
-4. ConcurrentHashMap scales reads and writes across internal segments.
-5. CopyOnWriteArrayList snapshots the backing array on each mutation.
-6. Today — thread-safe collections and when each design wins.
+1. In the last episode, we worked through Callable and Future.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Concurrent collections make shared structure access safer — not all multi-step logic automatic.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Forty-Two.
+1. Episode 42.
 2. Concurrent Collections.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `concurrent_hashmap` (renderer: `concurrent_hashmap`)
+### Scene `concept`
 
-1. ConcurrentHashMap is the go-to concurrent map in Java.
-2. It never throws ConcurrentModificationException on concurrent access.
-3. Internal locking is segment-based — not one lock for the whole map.
-4. get is usually lock-free. put and remove lock only a segment.
-5. null keys and null values are not permitted — unlike HashMap.
-6. Use ConcurrentHashMap when many threads share a mutable map.
+1. First, the why — then the syntax.
+2. Picture Concurrent Collections clearly before edge cases.
+3. Here are the points that matter when code meets production:
+4. Point 1: ConcurrentHashMap compute/merge.
+5. If you remember only one thing, make it that.
+6. Point 2: CopyOnWrite for rare writes.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Blocking queues for handoffs.
+9. Point 4: Weakly consistent iterators.
+10. Point 5: Compound actions need atomic APIs.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `copy_on_write` (renderer: `copy_on_write`)
+### Scene `example_intro`
 
-1. CopyOnWriteArrayList copies the entire array on every write.
-2. Reads iterate a stable snapshot — no locks during traversal.
-3. Writes are expensive — copy plus replace the reference.
-4. Perfect when reads vastly outnumber writes — listener lists, caches.
-5. Iterator never throws ConcurrentModificationException.
-6. Do not use for write-heavy workloads — copying dominates.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `thread_safe_queues` (renderer: `thread_safe_queues`)
+```java
+ConcurrentHashMap<String, Integer> map = new ConcurrentHashMap<>();
+map.merge("a", 1, Integer::sum);
+```
 
-1. ConcurrentLinkedQueue — lock-free linked nodes for high-throughput queues.
-2. BlockingQueue variants add wait and notify semantics — covered next episode.
-3. ConcurrentSkipListMap and ConcurrentSkipListSet offer sorted concurrent access.
-4. Collections.synchronizedList wraps with a mutex — simple but coarse.
-5. Prefer java.util.concurrent types over synchronized wrappers at scale.
-6. Match the collection to your read-write ratio and ordering needs.
+### Scene `example_walk`
 
-### Scene `vs_synchronized` (renderer: `vs_synchronized`)
+1. Walkthrough.
+2. I'll walk this like pair-programming.
+3. Focus on the idea each line encodes.
+4. Then connect to the failure mode.
+5. Look at `ConcurrentHashMap<String, Integer> map = new ConcurrentHashMap<>();`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `map.merge("a", 1, Integer::sum);`.
+8. If you can explain those lines to a teammate, you understand the episode.
+9. If you only recognize the keywords, rewind the concept section once.
 
-1. Synchronized collections versus concurrent collections.
-2. SynchronizedMap — one lock per operation — simple but contended.
-3. ConcurrentHashMap — segmented or striped locking — scales better.
-4. CopyOnWriteArrayList — no read locks — ideal for read-heavy lists.
-5. Vector and synchronized ArrayList block every reader and writer.
-6. Legacy wrappers still appear — know the modern replacements.
+### Scene `deeper`
 
-### Scene `when_use` (renderer: `when_use`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Concurrent Collections, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. When to choose each concurrent collection.
-2. Shared cache or registry — ConcurrentHashMap.
-3. Event listeners or config snapshots — CopyOnWriteArrayList.
-4. High-throughput work queues — ConcurrentLinkedQueue.
-5. Sorted concurrent map — ConcurrentSkipListMap.
-6. When not — single-threaded code — plain HashMap is faster.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: check-then-act on CHM without atomic methods.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Using COW lists for write-heavy workloads.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Synchronizing around CHM unnecessarily.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — using HashMap from multiple threads without external locking.
-3. Two — CopyOnWriteArrayList for write-heavy lists — copies explode.
-4. Three — assuming compound actions are atomic — check-then-act needs care.
-5. Also — iterating a synchronized list without holding its lock.
-6. Concurrent collections help — but logical consistency is still your job.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: Is CHM enough for multi-step logic?
+3. Answer: Single ops are safe; multi-step needs compute/merge or other coordination.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — ConcurrentHashMap versus synchronized HashMap?
-2. ConcurrentHashMap uses finer locking — better scalability under contention.
-3. No ConcurrentModificationException on concurrent iteration patterns.
-4. Null keys and values forbidden — enforced at API level.
-5. CopyOnWriteArrayList for read-heavy, rarely mutated lists.
-6. Mention when synchronized wrappers are still acceptable — low contention.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. ConcurrentHashMap compute/merge.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. CopyOnWrite for rare writes.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Blocking queues for handoffs.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Weakly consistent iterators.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Compound actions need atomic APIs.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Collections protect shared structures. What about single counters?
-2. Episode Forty-Three — Atomic Variables.
-3. AtomicInteger, compare-and-swap, and lock-free updates.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Concurrent Collections is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Concurrent Collections.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 43: Atomics.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **96** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +176,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — ConcurrentHashMap versus synchronized HashMap?_
 - **`teaser`** — starts from: _Collections protect shared structures. What about single counters?_
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

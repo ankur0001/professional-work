@@ -5,98 +5,160 @@
 | Episode | 26 |
 | Title | Streams Intro |
 | Catalog handbook column | 26 |
-| Narration source script | `make_episode_26.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Sorting orders a collection. Streams transform how you process one.
-2. Instead of nested loops everywhere — declare a pipeline.
-3. Source, intermediate operations, terminal operation.
-4. Lazy until it needs to run. Expressive when the problem fits.
-5. Today — the mental model that makes Streams useful.
-6. Data as a pipeline — not a pile of index variables.
+1. In the last episode, we worked through Sorting and Comparators.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Streams let you describe bulk operations — laziness included.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Twenty-Six.
-2. Streams introduction — pipelines over data.
+1. Episode 26.
+2. Streams Intro.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `idea` (renderer: `idea`)
+### Scene `concept`
 
-1. A Stream is not a new collection type.
-2. It is a sequence of elements supporting aggregate operations.
-3. You build a pipeline — then a terminal operation triggers computation.
-4. Streams are single-use. Consume once.
-5. They can come from collections, arrays, generators, or I/O wrappers.
-6. Think recipe first — result second.
+1. First, the why — then the syntax.
+2. Picture Streams Intro clearly before edge cases.
+3. Here are the points that matter when code meets production:
+4. Point 1: Pipelines: source, intermediate ops, terminal op.
+5. If you remember only one thing, make it that.
+6. Point 2: Lazy until terminal.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Prefer purity in lambdas.
+9. Point 4: toList() modern collectors.
+10. Point 5: Streams aren't always faster.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `ops` (renderer: `ops`)
+### Scene `example_intro`
 
-1. Operations split into two families.
-2. Intermediate — filter, map, flatMap, sorted, distinct — return a stream.
-3. Terminal — collect, reduce, forEach, count, anyMatch — produce a result or side effect.
-4. Without a terminal operation, nothing useful happens.
-5. Keep intermediate steps free of surprising mutation.
-6. Readable pipelines beat clever one-liners.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `lazy` (renderer: `lazy`)
+```java
+list.stream()
+  .filter(s -> s.length() > 3)
+  .map(String::toUpperCase)
+  .toList();
+```
 
-1. Laziness is the key performance idea.
-2. Intermediate operations record what to do — they do not run yet.
-3. A terminal operation pulls data through the pipeline.
-4. anyMatch can stop early. limit can bound work.
-5. That is why filter then findFirst can skip unused elements.
-6. Use laziness — do not fight it with eager side effects mid-pipeline.
+### Scene `example_walk`
 
-### Scene `collect` (renderer: `collect`)
+1. Walkthrough.
+2. I'll walk this like pair-programming.
+3. Focus on the idea each line encodes.
+4. Then connect to the failure mode.
+5. Look at `list.stream()`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `.filter(s -> s.length() > 3)`.
+8. Look at `.map(String::toUpperCase)`.
+9. Look at `.toList();`.
+10. If you can explain those lines to a teammate, you understand the episode.
+11. If you only recognize the keywords, rewind the concept section once.
 
-1. collect is how most pipelines finish.
-2. Collectors.toList and toSet materialize results.
-3. toMap builds maps carefully — watch duplicate keys.
-4. groupingBy clusters elements by a classifier.
-5. joining builds strings without manual StringBuilder noise.
-6. Choose a collector that matches the shape you need next.
+### Scene `deeper`
 
-### Scene `when` (renderer: `when`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Streams Intro, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. When Streams shine.
-2. Transform and filter chains that would be noisy loops.
-3. Pipelines that read like the business rule.
-4. Optional parallelism later — after you measure.
-5. When not — heavy mutable accumulation that is clearer as a for-loop.
-6. Clarity first. Streams are a tool, not a purity contest.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Mutating external state in lambdas.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Forgetting a terminal operation.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Blindly parallelizing.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — reusing a stream after it was consumed.
-3. Two — sneaking side effects into map instead of keeping transformations pure.
-4. Three — sprinkling parallel without evidence it helps.
-5. Also — giant pipelines nobody can debug at a breakpoint.
-6. Good stream code is still boringly clear.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: Are streams always faster?
+3. Answer: No — clarity first; measure before going parallel.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — what is a Stream, and why does laziness matter?
-2. A pipeline over elements with intermediate and terminal operations.
-3. Laziness delays work until a terminal operation — enabling short-circuiting.
-4. Mention collect as the common way to materialize results.
-5. Contrast with collections — streams do not store elements themselves.
-6. That answer shows conceptual understanding.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Pipelines: source, intermediate ops, terminal op.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. Lazy until terminal.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Prefer purity in lambdas.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. toList() modern collectors.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Streams aren't always faster.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Pipelines are in place. Next — collectors with real shape.
-2. Episode Twenty-Seven — Stream Collectors.
-3. Grouping, partitioning, and downstream collectors.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Streams Intro is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Streams Intro.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 27: Stream Collectors.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **98** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +180,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — what is a Stream, and why does laziness matter?_
 - **`teaser`** — starts from: _Pipelines are in place. Next — collectors with real shape._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

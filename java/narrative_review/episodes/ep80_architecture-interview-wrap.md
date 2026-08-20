@@ -5,98 +5,153 @@
 | Episode | 80 |
 | Title | Architecture Interview Wrap |
 | Catalog handbook column | 80 |
-| Narration source script | `make_episode_80.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Seventy-Nine covered observability and resilience in distributed systems.
-2. You have traveled from Java syntax through JVM internals, patterns, and Spring.
-3. Architecture interviews reward structured thinking more than buzzword density.
-4. The best answers connect requirements to trade-offs and verification.
-5. Today — a reusable system-design framework using this series as your toolkit.
-6. This is Episode Eighty — the finale of The Java Story.
+1. In the last episode, we worked through Observability and Resilience.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Architecture answers are trade-off stories under constraints.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Eighty.
+1. Episode 80.
 2. Architecture Interview Wrap.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `framework` (renderer: `framework`)
+### Scene `concept`
 
-1. A reusable architecture interview framework.
-2. Clarify functional requirements and non-functionals — latency, consistency, scale.
-3. Sketch a modular monolith first — extract services only with a reason.
-4. Define APIs, data ownership, and failure modes explicitly.
-5. Call out security, observability, and test strategy — seniors always do.
-6. Close with how you would measure success and evolve the design.
+1. First, the why — then the syntax.
+2. Picture Architecture Interview Wrap clearly.
+3. Here are the points that matter when code meets production:
+4. Point 1: Clarify requirements/SLOs.
+5. If you remember only one thing, make it that.
+6. Point 2: Draw boundaries and data flow.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Failure modes.
+9. Point 4: Evolve complexity.
+10. Point 5: Bring JVM awareness as a Java engineer.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `java_toolkit` (renderer: `java_toolkit`)
+### Scene `example_intro`
 
-1. Map the series to interview moments.
-2. Language and collections — correct, idiomatic building blocks.
-3. Concurrency and JVM — explain latency, GC, and threading under load.
-4. Patterns — name structures when they clarify, not decorate.
-5. Spring — IoC, Boot, MVC, Data, Security as the delivery platform.
-6. Microservices and resilience — when distribution earns its cost.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `tradeoffs` (renderer: `tradeoffs`)
+```java
+// Scaffold: requirements -> API/data -> runtime -> failures -> observability
+```
 
-1. Trade-offs interviewers listen for.
-2. Consistency versus availability — say which the product needs.
-3. Sync versus async — latency versus coupling versus complexity.
-4. Normalization versus read models — write simplicity versus query speed.
-5. Build versus buy — managed Kafka or a simpler queue.
-6. State the option you reject and why — that signals judgment.
+### Scene `example_walk`
 
-### Scene `storytelling` (renderer: `storytelling`)
+1. Walkthrough.
+2. Walk this like pair-programming.
+3. Focus on what each line means.
+4. Connect to the failure mode.
+5. Comment cue: Scaffold: requirements -> API/data -> runtime -> failures -> observability
+6. If you can explain those lines to a teammate, you understand the episode.
+7. If you only recognize the keywords, rewind the concept section once.
 
-1. How to narrate without drowning the room.
-2. Lead with the user journey — then zoom into the hottest path.
-3. Draw boxes sparingly — label ownership and data stores.
-4. Timebox deep dives — offer to go deeper on one component.
-5. When stuck — restate constraints and propose a boring working design.
-6. Boring and operable beats clever and fragile.
+### Scene `deeper`
 
-### Scene `checklist` (renderer: `checklist`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Architecture Interview Wrap, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. Final checklist before you say done.
-2. Requirements restated — scale numbers roughly estimated.
-3. API shapes and primary data models named.
-4. Authn, authz, and secret handling mentioned.
-5. Observability and failure injection path mentioned.
-6. Evolution path — what you would split or cache next.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Buzzword bingo.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Ignoring ops.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Perfect design with no evolution path.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common interview mistakes.
-2. One — jumping to Kafka and Kubernetes before requirements are clear.
-3. Two — ignoring data ownership and consistency until the last minute.
-4. Three — never mentioning how you would test or operate the design.
-5. Also — defending a choice you cannot explain under cross-examination.
-6. Judgment under constraints beats encyclopedic tooling lists.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: How to answer as a Java engineer?
+3. Answer: Requirements, design, JVM/runtime concerns, failure modes, observability.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Capstone prompt — design an order service for an online store.
-2. Clarify traffic, consistency for payments, and inventory constraints.
-3. Propose modular services or modules — Order, Payment, Inventory.
-4. Sync reserve inventory — async notify shipping — outbox for events.
-5. Secure APIs, trace requests, break circuit on payment timeouts.
-6. Ship a boring design first — then scale the measured hotspots.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Clarify requirements/SLOs.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. Draw boundaries and data flow.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Failure modes.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Evolve complexity.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Bring JVM awareness as a Java engineer.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. That is the end of The Java Story — eighty episodes.
-2. From hello world to architecture interviews — one continuous arc.
-3. Rebuild any episode from its make_episode script when you need a refresher.
-4. Now go build something — and measure it.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Architecture Interview Wrap is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Architecture Interview Wrap.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 81: Caching Strategies.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **94** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +173,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common interview mistakes._
 - **`interview`** — starts from: _Capstone prompt — design an order service for an online store._
 - **`teaser`** — starts from: _That is the end of The Java Story — eighty episodes._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

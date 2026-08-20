@@ -5,98 +5,155 @@
 | Episode | 79 |
 | Title | Observability and Resilience |
 | Catalog handbook column | 79 |
-| Narration source script | `make_episode_79.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Seventy-Eight framed microservices — boundaries, data, and operational cost.
-2. Distributed systems do not fail cleanly — they fail partially and intermittently.
-3. Observability tells you what is happening — resilience limits blast radius.
-4. Without both, on-call becomes guesswork and cascading outages.
-5. Spring Boot Actuator, Micrometer, and Resilience4j show up in many stacks.
-6. Today — logs, metrics, traces, timeouts, and circuit breakers.
+1. In the last episode, we worked through Microservices Basics.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. If you can't see it and can't survive dependency failure, you're not production-ready.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Seventy-Nine.
+1. Episode 79.
 2. Observability and Resilience.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `pillars` (renderer: `pillars`)
+### Scene `concept`
 
-1. Three observability pillars — use them together.
-2. Logs — event narratives with correlation IDs across services.
-3. Metrics — RED and USE signals — rate, errors, duration, saturation.
-4. Traces — request paths across process boundaries via spans.
-5. OpenTelemetry is becoming the portable instrumentation layer.
-6. If you cannot answer why latency spiked, your pillars have gaps.
+1. First, the why — then the syntax.
+2. Picture Observability and Resilience clearly.
+3. Here are the points that matter when code meets production:
+4. Point 1: Logs, metrics, traces.
+5. If you remember only one thing, make it that.
+6. Point 2: Timeouts everywhere.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Retries with jitter + idempotency.
+9. Point 4: Circuit breakers.
+10. Point 5: SLOs drive alerts.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `actuator` (renderer: `actuator`)
+### Scene `example_intro`
 
-1. Spring Boot operations surface.
-2. Actuator health endpoints feed load balancers and orchestrators.
-3. Micrometer binds timers and counters to Prometheus or similar backends.
-4. Structured JSON logs beat free-text grepping under load.
-5. Propagate trace and span IDs on every outbound call.
-6. Alert on symptoms users feel — error rate and latency — not only CPU.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `timeouts` (renderer: `timeouts`)
+```java
+// pseudo: call dependency with timeout + retry + circuit breaker
+// emit metrics for latency/errors; propagate trace ids
+```
 
-1. Resilience starts with timeouts and limits.
-2. Every remote call needs a timeout — infinite waits hold threads hostage.
-3. Bulkheads isolate pools so one dependency cannot starve others.
-4. Rate limits protect you from stampeding clients and buggy loops.
-5. Retries need jitter and budgets — blind retries amplify outages.
-6. Idempotent APIs make safe retries possible — design for them.
+### Scene `example_walk`
 
-### Scene `breakers` (renderer: `breakers`)
+1. Walkthrough.
+2. Walk this like pair-programming.
+3. Focus on what each line means.
+4. Connect to the failure mode.
+5. Comment cue: pseudo: call dependency with timeout + retry + circuit breaker
+6. Comment cue: emit metrics for latency/errors; propagate trace ids
+7. If you can explain those lines to a teammate, you understand the episode.
+8. If you only recognize the keywords, rewind the concept section once.
 
-1. Circuit breakers stop calling a sick dependency.
-2. Closed — calls flow — open — fail fast — half-open — probe recovery.
-3. Resilience4j integrates cleanly with Spring Boot.
-4. Combine with fallbacks — cached responses or degraded features.
-5. Failing fast is kinder than queueing until thread pools die.
-6. Tune thresholds from real SLOs — not copy-pasted defaults forever.
+### Scene `deeper`
 
-### Scene `degrade` (renderer: `degrade`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Observability and Resilience, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. Graceful degradation is a product skill.
-2. Show partial results when recommendations are down — still take checkout.
-3. Feature flags shut off expensive paths during incidents.
-4. Read-only mode can save a write-path outage from becoming total failure.
-5. Document dependency criticality — which outages are SEV-one.
-6. Practice game days — resilience untested is resilience imagined.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Retry storms.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: No timeouts.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Alerts on raw CPU instead of SLOs.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — logs without correlation IDs — cannot stitch a single request.
-3. Two — retries without backoff — turn a blip into a self-DDoS.
-4. Three — health checks that always return up while the DB is down.
-5. Also — paging on raw CPU — ignore saturation of thread pools and queues.
-6. Observe what users feel — defend what users need.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: First resilience rule?
+3. Answer: Set timeouts; unbounded waits become outages.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — how do you keep a distributed Spring system reliable?
-2. Instrument logs, metrics, and traces with correlation across services.
-3. Timeout every dependency — bulkhead and rate-limit shared resources.
-4. Circuit-break sick calls — degrade features instead of failing entirely.
-5. Alert on SLOs — error rate and latency — with runnable runbooks.
-6. Prove it with load tests and failure injection, not slideware.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Logs, metrics, traces.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. Timeouts everywhere.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Retries with jitter + idempotency.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Circuit breakers.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. SLOs drive alerts.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. The platform story is complete — next we wrap the interview arc.
-2. Episode Eighty — Architecture Interview Wrap.
-3. How to structure system-design answers using everything from this series.
-4. See you in the finale.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Observability and Resilience is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Observability and Resilience.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 80: Architecture Interview Wrap.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **95** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +175,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — how do you keep a distributed Spring system reliable?_
 - **`teaser`** — starts from: _The platform story is complete — next we wrap the interview arc._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

@@ -5,19 +5,18 @@
 | Episode | 12 |
 | Title | Packages |
 | Catalog handbook column | 12 |
-| Narration source script | `make_episode_12.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough code |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
 ### Scene `hook` (renderer: `hook`)
 
-1. Access needs a neighborhood. Packages are those neighborhoods.
-2. A package is a namespace — and a boundary.
-3. It prevents name collisions and shapes who collaborates.
-4. On disk and at runtime, package plus class name is identity.
-5. Treat package structure as architecture you can see.
-6. Folders tell the truth about ownership — or they should.
+1. Access needs neighborhoods. Packages are those neighborhoods.
+2. Namespace and boundary — on disk and at runtime.
+3. Prevent name collisions. Shape collaboration.
+4. Folder tree should tell the truth about ownership.
 
 ### Scene `title` (renderer: `title`)
 
@@ -26,73 +25,171 @@
 
 ### Scene `namespace` (renderer: `namespace`)
 
-1. package com.acme.orders.domain;
-2. That line is not decoration — it is part of the binary name.
-3. com.acme.OrderService is not the same as com.other.OrderService.
-4. Folders should match the package declaration. Java expects that.
-5. Break the mapping and tools get angry fast.
-6. Folder path and package declaration must agree.
+1. package com.acme.orders.domain — part of binary class name.
+2. com.acme.OrderService distinct from com.other.OrderService.
+3. Directory path must match package declaration.
+4. Break mapping — IDE and compiler angry.
 
 ### Scene `boundary` (renderer: `boundary`)
 
-1. Packages define package-private visibility.
-2. Types in the same package can collaborate quietly.
-3. Types outside must use the public API — if you designed one.
-4. Good packages make invalid dependencies hard to introduce.
-5. Bad packages — one giant folder — erase ownership.
-6. Boundaries only work if the tree reflects them.
+1. Package-private visibility scoped to package.
+2. External code uses public API types only.
+3. Good packages make illegal dependencies awkward.
+4. One giant util package erases boundaries.
 
 ### Scene `structure` (renderer: `structure`)
 
-1. Organize by capability when you can.
-2. api. application. domain. infrastructure.
-3. Or by feature — orders, payments, shipping — when teams own features.
-4. Layered-only packages can become anemic and tangled.
-5. Pick a structure that mirrors how people own the code.
-6. Feature teams and domain packages often fit better than pure layers.
+1. Organize by capability — api, application, domain, infrastructure.
+2. Or by feature when teams own features end to end.
+3. Pure layers alone can become anemic and tangled.
+4. Pick structure matching ownership and dependency direction.
+
+### Scene `example` (renderer: `example`)
+
+1. Walk application root placement.
+```java
+package com.acme.orders;
+
+import com.acme.orders.domain.Order;
+import com.acme.orders.api.OrderController;
+
+public class OrdersApplication {
+    public static void main(String[] args) {
+        System.out.println("Boot from root package: com.acme.orders");
+    }
+}
+```
+
+2. OrdersApplication at com.acme.orders — root for scanning.
+3. Imports show dependency direction toward domain types.
+4. Main at sensible root — frameworks scan downward from here.
 
 ### Scene `spring` (renderer: `spring`)
 
-1. Spring Boot tip — scanning starts from the main class package downward.
-2. Put OrdersApplication at a sensible root.
-3. Bury it too deep and beans disappear mysteriously.
-4. Packages are not only organization — frameworks navigate them.
-5. Design the root on purpose.
-6. A wrong root creates mysterious missing beans.
+1. Spring Boot scans from main class package down.
+2. Too deep main — beans missed mysteriously.
+3. Packages are navigation paths for frameworks.
+
+### Scene `deeper` (renderer: `deeper`)
+
+1. Default package — no package declaration — quick demos only, not production.
+2. Package naming convention — reversed domain — com.company.product.layer.
+3. Never use java or javax as your prefix — reserved and confusing.
+4. Split packages — same package name in two JARs — illegal in modules, fragile on classpath.
+5. JPMS forbids split packages — migration pain point.
+6. package-info.java — package level documentation and annotations.
+7. ArchUnit and similar tools test package dependency rules in CI.
+8. Feature folders versus layers — both valid — align with team ownership.
+9. Monorepo multi-module Maven/Gradle — each module maps to deployable or library boundary.
+
+### Scene `production` (renderer: `production`)
+
+1. Production context — why this topic stops incidents.
+2. Code review checklist item — catch misuse before merge.
+3. Observability — logs and metrics should name concepts clearly — not mystery abbreviations.
+4. Tests should encode the contracts we discussed — one failing test beats ten slides.
+5. Refactor toward clarity — juniors read this code six months from now.
+6. Interview answers map directly to daily choices — not trivia for trivia's sake.
+7. Connect to handbook lesson themes — JVM, structure, types, concurrency later in series.
+8. Next episodes build on this — skipping fundamentals creates gaps that show in system design.
 
 ### Scene `mistakes` (renderer: `mistakes`)
 
-1. Three common mistakes.
-2. One — every class in one package called util or common.
-3. Two — cyclic dependencies between packages — architecture spaghetti.
-4. Three — main class buried so component scanning misses half the app.
-5. Also — package names that lie about contents.
-6. Honest names reduce wrong imports and wrong ownership.
+1. Three mistakes.
+2. One — everything in util.
+3. Two — cyclic package dependencies.
+4. Three — buried main class.
+5. Package names that lie about contents.
 
 ### Scene `interview` (renderer: `interview`)
 
-1. Interview question — why do packages matter?
-2. Namespace uniqueness. Access boundaries. Ownership. Framework scanning.
-3. Runtime identity is package plus class name — plus classloader later.
-4. Good structure makes illegal dependencies awkward.
-5. That is architecture you can feel in the folder tree.
+1. Interview — why packages matter?
+2. Namespace. Access. Ownership. Framework scanning.
+3. Runtime identity — fully qualified name plus classloader.
+4. Structure enforces architecture when done honestly.
+
+### Scene `walkthrough2` (renderer: `walkthrough2`)
+
+1. Let's slow down once more with a reviewer mindset.
+2. If you saw this in a pull request, what would you comment?
+3. Naming clarity, null safety, visibility, performance — rotate through that checklist.
+4. Let me say that again in plain language — because this is the kind of detail interviews probe and production punishes.
+5. When you read open-source Java or a teammate's pull request, you'll recognize these patterns immediately.
+6. Pause the video if you want — write a five-line example in your scratch project. Muscle memory beats passive watching.
+7. The handbook treats this as foundational for eighty lessons — JVM tuning, Spring, concurrency all assume you know this cold.
+8. We're not racing the syllabus. We're building mental models that survive version upgrades and job changes.
+9. Senior engineers don't know every API by heart. They know where to look and which mistakes repeat.
+10. Junior engineers who nail fundamentals ramp faster on frameworks — Spring, JPA, Kafka all sit on this base.
+11. Your IDE helps — but only after you understand what the compiler and JVM will accept and reject.
+12. Compile errors are friends. They prevent runtime surprises in customer environments.
+13. Runtime errors with stack traces — read bottom up to your code first, then framework frames.
+14. Unit tests for this topic should be small — one concept per test method — not thousand-line integration only.
+15. When stuck, reduce to main in a scratch class — isolate the language feature from framework noise.
+
+### Scene `connect` (renderer: `connect`)
+
+1. Connect backward — Episode One gave portability. Episode Two named the toolchain.
+2. Connect forward — collections, streams, and concurrency assume today's concept is solid.
+3. The Java Story is cumulative — skipping an episode creates a hole you feel later as confusion.
+4. Bookmark the handbook lesson that matches this episode — revision sheet before interviews.
+5. Production stories in later episodes reference types and structures we defined in Phase One.
+6. You are still in Phase One — language and platform — the bedrock everything else stands on.
+7. Architects who skipped fundamentals design APIs that leak abstraction — don't skip.
+8. Teaching this to a teammate? Use the same order — hook, example, mistake, interview answer.
+9. Documentation you write for your team should mirror these boundaries — package, type, method.
+10. Code is read more than written — optimize for the reader who has no context yet.
+
+### Scene `revision` (renderer: `revision`)
+
+1. Quick revision beat — say the definition out loud without looking.
+2. Explain it to an imaginary junior on your team in two sentences.
+3. Name one production mistake this feature prevents when used correctly.
+4. Name one mistake it causes when used incorrectly.
+5. Connect to interview — one question, one crisp answer — practice now.
+6. If you cannot explain it simply, revisit the example scene once more.
+7. Solid Phase One fundamentals make Phase Two collections feel easy instead of magical.
+
+### Scene `deep_dive` (renderer: `deep_dive`)
+
+1. Deep dive moment — watch this carefully.
+2. In a code review, ask: does this code teach the reader the domain rule?
+3. Tests should document edge cases — null, empty, boundary, overflow where relevant.
+4. Logging — log identifiers and outcomes, not secrets — strings appear in logs constantly.
+5. Metrics — count failures of this operation — helps SRE spot regressions after deploy.
+6. Feature flags — control flow at deploy time — still write clear Java structure underneath.
+7. Refactoring — rename for intent before optimizing — clarity first, microseconds second.
+8. Pair with the handbook revision sheet — twenty bullets beat rereading eighty pages blindly.
+9. OpenJDK documentation and Javadoc — authoritative when interview answers need precision.
+10. Stack Overflow answers vary in quality — verify against language spec for edge cases.
+11. Your future self maintains this code — write the explanation you wish you had today.
+12. Teaching solid Java fundamentals reduces incident pages on-call — that is the real ROI.
+
+### Scene `summary` (renderer: `summary`)
+
+1. Packages group types under namespace.
+2. Match folders. Control access. Express ownership.
+3. Root package is framework anchor in Spring.
+4. Honest tree beats clever naming.
 
 ### Scene `teaser` (renderer: `teaser`)
 
-1. Boundaries are set. Next — fixed sets of constants with behavior.
-2. Episode Thirteen — enums.
-3. Type-safe states instead of magic strings.
+1. Boundaries set. Next — type-safe fixed constants.
+2. Episode Thirteen — Enums.
+3. States instead of magic strings.
 4. See you there.
-
-_Total beats: **47** across **9** scenes._
+_Total beats: expanded for ~8–12 minute conversational delivery (well above the 4-minute floor; under the 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
 - **Primary handbook lesson:** Lesson **12** — *Packages*.
 - **Series catalog:** Episode 12 ↔ handbook lesson 12 — *Packages*.
 - **How content was used:** The handbook provided the **topic outline and teaching points**. Spoken lines were **rewritten** into short documentary beats matched to motion-graphics scenes (per user guidance: own narration synced to presentation; handbook as reference, not a script to read aloud).
+
+- **Narration expansion:** Spoken lines expanded for **4–15 minute** conversational runtime; handbook still used as topic reference.
 
 ### Handbook concepts reused (from recovered Lesson 12 excerpt)
 
@@ -111,3 +208,5 @@ Full recovered excerpt: `../reference/handbook_lessons_1-12_excerpts.md` (Lesson
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — why do packages matter?_
 - **`teaser`** — starts from: _Boundaries are set. Next — fixed sets of constants with behavior._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

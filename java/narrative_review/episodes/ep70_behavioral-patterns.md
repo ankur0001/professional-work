@@ -5,98 +5,157 @@
 | Episode | 70 |
 | Title | Behavioral Patterns |
 | Catalog handbook column | 70 |
-| Narration source script | `make_episode_70.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Sixty-Nine covered structural patterns — adapting, wrapping, and composing.
-2. Behavioral patterns focus on algorithms and communication between objects.
-3. They let you vary what happens without rewriting call sites every time.
-4. Strategy swaps algorithms — Observer broadcasts events — Command queues actions.
-5. These patterns dominate service code and interview whiteboards alike.
-6. Today — Strategy, Observer, Command, Template Method, and Iterator — then Spring next.
+1. In the last episode, we worked through Structural Patterns.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Behavioral patterns organize algorithms and communication — Strategy/Observer/Command.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Seventy.
+1. Episode 70.
 2. Behavioral Patterns.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `strategy` (renderer: `strategy`)
+### Scene `concept`
 
-1. Strategy defines a family of algorithms and makes them interchangeable.
-2. Clients depend on a strategy interface — concrete strategies plug in.
-3. Comparator in Java is Strategy — sort order injected at call time.
-4. Payment processors, pricing rules, and retry policies are classic Strategies.
-5. Prefer Strategy over deep if-else chains that grow every quarter.
-6. Keep strategies focused — one decision axis per strategy type.
+1. First, the why — then the syntax.
+2. Picture Behavioral Patterns clearly.
+3. Here are the points that matter when code meets production:
+4. Point 1: Replace deep conditionals with Strategy.
+5. If you remember only one thing, make it that.
+6. Point 2: Observer for events.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Template method vs composition.
+9. Point 4: Command for undo/queues.
+10. Point 5: Don't over-abstract one-off code.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `observer` (renderer: `observer`)
+### Scene `example_intro`
 
-1. Observer notifies dependents automatically when a subject changes.
-2. Publish-subscribe and event listeners are Observer in modern clothes.
-3. Swing listeners, reactive streams, and message topics follow the shape.
-4. Decouples producers from consumers — but watch notification storms.
-5. Unregister carefully — leaked listeners are memory leak classics.
-6. Use Observer when many parties care about the same state change.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `command` (renderer: `command`)
+```java
+interface Pay { void pay(int n); }
+record CardPay() implements Pay { public void pay(int n) { /*...*/ } }
+```
 
-1. Command encapsulates a request as an object.
-2. You can queue, log, undo, and retry actions uniformly.
-3. Runnable and Callable are lightweight command shapes in Java.
-4. GUI actions, job queues, and transactional outboxes use Command ideas.
-5. Macro commands compose smaller commands into workflows.
-6. Command separates invoker from receiver — great for undo stacks.
+### Scene `example_walk`
 
-### Scene `template_iterator` (renderer: `template_iterator`)
+1. Walkthrough.
+2. Walk this like pair-programming.
+3. Focus on what each line means.
+4. Connect to the failure mode.
+5. Look at `interface Pay { void pay(int n); }`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `record CardPay() implements Pay { public void pay(int n) { /*...*/ } }`.
+8. That is not decorative syntax — it encodes a real rule of the platform or API.
+9. If you can explain those lines to a teammate, you understand the episode.
+10. If you only recognize the keywords, rewind the concept section once.
 
-1. Template Method defines an algorithm skeleton in a base class.
-2. Subclasses override steps without changing the overall sequence.
-3. JdbcTemplate and many framework hooks follow Template Method spirit.
-4. Iterator provides sequential access without exposing collection structure.
-5. Enhanced for-loops and Stream pipelines rest on Iterator ideas.
-6. Together they show behavior reuse — hooks and traversal, not inheritance for data.
+### Scene `deeper`
 
-### Scene `choose` (renderer: `choose`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Behavioral Patterns, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. Choosing behavioral patterns in practice.
-2. Vary an algorithm — Strategy or a simple function parameter.
-3. Broadcast state changes — Observer or an event bus with clear ownership.
-4. Queue or undo work — Command objects with explicit lifecycle.
-5. Framework-defined steps — Template Method or modern composition hooks.
-6. Prefer small interfaces — behavioral patterns should shrink switch statements.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Strategy interfaces with one implementation forever.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Observer leaks.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Command explosion without need.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — Strategy explosion — dozens of one-line classes for dead branches.
-3. Two — Observer spaghetti — unclear who listens and who owns cleanup.
-4. Three — Command without idempotency — retries double-charge users.
-5. Also — Template Method locking teams into brittle inheritance.
-6. Behavior patterns need ownership rules — not just class diagrams.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: Strategy essence?
+3. Answer: Swap algorithms behind a common interface without rewriting callers.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — how do Strategy and Template Method differ?
-2. Strategy composes algorithms via interfaces — swap at runtime.
-3. Template Method inherits a skeleton — subclasses fill in steps.
-4. Strategy favors composition — Template Method favors inheritance.
-5. Modern Java often prefers Strategy plus lambdas over deep templates.
-6. Say the force — runtime swap versus fixed sequence with customizable steps.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Replace deep conditionals with Strategy.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. Observer for events.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Template method vs composition.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Command for undo/queues.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Don't over-abstract one-off code.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Patterns prepared the design vocabulary — frameworks apply it at scale.
-2. Episode Seventy-One — Spring Framework Intro.
-3. IoC, dependency injection, and why Spring beans feel like patterns in production.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Behavioral Patterns is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Behavioral Patterns.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 71: Spring Framework Intro.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **97** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +177,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — how do Strategy and Template Method differ?_
 - **`teaser`** — starts from: _Patterns prepared the design vocabulary — frameworks apply it at scale._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

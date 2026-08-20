@@ -5,98 +5,160 @@
 | Episode | 21 |
 | Title | Lists |
 | Catalog handbook column | 21 |
-| Narration source script | `make_episode_21.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Modules draw boundaries. Collections fill the day-to-day work.
-2. Almost every Java program needs an ordered sequence of values.
-3. That is the List interface — indexed, ordered, and everywhere.
-4. ArrayList. LinkedList. When each one earns its keep.
-5. Today we choose lists with intent — not habit.
-6. Order with random access — or order with cheap inserts. Know the trade.
+1. In the last episode, we worked through Modules and JPMS.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. List is the everyday ordered collection — pick the implementation on purpose.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Twenty-One.
-2. Lists — ordered collections in java.util.
+1. Episode 21.
+2. Lists.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `contract` (renderer: `contract`)
+### Scene `concept`
 
-1. List is a contract in java.util.
-2. Elements have positions — zero-based indexes.
-3. Duplicates are allowed. Null may be allowed depending on the implementation.
-4. add, get, set, remove, size, contains — the verbs you already know.
-5. Prefer coding to List, not to a concrete class — until performance forces a choice.
-6. The interface keeps your API flexible.
+1. First, the why — then the syntax.
+2. Picture Lists clearly before edge cases.
+3. Here are the points that matter when code meets production:
+4. Point 1: List is ordered and allows duplicates.
+5. If you remember only one thing, make it that.
+6. Point 2: ArrayList is the default workhorse.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: LinkedList rarely wins for typical access.
+9. Point 4: Program to the List interface.
+10. Point 5: Watch ConcurrentModification during iteration.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `arraylist` (renderer: `arraylist`)
+### Scene `example_intro`
 
-1. ArrayList is the default workhorse.
-2. Backed by a resizable array. Amortized constant-time append at the end.
-3. Random access by index is fast — get and set are essentially array ops.
-4. Inserts and removes in the middle shift elements — that can get expensive.
-5. Give an initial capacity when you know the size roughly.
-6. For most application lists, start here.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `linked` (renderer: `linked`)
+```java
+List<String> list = new ArrayList<>();
+list.add("a");
+list.add(0, "b");
+System.out.println(list.get(0));
+```
 
-1. LinkedList is a doubly linked structure.
-2. Cheap inserts and removes when you already hold the right node position.
-3. Random access by index walks the chain — do not pretend it is an array.
-4. It also implements Queue and Deque — useful as a deque more than as a random-access list.
-5. If you mainly get by index, LinkedList is usually the wrong tool.
-6. Measure the access pattern before you romanticize pointers.
+### Scene `example_walk`
 
-### Scene `choose` (renderer: `choose`)
+1. Walkthrough.
+2. I'll walk this like pair-programming.
+3. Focus on the idea each line encodes.
+4. Then connect to the failure mode.
+5. Look at `List<String> list = new ArrayList<>();`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `list.add("a");`.
+8. Look at `list.add(0, "b");`.
+9. Look at `System.out.println(list.get(0));`.
+10. If you can explain those lines to a teammate, you understand the episode.
+11. If you only recognize the keywords, rewind the concept section once.
 
-1. How to choose.
-2. Most reads by index, appends at the end — ArrayList.
-3. Heavy middle inserts with sequential traversal — consider LinkedList, or rethink the model.
-4. Often a better answer is a different structure — Queue, Deque, or a map.
-5. Do not pick LinkedList because it sounds advanced.
-6. Pick the structure that matches how you touch the data.
+### Scene `deeper`
 
-### Scene `pitfalls` (renderer: `pitfalls`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Lists, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. List pitfalls that show up in reviews.
-2. Modifying a list while iterating with a for-each — ConcurrentModificationException risk.
-3. Use an Iterator remove, or collect changes and apply after.
-4. Arrays.asList returns a fixed-size list backed by an array — not a fully mutable ArrayList.
-5. List.of creates unmodifiable lists — great for constants, surprising if you call add.
-6. Know whether your list is growable before you mutate it.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Using LinkedList by habit.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Exposing raw ArrayList in public APIs.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Modifying a list while foreach-iterating.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — LinkedList everywhere for inserts that never happen in the middle.
-3. Two — raw types — List without generics — type safety thrown away.
-4. Three — exposing a mutable ArrayList from an API that should return an unmodifiable view.
-5. Also — ignoring equals contract when lists hold custom types.
-6. Lists are simple. Careless APIs make them expensive.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: Default List choice?
+3. Answer: ArrayList for most cases unless you measured otherwise.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — ArrayList versus LinkedList?
-2. ArrayList — array-backed, fast index access, costly middle inserts.
-3. LinkedList — node-backed, weak random access, better as a deque sometimes.
-4. Default choice in apps is almost always ArrayList.
-5. Mention Big-O briefly, then talk about real access patterns.
-6. That answer is practical — not textbook theater.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. List is ordered and allows duplicates.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. ArrayList is the default workhorse.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. LinkedList rarely wins for typical access.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Program to the List interface.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Watch ConcurrentModification during iteration.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Ordered sequences are clear. Next — uniqueness and hashing.
-2. Episode Twenty-Two — Sets.
-3. HashSet, LinkedHashSet, TreeSet — and when order matters.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Lists is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Lists.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 22: Sets.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **98** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -119,3 +181,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — ArrayList versus LinkedList?_
 - **`teaser`** — starts from: _Ordered sequences are clear. Next — uniqueness and hashing._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

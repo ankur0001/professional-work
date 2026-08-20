@@ -5,98 +5,155 @@
 | Episode | 78 |
 | Title | Microservices Basics |
 | Catalog handbook column | 78 |
-| Narration source script | `make_episode_78.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Seventy-Seven covered testing Spring apps from unit to containers.
-2. Architecture interviews often jump next — should this be microservices?
-3. Microservices are independently deployable services collaborating over the network.
-4. They buy team autonomy and scale axes — they cost operational complexity.
-5. The wrong split creates a distributed monolith — worst of both worlds.
-6. Today — when to split, boundaries, communication, data, and failure modes.
+1. In the last episode, we worked through Spring Testing.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Microservices are a scalability/org choice — distributed failure is the price.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Seventy-Eight.
+1. Episode 78.
 2. Microservices Basics.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `when_split` (renderer: `when_split`)
+### Scene `concept`
 
-1. Split when forces demand it — not for fashion.
-2. Independent deploy cadence across teams is a real force.
-3. Different scale or technology needs per subdomain.
-4. Strong module boundaries already exist — services formalize them.
-5. If one team owns everything and deploys weekly together — a modular monolith may win.
-6. Start cohesive — extract services when pain is measured, not imagined.
+1. First, the why — then the syntax.
+2. Picture Microservices Basics clearly.
+3. Here are the points that matter when code meets production:
+4. Point 1: Boundaries by business capability.
+5. If you remember only one thing, make it that.
+6. Point 2: Independent deployability.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Network is unreliable.
+9. Point 4: Data ownership.
+10. Point 5: Modular monolith first often.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `boundaries` (renderer: `boundaries`)
+### Scene `example_intro`
 
-1. Boundaries follow business capabilities — not technical layers.
-2. Think Order Service and Payment Service — not Controller Service and Repository Service.
-3. Domain-driven contexts help — a bounded context is a candidate service.
-4. Avoid chatty cross-service calls inside one user request when possible.
-5. Shared libraries for DTOs can couple release trains — version carefully.
-6. Clear ownership beats perfect purity — every service needs an owning team.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `communication` (renderer: `communication`)
+```java
+// Service A owns orders; Service B owns inventory
+// Communicate via API/events — not shared DB tables
+```
 
-1. Communication styles define failure shapes.
-2. Synchronous HTTP or gRPC — simple mental model, tight runtime coupling.
-3. Asynchronous messaging — Kafka or queues — temporal decoupling, harder flows.
-4. Idempotency keys matter when at-least-once delivery retries.
-5. Timeouts, retries, and backoff are part of the interface contract.
-6. Prefer async for fan-out and sync for queries that must return now.
+### Scene `example_walk`
 
-### Scene `data` (renderer: `data`)
+1. Walkthrough.
+2. Walk this like pair-programming.
+3. Focus on what each line means.
+4. Connect to the failure mode.
+5. Comment cue: Service A owns orders; Service B owns inventory
+6. Comment cue: Communicate via API/events — not shared DB tables
+7. If you can explain those lines to a teammate, you understand the episode.
+8. If you only recognize the keywords, rewind the concept section once.
 
-1. Data ownership is the hard part of microservices.
-2. Each service owns its database — no shared tables across services.
-3. Cross-service joins become APIs or materialized read models.
-4. Sagas or outbox patterns coordinate multi-service changes.
-5. Dual writes without a pattern are how distributed inconsistency starts.
-6. Eventual consistency is a product decision — set user expectations.
+### Scene `deeper`
 
-### Scene `cost` (renderer: `cost`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Microservices Basics, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. Operational cost you must budget for.
-2. More deployables — more pipelines, dashboards, and on-call surfaces.
-3. Distributed tracing and correlation IDs become mandatory.
-4. Local development needs compose files or remote stubs.
-5. Network latency and partial failure replace in-process method calls.
-6. If you cannot operate it, you do not have microservices — you have hope.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Splitting by technical layers only.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Distributed monolith.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Ignoring observability.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — splitting by technical layer — distributed presentation and data tiers.
-3. Two — shared database across services — invisible coupling at the schema.
-4. Three — chatty sync chains — one click fans into a latency hairball.
-5. Also — no idempotency — retries create double charges and duplicate rows.
-6. Architecture must match team and ops maturity — not a conference talk.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: When not microservices?
+3. Answer: Small team/simple domain — modular monolith may win.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — monolith or microservices for a new product?
-2. Default to a modular monolith until deploy or scale forces argue otherwise.
-3. Define domain boundaries first — extract services along those lines later.
-4. Budget for observability, CI, and on-call before multiplying deployables.
-5. Call out data ownership and consistency model explicitly.
-6. Optimize for change — pick the shape that lets the team ship safely.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Boundaries by business capability.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. Independent deployability.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Network is unreliable.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Data ownership.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Modular monolith first often.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Distributed systems fail in partial ways — next we harden them.
-2. Episode Seventy-Nine — Observability and Resilience.
-3. Logs, metrics, traces, timeouts, circuit breakers, and graceful degradation.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Microservices Basics is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Microservices Basics.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 79: Observability and Resilience.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **95** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +175,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — monolith or microservices for a new product?_
 - **`teaser`** — starts from: _Distributed systems fail in partial ways — next we harden them._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

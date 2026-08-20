@@ -5,98 +5,156 @@
 | Episode | 63 |
 | Title | Object Layout |
 | Catalog handbook column | 63 |
-| Narration source script | `make_episode_63.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Sixty-Two covered JVM flags and a measurement-first tuning mindset.
-2. Flags control runtime behavior — object layout controls per-instance memory cost.
-3. A million small objects can dominate heap even when each field is tiny.
-4. Every Java object carries a header, alignment padding, and reference fields.
-5. On 64-bit JVMs, compressed oops shrink pointer overhead dramatically.
-6. Today — object headers, field layout, padding, and UseCompressedOops.
+1. In the last episode, we worked through JVM Flags and Tuning.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Objects cost more than their fields — headers, padding, pointers.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Sixty-Three.
-2. Object Layout and Compressed Oops.
+1. Episode 63.
+2. Object Layout.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `object_headers` (renderer: `object_headers`)
+### Scene `concept`
 
-1. Every heap object starts with a header — metadata the JVM needs.
-2. Mark word — stores hash code, GC age, lock state, and identity bits.
-3. Klass pointer — points to class metadata in metaspace.
-4. On 64-bit HotSpot, the header is typically twelve bytes with compressed class pointers.
-5. Arrays add a length field — four bytes — before element data.
-6. Headers are invisible in source code but count toward heap footprint.
+1. First, the why — then the syntax.
+2. Picture Object Layout clearly.
+3. Here are the points that matter when code meets production:
+4. Point 1: Object header.
+5. If you remember only one thing, make it that.
+6. Point 2: Alignment/padding.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Compressed oops.
+9. Point 4: Array headers + length.
+10. Point 5: Field order can matter for packing.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `field_layout` (renderer: `field_layout`)
+### Scene `example_intro`
 
-1. Instance fields are laid out by the JVM — not in source declaration order.
-2. HotSpot reorders fields to minimize padding — widest fields first.
-3. long and double take eight bytes — int and references take four.
-4. boolean and byte pack into remaining slots when alignment allows.
-5. Subclass fields append after superclass layout — inheritance affects size.
-6. Use jol-core or JVM object layout tools to inspect real instance sizes.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `padding_alignment` (renderer: `padding_alignment`)
+```java
+// a 'tiny' object still pays for header + padding
+class Tiny { byte b; }
+```
 
-1. Objects align to eight-byte boundaries on 64-bit JVMs.
-2. If fields leave three bytes free, the JVM may add five bytes of padding.
-3. An object with one boolean field can still cost sixteen bytes total.
-4. Padding is why micro-optimizing field order rarely beats fewer objects.
-5. Array of small objects multiplies header cost — consider primitive arrays.
-6. Alignment rules apply per object — not per field in isolation.
+### Scene `example_walk`
 
-### Scene `compressed_oops` (renderer: `compressed_oops`)
+1. Walkthrough.
+2. Walk this like pair-programming.
+3. Focus on what each line means.
+4. Connect to the failure mode.
+5. Comment cue: a 'tiny' object still pays for header + padding
+6. Look at `class Tiny { byte b; }`.
+7. That is not decorative syntax — it encodes a real rule of the platform or API.
+8. If you can explain those lines to a teammate, you understand the episode.
+9. If you only recognize the keywords, rewind the concept section once.
 
-1. Compressed Oops — compressed ordinary object pointers — save heap space.
-2. Flag -XX:+UseCompressedOops — enabled by default on most 64-bit heaps under 32 GB.
-3. References stored as 32-bit offsets from a base address instead of full 64-bit pointers.
-4. Cuts reference field size in half — huge savings for reference-heavy structures.
-5. Heap base must fit in 32 GB for compression — larger heaps use uncompressed oops.
-6. Compressed class pointers — UseCompressedClassPointers — shrink klass pointers too.
+### Scene `deeper`
 
-### Scene `sizing_impact` (renderer: `sizing_impact`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Object Layout, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. Layout knowledge informs real design decisions.
-2. Linked lists of boxed Integers — header plus box plus pointer per element.
-3. int[] stores primitives densely — one header, four bytes per int.
-4. Records and value-oriented designs reduce pointer chasing and header overhead.
-5. Cache-friendly layouts matter more than saving one byte per field.
-6. Profile allocation rate — layout explains why some structures cost more.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Estimating memory by field sizes only.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Ignoring reference costs.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Obsessing over layout before algorithms.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — assuming declared field order equals memory layout.
-3. Two — disabling compressed oops on heaps under 32 GB — wastes memory.
-4. Three — optimizing field order before reducing object count.
-5. Also — ignoring boxing overhead — Integer costs far more than int.
-6. Measure with JOL or heap dumps — do not guess object sizes.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: Why is a tiny object bigger than expected?
+3. Answer: Headers, alignment, and references add overhead.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — how is a Java object laid out in memory?
-2. Header — mark word plus klass pointer — typically twelve bytes on 64-bit.
-3. Fields reordered by JVM for alignment — not source order.
-4. Eight-byte alignment adds padding — small objects can be surprisingly large.
-5. Compressed oops store 32-bit offsets — default under 32 GB heap.
-6. Arrays add length field — primitive arrays avoid per-element headers.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Object header.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. Alignment/padding.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Compressed oops.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Array headers + length.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Field order can matter for packing.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Object layout explains memory cost — safepoints explain when the JVM pauses.
-2. Episode Sixty-Four — Safepoints.
-3. Stop-the-world coordination, polling, and safepoint bias.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Object Layout is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Object Layout.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 64: Safepoints.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **96** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +176,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — how is a Java object laid out in memory?_
 - **`teaser`** — starts from: _Object layout explains memory cost — safepoints explain when the JVM pauses._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

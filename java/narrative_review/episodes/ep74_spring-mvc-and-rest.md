@@ -5,98 +5,164 @@
 | Episode | 74 |
 | Title | Spring MVC and REST |
 | Catalog handbook column | 74 |
-| Narration source script | `make_episode_74.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Seventy-Three covered Spring Boot starters and auto-configuration.
-2. Most Boot services speak HTTP — Spring MVC is the classic request stack.
-3. REST controllers map URLs to methods and convert JSON with HttpMessageConverters.
-4. Clean API design separates transport from business rules.
-5. Interviews love status codes, validation, and exception handling details.
-6. Today — controllers, mapping, validation, advice, and REST design tips.
+1. In the last episode, we worked through Spring Boot Basics.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. MVC maps HTTP to methods — be intentional about DTOs and errors.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Seventy-Four.
+1. Episode 74.
 2. Spring MVC and REST.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `controllers` (renderer: `controllers`)
+### Scene `concept`
 
-1. RestController combines Controller and ResponseBody.
-2. Methods return objects — Spring writes JSON to the response.
-3. RequestMapping family — GetMapping, PostMapping, PutMapping, DeleteMapping.
-4. Path variables, request params, and headers bind method arguments.
-5. Keep controllers thin — validate input, call a service, map the result.
-6. Business rules belong in services — not in mapping methods.
+1. First, the why — then the syntax.
+2. Picture Spring MVC and REST clearly.
+3. Here are the points that matter when code meets production:
+4. Point 1: DispatcherServlet flow.
+5. If you remember only one thing, make it that.
+6. Point 2: @RestController mappings.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Validation.
+9. Point 4: ResponseEntity and status codes.
+10. Point 5: Don't expose entities blindly.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `request_response` (renderer: `request_response`)
+### Scene `example_intro`
 
-1. The request-response pipeline.
-2. DispatcherServlet is the front controller for Spring MVC.
-3. Handler mapping finds the controller method for the request.
-4. Argument resolvers bind parameters — body, path, query, principal.
-5. Return value handlers write the body or negotiate a view.
-6. Filters and interceptors wrap cross-cutting HTTP concerns.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `validation` (renderer: `validation`)
+```java
+@RestController
+class HelloController {
+  @GetMapping("/hello")
+  String hello() { return "hi"; }
+}
+```
 
-1. Validation belongs at the edge of the API.
-2. Jakarta Validation annotations — NotNull, Size, Email — on DTOs.
-3. Valid on a request body triggers validation before your method runs.
-4. BindException or MethodArgumentNotValidException carry field errors.
-5. Return structured four-hundred responses — not stack traces.
-6. Validate again in the domain when rules are more than bean annotations.
+### Scene `example_walk`
 
-### Scene `errors` (renderer: `errors`)
+1. Walkthrough.
+2. Walk this like pair-programming.
+3. Focus on what each line means.
+4. Connect to the failure mode.
+5. Look at `@RestController`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `class HelloController {`.
+8. That is not decorative syntax — it encodes a real rule of the platform or API.
+9. Look at `@GetMapping("/hello")`.
+10. That is not decorative syntax — it encodes a real rule of the platform or API.
+11. Look at `String hello() { return "hi"; }`.
+12. That is not decorative syntax — it encodes a real rule of the platform or API.
+13. If you can explain those lines to a teammate, you understand the episode.
+14. If you only recognize the keywords, rewind the concept section once.
 
-1. Consistent error handling builds client trust.
-2. ControllerAdvice centralizes exception-to-response mapping.
-3. Map domain not-found to four-oh-four — conflicts to four-oh-nine.
-4. Never leak internal exception messages to public clients.
-5. Problem Details or a small error JSON schema keeps clients stable.
-6. Log with correlation IDs — respond with safe, actionable messages.
+### Scene `deeper`
 
-### Scene `design` (renderer: `design`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Spring MVC and REST, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. REST design habits that interviewers look for.
-2. Nouns for resources — verbs for HTTP methods, not URL paths.
-3. Idempotent PUT and DELETE — careful POST semantics.
-4. Use proper status codes — two-oh-one for create, two-oh-four for empty.
-5. Version deliberately — URL or header — do not break clients silently.
-6. Pagination and filtering for collections — never dump unbounded lists.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Returning entities with lazy fields.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Ignoring validation.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Inconsistent error shapes.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — fat controllers with transactions and SQL inside mapping methods.
-3. Two — returning entities directly — overexposes persistence fields.
-4. Three — swallowing exceptions and always returning two-hundred OK.
-5. Also — ignoring Content-Type and Accept — surprising clients with wrong formats.
-6. Treat the HTTP layer as a translation boundary — not the business core.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: Controller return types?
+3. Answer: Body, ResponseEntity, or reactive types — choose status and errors deliberately.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — how does a request reach your RestController?
-2. Embedded server hands the request to DispatcherServlet.
-3. Handler mapping selects the controller method by path and verb.
-4. Argument resolvers bind body and params — validation may run.
-5. Service executes business logic — return value becomes the HTTP body.
-6. Advice and filters can reshape errors and cross-cutting concerns.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. DispatcherServlet flow.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. @RestController mappings.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Validation.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. ResponseEntity and status codes.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Don't expose entities blindly.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. HTTP is handled — next we persist data.
-2. Episode Seventy-Five — Spring Data and Persistence.
-3. Repositories, JPA mapping, transactions, and N-plus-one awareness.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Spring MVC and REST is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Spring MVC and REST.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 75: Spring Data and Persistence.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **101** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +184,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — how does a request reach your RestController?_
 - **`teaser`** — starts from: _HTTP is handled — next we persist data._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

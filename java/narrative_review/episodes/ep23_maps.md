@@ -5,98 +5,158 @@
 | Episode | 23 |
 | Title | Maps |
 | Catalog handbook column | 23 |
-| Narration source script | `make_episode_23.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Sets answer membership. Maps answer association.
-2. Given this key — what value belongs with it?
-3. Lookups, caches, indexes, configuration — maps are everywhere.
-4. HashMap is the workhorse. Ordering variants exist for a reason.
-5. Today — Map contracts, null rules, and modern helpers.
-6. Keys find values. Contracts keep them honest.
+1. In the last episode, we worked through Sets.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Maps are the lookup engine of business logic.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Twenty-Three.
-2. Maps — key to value in java.util.
+1. Episode 23.
+2. Maps.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `contract` (renderer: `contract`)
+### Scene `concept`
 
-1. Map is not a Collection — it is its own hierarchy.
-2. Each key maps to at most one value.
-3. put replaces. get returns null when absent — or when the value is null.
-4. Views matter — keySet, values, and entrySet share the underlying map.
-5. Mutating a view mutates the map. That surprise shows up in code reviews.
-6. Model associations. Do not stuff pairs into a list forever.
+1. First, the why — then the syntax.
+2. Picture Maps clearly before edge cases.
+3. Here are the points that matter when code meets production:
+4. Point 1: Keys hash into buckets.
+5. If you remember only one thing, make it that.
+6. Point 2: getOrDefault/computeIfAbsent/merge are workhorses.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: null key/value rules depend on implementation.
+9. Point 4: LinkedHashMap preserves order; TreeMap sorts.
+10. Point 5: Concurrent maps come later for shared mutation.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `hashmap` (renderer: `hashmap`)
+### Scene `example_intro`
 
-1. HashMap is the default map for single-threaded use.
-2. Average constant-time put and get when hashing behaves.
-3. Keys need equals and hashCode — same story as HashSet.
-4. One null key is allowed. Many null values are allowed.
-5. Prefer computeIfAbsent and merge over get-then-put races of logic.
-6. For most application maps, start here.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `variants` (renderer: `variants`)
+```java
+Map<String, Integer> ages = new HashMap<>();
+ages.put("Ada", 36);
+int v = ages.getOrDefault("Ada", 0);
+```
 
-1. Ordering and specialized maps.
-2. LinkedHashMap preserves insertion order — or access order for LRU-style caches.
-3. TreeMap keeps keys sorted — natural order or Comparator.
-4. EnumMap is compact and fast when keys are enum constants.
-5. IdentityHashMap uses reference equality — rare, sharp tool.
-6. Pick the variant that matches your iteration and key domain.
+### Scene `example_walk`
 
-### Scene `nulls` (renderer: `nulls`)
+1. Walkthrough.
+2. I'll walk this like pair-programming.
+3. Focus on the idea each line encodes.
+4. Then connect to the failure mode.
+5. Look at `Map<String, Integer> ages = new HashMap<>();`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `ages.put("Ada", 36);`.
+8. Look at `int v = ages.getOrDefault("Ada", 0);`.
+9. If you can explain those lines to a teammate, you understand the episode.
+10. If you only recognize the keywords, rewind the concept section once.
 
-1. Null rules are implementation-specific.
-2. HashMap tolerates a null key. TreeMap does not.
-3. Hashtable rejects nulls entirely — and brings legacy synchronization.
-4. Never assume null policy from the Map interface alone.
-5. In modern code, ConcurrentHashMap also rejects nulls.
-6. Read the implementation before you lean on null as a signal.
+### Scene `deeper`
 
-### Scene `modern` (renderer: `modern`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Maps, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. Modern Map APIs reduce boilerplate bugs.
-2. getOrDefault avoids null checks for simple fallbacks.
-3. computeIfAbsent builds values lazily and cleanly.
-4. merge combines values with an explicit remapping function.
-5. Map.of and Map.copyOf create unmodifiable maps for safer APIs.
-6. Prefer these helpers over fragile get-then-mutate sequences.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Using containsKey+get instead of compute patterns.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Mutable keys.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Assuming iteration order on HashMap.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — mutable keys whose equals fields change after insertion.
-3. Two — modifying a map while iterating its keySet carelessly.
-4. Three — reaching for Hashtable in new code out of habit.
-5. Also — using null values as a secret third state without documenting it.
-6. Maps amplify clear key design — and punish sloppy identity.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: How HashMap works at high level?
+3. Answer: Hash to buckets, equals to resolve collisions, resize as load grows.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — how does HashMap work, and when TreeMap?
-2. HashMap — hash buckets, equals for collisions, average O(1).
-3. TreeMap — red-black tree, sorted keys, logarithmic ops.
-4. Call out mutable keys and null differences.
-5. Mention LinkedHashMap if they ask about predictable order.
-6. That answer is solid for junior and mid-level interviews.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Keys hash into buckets.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. getOrDefault/computeIfAbsent/merge are workhorses.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. null key/value rules depend on implementation.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. LinkedHashMap preserves order; TreeMap sorts.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Concurrent maps come later for shared mutation.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Associations are clear. Next — waiting lines and two-ended queues.
-2. Episode Twenty-Four — Queues and Deques.
-3. FIFO, stacks, and why ArrayDeque wins often.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Maps is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Maps.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 24: Queues and Deques.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **97** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -119,3 +179,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — how does HashMap work, and when TreeMap?_
 - **`teaser`** — starts from: _Associations are clear. Next — waiting lines and two-ended queues._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

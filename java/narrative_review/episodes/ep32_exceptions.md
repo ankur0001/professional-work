@@ -5,98 +5,163 @@
 | Episode | 32 |
 | Title | Exceptions |
 | Catalog handbook column | 32 |
-| Narration source script | `make_episode_32.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Programs fail. Networks drop. Files vanish. Users type nonsense.
-2. Exceptions are Java way of signaling that something went wrong.
-3. Not every error is a crash — some are expected and recoverable.
-4. Checked exceptions force you to acknowledge risk at compile time.
-5. Unchecked exceptions flag programming bugs and broken assumptions.
-6. Today — how Java models failure, and how to handle it with intent.
+1. In the last episode, we worked through java.time.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Exceptions are control flow for failure — design them like an API.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Thirty-Two.
-2. Exceptions — checked, unchecked, and handling failure.
+1. Episode 32.
+2. Exceptions.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `hierarchy` (renderer: `hierarchy`)
+### Scene `concept`
 
-1. Throwable sits at the root of the error hierarchy.
-2. Error is for serious JVM problems — you rarely catch these.
-3. Exception is what application code usually deals with.
-4. RuntimeException and its subclasses are unchecked.
-5. Everything else under Exception is checked — the compiler enforces handling.
-6. Know the hierarchy before you catch broadly.
+1. First, the why — then the syntax.
+2. Picture Exceptions clearly before edge cases.
+3. Here are the points that matter when code meets production:
+4. Point 1: Checked vs unchecked trade-offs.
+5. If you remember only one thing, make it that.
+6. Point 2: Don't swallow exceptions.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Wrap with context.
+9. Point 4: finally vs try-with-resources.
+10. Point 5: Create meaningful exception types.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `trycatch` (renderer: `trycatch`)
+### Scene `example_intro`
 
-1. try wraps code that might throw.
-2. catch handles a specific exception type — order matters, most specific first.
-3. You can catch multiple types in one block since Java seven.
-4. Handle what you can recover from — log, retry, or return a safe default.
-5. Swallowing exceptions silently is almost always wrong.
-6. A narrow catch beats catch Exception everywhere.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `throws` (renderer: `throws`)
+```java
+try {
+  read();
+} catch (IOException e) {
+  throw new UncheckedIOException(e);
+}
+```
 
-1. throws declares that a method may propagate an exception.
-2. Callers must handle checked exceptions — try-catch or declare throws.
-3. Unchecked exceptions do not require a throws clause.
-4. Document what can go wrong — throws is part of the contract.
-5. Do not use throws to push problems up without a plan.
-6. Sometimes wrapping a checked exception in an unchecked one is cleaner.
+### Scene `example_walk`
 
-### Scene `finally` (renderer: `finally`)
+1. Walkthrough.
+2. I'll walk this like pair-programming.
+3. Focus on the idea each line encodes.
+4. Then connect to the failure mode.
+5. Look at `try {`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `read();`.
+8. Look at `} catch (IOException e) {`.
+9. That is not decorative syntax — it encodes a real rule of the platform or API.
+10. Look at `throw new UncheckedIOException(e);`.
+11. That is not decorative syntax — it encodes a real rule of the platform or API.
+12. If you can explain those lines to a teammate, you understand the episode.
+13. If you only recognize the keywords, rewind the concept section once.
 
-1. finally runs whether the try block succeeds or throws.
-2. Classic use — release resources in a finally block.
-3. Modern code prefers try-with-resources — we cover that next episode.
-4. Do not return from finally — it can mask the real exception.
-5. finally is for cleanup that must happen no matter what.
-6. Keep finally blocks short and predictable.
+### Scene `deeper`
 
-### Scene `custom` (renderer: `custom`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Exceptions, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. Define custom exceptions when domain errors need clear names.
-2. Extend Exception for checked, RuntimeException for unchecked.
-3. Provide meaningful constructors — message, cause, both.
-4. BankAccountOverdrawnException beats a generic IllegalStateException.
-5. Do not create an exception class for every trivial case.
-6. Good exception names read like answers to what went wrong.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Empty catch blocks.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Using exceptions for ordinary control flow.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Losing the cause chain.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — catching Exception or Throwable and doing nothing useful.
-3. Two — using exceptions for normal control flow — they are expensive.
-4. Three — throwing generic RuntimeException without context or cause.
-5. Also — empty catch blocks that hide production bugs.
-6. Fail loudly in development. Handle deliberately in production.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: Checked vs unchecked?
+3. Answer: Checked must be declared/handled; unchecked need not — choose intentionally.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — checked versus unchecked exceptions?
-2. Checked — compiler requires handling or declaring throws.
-3. Unchecked — extends RuntimeException, no compile-time enforcement.
-4. Checked for recoverable conditions callers should know about.
-5. Unchecked for programming errors and broken invariants.
-6. Mention try-with-resources for cleanup — that shows modern Java.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Checked vs unchecked trade-offs.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. Don't swallow exceptions.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Wrap with context.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. finally vs try-with-resources.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Create meaningful exception types.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. You know how to catch failure. Next — how to close resources safely.
-2. Episode Thirty-Three — try-with-resources.
-3. AutoCloseable, suppressed exceptions, and leak-free I/O.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Exceptions is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Exceptions.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 33: try-with-resources.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **100** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +183,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — checked versus unchecked exceptions?_
 - **`teaser`** — starts from: _You know how to catch failure. Next — how to close resources safely._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

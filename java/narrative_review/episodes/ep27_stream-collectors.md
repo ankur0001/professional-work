@@ -5,98 +5,156 @@
 | Episode | 27 |
 | Title | Stream Collectors |
 | Catalog handbook column | 27 |
-| Narration source script | `make_episode_27.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Streams build pipelines. Collectors decide the shape of the answer.
-2. List, Set, Map, string, summary — same stream, different endings.
-3. groupingBy and partitioningBy turn flat data into structure.
-4. Downstream collectors nest work inside each group.
-5. Today — finish pipelines with intent, not afterthoughts.
-6. Collect is not dump. Collect is design.
+1. In the last episode, we worked through Streams Intro.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Collectors turn streams into the structures you actually return.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Twenty-Seven.
-2. Stream Collectors — shaping results.
+1. Episode 27.
+2. Stream Collectors.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `basics` (renderer: `basics`)
+### Scene `concept`
 
-1. Start with the basics in Collectors.
-2. toList and toSet materialize elements.
-3. toMap needs a key function, a value function, and often a merge function.
-4. Duplicate keys without a merge function throw — loudly.
-5. joining builds delimited strings without manual StringBuilder noise.
-6. Pick the collector that matches the type you need next.
+1. First, the why — then the syntax.
+2. Picture Stream Collectors clearly before edge cases.
+3. Here are the points that matter when code meets production:
+4. Point 1: toList/toSet/toMap.
+5. If you remember only one thing, make it that.
+6. Point 2: groupingBy and partitioningBy.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Downstream collectors.
+9. Point 4: toMap merge functions for collisions.
+10. Point 5: Immutable collection collectors.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `grouping` (renderer: `grouping`)
+### Scene `example_intro`
 
-1. groupingBy is the workhorse for classification.
-2. A classifier function produces keys.
-3. By default each key maps to a List of matching elements.
-4. Orders by region. Users by status. Events by day.
-5. You get a Map whose values are groups — ready for reports.
-6. Think pivot table — expressed as a pipeline.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `partition` (renderer: `partition`)
+```java
+Map<String, Long> counts = list.stream()
+  .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
+```
 
-1. partitioningBy is groupingBy for a boolean question.
-2. Predicate true goes one side. False the other.
-3. The result is Map of Boolean to the grouped values.
-4. Active versus inactive. Valid versus invalid. Paid versus unpaid.
-5. Two buckets — when two is exactly the model.
-6. Do not use it when you really needed many keys.
+### Scene `example_walk`
 
-### Scene `downstream` (renderer: `downstream`)
+1. Walkthrough.
+2. I'll walk this like pair-programming.
+3. Focus on the idea each line encodes.
+4. Then connect to the failure mode.
+5. Look at `Map<String, Long> counts = list.stream()`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `.collect(Collectors.groupingBy(s -> s, Collectors.counting()));`.
+8. If you can explain those lines to a teammate, you understand the episode.
+9. If you only recognize the keywords, rewind the concept section once.
 
-1. Downstream collectors avoid second passes.
-2. groupingBy with counting gives sizes per key.
-3. summingInt and averagingDouble summarize in place.
-4. mapping then toSet reshapes each group.
-5. collectingAndThen applies a finisher — like making the map unmodifiable.
-6. Nest the work. Keep the pipeline honest.
+### Scene `deeper`
 
-### Scene `reduce` (renderer: `reduce`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Stream Collectors, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. Beyond grouping — reducing and summarizing.
-2. reducing folds with an identity and an operator.
-3. summarizingInt returns count, sum, min, max, and average together.
-4. teeing runs two collectors and merges their results — Java sixteen and later.
-5. Use summaries when dashboards need several stats at once.
-6. Collectors are a toolbox — learn the shapes, not every overload by heart.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: toMap crashes on duplicate keys without merge.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Huge groupingBy without memory thought.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Collecting twice unnecessarily.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — toMap without a merge function when duplicates exist.
-3. Two — mutating shared accumulators and hoping parallel collect survives.
-4. Three — groupingBy then a manual loop that a downstream collector already covers.
-5. Also — assuming toList is always unmodifiable — know your Java version.
-6. Clear collectors beat clever post-processing.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: groupingBy use case?
+3. Answer: Bucket elements by a classifier into a map of aggregates.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — groupingBy versus partitioningBy?
-2. groupingBy — many keys from a classifier function.
-3. partitioningBy — boolean predicate, always two sides.
-4. Mention downstream collectors for counting or summing inside groups.
-5. Give a domain example — orders by region versus paid versus unpaid.
-6. That answer shows practical stream fluency.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. toList/toSet/toMap.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. groupingBy and partitioningBy.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Downstream collectors.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. toMap merge functions for collisions.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Immutable collection collectors.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Results have shape. Next — expanding elements inside the pipeline.
-2. Episode Twenty-Eight — flatMap and composition.
-3. One-to-many transforms without nested collections mess.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Stream Collectors is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Stream Collectors.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 28: flatMap & Composition.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **96** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +176,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — groupingBy versus partitioningBy?_
 - **`teaser`** — starts from: _Results have shape. Next — expanding elements inside the pipeline._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

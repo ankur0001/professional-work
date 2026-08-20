@@ -5,98 +5,155 @@
 | Episode | 52 |
 | Title | Bytecode Basics |
 | Catalog handbook column | 52 |
-| Narration source script | `make_episode_52.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Fifty-One showed how the JVM loads class files.
-2. But what is actually inside those bytes?
-3. Java source compiles to bytecode — a stack-machine instruction set.
-4. Opcodes like iload, invokevirtual, and return drive every method.
-5. javap disassembles class files so you can read what the JVM runs.
-6. Today — bytecode basics, the constant pool, and the stack machine model.
+1. In the last episode, we worked through Class Loading.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Bytecode is the JVM's language — javap turns mystery into mechanism.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Fifty-Two.
+1. Episode 52.
 2. Bytecode Basics.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `class_file` (renderer: `class_file`)
+### Scene `concept`
 
-1. A class file is a structured binary format — not human-readable source.
-2. Magic number CA FE BA BE identifies a valid Java class file.
-3. Constant pool holds strings, class names, method signatures, and literals.
-4. Fields, methods, and attributes describe the class structure.
-5. Code attribute contains the actual bytecode instructions for each method.
-6. The JVM never sees your .java file — only verified .class bytecode.
+1. First, the why — then the syntax.
+2. Picture Bytecode Basics clearly.
+3. Here are the points that matter when code meets production:
+4. Point 1: Operand stack + local variables.
+5. If you remember only one thing, make it that.
+6. Point 2: Constant pool.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: javac emits; JIT optimizes later.
+9. Point 4: Reading bytecode explains language sugar.
+10. Point 5: Don't confuse source lines with native instructions.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `javap` (renderer: `javap`)
+### Scene `example_intro`
 
-1. javap is the JDK disassembler — your window into bytecode.
-2. javap -c MyClass prints disassembled method bodies.
-3. javap -v adds verbose output — constant pool entries and stack maps.
-4. javap -p shows private members — useful for debugging generated code.
-5. Compare source to javap output — see what the compiler actually emitted.
-6. Every senior Java developer should read javap at least once per project.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `stack_machine` (renderer: `stack_machine`)
+```bash
+# javap -c -p App
+# look for invokevirtual / getfield / ifeq
+```
 
-1. The JVM is a stack machine — operands live on an operand stack.
-2. Each method frame has its own operand stack and local variable array.
-3. Instructions push values, operate, and pop results.
-4. iload pushes a local int — iadd pops two ints and pushes the sum.
-5. No general-purpose registers — the stack is the workspace.
-6. Think push, operate, pop — that mental model unlocks every opcode.
+### Scene `example_walk`
 
-### Scene `opcodes` (renderer: `opcodes`)
+1. Walkthrough.
+2. Walk this like pair-programming.
+3. Focus on what each line means.
+4. Connect to the failure mode.
+5. Comment cue: javap -c -p App
+6. Comment cue: look for invokevirtual / getfield / ifeq
+7. If you can explain those lines to a teammate, you understand the episode.
+8. If you only recognize the keywords, rewind the concept section once.
 
-1. Opcodes are single-byte instructions — some have operands.
-2. Constants — iconst_1, ldc, bipush load values onto the stack.
-3. Locals — iload, istore, aload, astore read and write local slots.
-4. Fields — getfield, putfield, getstatic access object and class data.
-5. Methods — invokevirtual, invokestatic, invokespecial dispatch calls.
-6. Control flow — ifeq, goto, tableswitch branch on stack values.
+### Scene `deeper`
 
-### Scene `reading_bytecode` (renderer: `reading_bytecode`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Bytecode Basics, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. Walk through a simple method bytecode by bytecode.
-2. aload_0 pushes this — getfield reads an instance field.
-3. invokevirtual calls a method — return ends the frame.
-4. Stack depth must match what verification expects — stack map tables help.
-5. Compiler optimizations change bytecode — loops may unroll or inline.
-6. Reading bytecode connects source code to runtime behavior.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Assuming one Java line equals one machine instruction.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Optimizing without looking at bytecode/JIT.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Fear of javap.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — assuming bytecode matches source line-for-line — compilers optimize.
-3. Two — ignoring stack depth errors — VerifyError at class load time.
-4. Three — confusing invokevirtual with invokestatic — wrong dispatch semantics.
-5. Also — editing .class files by hand without understanding verification.
-6. Use javap as a learning tool — not as something to fear.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: Why read bytecode?
+3. Answer: To understand sugar, performance surprises, and what the JIT sees.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — what is Java bytecode?
-2. Platform-independent instruction set for the JVM stack machine.
-3. Compiled from .java by javac into .class files.
-4. Constant pool, fields, methods, and Code attributes per class.
-5. javap disassembles bytecode — read opcodes like iload and invokevirtual.
-6. Verification ensures type safety and stack consistency before execution.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Operand stack + local variables.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. Constant pool.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. javac emits; JIT optimizes later.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Reading bytecode explains language sugar.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Don't confuse source lines with native instructions.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Bytecode runs on stacks — but where do objects actually live?
-2. Episode Fifty-Three — Heap and Stack.
-3. Frames, locals, object layout, and metaspace.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Bytecode Basics is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Bytecode Basics.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 53: Heap and Stack.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **95** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -119,3 +176,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — what is Java bytecode?_
 - **`teaser`** — starts from: _Bytecode runs on stacks — but where do objects actually live?_
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

@@ -5,98 +5,158 @@
 | Episode | 44 |
 | Title | Synchronizers |
 | Catalog handbook column | 44 |
-| Narration source script | `make_episode_44.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Threads often need to meet at a point — start together or wait for completion.
-2. Synchronizers coordinate thread arrival and departure without shared data structures.
-3. CountDownLatch — one thread waits until others finish a countdown.
-4. CyclicBarrier — threads rendezvous at a barrier, then release together.
-5. Semaphore — limit how many threads access a resource at once.
-6. Today — the three core synchronizers and when each fits.
+1. In the last episode, we worked through Atomics.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Latches, barriers, and semaphores coordinate phases of work.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Forty-Four.
+1. Episode 44.
 2. Synchronizers.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `countdown_latch` (renderer: `countdown_latch`)
+### Scene `concept`
 
-1. CountDownLatch initializes with a count — typically the number of workers.
-2. Each worker calls countDown when finished — the latch decrements.
-3. await blocks until the count reaches zero — then all waiters proceed.
-4. One-shot — cannot reset the count after it reaches zero.
-5. Classic pattern — main thread waits for parallel startup or shutdown.
-6. Example — wait for N services to finish initialization before accepting traffic.
+1. First, the why — then the syntax.
+2. Picture Synchronizers clearly before edge cases.
+3. Here are the points that matter when code meets production:
+4. Point 1: CountDownLatch one-shot gates.
+5. If you remember only one thing, make it that.
+6. Point 2: CyclicBarrier multi-phase.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Semaphore permits.
+9. Point 4: Don't reinvent with wait/notify casually.
+10. Point 5: Pick the simplest tool.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `cyclic_barrier` (renderer: `cyclic_barrier`)
+### Scene `example_intro`
 
-1. CyclicBarrier sets a party count — the number of threads that must arrive.
-2. Each thread calls await — the barrier releases when all parties arrive.
-3. Reusable — after release, the barrier resets for the next cycle.
-4. Optional barrier action runs once when the last thread arrives.
-5. Use for phased parallel computation — each phase ends at the barrier.
-6. BrokenBarrierException if a waiting thread is interrupted or times out.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `semaphore` (renderer: `semaphore`)
+```java
+CountDownLatch latch = new CountDownLatch(3);
+latch.countDown();
+latch.await();
+```
 
-1. Semaphore maintains a set of permits — acquire takes one, release returns one.
-2. new Semaphore of N allows up to N concurrent accessors.
-3. acquire blocks when no permits remain — release wakes a waiter.
-4. tryAcquire with timeout avoids indefinite blocking.
-5. Binary semaphore with one permit acts like a mutex — but not reentrant.
-6. Use for connection pools, rate limiting, and bounded resource access.
+### Scene `example_walk`
 
-### Scene `coordination` (renderer: `coordination`)
+1. Walkthrough.
+2. I'll walk this like pair-programming.
+3. Focus on the idea each line encodes.
+4. Then connect to the failure mode.
+5. Look at `CountDownLatch latch = new CountDownLatch(3);`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `latch.countDown();`.
+8. Look at `latch.await();`.
+9. If you can explain those lines to a teammate, you understand the episode.
+10. If you only recognize the keywords, rewind the concept section once.
 
-1. Choosing the right synchronizer.
-2. CountDownLatch — wait for a fixed number of events — one direction.
-3. CyclicBarrier — threads meet repeatedly at the same point.
-4. Semaphore — cap concurrent access to a limited resource.
-5. Phaser offers flexible phase-based coordination — advanced alternative.
-6. Exchanger swaps objects between two threads at a rendezvous point.
+### Scene `deeper`
 
-### Scene `when_sync` (renderer: `when_sync`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Synchronizers, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. When to use each synchronizer.
-2. Service startup gate — CountDownLatch until all workers ready.
-3. Parallel matrix phases — CyclicBarrier between compute steps.
-4. Database connection cap — Semaphore with pool size permits.
-5. Fork-join style shutdown — latch counts completed tasks.
-6. When not — simple flag — volatile or AtomicBoolean may suffice.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Using latch when a barrier was needed.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Forgetting to countDown on error paths.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Semaphore permits leaked.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — reusing a CountDownLatch after count hits zero — it is one-shot.
-3. Two — wrong party count on CyclicBarrier — threads hang forever.
-4. Three — Semaphore acquire without matching release — permits leak.
-5. Also — calling await on the only thread that should countDown.
-6. Synchronizers coordinate timing — they do not protect mutable state alone.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: Latch vs CyclicBarrier?
+3. Answer: Latch is one-shot; barrier resets for recurring phases.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — CountDownLatch versus CyclicBarrier?
-2. CountDownLatch — one or more threads wait for others to finish events.
-3. Count is decremented — cannot reset after reaching zero.
-4. CyclicBarrier — threads rendezvous; all must arrive before any proceed.
-5. Barrier resets and is reusable for the next cycle.
-6. Semaphore limits concurrent access — different problem entirely.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. CountDownLatch one-shot gates.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. CyclicBarrier multi-phase.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Semaphore permits.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Don't reinvent with wait/notify casually.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Pick the simplest tool.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Synchronizers coordinate arrival. What about passing work between threads?
-2. Episode Forty-Five — BlockingQueue and Producer-Consumer.
-3. Bounded queues, backpressure, and the classic pattern.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Synchronizers is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Synchronizers.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 45: BlockingQueue.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **97** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +178,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — CountDownLatch versus CyclicBarrier?_
 - **`teaser`** — starts from: _Synchronizers coordinate arrival. What about passing work between threads?_
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

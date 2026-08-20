@@ -5,98 +5,160 @@
 | Episode | 22 |
 | Title | Sets |
 | Catalog handbook column | 22 |
-| Narration source script | `make_episode_22.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Lists keep order and duplicates. Sets answer a different question.
-2. Is this value already in the collection — yes or no?
-3. Uniqueness is the product. Membership is the verb.
-4. HashSet. LinkedHashSet. TreeSet. Same contract — different trade-offs.
-5. Today we pick the right Set for the job.
-6. One of each — with rules you must respect.
+1. In the last episode, we worked through Lists.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Set means uniqueness — and uniqueness means equals/hashCode discipline.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Twenty-Two.
-2. Sets — uniqueness in java.util.
+1. Episode 22.
+2. Sets.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `contract` (renderer: `contract`)
+### Scene `concept`
 
-1. Set is a Collection that forbids duplicates.
-2. Whether two elements collide is decided by equals — not by ==.
-3. There is no get by index. You ask contains.
-4. Iteration order depends on the implementation you chose.
-5. Prefer the Set interface in APIs until performance forces a concrete type.
-6. Model membership. Do not pretend it is a list.
+1. First, the why — then the syntax.
+2. Picture Sets clearly before edge cases.
+3. Here are the points that matter when code meets production:
+4. Point 1: Uniqueness via equals/hashCode.
+5. If you remember only one thing, make it that.
+6. Point 2: HashSet/LinkedHashSet/TreeSet trade-offs.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Sorted order needs consistent comparators.
+9. Point 4: Don't mutate fields used in hashing while in a set.
+10. Point 5: Set algebra shows up in real domain rules.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `hashset` (renderer: `hashset`)
+### Scene `example_intro`
 
-1. HashSet is the default for most uniqueness needs.
-2. It uses hashing for average constant-time add, remove, and contains.
-3. Do not rely on iteration order — it is not a feature.
-4. Your element type must honor equals and hashCode together.
-5. Mutable fields that participate in equals make sets unstable.
-6. For fast membership tests, start with HashSet.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `ordered` (renderer: `ordered`)
+```java
+Set<String> set = new HashSet<>();
+set.add("a");
+set.add("a");
+System.out.println(set.size());
+```
 
-1. When order matters, reach for a sibling.
-2. LinkedHashSet preserves insertion order while keeping hash performance.
-3. TreeSet keeps elements sorted — natural order or a Comparator.
-4. Tree operations are logarithmic — fine, until you pretend they are free.
-5. Need sorted ranges or first and last — TreeSet earns its keep.
-6. Need stable encounter order — LinkedHashSet is cleaner than sorting later.
+### Scene `example_walk`
 
-### Scene `equals` (renderer: `equals`)
+1. Walkthrough.
+2. I'll walk this like pair-programming.
+3. Focus on the idea each line encodes.
+4. Then connect to the failure mode.
+5. Look at `Set<String> set = new HashSet<>();`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `set.add("a");`.
+8. Look at `set.add("a");`.
+9. Look at `System.out.println(set.size());`.
+10. If you can explain those lines to a teammate, you understand the episode.
+11. If you only recognize the keywords, rewind the concept section once.
 
-1. The silent dependency — equals and hashCode.
-2. If two objects are equal, their hash codes must match.
-3. Break that contract and HashSet will lose or duplicate your data.
-4. TreeSet uses compareTo or a Comparator — consistency with equals still matters.
-5. Immutable value types make safer set elements.
-6. Identity is a design decision. Sets enforce it ruthlessly.
+### Scene `deeper`
 
-### Scene `choose` (renderer: `choose`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Sets, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. How to choose.
-2. Pure membership, order irrelevant — HashSet.
-3. Need predictable iteration in insertion order — LinkedHashSet.
-4. Need sorted traversal or range queries — TreeSet.
-5. Set.of gives an unmodifiable set — great for constants.
-6. Choose for access pattern, not for how advanced the class name sounds.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Broken equals/hashCode pairs.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Expecting HashSet to be sorted.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Mutating keys after insert.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — putting mutable objects in a HashSet, then mutating their keys.
-3. Two — implementing equals without hashCode — or the reverse.
-4. Three — using TreeSet with types that have no natural ordering.
-5. Also — expecting HashSet iteration to stay stable across JVMs.
-6. Sets are simple. Contracts are not optional.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: HashSet vs TreeSet?
+3. Answer: HashSet is unordered typical O(1); TreeSet is sorted O(log n).
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — HashSet versus LinkedHashSet versus TreeSet?
-2. HashSet — fastest typical membership, no order guarantees.
-3. LinkedHashSet — hash performance with insertion-order iteration.
-4. TreeSet — sorted, logarithmic, needs ordering rules.
-5. Mention equals and hashCode — interviewers listen for that.
-6. That answer shows judgment, not memorization.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Uniqueness via equals/hashCode.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. HashSet/LinkedHashSet/TreeSet trade-offs.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Sorted order needs consistent comparators.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Don't mutate fields used in hashing while in a set.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Set algebra shows up in real domain rules.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Uniqueness is clear. Next — associating keys with values.
-2. Episode Twenty-Three — Maps.
-3. HashMap realities, ordering variants, and null rules.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Sets is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Sets.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 23: Maps.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **98** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -119,3 +181,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — HashSet versus LinkedHashSet versus TreeSet?_
 - **`teaser`** — starts from: _Uniqueness is clear. Next — associating keys with values._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

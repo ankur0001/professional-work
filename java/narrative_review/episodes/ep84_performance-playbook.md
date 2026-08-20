@@ -5,101 +5,164 @@
 | Episode | 84 |
 | Title | Performance Playbook |
 | Catalog handbook column | S2 |
-| Narration source script | `make_episode_84.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Eighty-Three covered event-driven flows and the transactional outbox.
-2. Performance work without a method becomes random tuning theater.
-3. Users feel latency percentiles — not average CPU on a quiet afternoon.
-4. Java gives you JFR, async profilers, GC logs, and Micrometer — use them.
-5. Fix the hottest path first — then re-measure.
-6. Today — a performance playbook from symptom to verified fix.
+1. In the last episode, we worked through Event-Driven Architecture.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Performance is a loop: measure, hypothesize, change one thing, remeasure.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Eighty-Four.
+1. Episode 84.
 2. Performance Playbook.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `measure` (renderer: `measure`)
+### Scene `concept`
 
-1. Start with measurement — never with a hunch.
-2. Define the SLO — p95 latency, error rate, throughput under load.
-3. Reproduce with realistic data volumes and concurrency.
-4. Capture RED metrics — rate, errors, duration — per endpoint.
-5. Add traces for the slow requests — see where time goes.
-6. Without a baseline, you cannot claim an improvement.
+1. First, the why — then the syntax.
+2. Picture Performance Playbook clearly.
+3. Here are the points that matter when code meets production:
+4. Point 1: Define SLOs/percentiles.
+5. If you remember only one thing, make it that.
+6. Point 2: JFR/profilers.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Allocation and locks.
+9. Point 4: Avoid premature micro-opts.
+10. Point 5: Load tests that resemble reality.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `find` (renderer: `find`)
+### Scene `example_intro`
 
-1. Find the bottleneck before changing code.
-2. CPU-bound — profile methods — hot loops, JSON, crypto, regex.
-3. IO-bound — watch DB time, remote calls, thread pool waits.
-4. Allocation pressure — GC logs and allocation profilers tell the story.
-5. Lock contention — thread dumps and JFR synchronization events.
-6. One primary bottleneck at a time — resist shotgun refactors.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `fix_app` (renderer: `fix_app`)
+```java
+// 1) capture baseline percentiles
+// 2) profile under load
+// 3) change one variable
+// 4) remeasure
+```
 
-1. Application-level fixes that often win.
-2. Cut N-plus-one queries — fetch joins or DTO projections.
-3. Cache correct hot reads — with invalidation from Episode Eighty-One.
-4. Shrink payloads — less JSON, fewer columns, pagination.
-5. Reuse connections and HTTP clients — connection setup is not free.
-6. Move heavy work off the request thread — async or queues when product allows.
+### Scene `example_walk`
 
-### Scene `fix_runtime` (renderer: `fix_runtime`)
+1. Walkthrough.
+2. Walk this like pair-programming.
+3. Focus on what each line means.
+4. Connect to the failure mode.
+5. Comment cue: 1) capture baseline percentiles
+6. Comment cue: 2) profile under load
+7. Comment cue: 3) change one variable
+8. Comment cue: 4) remeasure
+9. If you can explain those lines to a teammate, you understand the episode.
+10. If you only recognize the keywords, rewind the concept section once.
 
-1. Runtime and platform levers.
-2. Size heaps and pick collectors from GC evidence — Episode Sixty-Two.
-3. Tune thread and pool sizes to measured concurrency — not folklore.
-4. Warm up JIT before load tests that claim peak performance.
-5. Watch container CPU throttling — limits can fake a slow app.
-6. Native images and AOT help startup — steady-state still needs profiling.
+### Scene `deeper`
 
-### Scene `verify` (renderer: `verify`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Performance Playbook, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. Verify like a scientist.
-2. One change, then re-run the same load scenario.
-3. Compare p95 and p99 — not only averages.
-4. Watch error rate — a faster endpoint that five-hundreds is not a win.
-5. Keep a short performance note — what changed, what improved.
-6. Automate a smoke performance check in CI for critical paths when feasible.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Tuning without baseline.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Optimizing cold paths.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Load tests that aren't production-like.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — optimizing before measuring — classic premature work.
-3. Two — load testing with tiny datasets — missing real index and GC behavior.
-4. Three — celebrating mean latency while p99 burns.
-5. Also — changing five knobs at once — no attribution.
-6. Method beats folklore — every time.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: First performance question?
+3. Answer: Which percentile/error budget fails under what load?
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — an endpoint's p99 doubled after a release — what do you do?
-2. Confirm blast radius — which endpoint, since when, which region.
-3. Compare metrics and traces before versus after the deploy.
-4. Profile or pull JFR — classify CPU, IO, GC, or lock wait.
-5. Fix the top offender — re-measure under the same load.
-6. Ship with a rollback plan — performance incidents need escape hatches.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Define SLOs/percentiles.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. JFR/profilers.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Allocation and locks.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Avoid premature micro-opts.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Load tests that resemble reality.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Speed is one production virtue — readiness is the checklist.
-2. Episode Eighty-Five — Production Readiness Capstone.
-3. The Season Two finale — ship checklist and staff-level wrap.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Performance Playbook is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Performance Playbook.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 85: Production Readiness Capstone.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **97** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
 - **Episode 84** is a **Season 2 production-systems bonus** track. It is **not** one of the handbook’s 80 lessons.
 - Topic framing for the video: **Performance Playbook** (continuity after Episode 80’s architecture interview wrap).
 - Narration was **original written for the video** (scene-synced beats), not copied verbatim from the handbook.
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

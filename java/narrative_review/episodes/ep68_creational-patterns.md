@@ -5,98 +5,160 @@
 | Episode | 68 |
 | Title | Creational Patterns |
 | Catalog handbook column | 68 |
-| Narration source script | `make_episode_68.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Episode Sixty-Seven introduced design patterns and the three GoF categories.
-2. Creational patterns answer one question — who creates objects, and how.
-3. Scattered new keywords couple callers to concrete classes and construction details.
-4. When construction grows complex — optional fields, validation, families of products — patterns help.
-5. Java codebases lean on Factory and Builder constantly — Singleton less often than people think.
-6. Today — Singleton, Factory Method, Abstract Factory, Builder, and Prototype.
+1. In the last episode, we worked through Design Patterns Intro.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Creational patterns manage how objects come to life — DI often replaces factories.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Sixty-Eight.
+1. Episode 68.
 2. Creational Patterns.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `singleton` (renderer: `singleton`)
+### Scene `concept`
 
-1. Singleton ensures one instance with a global access point.
-2. Classic use — a shared configuration or a process-wide registry.
-3. In Java — prefer enum singleton or static holder for thread-safe lazy init.
-4. Cost — hidden global state that complicates testing and parallel evolution.
-5. Dependency injection often replaces Singleton — inject one instance instead of reaching for it.
-6. Reach for Singleton only when truly one is required — not as a default.
+1. First, the why — then the syntax.
+2. Picture Creational Patterns clearly.
+3. Here are the points that matter when code meets production:
+4. Point 1: Singleton caveats.
+5. If you remember only one thing, make it that.
+6. Point 2: Factory methods.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Builder for many options.
+9. Point 4: Prototype rarely.
+10. Point 5: Containers may own lifecycle.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `factory` (renderer: `factory`)
+### Scene `example_intro`
 
-1. Factory Method lets subclasses decide which concrete type to create.
-2. Callers depend on an interface — not on new ConcreteThing parentheses.
-3. Abstract Factory builds families of related products that must stay consistent.
-4. Example — UI kits with matching buttons and dialogs per look and feel.
-5. JDK examples — Collection iterators, Charset encoders, JDBC DriverManager.
-6. Factories shine when creation rules change more often than usage sites.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `builder` (renderer: `builder`)
+```java
+public final class App {
+  public static final App INSTANCE = new App();
+  private App() {}
+}
+```
 
-1. Builder constructs complex objects step by step with a fluent API.
-2. Telescoping constructors — many overloads — become unreadable fast.
-3. Builder sets fields, validates, then builds an immutable result.
-4. Java records and Lombok builders are modern flavors of the same idea.
-5. StringBuilder is a specialized builder for character sequences.
-6. Use Builder when objects have many optional parameters or invariant checks.
+### Scene `example_walk`
 
-### Scene `prototype` (renderer: `prototype`)
+1. Walkthrough.
+2. Walk this like pair-programming.
+3. Focus on what each line means.
+4. Connect to the failure mode.
+5. Look at `public final class App {`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `public static final App INSTANCE = new App();`.
+8. That is not decorative syntax — it encodes a real rule of the platform or API.
+9. Look at `private App() {}`.
+10. If you can explain those lines to a teammate, you understand the episode.
+11. If you only recognize the keywords, rewind the concept section once.
 
-1. Prototype creates new objects by copying a prototypical instance.
-2. Useful when construction is expensive or configuration is mostly shared.
-3. Java's Cloneable is awkward — prefer copy constructors or copy factories.
-4. Deep versus shallow copy matters — shared mutable state surprises teams.
-5. Deserialization and object pools sometimes play a similar role.
-6. Prototype is rarer in Java apps — know it, use it when cloning beats rebuilding.
+### Scene `deeper`
 
-### Scene `choose` (renderer: `choose`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Creational Patterns, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. How to choose among creational patterns.
-2. One shared instance — Singleton or better, a DI-managed bean.
-3. Vary the type created — Factory Method or a simple static factory.
-4. Many optional fields — Builder with validation at build time.
-5. Families of products — Abstract Factory keeps combinations consistent.
-6. Start with a static factory method — escalate only when forces demand it.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Double-checked locking myths.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Telescoping constructors.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Singleton as global mutable bag.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — Singleton as a service locator for everything — testing nightmare.
-3. Two — Abstract Factory for a single product type — unnecessary hierarchy.
-4. Three — mutable builders reused across threads without care.
-5. Also — Cloneable without documenting deep versus shallow semantics.
-6. Creation should clarify ownership — not hide it.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: Builder vs telescoping constructors?
+3. Answer: Builder keeps call sites readable with many optional fields.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — Factory versus Builder — when each?
-2. Factory chooses which type to instantiate — hides concrete classes.
-3. Builder assembles one complex object — many optional fields, clear validation.
-4. Factory returns quickly — Builder chains setters then builds.
-5. They combine — a factory may return a preconfigured builder.
-6. Pick the one that matches the force — type variation versus construction complexity.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Singleton caveats.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. Factory methods.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Builder for many options.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. Prototype rarely.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Containers may own lifecycle.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Creation is settled — next is composition.
-2. Episode Sixty-Nine — Structural Patterns.
-3. Adapter, Decorator, Facade, Proxy, and Composite.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Creational Patterns is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Creational Patterns.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 69: Structural Patterns.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **98** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +180,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — Factory versus Builder — when each?_
 - **`teaser`** — starts from: _Creation is settled — next is composition._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.

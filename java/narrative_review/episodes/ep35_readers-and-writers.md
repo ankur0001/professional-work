@@ -5,98 +5,157 @@
 | Episode | 35 |
 | Title | Readers and Writers |
 | Catalog handbook column | 35 |
-| Narration source script | `make_episode_35.py` |
-| Spoken form | Short documentary beats (Chatterbox / Kokoro render) |
+| Narration source script | Expanded review narration (4–15 min target) |
+| Spoken form | Conversational documentary beats + walkthrough example |
+| Runtime target | **4–15 minutes** (aim ~8–12) |
 
 ## Full narration (spoken beats)
 
-### Scene `hook` (renderer: `hook`)
+### Scene `hook`
 
-1. Bytes are raw. Text is encoded — characters mapped to bytes by a charset.
-2. Reader and Writer are the character-stream abstractions in java.io.
-3. InputStreamReader bridges bytes to characters. OutputStreamWriter the reverse.
-4. Always specify a charset — never rely on the platform default silently.
-5. BufferedReader adds readLine — the workhorse for line-oriented text.
-6. Today — reading and writing text the classic, still-relevant way.
+1. In the last episode, we worked through Files and NIO.2.
+2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
+3. Text is not bytes — Readers/Writers force you to confront encoding.
+4. I am not going to machine-gun definitions at you.
+5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
+6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
+7. The floor is four minutes, but we are not doing the thin headline version anymore.
 
-### Scene `title` (renderer: `title`)
+### Scene `title`
 
-1. Episode Thirty-Five.
-2. Readers, Writers, and Text I/O.
+1. Episode 35.
+2. Readers and Writers.
+3. By the end, you should explain this out loud without reading notes.
+4. If you can teach it, you own it.
 
-### Scene `reader` (renderer: `reader`)
+### Scene `concept`
 
-1. Reader reads characters — abstract base for text input.
-2. InputStreamReader wraps an InputStream with a Charset decoder.
-3. FileReader is a convenience shortcut — but hides charset choice.
-4. Prefer Files.newBufferedReader with StandardCharsets.UTF_8.
-5. read returns an int — minus one means end of stream.
-6. Character streams handle encoding — byte streams do not.
+1. First, the why — then the syntax.
+2. Picture Readers and Writers clearly before edge cases.
+3. Here are the points that matter when code meets production:
+4. Point 1: Character streams vs byte streams.
+5. If you remember only one thing, make it that.
+6. Point 2: Buffering is not optional for performance.
+7. This is usually where tutorials stop — we will not.
+8. Point 3: Specify Charset.
+9. Point 4: InputStreamReader bridges bytes to chars.
+10. Point 5: Flush/close semantics matter.
+11. That last point is often the senior-level differentiator in interviews.
+12. Notice how these points connect: mechanism, usage, and failure mode.
+13. Hold them in your head while we look at code.
 
-### Scene `buffered` (renderer: `buffered`)
+### Scene `example_intro`
 
-1. BufferedReader wraps any Reader with an internal buffer.
-2. readLine returns one line without the newline — null at end of file.
-3. lines since Java eight returns a Stream of lines — lazy and closeable.
-4. Buffering reduces system calls — essential for file and network reads.
-5. Process line by line for log files and CSV — not readAll at once.
-6. Always use try-with-resources with BufferedReader.
+1. Example time. Do not skim.
+2. Every line maps to something we just said.
+3. If you need to, pause and retype it yourself after the walkthrough.
 
-### Scene `printwriter` (renderer: `printwriter`)
+```java
+try (var w = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
+  w.write("line\n");
+}
+```
 
-1. PrintWriter is a character-output wrapper with print and println.
-2. It can auto-flush on println — useful for interactive output.
-3. Wrap a FileWriter or OutputStreamWriter with explicit charset.
-4. Files.newBufferedWriter is the NIO convenience — UTF eight default.
-5. printf-style formatting is available but String.format is often clearer.
-6. Flush before close when downstream consumers need immediate data.
+### Scene `example_walk`
 
-### Scene `files` (renderer: `files`)
+1. Walkthrough.
+2. I'll walk this like pair-programming.
+3. Focus on the idea each line encodes.
+4. Then connect to the failure mode.
+5. Look at `try (var w = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {`.
+6. That is not decorative syntax — it encodes a real rule of the platform or API.
+7. Look at `w.write("line\n");`.
+8. If you can explain those lines to a teammate, you understand the episode.
+9. If you only recognize the keywords, rewind the concept section once.
 
-1. Files.readAllLines loads every line into a List — fine for small files.
-2. Files.lines returns a Stream — better for large text with lazy processing.
-3. write with a charset writes a collection of lines with a newline separator.
-4. Combine NIO Path with classic Reader and Writer when you need flexibility.
-5. For config and data files, UTF eight is the modern default.
-6. Pick the API level that matches file size and processing style.
+### Scene `deeper`
 
-### Scene `charset` (renderer: `charset`)
+1. One level deeper — the part short videos skip.
+2. Ask: what happens under load? Under failure? Under bad input?
+3. With Readers and Writers, mastery is not more jargon.
+4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
+5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
+6. So when you adopt a feature from this episode, adopt the operational story too.
+7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
 
-1. A charset maps characters to bytes — UTF eight is the universal default.
-2. StandardCharsets.UTF_8 is a constant — never rely on defaultCharset blindly.
-3. InputStreamReader and OutputStreamWriter require an explicit Charset.
-4. Mojibake happens when reader and writer disagree on encoding.
-5. Files methods accept a Charset parameter — pass it every time.
-6. Explicit encoding prevents bugs that only appear in production.
+### Scene `mistakes`
 
-### Scene `mistakes` (renderer: `mistakes`)
+1. Reality check — common mistakes.
+2. Mistake 1: Reading text as raw bytes.
+3. I have seen this in real code reviews — including my own older code.
+4. Mistake 2: Ignoring charset.
+5. I have seen this in real code reviews — including my own older code.
+6. Mistake 3: Unbuffered tiny writes in a loop.
+7. I have seen this in real code reviews — including my own older code.
+8. If you recognize one, good. Recognition is the first control.
 
-1. Three common mistakes.
-2. One — using platform default charset — breaks across environments.
-3. Two — readAllLines on huge files — memory explosion.
-4. Three — forgetting to close Reader or Writer — handle leaks.
-5. Also — mixing byte and character APIs on the same stream.
-6. Explicit charset, buffering, and try-with-resources every time.
+### Scene `interview`
 
-### Scene `interview` (renderer: `interview`)
+1. Interview time. Speak like someone who has shipped.
+2. Question: Reader vs InputStream?
+3. Answer: Text vs binary.
+4. Then add one trade-off or failure-mode sentence.
+5. That extra sentence is what interviewers remember.
+6. Practice once without looking at the screen.
 
-1. Interview question — Reader versus InputStream?
-2. InputStream reads raw bytes — Reader reads decoded characters.
-3. Bridge with InputStreamReader and a specified Charset.
-4. BufferedReader adds readLine and buffering for efficiency.
-5. Mention UTF eight and try-with-resources.
-6. That answer shows text I/O literacy.
+### Scene `amplify`
 
-### Scene `teaser` (renderer: `teaser`)
+1. Let me press on point 1 a bit harder.
+2. Character streams vs byte streams.
+3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+4. If you cannot explain the failure mode, you do not own the feature yet.
+5. Let me press on point 2 a bit harder.
+6. Buffering is not optional for performance.
+7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+8. If you cannot explain the failure mode, you do not own the feature yet.
+9. Let me press on point 3 a bit harder.
+10. Specify Charset.
+11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+12. If you cannot explain the failure mode, you do not own the feature yet.
+13. Let me press on point 4 a bit harder.
+14. InputStreamReader bridges bytes to chars.
+15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+16. If you cannot explain the failure mode, you do not own the feature yet.
+17. Let me press on point 5 a bit harder.
+18. Flush/close semantics matter.
+19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
+20. If you cannot explain the failure mode, you do not own the feature yet.
 
-1. Text I/O is sorted. Next — doing work in parallel.
-2. Episode Thirty-Six — Threads Introduction.
-3. Runnable, thread lifecycle, and why concurrency is hard.
-4. See you there.
+### Scene `handbook_spine`
 
-_Total beats: **54** across **10** scenes._
+1. How this maps to the reference handbook mindset:
+2. The handbook teaches concept, internal working, mistakes, and interview questions.
+3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
+4. So if a section felt familiar, good: that means the curriculum spine is intact.
+
+### Scene `practice`
+
+1. Mini practice before you go.
+2. Pause the video and do this without looking:
+3. 1) Say out loud what Readers and Writers is for in one sentence.
+4. 2) Write the example from memory — approximate is fine.
+5. 3) Name one mistake from this episode and how you would catch it in review.
+6. That three-step drill turns watching into learning.
+### Scene `summary`
+
+1. Landing the plane.
+2. Today was Readers and Writers.
+3. You got a mental model, a worked example, traps, and an interview answer.
+4. Pause and retype the example from memory if you can — that beats passive rewatching.
+5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+
+### Scene `teaser`
+
+1. Next episode keeps the story moving.
+2. Episode 36: Threads Intro.
+3. It builds directly on today’s mental model.
+4. If something clicked, stick around. I will see you there.
+
+_Total beats: **96** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
 
 ## Source attribution (reference document)
+
+(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
@@ -118,3 +177,5 @@ Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** —
 - **`mistakes`** — starts from: _Three common mistakes._
 - **`interview`** — starts from: _Interview question — Reader versus InputStream?_
 - **`teaser`** — starts from: _Text I/O is sorted. Next — doing work in parallel._
+
+- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.
