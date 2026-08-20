@@ -1,7 +1,10 @@
 # The Java Story — Narrative Review Pack
 
-One markdown file per rendered video with the **full spoken narration** and an
-explanation of **what was taken from the reference handbook**.
+One markdown file per video with **expanded conversational narration** (target **4–15 minutes**,
+aim ~8–12) plus an explanation of **what was taken from the reference handbook**.
+
+After review feedback on Episode 1, all scripts were deepened: more explanation, mentor tone,
+worked examples/code where useful, mistakes, and interview wraps — not the ultra-short headline cut.
 
 ## Reference document
 
@@ -111,6 +114,7 @@ explanation of **what was taken from the reference handbook**.
 ## Related docs
 
 - [`SOURCE_MAPPING.md`](SOURCE_MAPPING.md) — handbook ↔ episode mapping rules
+- [`EXPANSION_STYLE.md`](EXPANSION_STYLE.md) — expansion voice / structure rules
 - [`reference/EPISODE_CATALOG.md`](reference/EPISODE_CATALOG.md)
 - [`reference/handbook_toc_recovered.md`](reference/handbook_toc_recovered.md)
 - [`reference/handbook_lessons_1-12_excerpts.md`](reference/handbook_lessons_1-12_excerpts.md)

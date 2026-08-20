@@ -28,8 +28,8 @@ The full HTML is **not in git**. Recovered fragments live in [`reference/`](refe
 | Standard examples & interview angles | Exact sentence order |
 | Phase structure (language → collections → concurrency → JVM → Spring) | 12–15 minute lesson length |
 
-Videos compress each lesson into a **4–5 minute** documentary with continuity teasers between episodes.
+Videos target a **4–15 minute** conversational documentary (floor 4 minutes, soft aim ~8–12, ceiling ~15) with continuity teasers between episodes. Narration in this pack was **expanded** after review feedback that the first short-cut scripts were too thin.
 
 ## Episode 01 special case
 
-Episode 01 also has a long-form production bible (`java-episode-01-production-bible.md` on the Episode 01 PR branch). The **shipped short cut** narration (review file `ep01_*.md`) is the condensed SCENES list actually rendered to YouTube length; the bible is the earlier cinematic draft based on handbook Lesson 1 (*Introduction to Java*).
+Episode 01 also has a long-form production bible (`java-episode-01-production-bible.md` on the Episode 01 PR branch). The review file `ep01_*.md` is now the **expanded conversational narration** (history + bytecode/JVM + walked-through `HelloWorld`), based on handbook Lesson 1 (*Introduction to Java*), not the ultra-short headline cut.
