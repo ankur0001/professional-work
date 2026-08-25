@@ -5,31 +5,20 @@
 | Episode | 07 |
 | Title | Methods |
 | Catalog handbook column | 7 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — a calculation that wants a name
+By now we can store information, compute with it, and choose different paths through a program. That is enough to make `main` do useful work. It is also enough to paint ourselves into a corner.
 
-In the previous episodes we learned how to store information in variables, compute with operators, and choose paths with control flow. That is enough to write a working `main` method that does everything in one place.
+Suppose our application needs to calculate the total price of an order. We could place the whole calculation directly inside `main()`. For one screen, on one afternoon, that can feel fine. Then checkout needs the same math. The invoice preview needs it. A refund path needs it too. Suddenly the same formula lives in three places.
 
-But let's start with a problem.
+So a natural question appears: if the behavior is the same, why are we rewriting it by hand?
 
-Suppose our application needs to calculate the total price of an order. We could place all of the calculation directly inside `main()`. That might work for one calculation, but what happens when we need the same calculation in several places — checkout, invoice preview, and a refund path?
+Instead of copying the logic, we can give that behavior a name and place it inside a method. A method is a named piece of behavior. You give it inputs, it does work, and it can return a result. Variables remember nouns. Methods package verbs.
 
-Instead of copying the same logic repeatedly, we can give that behavior a name and place it inside a **method**.
-
-A method is simply a named piece of behavior. You give it inputs, it does work, and it can return a result. That sounds small. It is one of the most important design tools in Java.
-
-### Why methods exist
-
-Without methods, programs grow by copy and paste. Every duplicated block becomes a place where a bug can be fixed in one spot and forgotten in another. Methods let us say: this behavior has a name, a clear contract, and a single place to improve.
-
-In simple language: a method packages a verb. Variables remember nouns. Methods do work with those nouns.
-
-### Example 1 — the smallest useful method
+Here is the smallest version that still teaches the idea:
 
 ```java
 double calculateTotal(double price, double tax) {
@@ -37,15 +26,9 @@ double calculateTotal(double price, double tax) {
 }
 ```
 
-Why is this code here? Because it turns an unnamed expression into a reusable idea.
+Why show this now? Because an abstract definition of "method" is easy to nod at and hard to use. This example turns an unnamed expression into a reusable idea. `calculateTotal` is the name of the behavior. `price` and `tax` are the inputs. The body computes `price + tax` and `return`s that value. The method does not print. It does not talk to a database. It answers one question: given a price and a tax amount, what is the total?
 
-Walk through it. `double calculateTotal(...)` declares a method that returns a `double`. The name `calculateTotal` tells a reader what the behavior is for. The parameters `price` and `tax` are the inputs. Inside the body, we compute `price + tax` and `return` that value to the caller.
-
-The method does not print anything. It does not talk to a database. It answers one question: given a price and a tax amount, what is the total?
-
-### Calling the method
-
-A method definition by itself does nothing until something calls it.
+But a method definition by itself does nothing until something calls it. That raises the next question: how does the program actually use this named behavior?
 
 ```java
 public class OrderMath {
@@ -60,15 +43,11 @@ public class OrderMath {
 }
 ```
 
-In `main`, we call `calculateTotal(100.0, 18.0)`. Java binds `100.0` to `price` and `18.0` to `tax`, runs the body, and returns `118.0`. That returned value is stored in `total`, then printed.
+In `main`, we call `calculateTotal(100.0, 18.0)`. Java binds `100.0` to `price` and `18.0` to `tax`, runs the body, and returns `118.0`. That returned value is stored in `total` and then printed. The payoff is already visible: if the tax rule changes, we edit one method instead of hunting through every copy of the formula.
 
-Notice the payoff already: if the tax rule changes, we edit one method instead of hunting through every copy of the formula.
+Once calling feels clear, learners usually ask a deeper question — sometimes out loud, sometimes only as confusion later: if I change a parameter inside the method, does the caller's variable change?
 
-### Important detail — Java is pass-by-value
-
-This is a common misunderstanding, so we will face it directly.
-
-For primitives, the method receives a copy of the value. Changing the parameter inside the method does not change the caller's variable.
+For primitives, no. The method receives a copy of the value.
 
 ```java
 static void tryChange(int n) {
@@ -82,13 +61,9 @@ public static void main(String[] args) {
 }
 ```
 
-For object references, the method still receives a copy — a copy of the reference. That means the method can mutate the same object the caller sees, but it cannot make the caller's variable point to a different object by reassigning the parameter.
+`x` remains `1`, because `n` was only a copy. For object references, Java is still pass-by-value — but the value being copied is the reference. So a method can mutate the same object the caller sees, yet it cannot make the caller's variable point somewhere else by reassigning the parameter. If an interview asks whether Java is pass-by-reference, the precise answer is: no. Pass-by-value. For objects, the copied value is the reference.
 
-If someone asks in an interview, "Is Java pass-by-reference?" the precise answer is: no. Java is pass-by-value. For objects, the value being copied is the reference.
-
-### Example 2 — a more practical checkout fragment
-
-Let's evolve the example toward something you might see in a small shop application.
+Now that the mechanism is honest, let's evolve the example toward something closer to a shop.
 
 ```java
 static double calculateTotal(double price, double taxRate) {
@@ -104,11 +79,9 @@ static void printReceipt(String item, double price, double taxRate) {
 }
 ```
 
-Now `calculateTotal` accepts a tax **rate** instead of a precomputed tax amount. It also guards against invalid input. `printReceipt` uses the calculation and focuses on presentation. Each method has one job. That separation makes testing and reuse easier.
+Notice what changed and why. `calculateTotal` now accepts a tax rate instead of a precomputed tax amount, and it refuses invalid input. `printReceipt` uses the calculation and focuses on presentation. Each method has one job. That separation is not style for its own sake — it is how testing and reuse stay possible as requirements grow.
 
-### Example 3 — a common mistake: doing too much in one method
-
-What if we skip method design and put everything in `main`?
+What if we skip methods and keep everything in `main`?
 
 ```java
 public static void main(String[] args) {
@@ -116,17 +89,13 @@ public static void main(String[] args) {
     double taxRate = 0.18;
     double total = price + (price * taxRate);
     System.out.println("Shirt => " + total);
-    // later, same formula again for another item...
+    // later, the same formula again for another item...
 }
 ```
 
-This works for a demo. Then requirements grow. Discount rules appear. Receipt formatting changes. Refunds need the same math. The formula gets copied, then copied with a tiny difference, then nobody is sure which copy is correct.
+This works for a demo. Then discounts appear. Receipt formatting changes. Refunds need the same math. The formula gets copied, then copied with a tiny difference, then nobody is sure which copy is correct. The method is not ceremony. It is how behavior stays coherent as the program grows.
 
-The method is not ceremony. It is how we keep behavior coherent as the program grows.
-
-### Overloading — same name, different parameter lists
-
-Java allows multiple methods with the same name if their parameter lists differ. That is overloading.
+There is one more pressure that appears once methods become natural: sometimes several closely related operations deserve the same verb. Java allows overloading — multiple methods with the same name and different parameter lists.
 
 ```java
 static double calculateTotal(double price, double taxRate) { /* ... */ }
@@ -137,20 +106,16 @@ static double calculateTotal(double price, double taxRate, double discount) {
 }
 ```
 
-The compiler chooses which method to call based on the arguments you pass. Overloading is useful when several closely related operations deserve the same verb. It becomes confusing when the overloads secretly do unrelated things.
+The compiler chooses which method to call based on the arguments. Overloading helps when the operations are truly the same idea. It becomes noise when the overloads secretly do unrelated things.
 
-### Connecting the thread
+So let's reconnect the chain. We started with duplicated order math and asked why we were rewriting the same behavior. Methods gave that behavior a name and a contract. Calling showed how values move in and results move out. Pass-by-value explained what "inputs" really mean. A more practical checkout fragment showed responsibilities splitting cleanly. Skipping methods showed the maintenance trap. Overloading showed how related forms of the same verb can coexist.
 
-Methods give behavior a name, a contract, and a place to live. We saw a tiny calculation, a safer practical version, the pass-by-value rule, and the failure mode of endless copy-paste in `main`.
+Once we can name behavior, another need becomes obvious: we often need many values under one name, accessible by position — a list of prices, a list of scores, a list of ids. Copying `price1`, `price2`, `price3` into separate variables is the same kind of trap we just escaped with methods.
 
-Next we need a way to store many values under one name and access them by position. That is the road into arrays — and later into collections.
+That is the natural door into Episode Eight: arrays.
 
-That is Episode Eight.
+## Source attribution
 
-## Source attribution (reference document)
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 7 (*Methods*).
 
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary handbook lesson:** Lesson **7** — *Methods*.
-- **How content was used:** Topic spine (reuse, signatures, return values, pass-by-value, overloading). Rewritten as descriptive instructor prose with evolving examples (`calculateTotal` → practical checkout → mistake), matching the course style guide.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
+Narration technique: duplicated-logic situation → “why rewrite?” → method as answer → call site → pass-by-value question → practical evolution → what-if no methods → overloading as related pressure → next natural problem (many values / arrays). Continuity-checked transitions.
