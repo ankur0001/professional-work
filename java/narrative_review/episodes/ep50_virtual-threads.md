@@ -5,50 +5,75 @@
 | Episode | 50 |
 | Title | Virtual Threads |
 | Catalog handbook column | 50 |
-| Narration source script | Expanded review narration (4–15 min target) |
-| Spoken form | Conversational documentary beats + walkthrough example |
-| Runtime target | **4–15 minutes** (aim ~8–12) |
+| Narration source script | Descriptive instructor narration (4–15 min) |
+| Spoken form | Connected explanatory prose with walked-through examples |
+| Runtime target | **4–15 minutes** (aim ~10–12) |
 
-## Full narration (spoken beats)
+## Full narration
 
-### Scene `hook`
+### Opening — start with a problem
 
-1. In the last episode, we worked through Deadlocks.
-2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
-3. Virtual threads make the thread-per-request style scalable again for blocking IO.
-4. I am not going to machine-gun definitions at you.
-5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
-6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
-7. The floor is four minutes, but we are not doing the thin headline version anymore.
+In the previous episode, we worked through **Deadlocks**. That gave us a piece of the platform. Today we need the next piece: **Virtual Threads**.
 
-### Scene `title`
+We are continuing The Java Story, and today's challenge is Virtual Threads. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
 
-1. Episode 50.
-2. Virtual Threads.
-3. By the end, you should explain this out loud without reading notes.
-4. If you can teach it, you own it.
+Virtual threads make the thread-per-request style scalable again for blocking IO.
 
-### Scene `concept`
+I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
 
-1. First, the why — then the syntax.
-2. Picture Virtual Threads clearly before edge cases.
-3. Here are the points that matter when code meets production:
-4. Point 1: Cheap to create many.
-5. If you remember only one thing, make it that.
-6. Point 2: Don't pool them like platform threads.
-7. This is usually where tutorials stop — we will not.
-8. Point 3: Watch pinning cases.
-9. Point 4: Great with Blocking IO + structured concurrency.
-10. Point 5: CPU-bound work still needs bounding.
-11. That last point is often the senior-level differentiator in interviews.
-12. Notice how these points connect: mechanism, usage, and failure mode.
-13. Hold them in your head while we look at code.
+### Why this exists
 
-### Scene `example_intro`
+In simple language, virtual threads is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
 
-1. Example time. Do not skim.
-2. Every line maps to something we just said.
-3. If you need to, pause and retype it yourself after the walkthrough.
+A helpful picture: Picture Virtual Threads clearly before edge cases.
+
+Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
+
+### Building the idea step by step
+
+#### Step 1
+
+Now consider this teaching point: Cheap to create many.
+
+This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 2
+
+Now consider this teaching point: Don't pool them like platform threads.
+
+Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 3
+
+Now consider this teaching point: Watch pinning cases.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 4
+
+Now consider this teaching point: Great with Blocking IO + structured concurrency.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 5
+
+Now consider this teaching point: CPU-bound work still needs bounding.
+
+This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+### Example 1 — the smallest useful illustration
+
+Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
 
 ```java
 try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {
@@ -56,126 +81,92 @@ try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {
 }
 ```
 
-### Scene `example_walk`
+Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
 
-1. Walkthrough.
-2. I'll walk this like pair-programming.
-3. Focus on the idea each line encodes.
-4. Then connect to the failure mode.
-5. Look at `try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {`.
-6. That is not decorative syntax — it encodes a real rule of the platform or API.
-7. Look at `exec.submit(() -> handle(req));`.
-8. If you can explain those lines to a teammate, you understand the episode.
-9. If you only recognize the keywords, rewind the concept section once.
+I'll walk this like pair-programming.
 
-### Scene `deeper`
+Focus on the idea each line encodes.
 
-1. One level deeper — the part short videos skip.
-2. Ask: what happens under load? Under failure? Under bad input?
-3. With Virtual Threads, mastery is not more jargon.
-4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
-5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
-6. So when you adopt a feature from this episode, adopt the operational story too.
-7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
+Then connect to the failure mode.
 
-### Scene `mistakes`
+Look at `try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {`.
 
-1. Reality check — common mistakes.
-2. Mistake 1: Pooling virtual threads unnecessarily.
-3. I have seen this in real code reviews — including my own older code.
-4. Mistake 2: Pinning in hot synchronized/native sections without care.
-5. I have seen this in real code reviews — including my own older code.
-6. Mistake 3: Assuming they speed up CPU-bound math.
-7. I have seen this in real code reviews — including my own older code.
-8. If you recognize one, good. Recognition is the first control.
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-### Scene `interview`
+Look at `exec.submit(() -> handle(req));`.
 
-1. Interview time. Speak like someone who has shipped.
-2. Question: Virtual vs platform thread?
-3. Answer: Virtual threads are scheduled onto fewer carriers — cheap for lots of blocking tasks.
-4. Then add one trade-off or failure-mode sentence.
-5. That extra sentence is what interviewers remember.
-6. Practice once without looking at the screen.
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-### Scene `amplify`
+After this example, you should be able to point to the code and explain what problem each important line is solving.
 
-1. Let me press on point 1 a bit harder.
-2. Cheap to create many.
-3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-4. If you cannot explain the failure mode, you do not own the feature yet.
-5. Let me press on point 2 a bit harder.
-6. Don't pool them like platform threads.
-7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-8. If you cannot explain the failure mode, you do not own the feature yet.
-9. Let me press on point 3 a bit harder.
-10. Watch pinning cases.
-11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-12. If you cannot explain the failure mode, you do not own the feature yet.
-13. Let me press on point 4 a bit harder.
-14. Great with Blocking IO + structured concurrency.
-15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-16. If you cannot explain the failure mode, you do not own the feature yet.
-17. Let me press on point 5 a bit harder.
-18. CPU-bound work still needs bounding.
-19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-20. If you cannot explain the failure mode, you do not own the feature yet.
+### Example 2 — make it more realistic
 
-### Scene `handbook_spine`
+The first example isolates the concept. Real applications rarely stop there. In a practical setting, Virtual Threads usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
 
-1. How this maps to the reference handbook mindset:
-2. The handbook teaches concept, internal working, mistakes, and interview questions.
-3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
-4. So if a section felt familiar, good: that means the curriculum spine is intact.
+So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
 
-### Scene `practice`
+A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
 
-1. Mini practice before you go.
-2. Pause the video and do this without looking:
-3. 1) Say out loud what Virtual Threads is for in one sentence.
-4. 2) Write the example from memory — approximate is fine.
-5. 3) Name one mistake from this episode and how you would catch it in review.
-6. That three-step drill turns watching into learning.
-### Scene `summary`
+When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
 
-1. Landing the plane.
-2. Today was Virtual Threads.
-3. You got a mental model, a worked example, traps, and an interview answer.
-4. Pause and retype the example from memory if you can — that beats passive rewatching.
-5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+### What if we skip this approach?
 
-### Scene `teaser`
+Important concepts become memorable when we see the failure mode without them.
 
-1. Next episode keeps the story moving.
-2. Episode 51: Class Loading.
-3. It builds directly on today’s mental model.
-4. If something clicked, stick around. I will see you there.
+For example, consider this common mistake: Pooling virtual threads unnecessarily.
 
-_Total beats: **96** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
+That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+
+This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+
+### Example 3 — a common misunderstanding
+
+**Misunderstanding 1:** Pooling virtual threads unnecessarily.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 2:** Pinning in hot synchronized/native sections without care.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 3:** Assuming they speed up CPU-bound math.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+
+### Interview-style checkpoint
+
+Question: Virtual vs platform thread?
+
+Answer in spoken form: Virtual threads are scheduled onto fewer carriers — cheap for lots of blocking tasks.
+
+Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+
+### Connecting the thread
+
+We came from **Deadlocks**. That set up a need. **Virtual Threads** is one of Java's answers to that need.
+
+You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+
+### Looking ahead
+
+Once this is solid, a new challenge appears. That challenge leads us to **Class Loading**.
+
+We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
 
 ## Source attribution (reference document)
 
-(reference document)
-
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
-- **Primary handbook lesson:** Lesson **50** — *Virtual Threads*.
-- **Series catalog:** Episode 50 ↔ handbook lesson 50 — *Virtual Threads*.
-- **How content was used:** The handbook provided the **topic outline and teaching points**. Spoken lines were **rewritten** into short documentary beats matched to motion-graphics scenes (per user guidance: own narration synced to presentation; handbook as reference, not a script to read aloud).
+- **Primary curriculum mapping:** Episode 50 / **Virtual Threads** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
+- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
+- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
 
-- Full handbook HTML is **not checked into git** (original upload was ephemeral). Attribution for this episode is by **lesson title / topic** from the recovered TOC and the series catalog.
+### Teaching points drawn from the topic bank
 
-### Scene ↔ curriculum intent
-
-- **`hook`** — starts from: _Episode Forty-Nine showed how platform threads deadlock under bad lock order._
-- **`title`** — starts from: _Episode Fifty._
-- **`project_loom`** — starts from: _Project Loom reimagined threads without rewriting your Java code._
-- **`virtual_vs_platform`** — starts from: _Platform thread — one-to-one with an OS thread._
-- **`pinning`** — starts from: _Pinning — when a virtual thread cannot unmount from its carrier._
-- **`structured_concurrency`** — starts from: _Structured concurrency — scope owns child tasks, cancels on failure._
-- **`when_to_use`** — starts from: _When virtual threads shine._
-- **`mistakes`** — starts from: _Three common mistakes._
-- **`interview`** — starts from: _Interview question — virtual threads versus platform threads?_
-- **`teaser`** — starts from: _Threads run code — but where does that code come from?_
-
-- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.
+- Cheap to create many.
+- Don't pool them like platform threads.
+- Watch pinning cases.
+- Great with Blocking IO + structured concurrency.
+- CPU-bound work still needs bounding.

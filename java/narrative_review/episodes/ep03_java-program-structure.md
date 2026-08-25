@@ -5,225 +5,176 @@
 | Episode | 03 |
 | Title | Java Program Structure |
 | Catalog handbook column | 3 |
-| Narration source script | Expanded review narration (4–15 min target) |
-| Spoken form | Conversational documentary beats + walkthrough code |
-| Runtime target | **4–15 minutes** (aim ~8–12) |
+| Narration source script | Descriptive instructor narration (4–15 min) |
+| Spoken form | Connected explanatory prose with walked-through examples |
+| Runtime target | **4–15 minutes** (aim ~10–12) |
 
-## Full narration (spoken beats)
+## Full narration
 
-### Scene `hook` (renderer: `hook`)
+### Opening — start with a problem
 
-1. Episode Two named the platform layers — JDK, JRE, JVM.
-2. Now open any Java file in your editor.
-3. Every line has a job — package, imports, class, fields, methods, statements.
-4. Structure is not decoration.
-5. It decides how code is found, compiled, loaded, tested, scanned by frameworks, and owned by teams.
-6. Today we read a Java program like a map — slowly, line by line.
+In the previous episode, we worked through **JDK, JRE, and JVM**. That gave us a piece of the platform. Today we need the next piece: **Java Program Structure**.
 
-### Scene `title` (renderer: `title`)
+You want to run a program, but Java refuses until the file, class, package, and entry point agree with each other.
 
-1. Episode Three.
-2. Java Program Structure — packages, classes, and the entry point.
-3. By the end you'll see hierarchy, access, and runtime identity in one picture.
+If you don't know where main lives or why public classes match filenames, every later lesson feels cursed.
 
-### Scene `anatomy` (renderer: `anatomy`)
+I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
 
-1. Here is the shape Java expects.
-2. At the top — optional package declaration. That is your namespace on disk and in bytecode.
-3. Then imports — shortcuts to types defined elsewhere.
-4. A top-level type — usually a public class. One public class per file, filename must match.
-5. Inside the class — fields for state, constructors to create valid objects, methods for behavior, nested types when needed.
-6. Below that — blocks and statements inside methods.
-7. Think tree: package, then type, then members, then statements.
-8. Tools — compilers, IDEs, Spring — all assume this hierarchy.
+### Why this exists
 
-### Scene `hello` (renderer: `hello`)
+In simple language, java program structure is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
 
-1. Walk a classic program — slowly, because every piece maps to a real rule.
+### Building the idea step by step
+
+#### Step 1
+
+Now consider this teaching point: A .java file is a compilation unit; one public top-level class must match the filename.
+
+This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 2
+
+Now consider this teaching point: Packages are namespaces that map to directories.
+
+Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 3
+
+Now consider this teaching point: main(String[] args) is the classic launcher entry point.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 4
+
+Now consider this teaching point: Imports bring types into scope; classpath/module path finds classes.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 5
+
+Now consider this teaching point: Structure is not paperwork — it is how the compiler and JVM find your code.
+
+This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+### Example 1 — the smallest useful illustration
+
+Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+
 ```java
-package com.example.app;
+package com.example.demo;
 
-public class HelloWorld {
+public class App {
     public static void main(String[] args) {
-        System.out.println("Hello, World!");
+        System.out.println("args length = " + args.length);
     }
 }
 ```
 
-2. Line one: package com.example.app — this type's fully qualified name starts here.
-3. Folders under src/main/java should mirror that path — com/example/app/HelloWorld.java.
-4. public class HelloWorld — the public class name and filename must match. Java is case-sensitive.
-5. public static void main(String[] args) — the JVM entry point. public so the launcher sees it. static so it runs without constructing an object first.
-6. String[] args — command-line arguments as an array of strings.
-7. System.out.println — one statement, terminated by semicolon, printing a line to standard output.
-8. Tiny file. Four layers of structure. One runnable program.
+Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
 
-### Scene `access` (renderer: `access`)
+I'll walk this example like we're pair-programming.
 
-1. Access is part of structure — not a later topic.
-2. public — visible everywhere. Use for intentional API surface.
-3. No modifier — package-private. Same package only. Perfect for internal collaborators.
-4. private — only this class. Default for fields.
-5. protected — package plus subclasses — we'll deepen that in Episode Eleven.
-6. Good structure hides what should not leak — and keeps public APIs small.
-7. If everything is public, you have no boundary — only hope.
+Focus on the idea each line encodes — not memorizing syntax trivia.
 
-### Scene `packages` (renderer: `packages`)
+Then we'll connect it to the production failure mode.
 
-1. In real services, packages mirror ownership.
-2. api — controllers, DTOs, public HTTP contracts.
-3. application — use-case orchestration.
-4. domain — business rules and entities.
-5. infrastructure — databases, messaging, external adapters.
-6. Dependency arrows should point inward — domain should not import JDBC types.
-7. Flat util packages with two hundred classes erase ownership — and make cyclic imports inevitable.
-8. Structure expresses who owns what — and what must not depend on what.
+Look at `package com.example.demo;`.
 
-### Scene `flow` (renderer: `flow`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Follow runtime with structure in mind.
-2. Load class by fully qualified name. Verify bytecode. Prepare static fields. Run static initializers. Construct objects. Invoke methods.
-3. Your package and class names become the identity the classloader loads.
-4. com.example.orders.Order and com.other.orders.Order are different types — even if both are called Order.
-5. Class identity is name plus classloader — matters in app servers, plugins, and Spring devtools.
-6. Static fields live with class metadata. Instance fields live in heap objects. Locals live in stack frames.
-7. Structure you write becomes layout and lifecycle at runtime — indirectly but reliably.
+Look at `public class App {`.
 
-### Scene `deeper` (renderer: `deeper`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Go one level deeper — domain example with validation in the constructor.
-```java
-package com.example.orders.domain;
+Look at `public static void main(String[] args) {`.
 
-public final class Order {
-    private final String id;
-    private final long amountInCents;
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-    public Order(String id, long amountInCents) {
-        if (amountInCents < 0) {
-            throw new IllegalArgumentException("amount must be non-negative");
-        }
-        this.id = id;
-        this.amountInCents = amountInCents;
-    }
+Look at `System.out.println("args length = " + args.length);`.
 
-    public boolean isHighValue() {
-        return amountInCents >= 100_00;
-    }
-}
-```
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-2. private final fields — state encapsulated, reassignment blocked on the reference.
-3. Constructor validates amountInCents — invalid objects cannot exist.
-4. isHighValue encodes a domain rule next to the data it protects — better than scattered comparisons in controllers.
-5. This is structure serving design — not ceremony.
-6. Spring Boot later scans from your main class package downward — root package choice is architectural.
+After this example, you should be able to point to the code and explain what problem each important line is solving.
 
-### Scene `imports` (renderer: `imports`)
+### Example 2 — make it more realistic
 
-1. One more structural piece — imports.
-2. import java.util.List brings a type into scope without fully qualifying every use.
-3. Static imports exist for constants and static methods — use sparingly.
-4. Star imports — import java.util.* — save typing but hide origin in reviews.
-5. Most teams prefer explicit imports — IDE manages them anyway.
-6. Imports are compile-time convenience. Runtime identity is always fully qualified.
+The first example isolates the concept. Real applications rarely stop there. In a practical setting, Java Program Structure usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
 
-### Scene `blocks` (renderer: `blocks`)
+So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
 
-1. Static initializer block — static { ... } — runs once when class loaded.
-2. Instance initializer block — { ... } — runs before constructor body every new.
-3. Use static blocks sparingly — hard to test, hide I/O — prefer static factory methods.
-4. Single-class demos skip package — production code always declares package.
-5. Multiple top-level classes in one file — only one public, rest package-private — rare style.
-6. Text blocks for multi-line strings in main — JSON fixtures in tutorials — Java 15+.
+A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
 
-### Scene `mistakes` (renderer: `mistakes`)
+When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
 
-1. Three common mistakes.
-2. One — every class in one giant package. Ownership and test boundaries disappear.
-3. Two — public mutable fields — encapsulation dies, invariants impossible.
-4. Three — burying @SpringBootApplication too deep so component scanning misses half your beans.
-5. Also — hiding I/O inside constructors — hard to test, surprising side effects on new.
-6. Fix structure early — refactors across package boundaries hurt later.
+### What if we skip this approach?
 
-### Scene `interview` (renderer: `interview`)
+Important concepts become memorable when we see the failure mode without them.
 
-1. Interview question — why do packages matter?
-2. Namespacing — avoid class name collisions.
-3. Access control — package-private collaboration.
-4. Ownership — teams and modules align to packages.
-5. Framework scanning — Spring Boot starts from the application class package.
-6. Add — class identity is fully qualified name plus defining classloader.
-7. That answer connects syntax to architecture — interviewers notice.
+For example, consider this common mistake: Public class name does not match filename.
 
-### Scene `spring_boot` (renderer: `spring_boot`)
+That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
 
-1. Spring Boot @SpringBootApplication combines configuration, component scan, auto-configuration.
-2. Main class package defines scan root — com.example.orders pulls in com.example.orders.* beans.
-3. Moving a @Service to com.example.other without moving main — bean may never register.
-4. Multiple modules in one repo — each may have own main — only one bootstraps per process.
-5. Tests use @SpringBootTest — loads context — slow because structure and classpath matter.
-6. Slice tests — @WebMvcTest — load smaller vertical slice — faster feedback on structure choices.
+This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
 
-### Scene `connect` (renderer: `connect`)
+### Example 3 — a common misunderstanding
 
-1. Variables and types next — fields and parameters in this structure get concrete types.
-2. Access modifiers episode revisits visibility we previewed today.
-3. Packages episode zooms into namespace we declared at top of every file.
+**Misunderstanding 1:** Public class name does not match filename.
 
-### Scene `summary` (renderer: `summary`)
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
 
-1. Let's land the plane.
-2. Java programs organize as packages, types, members, and statements.
-3. Filename matches public class. main is the conventional entry.
-4. Access modifiers encode boundaries. Package layout encodes ownership.
-5. Runtime loads by fully qualified names — structure is not cosmetic.
-6. You can read a Java file as a map now — not a wall of keywords.
+**Misunderstanding 2:** Package declaration does not match folders.
 
-### Scene `teaser` (renderer: `teaser`)
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
 
-1. You can read the skeleton. Next — what lives inside those fields and methods.
-2. Episode Four — Variables and Data Types.
-3. Primitives, references, money traps, and memory shape.
-4. See you there.
-_Total beats: expanded for ~8–12 minute conversational delivery (well above the 4-minute floor; under the 15-minute ceiling)._
+**Misunderstanding 3:** Assuming the working directory alone finds classes without classpath.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+
+### Interview-style checkpoint
+
+Question: What must be true about a public top-level class and its file?
+
+Answer in spoken form: Filename must match the public class name exactly (case-sensitive) and end with .java.
+
+Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+
+### Connecting the thread
+
+We came from **JDK, JRE, and JVM**. That set up a need. **Java Program Structure** is one of Java's answers to that need.
+
+You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+
+### Looking ahead
+
+Once this is solid, a new challenge appears. That challenge leads us to **Variables and Data Types**.
+
+We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
 
 ## Source attribution (reference document)
 
-(reference document)
-
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
-- **Primary handbook lesson:** Lesson **3** — *Java Program Structure*.
-- **Series catalog:** Episode 03 ↔ handbook lesson 3 — *Java Program Structure*.
-- **How content was used:** The handbook provided the **topic outline and teaching points**. Spoken lines were **rewritten** into short documentary beats matched to motion-graphics scenes (per user guidance: own narration synced to presentation; handbook as reference, not a script to read aloud).
+- **Primary curriculum mapping:** Episode 03 / **Java Program Structure** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
+- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
+- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
 
-- **Narration expansion:** Spoken lines expanded for **4–15 minute** conversational runtime; handbook still used as topic reference.
+### Teaching points drawn from the topic bank
 
-### Handbook concepts reused (from recovered Lesson 3 excerpt)
-
-- A Java program is organized into packages, types, fields, methods, constructors, blocks, and statements. Structure is not cosmetic; it affects access control, class loading, dependency boundaries, testability, modularity, and framework scanning.
-- Java's structure was built around classes from the beginning. Over time, the platform added annotations, generics, enums, lambdas, records, sealed classes, and modules. Enterprise frameworks such as Spring made annotations and package organization central to a
-- Unstructured codebases become hard to test, deploy, and reason about. Poor package boundaries create cyclic dependencies, leaky domain models, unclear ownership, and fragile framework configuration. Senior engineers must design structure that expresses busines
-- Java provides packages for namespacing, classes for behavior and state, interfaces for contracts, access modifiers for encapsulation, and annotations for metadata. This lets teams scale code ownership while giving tools enough structure for compilation, refact
-- The compiler maps each top-level type to bytecode. Packages become naming conventions in fully qualified class names. Access checks are enforced by the compiler and verified by the JVM. Annotations may be retained in class files and read reflectively by framew
-- The JVM loads classes by fully qualified name. Class identity is the combination of class name and defining classloader. This matters in application servers, plugins, test frameworks, hot reload tools, and Spring Boot devtools.
-
-Full recovered excerpt: `../reference/handbook_lessons_1-12_excerpts.md` (Lesson 3).
-
-### Scene ↔ curriculum intent
-
-- **`hook`** — continuity from JDK layers
-- **`title`** — episode promise
-- **`anatomy`** — program hierarchy
-- **`hello`** — HelloWorld line-by-line
-- **`access`** — access modifiers primer
-- **`packages`** — production package layout
-- **`flow`** — load-init-invoke runtime
-- **`deeper`** — domain Order example
-- **`mistakes`** — common mistakes
-- **`interview`** — packages interview
-- **`summary`** — revision
-- **`teaser`** — bridge to Episode 04
-
-- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.
+- A .java file is a compilation unit; one public top-level class must match the filename.
+- Packages are namespaces that map to directories.
+- main(String[] args) is the classic launcher entry point.
+- Imports bring types into scope; classpath/module path finds classes.
+- Structure is not paperwork — it is how the compiler and JVM find your code.

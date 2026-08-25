@@ -5,176 +5,163 @@
 | Episode | 63 |
 | Title | Object Layout |
 | Catalog handbook column | 63 |
-| Narration source script | Expanded review narration (4–15 min target) |
-| Spoken form | Conversational documentary beats + walkthrough example |
-| Runtime target | **4–15 minutes** (aim ~8–12) |
+| Narration source script | Descriptive instructor narration (4–15 min) |
+| Spoken form | Connected explanatory prose with walked-through examples |
+| Runtime target | **4–15 minutes** (aim ~10–12) |
 
-## Full narration (spoken beats)
+## Full narration
 
-### Scene `hook`
+### Opening — start with a problem
 
-1. In the last episode, we worked through JVM Flags and Tuning.
-2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
-3. Objects cost more than their fields — headers, padding, pointers.
-4. I am not going to machine-gun definitions at you.
-5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
-6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
-7. The floor is four minutes, but we are not doing the thin headline version anymore.
+In the previous episode, we worked through **JVM Flags and Tuning**. That gave us a piece of the platform. Today we need the next piece: **Object Layout**.
 
-### Scene `title`
+We are continuing The Java Story, and today's challenge is Object Layout. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
 
-1. Episode 63.
-2. Object Layout.
-3. By the end, you should explain this out loud without reading notes.
-4. If you can teach it, you own it.
+Objects cost more than their fields — headers, padding, pointers.
 
-### Scene `concept`
+I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
 
-1. First, the why — then the syntax.
-2. Picture Object Layout clearly.
-3. Here are the points that matter when code meets production:
-4. Point 1: Object header.
-5. If you remember only one thing, make it that.
-6. Point 2: Alignment/padding.
-7. This is usually where tutorials stop — we will not.
-8. Point 3: Compressed oops.
-9. Point 4: Array headers + length.
-10. Point 5: Field order can matter for packing.
-11. That last point is often the senior-level differentiator in interviews.
-12. Notice how these points connect: mechanism, usage, and failure mode.
-13. Hold them in your head while we look at code.
+### Why this exists
 
-### Scene `example_intro`
+In simple language, object layout is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
 
-1. Example time. Do not skim.
-2. Every line maps to something we just said.
-3. If you need to, pause and retype it yourself after the walkthrough.
+A helpful picture: Picture Object Layout clearly.
+
+Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
+
+### Building the idea step by step
+
+#### Step 1
+
+Now consider this teaching point: Object header.
+
+This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 2
+
+Now consider this teaching point: Alignment/padding.
+
+Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 3
+
+Now consider this teaching point: Compressed oops.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 4
+
+Now consider this teaching point: Array headers + length.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 5
+
+Now consider this teaching point: Field order can matter for packing.
+
+This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+### Example 1 — the smallest useful illustration
+
+Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
 
 ```java
 // a 'tiny' object still pays for header + padding
 class Tiny { byte b; }
 ```
 
-### Scene `example_walk`
+Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
 
-1. Walkthrough.
-2. Walk this like pair-programming.
-3. Focus on what each line means.
-4. Connect to the failure mode.
-5. Comment cue: a 'tiny' object still pays for header + padding
-6. Look at `class Tiny { byte b; }`.
-7. That is not decorative syntax — it encodes a real rule of the platform or API.
-8. If you can explain those lines to a teammate, you understand the episode.
-9. If you only recognize the keywords, rewind the concept section once.
+Walk this like pair-programming.
 
-### Scene `deeper`
+Focus on what each line means.
 
-1. One level deeper — the part short videos skip.
-2. Ask: what happens under load? Under failure? Under bad input?
-3. With Object Layout, mastery is not more jargon.
-4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
-5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
-6. So when you adopt a feature from this episode, adopt the operational story too.
-7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
+Connect to the failure mode.
 
-### Scene `mistakes`
+Look at `class Tiny { byte b; }`.
 
-1. Reality check — common mistakes.
-2. Mistake 1: Estimating memory by field sizes only.
-3. I have seen this in real code reviews — including my own older code.
-4. Mistake 2: Ignoring reference costs.
-5. I have seen this in real code reviews — including my own older code.
-6. Mistake 3: Obsessing over layout before algorithms.
-7. I have seen this in real code reviews — including my own older code.
-8. If you recognize one, good. Recognition is the first control.
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-### Scene `interview`
+After this example, you should be able to point to the code and explain what problem each important line is solving.
 
-1. Interview time. Speak like someone who has shipped.
-2. Question: Why is a tiny object bigger than expected?
-3. Answer: Headers, alignment, and references add overhead.
-4. Then add one trade-off or failure-mode sentence.
-5. That extra sentence is what interviewers remember.
-6. Practice once without looking at the screen.
+### Example 2 — make it more realistic
 
-### Scene `amplify`
+The first example isolates the concept. Real applications rarely stop there. In a practical setting, Object Layout usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
 
-1. Let me press on point 1 a bit harder.
-2. Object header.
-3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-4. If you cannot explain the failure mode, you do not own the feature yet.
-5. Let me press on point 2 a bit harder.
-6. Alignment/padding.
-7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-8. If you cannot explain the failure mode, you do not own the feature yet.
-9. Let me press on point 3 a bit harder.
-10. Compressed oops.
-11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-12. If you cannot explain the failure mode, you do not own the feature yet.
-13. Let me press on point 4 a bit harder.
-14. Array headers + length.
-15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-16. If you cannot explain the failure mode, you do not own the feature yet.
-17. Let me press on point 5 a bit harder.
-18. Field order can matter for packing.
-19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-20. If you cannot explain the failure mode, you do not own the feature yet.
+So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
 
-### Scene `handbook_spine`
+A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
 
-1. How this maps to the reference handbook mindset:
-2. The handbook teaches concept, internal working, mistakes, and interview questions.
-3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
-4. So if a section felt familiar, good: that means the curriculum spine is intact.
+When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
 
-### Scene `practice`
+### What if we skip this approach?
 
-1. Mini practice before you go.
-2. Pause the video and do this without looking:
-3. 1) Say out loud what Object Layout is for in one sentence.
-4. 2) Write the example from memory — approximate is fine.
-5. 3) Name one mistake from this episode and how you would catch it in review.
-6. That three-step drill turns watching into learning.
-### Scene `summary`
+Important concepts become memorable when we see the failure mode without them.
 
-1. Landing the plane.
-2. Today was Object Layout.
-3. You got a mental model, a worked example, traps, and an interview answer.
-4. Pause and retype the example from memory if you can — that beats passive rewatching.
-5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+For example, consider this common mistake: Estimating memory by field sizes only.
 
-### Scene `teaser`
+That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
 
-1. Next episode keeps the story moving.
-2. Episode 64: Safepoints.
-3. It builds directly on today’s mental model.
-4. If something clicked, stick around. I will see you there.
+This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
 
-_Total beats: **96** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
+### Example 3 — a common misunderstanding
+
+**Misunderstanding 1:** Estimating memory by field sizes only.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 2:** Ignoring reference costs.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 3:** Obsessing over layout before algorithms.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+
+### Interview-style checkpoint
+
+Question: Why is a tiny object bigger than expected?
+
+Answer in spoken form: Headers, alignment, and references add overhead.
+
+Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+
+### Connecting the thread
+
+We came from **JVM Flags and Tuning**. That set up a need. **Object Layout** is one of Java's answers to that need.
+
+You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+
+### Looking ahead
+
+Once this is solid, a new challenge appears. That challenge leads us to **Safepoints**.
+
+We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
 
 ## Source attribution (reference document)
 
-(reference document)
-
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
-- **Primary handbook lesson:** Lesson **63** — *Object Layout*.
-- **Series catalog:** Episode 63 ↔ handbook lesson 63 — *Object Layout*.
-- **How content was used:** The handbook provided the **topic outline and teaching points**. Spoken lines were **rewritten** into short documentary beats matched to motion-graphics scenes (per user guidance: own narration synced to presentation; handbook as reference, not a script to read aloud).
+- **Primary curriculum mapping:** Episode 63 / **Object Layout** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
+- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
+- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
 
-- Full handbook HTML is **not checked into git** (original upload was ephemeral). Attribution for this episode is by **lesson title / topic** from the recovered TOC and the series catalog.
+### Teaching points drawn from the topic bank
 
-### Scene ↔ curriculum intent
-
-- **`hook`** — starts from: _Episode Sixty-Two covered JVM flags and a measurement-first tuning mindset._
-- **`title`** — starts from: _Episode Sixty-Three._
-- **`object_headers`** — starts from: _Every heap object starts with a header — metadata the JVM needs._
-- **`field_layout`** — starts from: _Instance fields are laid out by the JVM — not in source declaration order._
-- **`padding_alignment`** — starts from: _Objects align to eight-byte boundaries on 64-bit JVMs._
-- **`compressed_oops`** — starts from: _Compressed Oops — compressed ordinary object pointers — save heap space._
-- **`sizing_impact`** — starts from: _Layout knowledge informs real design decisions._
-- **`mistakes`** — starts from: _Three common mistakes._
-- **`interview`** — starts from: _Interview question — how is a Java object laid out in memory?_
-- **`teaser`** — starts from: _Object layout explains memory cost — safepoints explain when the JVM pauses._
-
-- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.
+- Object header.
+- Alignment/padding.
+- Compressed oops.
+- Array headers + length.
+- Field order can matter for packing.

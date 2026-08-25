@@ -5,208 +5,152 @@
 | Episode | 07 |
 | Title | Methods |
 | Catalog handbook column | 7 |
-| Narration source script | Expanded review narration (4–15 min target) |
-| Spoken form | Conversational documentary beats + walkthrough code |
-| Runtime target | **4–15 minutes** (aim ~8–12) |
+| Narration source script | Descriptive instructor narration (4–15 min) |
+| Spoken form | Connected explanatory prose with walked-through examples |
+| Runtime target | **4–15 minutes** (aim ~10–12) |
 
-## Full narration (spoken beats)
+## Full narration
 
-### Scene `hook` (renderer: `hook`)
+### Opening — a calculation that wants a name
 
-1. Control flow chooses the path. Methods package the work.
-2. A method is named behavior — inputs, outputs, side effects, visibility.
-3. Good methods make APIs clear. Bad methods hide bugs in long routines.
-4. Senior Java is mostly method design — domain language at the right boundaries.
+In the previous episodes we learned how to store information in variables, compute with operators, and choose paths with control flow. That is enough to write a working `main` method that does everything in one place.
 
-### Scene `title` (renderer: `title`)
+But let's start with a problem.
 
-1. Episode Seven.
-2. Methods — parameters, returns, and clean contracts.
+Suppose our application needs to calculate the total price of an order. We could place all of the calculation directly inside `main()`. That might work for one calculation, but what happens when we need the same calculation in several places — checkout, invoice preview, and a refund path?
 
-### Scene `anatomy` (renderer: `anatomy`)
+Instead of copying the same logic repeatedly, we can give that behavior a name and place it inside a **method**.
 
-1. Anatomy of a method.
-2. Access modifier. Return type. Name. Parameter list. Body.
-3. Name says what it does. Parameters say what it needs.
-4. Return type says what you get — void if it only acts.
-5. Read a signature like a sentence — that is the contract callers depend on.
+A method is simply a named piece of behavior. You give it inputs, it does work, and it can return a result. That sounds small. It is one of the most important design tools in Java.
 
-### Scene `signature` (renderer: `signature`)
+### Why methods exist
 
-1. The signature is the contract.
-2. Same name, different parameter types — overloading. Compiler picks at compile time.
-3. Override — subclass replaces parent method — runtime polymorphism. Different idea.
-4. Keep overloads obvious. If callers guess wrong, rename instead.
-5. Varargs — String... parts — sparingly. Lists often clearer.
+Without methods, programs grow by copy and paste. Every duplicated block becomes a place where a bug can be fixed in one spot and forgotten in another. Methods let us say: this behavior has a name, a clear contract, and a single place to improve.
 
-### Scene `example` (renderer: `example`)
+In simple language: a method packages a verb. Variables remember nouns. Methods do work with those nouns.
 
-1. Walk domain methods on an order service.
+### Example 1 — the smallest useful method
+
 ```java
-public class OrderService {
-    public boolean canBeCancelled(Order order) {
-        return order.status() == OrderStatus.PENDING;
+double calculateTotal(double price, double tax) {
+    return price + tax;
+}
+```
+
+Why is this code here? Because it turns an unnamed expression into a reusable idea.
+
+Walk through it. `double calculateTotal(...)` declares a method that returns a `double`. The name `calculateTotal` tells a reader what the behavior is for. The parameters `price` and `tax` are the inputs. Inside the body, we compute `price + tax` and `return` that value to the caller.
+
+The method does not print anything. It does not talk to a database. It answers one question: given a price and a tax amount, what is the total?
+
+### Calling the method
+
+A method definition by itself does nothing until something calls it.
+
+```java
+public class OrderMath {
+    static double calculateTotal(double price, double tax) {
+        return price + tax;
     }
 
-    public void cancel(Order order) {
-        if (!canBeCancelled(order)) {
-            throw new IllegalStateException("cannot cancel");
-        }
-        order.markCancelled();
-    }
-
-    public static int compareByAmount(Order a, Order b) {
-        return Long.compare(a.amountInCents(), b.amountInCents());
+    public static void main(String[] args) {
+        double total = calculateTotal(100.0, 18.0);
+        System.out.println(total);
     }
 }
 ```
 
-2. canBeCancelled encodes a rule — better than five comparisons copied in controllers.
-3. cancel validates then mutates — guard clause inside method.
-4. compareByAmount static — utility on type, no instance needed.
-5. Methods should express domain intent — not just mechanical steps.
+In `main`, we call `calculateTotal(100.0, 18.0)`. Java binds `100.0` to `price` and `18.0` to `tax`, runs the body, and returns `118.0`. That returned value is stored in `total`, then printed.
 
-### Scene `design` (renderer: `design`)
+Notice the payoff already: if the tax rule changes, we edit one method instead of hunting through every copy of the formula.
 
-1. Design tips that scale.
-2. One job per method. Short enough to scan in a code review.
-3. Avoid boolean flag parameters that fork behavior — split into two methods.
-4. Prefer clear return types over returning null without contract — Optional later in Episode Thirty.
-5. Do not swallow exceptions in helpers — callers need failure signals.
-6. Hide helpers as private unless they are real API.
+### Important detail — Java is pass-by-value
 
-### Scene `static` (renderer: `static`)
+This is a common misunderstanding, so we will face it directly.
 
-1. Instance methods need an object. Static methods belong to the class.
-2. Static utilities fine for pure functions — parsing, math.
-3. Static mutable state is global — concurrency and test pollution.
-4. In Spring, this.method() from same class may skip transactional proxy — know AOP boundaries.
-5. Prefer instance behavior for domain rules.
+For primitives, the method receives a copy of the value. Changing the parameter inside the method does not change the caller's variable.
 
-### Scene `deeper` (renderer: `deeper`)
+```java
+static void tryChange(int n) {
+    n = 99;
+}
 
-1. Parameters are pass-by-value — always.
-2. For references, the reference value is copied — both point at same object.
-3. Reassigning parameter to new object does not affect caller's variable.
-4. Mutating object through reference is visible to caller — know the difference.
-5. Varargs — public void log(String level, String... messages) — treat as array inside.
-6. Overloading resolution picks most specific match — ambiguity compile error.
-7. Bridge methods and generics — rare interview topic — compiler synthesizes bridges for erasure.
-8. Recursion has stack depth limits — deep recursion risks StackOverflowError.
-9. Tail recursion is not optimized by standard HotSpot — use loops for deep iteration.
-10. Method references — System.out::println — shorthand for lambdas, Episode Twenty-Six area.
+public static void main(String[] args) {
+    int x = 1;
+    tryChange(x);
+    System.out.println(x);   // still 1
+}
+```
 
-### Scene `production` (renderer: `production`)
+For object references, the method still receives a copy — a copy of the reference. That means the method can mutate the same object the caller sees, but it cannot make the caller's variable point to a different object by reassigning the parameter.
 
-1. Production context — why this topic stops incidents.
-2. Code review checklist item — catch misuse before merge.
-3. Observability — logs and metrics should name concepts clearly — not mystery abbreviations.
-4. Tests should encode the contracts we discussed — one failing test beats ten slides.
-5. Refactor toward clarity — juniors read this code six months from now.
-6. Interview answers map directly to daily choices — not trivia for trivia's sake.
-7. Connect to handbook lesson themes — JVM, structure, types, concurrency later in series.
-8. Next episodes build on this — skipping fundamentals creates gaps that show in system design.
+If someone asks in an interview, "Is Java pass-by-reference?" the precise answer is: no. Java is pass-by-value. For objects, the value being copied is the reference.
 
-### Scene `mistakes` (renderer: `mistakes`)
+### Example 2 — a more practical checkout fragment
 
-1. Three mistakes.
-2. One — screen-long methods doing five jobs.
-3. Two — names like processData or handleStuff.
-4. Three — swallowing exceptions so callers never learn failure.
-5. Also — every helper public — no encapsulation left.
+Let's evolve the example toward something you might see in a small shop application.
 
-### Scene `interview` (renderer: `interview`)
+```java
+static double calculateTotal(double price, double taxRate) {
+    if (price < 0 || taxRate < 0) {
+        throw new IllegalArgumentException("price and taxRate must be non-negative");
+    }
+    return price + (price * taxRate);
+}
 
-1. Interview — overload versus override?
-2. Overload — same name, different parameters, compile time.
-3. Override — subclass replaces inherited method, runtime dispatch.
-4. Methods should express domain intent.
-5. Boolean flag parameters are a design smell — split methods.
+static void printReceipt(String item, double price, double taxRate) {
+    double total = calculateTotal(price, taxRate);
+    System.out.println(item + " => " + total);
+}
+```
 
-### Scene `walkthrough2` (renderer: `walkthrough2`)
+Now `calculateTotal` accepts a tax **rate** instead of a precomputed tax amount. It also guards against invalid input. `printReceipt` uses the calculation and focuses on presentation. Each method has one job. That separation makes testing and reuse easier.
 
-1. Let's slow down once more with a reviewer mindset.
-2. If you saw this in a pull request, what would you comment?
-3. Naming clarity, null safety, visibility, performance — rotate through that checklist.
-4. Let me say that again in plain language — because this is the kind of detail interviews probe and production punishes.
-5. When you read open-source Java or a teammate's pull request, you'll recognize these patterns immediately.
-6. Pause the video if you want — write a five-line example in your scratch project. Muscle memory beats passive watching.
-7. The handbook treats this as foundational for eighty lessons — JVM tuning, Spring, concurrency all assume you know this cold.
-8. We're not racing the syllabus. We're building mental models that survive version upgrades and job changes.
-9. Senior engineers don't know every API by heart. They know where to look and which mistakes repeat.
-10. Junior engineers who nail fundamentals ramp faster on frameworks — Spring, JPA, Kafka all sit on this base.
-11. Your IDE helps — but only after you understand what the compiler and JVM will accept and reject.
-12. Compile errors are friends. They prevent runtime surprises in customer environments.
-13. Runtime errors with stack traces — read bottom up to your code first, then framework frames.
-14. Unit tests for this topic should be small — one concept per test method — not thousand-line integration only.
-15. When stuck, reduce to main in a scratch class — isolate the language feature from framework noise.
+### Example 3 — a common mistake: doing too much in one method
 
-### Scene `connect` (renderer: `connect`)
+What if we skip method design and put everything in `main`?
 
-1. Connect backward — Episode One gave portability. Episode Two named the toolchain.
-2. Connect forward — collections, streams, and concurrency assume today's concept is solid.
-3. The Java Story is cumulative — skipping an episode creates a hole you feel later as confusion.
-4. Bookmark the handbook lesson that matches this episode — revision sheet before interviews.
-5. Production stories in later episodes reference types and structures we defined in Phase One.
-6. You are still in Phase One — language and platform — the bedrock everything else stands on.
-7. Architects who skipped fundamentals design APIs that leak abstraction — don't skip.
-8. Teaching this to a teammate? Use the same order — hook, example, mistake, interview answer.
-9. Documentation you write for your team should mirror these boundaries — package, type, method.
-10. Code is read more than written — optimize for the reader who has no context yet.
+```java
+public static void main(String[] args) {
+    double price = 100.0;
+    double taxRate = 0.18;
+    double total = price + (price * taxRate);
+    System.out.println("Shirt => " + total);
+    // later, same formula again for another item...
+}
+```
 
-### Scene `contracts` (renderer: `contracts`)
+This works for a demo. Then requirements grow. Discount rules appear. Receipt formatting changes. Refunds need the same math. The formula gets copied, then copied with a tiny difference, then nobody is sure which copy is correct.
 
-1. Preconditions — validate arguments at method entry — fail fast IllegalArgumentException.
-2. Postconditions — guarantee on return — document in javadoc or tests.
-3. JavaDoc @param @return @throws — contract for public API.
-4. Defensive copy on getters for mutable internal state — return List.copyOf.
-5. Fail fast versus fail safe — domain methods usually fail fast on invalid input.
+The method is not ceremony. It is how we keep behavior coherent as the program grows.
 
-### Scene `summary` (renderer: `summary`)
+### Overloading — same name, different parameter lists
 
-1. Methods package behavior with contracts.
-2. Signatures are API promises. Overload carefully. Override for polymorphism.
-3. Domain methods beat scattered operator soup.
-4. Static for utilities — not mutable global state.
-5. Name and size methods for the reader who arrives at three a.m.
+Java allows multiple methods with the same name if their parameter lists differ. That is overloading.
 
-### Scene `teaser` (renderer: `teaser`)
+```java
+static double calculateTotal(double price, double taxRate) { /* ... */ }
 
-1. Behavior is packaged. Next — hold many values.
-2. Episode Eight — Arrays.
-3. Fixed size, indexed access, off-by-one traps.
-4. See you there.
-_Total beats: expanded for ~8–12 minute conversational delivery (well above the 4-minute floor; under the 15-minute ceiling)._
+static double calculateTotal(double price, double taxRate, double discount) {
+    double discounted = price - discount;
+    return calculateTotal(discounted, taxRate);
+}
+```
+
+The compiler chooses which method to call based on the arguments you pass. Overloading is useful when several closely related operations deserve the same verb. It becomes confusing when the overloads secretly do unrelated things.
+
+### Connecting the thread
+
+Methods give behavior a name, a contract, and a place to live. We saw a tiny calculation, a safer practical version, the pass-by-value rule, and the failure mode of endless copy-paste in `main`.
+
+Next we need a way to store many values under one name and access them by position. That is the road into arrays — and later into collections.
+
+That is Episode Eight.
 
 ## Source attribution (reference document)
-
-(reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
 - **Primary handbook lesson:** Lesson **7** — *Methods*.
-- **Series catalog:** Episode 07 ↔ handbook lesson 7 — *Methods*.
-- **How content was used:** The handbook provided the **topic outline and teaching points**. Spoken lines were **rewritten** into short documentary beats matched to motion-graphics scenes (per user guidance: own narration synced to presentation; handbook as reference, not a script to read aloud).
-
-- **Narration expansion:** Spoken lines expanded for **4–15 minute** conversational runtime; handbook still used as topic reference.
-
-### Handbook concepts reused (from recovered Lesson 7 excerpt)
-
-- Concept: Methods define named behavior with inputs, outputs, side effects, contracts, and visibility. In senior-level Java, method design controls API clarity, testability, transaction boundaries, latency, coupling, and domain expressiveness.
-- Mistakes: Common mistakes include long methods, unclear names, boolean parameter traps, returning null without contract, swallowing exceptions, mixing I/O and domain rules, self-invoking proxied Spring methods, and making every helper public.
-
-Full recovered excerpt: `../reference/handbook_lessons_1-12_excerpts.md` (Lesson 7).
-
-### Scene ↔ curriculum intent
-
-- **`hook`** — starts from: _Control flow chooses the path. Methods package the work._
-- **`title`** — starts from: _Episode Seven._
-- **`anatomy`** — starts from: _Look at the anatomy of a method._
-- **`signature`** — starts from: _The signature is the contract._
-- **`design`** — starts from: _Design tips that scale._
-- **`static`** — starts from: _Instance methods need an object. Static methods do not._
-- **`mistakes`** — starts from: _Three common mistakes._
-- **`interview`** — starts from: _Interview question — overload versus override?_
-- **`teaser`** — starts from: _Behavior is packaged. Next we hold many values._
-
-- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.
+- **How content was used:** Topic spine (reuse, signatures, return values, pass-by-value, overloading). Rewritten as descriptive instructor prose with evolving examples (`calculateTotal` → practical checkout → mistake), matching the course style guide.
+- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).

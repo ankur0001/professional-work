@@ -5,102 +5,54 @@
 | Episode | 01 |
 | Title | Why Java Exists / Introduction to Java |
 | Catalog handbook column | 1 |
-| Narration source script | Expanded review narration (4–15 min target) |
-| Spoken form | Conversational documentary beats + walkthrough code |
+| Narration source script | Descriptive instructor narration (4–15 min) |
+| Spoken form | Connected explanatory prose with walked-through examples |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
-## Full narration (spoken beats)
+## Full narration
 
-### Scene `hook` (renderer: `hook`)
+### Opening — a problem worth solving
 
-1. Okay… imagine this for a second.
-2. You open your banking app. You book a flight. You check a stock ticker. You unlock an Android phone.
-3. Behind a shocking number of those screens, the same language is quietly doing the work.
-4. Not the flashiest language. Not the newest language.
-5. Just… the one that refused to die.
-6. That language is Java.
+Before we talk about syntax, let's start with a problem.
 
-### Scene `question` (renderer: `question`)
+Imagine you are building software in the early nineteen nineties. The internet is about to explode. Teams want the same application to run on Windows machines, Unix servers, and a growing collection of devices. You already have a powerful language available: C++. It can talk to the hardware. It can be fast. So why invent something else?
 
-1. Here’s what I find fascinating.
-2. Java was born in the nineteen nineties — almost thirty years ago.
-3. In that time, hundreds of languages arrived with big promises… and quietly disappeared.
-4. Java didn’t.
-5. So the real question isn’t “what is Java syntax?”
-6. The real question is: why does Java still run so much of the world?
-7. Stick with me. We’re going to answer that like a story — with history, with the engineering problem, and with a tiny program you can actually run.
+The answer is not "because new languages are fun." The answer is that C++ made some kinds of large-scale software painfully expensive.
 
-### Scene `cpp_pain` (renderer: `cpp_pain`)
+In C++, you manage memory yourself. One small mistake and you get a leak, a crash, or a security hole that only appears under load. And platform dependency is another tax: code that works on one operating system can break on another. If your product must run in many places, you may end up rewriting and retesting the same business logic again and again.
 
-1. Go back to the early nineties.
-2. The internet is about to explode. Devices are multiplying. Teams want software that moves across machines.
-3. At Sun Microsystems, a team led by James Gosling starts building software for set-top boxes and interactive devices.
-4. Their first instinct is obvious: use C++.
-5. C++ is powerful. Absolutely. You can talk to the metal. You can squeeze performance.
-6. But that power comes with a tax.
-7. Manual memory management. One tiny mistake — and you get a leak… or a crash… or a security hole that only shows up in production.
-8. And platform dependency? Code that works on one operating system can break completely on another.
-9. Imagine rewriting the same business logic for Windows, Unix, and every weird device in between.
-10. For a team targeting many devices, that wasn’t “a little inconvenience.” That was a nightmare.
+That is the situation that made Java necessary. Java was created to be safer than C++ for many application teams, easier to maintain across large codebases, and portable across platforms without a full rewrite for every operating system.
 
-### Scene `birth` (renderer: `birth`)
+### Why "Write Once, Run Anywhere" mattered
 
-1. So they don’t just “try harder at C++.”
-2. They build something new.
-3. First it’s called Oak. Later it becomes Java — yes, after coffee.
-4. The mission is blunt and practical: safer than C++, easier to maintain, and portable across platforms.
-5. Think of it as an engineering compromise with a philosophy attached.
-6. You give up raw pointer freedom.
-7. You gain a runtime that protects you, a language that scales across teams, and a deployment model that doesn’t demand a rewrite for every OS.
+In nineteen ninety-five, Java arrived with a promise the industry could feel in its budget: write once, run anywhere.
 
-### Scene `wora` (renderer: `wora_intro`)
+That phrase can sound like marketing until you have paid the cost of shipping the same product three times. For banks, telecom systems, and enterprise backends, rewrite cost is not academic. It is months of work, duplicated bugs, and operational risk.
 
-1. In nineteen ninety-five, Java shows up with a slogan the industry can feel in its bones.
-2. Write once. Run anywhere.
-3. That line sounds like marketing… until you’ve paid the cost of shipping the same product three times.
-4. For banks, telecom, enterprise backends — rewrite cost isn’t academic. It’s months, money, and risk.
-5. So “write once, run anywhere” isn’t a vibe. It’s a business survival feature.
-6. But slogans don’t ship software. Machinery does.
-7. So let’s open the hood and see what actually makes that promise real.
+But a slogan does not ship software. Machinery does. So the important question becomes: what does Java actually do differently so that the same program can travel across machines?
 
-### Scene `bytecode` (renderer: `bytecode`)
+### How Java achieves portability — bytecode and the JVM
 
-1. Here’s the secret. Watch carefully.
-2. Java does **not** compile your source straight into Windows machine code or Mac machine code.
-3. First, `javac` turns your `.java` file into bytecode — a platform-neutral instruction format living in a `.class` file.
-4. Think of bytecode like an international language for programs.
-5. Then the JVM — the Java Virtual Machine — reads that bytecode and turns it into whatever the local machine actually understands.
-6. Windows has a JVM. macOS has a JVM. Linux has a JVM. Containers have JVMs.
-7. Same `.class` files. Different translators. Same program behavior — as long as the JVM is compatible.
-8. That pipeline is the real meaning of Write Once, Run Anywhere.
-9. And modern JVMs go further: they start by interpreting, then JIT-compile hot methods into optimized native code.
-10. So you get portability *and* serious performance after warmup — which is exactly why long-running servers love Java.
+Here is the core idea in simple language.
 
-### Scene `memory` (renderer: `memory`)
+Java does not take your source code and immediately turn it into Windows-only machine instructions or Mac-only machine instructions. First, the compiler turns your `.java` file into **bytecode**, stored in a `.class` file. Bytecode is a platform-neutral instruction format — think of it as an international language for programs.
 
-1. Quick mental model while we’re here — because beginners mix this up forever.
-2. Your method calls and local variables mostly live on the **stack**.
-3. Your objects live on the **heap**.
-4. Class metadata lives in **metaspace**.
-5. The garbage collector cleans unreachable heap objects so you don’t `free()` by hand like C++.
-6. You still care about memory — allocation rate, leaks via lingering references, heap limits in containers — but you don’t manage every byte manually.
-7. That trade-off is a huge reason large teams can move faster without constantly shooting themselves in the foot.
+Then the **JVM** — the Java Virtual Machine — reads that bytecode and turns it into whatever the local machine understands.
 
-### Scene `industry` (renderer: `industry`)
+```bash
+javac HelloWorld.java   # source -> bytecode (.class)
+java HelloWorld         # JVM loads bytecode and runs it
+```
 
-1. Now… why did industry stick with it?
-2. Banks need stability, not hype cycles.
-3. Android needed a language millions of developers already understood.
-4. Large backends needed a runtime with battle-tested tooling — profilers, GC logs, thread dumps, Flight Recorder.
-5. Enterprise teams don’t switch languages because Twitter got excited about something new.
-6. They switch when failure becomes more expensive than migration.
-7. Java earned trust the boring way: one production system at a time, for decades.
-8. That’s not romance. That’s infrastructure.
+Watch what each command is doing. `javac` is the compiler. Its job is to check your source and produce bytecode. `java` does not mean "Windows runs the class file directly." It means "start a JVM process, load this class, and execute it."
 
-### Scene `code` (renderer: `code_print`)
+Windows has a JVM. macOS has a JVM. Linux has a JVM. Containers have JVMs. Same `.class` files. Different translators. Same program behavior — as long as the JVM is compatible.
 
-1. Alright — enough history. Let’s make this concrete with your first program.
-2. I’m going to walk this slowly, because every piece of this tiny file maps to a real idea we just talked about.
+That pipeline is the real meaning of Write Once, Run Anywhere.
+
+### A first Java program — and what every part is for
+
+Let's make this concrete with the smallest useful program. Suppose we simply want the computer to print a greeting. We could imagine a magical one-line language for that, but Java organizes even tiny programs around a clear structure: a class, an entry point, and a library call.
 
 ```java
 public class HelloWorld {
@@ -110,91 +62,55 @@ public class HelloWorld {
 }
 ```
 
-3. First line: `public class HelloWorld` — you’re declaring a blueprint. In Java, almost everything lives inside a class.
-4. Filename rule: save this as `HelloWorld.java`. The public class name and the filename must match. Java is case-sensitive. `helloworld.java` will fight you.
-5. Inside the class: `public static void main(String[] args)` — this is the entry point. When you launch the program, the JVM looks for this exact signature.
-6. `public` means the JVM can see it. `static` means it can run without creating an object first. `void` means it doesn’t return a value. `String[] args` is how command-line arguments arrive.
-7. Then `System.out.println("Hello, World!");` — print a line to standard output.
-8. That’s it. Tiny file. Huge ideas: class, entry point, standard library, runtime launch.
+Save this as `HelloWorld.java`. That filename matters. In Java, a public top-level class name and the filename must match, including case. If the class is `HelloWorld` and the file is `helloworld.java`, the compiler will fight you.
 
-### Scene `run` (renderer: `run`)
+Now walk the code with me.
 
-1. Now hit the flow you’d use every day.
-2. Compile: `javac HelloWorld.java` — that produces `HelloWorld.class` bytecode.
-3. Run: `java HelloWorld` — notice: no `.class` in the command. You’re naming the class.
-4. The launcher starts a JVM process.
-5. The JVM loads the class, verifies bytecode, finds `main`, and executes `println`.
-6. Console says: Hello, World!
-7. Behind the scenes, the JVM did the heavy lifting — not “Windows directly,” not “Mac directly.”
-8. Same source. Same bytecode. Different machine. That’s the whole thesis of this episode in one demo.
+`public class HelloWorld` declares a blueprint. Almost everything in Java lives inside a class. At this moment, think of the class as a named container for behavior.
 
-### Scene `mistakes` (renderer: `mistakes`)
+Inside it, `public static void main(String[] args)` is the entry point. When you launch the program, the JVM looks for this exact kind of method. `public` means it can be seen from outside. `static` means the JVM can call it without first creating a `HelloWorld` object. `void` means it does not return a value to the caller. `String[] args` is how command-line arguments arrive.
 
-1. Three beginner mistakes I want burned into your brain early.
-2. Mistake one: thinking Java runs like a plain native `.exe` with no runtime. Nope. The JVM is doing the work.
-3. Mistake two: mixing up JDK, JRE, and JVM. Quick preview — JDK is for developing, JRE is the runtime idea, JVM is the engine inside. Episode Two unpacks this properly.
-4. Mistake three: naming the file wrong. Public class `HelloWorld` in `hello.java` will confuse the compiler and you.
-5. If something feels magical right now, good. Magical usually means “there’s a layer.” We’re going to name those layers.
+Then `System.out.println("Hello, World!");` asks the standard library to print a line to the console.
 
-### Scene `interview` (renderer: `interview`)
+When you compile and run, the result is the text `Hello, World!` on the screen. Behind that simple result is the whole story of this episode: source becomes bytecode, the JVM loads it, finds `main`, and executes the print.
 
-1. Interview time — say this out loud like someone who’s shipped code.
-2. Question: Why is Java considered platform independent?
-3. Answer: We don’t compile application source to OS-specific machine code first. We compile to bytecode — a platform-neutral format.
-4. Then a JVM on each operating system translates that bytecode into native instructions for that machine.
-5. So the same `.class` files can run on Windows, macOS, or Linux — as long as a compatible JVM is present.
-6. Bonus line interviewers love: the JVM also verifies bytecode and can JIT-compile hot paths, so portability doesn’t automatically mean “slow forever.”
-7. If you can explain that calmly, you’re already ahead of half the candidates who only memorized the slogan.
+### What if we skipped the JVM idea?
 
-### Scene `summary` (renderer: `summary`)
+What if Java compiled straight to native machine code like a traditional C toolchain and stopped there? You would gain a familiar mental model, but you would lose the portable `.class` contract that lets the same artifacts move across operating systems. Teams would be back to platform-specific builds as the default path.
 
-1. Let’s land the plane.
-2. Java exists because the nineties needed something safer and more portable than C++ for a multi-device, networked world.
-3. Write Once, Run Anywhere works because of bytecode plus the JVM — not because of vibes.
-4. Industry kept Java because trust, tooling, and long-term maintainability beat novelty.
-5. And your first program showed the full path: source → compiler → bytecode → JVM → output.
-6. You don’t just “know a slogan” now. You know the machinery behind it.
+Java's bet was different: accept a runtime layer, gain portability and a managed environment. Modern JVMs also interpret first and then JIT-compile hot methods into optimized native code, so long-running servers can be both portable and fast after warmup.
 
-### Scene `teaser` (renderer: `teaser`)
+### A common misunderstanding
 
-1. But one mystery remains — and beginners slam into it on day one.
-2. When people say “install Java”… what are they actually installing?
-3. JDK. JRE. JVM. Three names. Three different jobs. Constantly mixed up.
-4. That’s Episode Two — and once you see them as layers on screen, the confusion disappears.
-5. If something clicked today, stick around.
-6. I’ll see you in Episode Two.
+Beginners often say, "Java runs on Windows." That sentence is incomplete. What usually runs on Windows is a **JVM for Windows**, executing portable bytecode. The operating system is not reading your `.java` file as if it were a native executable. The JVM is doing the heavy lifting.
 
-_Total beats: expanded for ~10–12 minute conversational delivery (well above the 4-minute floor; under the 15-minute ceiling)._
+Another common mix-up is treating "install Java" as one thing. People say JDK, JRE, and JVM as if they were synonyms. They are related layers with different jobs — and that is exactly where Episode Two begins.
+
+### Connecting the pieces
+
+So let's connect what we have learned.
+
+Java exists because large software needed a safer, more portable alternative to the C++ tax of manual memory and platform-specific rewrites. Write Once, Run Anywhere works because of bytecode plus the JVM, not because of a slogan. Your first program showed the full path: source → compiler → bytecode → JVM → output.
+
+You should now be able to say, in your own words: why Java was created, how portability actually works, and what happens when a tiny program runs.
+
+### Looking ahead
+
+But one mystery remains, and every beginner hits it on day one. When people say "install Java," what are they actually installing? JDK. JRE. JVM. Three names. Three different jobs. Constantly mixed up.
+
+That is Episode Two. Once you see them as layers, the confusion disappears.
 
 ## Source attribution (reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
 - **Primary handbook lesson:** Lesson **1** — *Introduction to Java*.
-- **Series catalog:** Episode 01 ↔ handbook lesson 1 — *Why Java Exists / Introduction to Java*.
-- **How content was used:** The handbook provided the **topic outline and teaching points** (history/problem statement, bytecode + JVM, memory areas, execution flow, interview framing). Spoken lines were **expanded** into a conversational 4–15 minute documentary script with a walked-through `HelloWorld` example — not a verbatim paste of handbook prose.
-- **Runtime note:** Earlier short-cut narration was too thin (~4 min headline beats). This revision deepens explanation, examples, mistakes, and interview answer structure while staying under ~15 minutes.
+- **How content was used:** Topic outline and teaching points (problem statement, bytecode/JVM, execution flow, interview framing). Narration rewritten as descriptive instructor prose with walked-through `HelloWorld` — not short definition beats and not a verbatim handbook paste.
+- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
 
-### Handbook concepts reused (from recovered Lesson 1 excerpt)
+### Handbook concepts reused
 
-- Platform independence through bytecode and the JVM; reliability via typing/exceptions; memory safety without raw pointers.
-- Source compiles to `.class` bytecode; runtime loads, verifies, links, interprets, then JIT-compiles hot paths.
-- Pipeline: ClassLoader → Bytecode Verifier → Linker → Interpreter → JIT.
-- Memory: stack frames/locals, heap objects, metaspace metadata, code cache, native memory.
-- Entry point via `public static void main(String[] args)`.
-
-Full recovered excerpt: `../reference/handbook_lessons_1-12_excerpts.md` (Lesson 1).
-
-### Scene ↔ curriculum intent
-
-- **`hook`** — real-world ubiquity
-- **`question`** — survival puzzle / lesson promise
-- **`cpp_pain`** — handbook problem statement (C++ cost)
-- **`birth`** — Oak → Java mission
-- **`wora`** — portability as business requirement
-- **`bytecode`** — internal working / JVM pipeline
-- **`memory`** — memory layout primer
-- **`industry`** — production / architect perspective
-- **`code` / `run`** — code example + execution flow
-- **`mistakes` / `interview` / `summary`** — common mistakes + interview + revision
-- **`teaser`** — Lesson 2 bridge (JDK/JRE/JVM)
+- Platform independence through bytecode and the JVM
+- Source → `.class` → load/verify/interpret/JIT
+- Entry point via `public static void main(String[] args)`
+- Memory safety without raw pointer arithmetic as part of Java's design bet

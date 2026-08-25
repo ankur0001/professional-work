@@ -5,135 +5,159 @@
 | Episode | 57 |
 | Title | Memory Leaks and Profiling |
 | Catalog handbook column | 57 |
-| Narration source script | Expanded review narration (4–15 min target) |
-| Spoken form | Conversational documentary beats + walkthrough code |
+| Narration source script | Descriptive instructor narration (4–15 min) |
+| Spoken form | Connected explanatory prose with walked-through examples |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
-## Full narration (spoken beats)
+## Full narration
 
-### Scene `hook` (renderer: `hook`)
+### Opening — start with a problem
 
-1. Episode Fifty-Six compared GC collectors that reclaim unreachable objects efficiently.
-2. But what if objects stay reachable when they should not — held by references you forgot?
-3. A memory leak in Java means live references pin objects that belong in the garbage — not missing free calls.
-4. The heap grows until OutOfMemoryError — no collector fixes strong references you still maintain.
-5. Profiling and heap dumps reveal what keeps objects alive — dominator trees and paths to GC roots.
-6. Today — memory leaks, heap dumps, retained sets, and leak patterns that repeat across codebases.
+In the previous episode, we worked through **GC Collectors**. That gave us a piece of the platform. Today we need the next piece: **Memory Leaks and Profiling**.
 
-### Scene `title` (renderer: `title`)
+We are continuing The Java Story, and today's challenge is Memory Leaks and Profiling. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
 
-1. Episode Fifty-Seven.
-2. Memory Leaks and Profiling.
-3. We'll capture a dump, read MAT reports, and fix the static map that never evicts.
+Java leaks are usually reference leaks — profilers find the chain.
 
-### Scene `heap_dumps` (renderer: `heap_dumps`)
+I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
 
-1. A heap dump is a snapshot of every object on the heap at one instant — HPROF format.
-2. Trigger with jmap, jcmd GC.heap_dump, or -XX:+HeapDumpOnOutOfMemoryError for automatic capture on OOM.
-3. Open in Eclipse MAT or VisualVM — indexed analysis, dominator tree, leak suspects.
-4. Capture during high memory or right after OOM for best signal — not immediately after restart when heap is empty.
-5. Never dump production without a plan — files can be many gigabytes, disk and privacy matter.
-6. Compare two dumps from the same workload version — diff growth implicates new code paths.
+### Why this exists
+
+In simple language, memory leaks and profiling is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
+
+A helpful picture: Picture Memory Leaks and Profiling clearly.
+
+Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
+
+### Building the idea step by step
+
+#### Step 1
+
+Now consider this teaching point: Dominator trees.
+
+This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 2
+
+Now consider this teaching point: Unbounded caches.
+
+Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 3
+
+Now consider this teaching point: Listener leaks.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 4
+
+Now consider this teaching point: ThreadLocal pool leaks.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 5
+
+Now consider this teaching point: Heap dumps under load.
+
+This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+### Example 1 — the smallest useful illustration
+
+Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
 
 ```bash
-jcmd <pid> GC.heap_dump /tmp/heap.hprof
+// capture heap dump, then inspect dominators
+// jcmd <pid> GC.heap_dump /tmp/app.hprof
 ```
 
-7. Histogram first with jcmd GC.class_histogram — confirms suspect class before full dump weight.
+Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
 
-### Scene `retained_sets` (renderer: `retained_sets`)
+Walk this like pair-programming.
 
-1. Retained set — all objects kept alive only because a given object references them — domination analysis.
-2. MAT computes retained heap size — memory you would free if one reference disappeared.
-3. Dominator tree sorts objects by retained size — big retained blocks scream leak suspects.
-4. Leak suspects report highlights collections growing without bound — ArrayList or HashMap entries dominating.
-5. Follow reference chains from GC roots — path to GC roots, exclude weak references when hunting strong leaks.
-6. Shallow size versus retained size — shallow is the object alone, retained is the whole subgraph it pins.
+Focus on what each line means.
 
-### Scene `leak_patterns` (renderer: `leak_patterns`)
+Connect to the failure mode.
 
-1. Common leak patterns in Java applications — recognize before you grep blindly.
-2. Static collections that never remove entries — caches without eviction policy or TTL.
-3. Listeners registered but never unregistered — event buses, UI frameworks, JMX notifications.
-4. ThreadLocal values not cleared after request — pool thread carries last user's context and data graph.
-5. ClassLoader leaks in redeployed web apps — old WAR classes pinned by singleton references.
-6. Unclosed resources held in fields — streams and connections indirectly retain buffers.
+After this example, you should be able to point to the code and explain what problem each important line is solving.
 
-```java
-private static final Map<String, byte[]> CACHE = new HashMap<>();  // grows forever
-void handle(String key, byte[] data) {
-    CACHE.put(key, data);  // no remove, no bounds — classic leak
-}
-```
+### Example 2 — make it more realistic
 
-7. Fix — bounded cache, WeakReference values, or Caffeine with eviction — not unbounded static HashMap.
+The first example isolates the concept. Real applications rarely stop there. In a practical setting, Memory Leaks and Profiling usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
 
-### Scene `profiling_overview` (renderer: `profiling_overview`)
+So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
 
-1. Profiling complements heap dumps for live diagnosis before the heap explodes.
-2. Async Profiler — low-overhead CPU and allocation sampling attachable in production carefully.
-3. JFR allocation events show which methods allocate the most bytes over time — hot allocators.
-4. jcmd VM.native_memory summary tracks native and heap together — metaspace and direct buffer growth.
-5. VisualVM connects live — watch heap trend during load test — slope tells leak from traffic spike.
-6. Profile under realistic sustained load — idle apps hide leaks that appear only under steady traffic.
+A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
 
-### Scene `mat_workflow` (renderer: `mat_workflow`)
+When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
 
-1. A practical MAT workflow for leak hunting — repeatable, not panic-driven.
-2. Open HPROF — run Leak Suspects and Top Consumers reports first pass.
-3. Inspect dominator tree — sort by retained heap, click largest suspicious collection.
-4. Right-click suspect — Path to GC Roots, exclude weak and soft references initially.
-5. Identify the static field, cache, or listener holder keeping unexpected objects alive.
-6. Fix code — remove reference, add eviction, use WeakReference, or clear ThreadLocal in finally — verify with second dump under same workload.
+### What if we skip this approach?
 
-### Scene `mistakes` (renderer: `mistakes`)
+Important concepts become memorable when we see the failure mode without them.
 
-1. Three common mistakes I want burned into your brain.
-2. Mistake one — restarting the JVM before capturing a heap dump — evidence gone, mystery returns next week.
-3. Mistake two — chasing shallow size of many tiny objects instead of retained heap of one big map.
-4. Mistake three — assuming GC logs alone prove a leak — you need object graph proof of unexpected retention.
-5. Also — comparing dumps from different application versions or different traffic shapes — false leads.
-6. Leaks are reference problems — find what still points at garbage, then break that edge.
+For example, consider this common mistake: Guessing instead of dumping.
 
-### Scene `interview` (renderer: `interview`)
+That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
 
-1. Interview time — say this out loud like someone who has shipped code.
-2. Question: How do you diagnose a memory leak?
-3. Answer: Confirm heap grows under steady load — not just a traffic spike — GC cannot keep up despite collections.
-4. Capture heap dump — MAT retained set, dominator tree, leak suspects report.
-5. Path to GC roots — find unexpected strong reference chain — static map, listener, ThreadLocal, class loader.
-6. Fix and verify with another dump under the same workload — retained size should stabilize.
-7. Mention JFR allocation profiling for live triage — operational depth interviewers notice.
+This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
 
-### Scene `teaser` (renderer: `teaser`)
+### Example 3 — a common misunderstanding
 
-1. Heap dumps answer what is alive at a snapshot — command-line tools answer what is running right now.
-2. Episode Fifty-Eight — Diagnostic Tools.
-3. jcmd, jmap, jstack, and JFR for live JVM inspection on call.
-4. See you there.
+**Misunderstanding 1:** Guessing instead of dumping.
 
-_Total beats: expanded for ~10–12 minute conversational delivery (well above the 4-minute floor; under the 15-minute ceiling)._
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 2:** Fixating on GC when the leak is a reference graph.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 3:** Ignoring classloader leaks in hot reload.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+
+### Interview-style checkpoint
+
+Question: Classic Java leak?
+
+Answer in spoken form: Unbounded caches, static collections, ThreadLocal misuse, forgotten listeners.
+
+Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+
+### Connecting the thread
+
+We came from **GC Collectors**. That set up a need. **Memory Leaks and Profiling** is one of Java's answers to that need.
+
+You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+
+### Looking ahead
+
+Once this is solid, a new challenge appears. That challenge leads us to **Diagnostic Tools**.
+
+We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
 
 ## Source attribution (reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
-- **Primary handbook lesson:** Lesson **57** — *Bytecode*.
-- **Series catalog mapping:** Episode 57 / catalog column `57` / published title *Memory Leaks and Profiling*.
-- **How content was used:** The handbook provided the **topic outline and teaching points**. Spoken lines were **expanded** into a conversational 4–15 minute documentary script with leak pattern code example — not a verbatim paste of handbook prose.
-- **Runtime note:** Earlier short-cut narration was too thin (~4 min headline beats). This revision deepens explanation, examples, mistakes, and interview answer structure while staying under ~15 minutes.
+- **Primary curriculum mapping:** Episode 57 / **Memory Leaks and Profiling** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
+- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
+- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
 
-- Full handbook HTML is **not checked into git** (original upload was ephemeral). Attribution for this episode is by **lesson title / topic** from the recovered TOC and the series catalog.
+### Teaching points drawn from the topic bank
 
-### Scene ↔ curriculum intent
-
-- **`hook`** — reachable garbage vs GC failure
-- **`title`** — episode title card
-- **`heap_dumps`** — capture and analyze HPROF
-- **`retained_sets`** — dominator tree and retained size
-- **`leak_patterns`** — static caches, listeners, ThreadLocal
-- **`profiling_overview`** — JFR and allocation profiling
-- **`mat_workflow`** — step-by-step leak hunt
-- **`mistakes`** — restart before dump, shallow size chase
-- **`interview`** — leak diagnosis interview answer
-- **`teaser`** — bridge to Diagnostic Tools
+- Dominator trees.
+- Unbounded caches.
+- Listener leaks.
+- ThreadLocal pool leaks.
+- Heap dumps under load.

@@ -5,206 +5,162 @@
 | Episode | 37 |
 | Title | Synchronization |
 | Catalog handbook column | 37 |
-| Narration source script | Expanded review narration (4–15 min target) |
-| Spoken form | Conversational documentary beats + walkthrough code |
+| Narration source script | Descriptive instructor narration (4–15 min) |
+| Spoken form | Connected explanatory prose with walked-through examples |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
-## Full narration (spoken beats)
+## Full narration
 
-### Scene `hook` (renderer: `hook`)
+### Opening — start with a problem
 
-1. Two threads update the same counter. You expect two increments — you might get one.
-2. Race conditions happen when shared mutable state is accessed without coordination.
-3. Synchronization is how Java makes critical sections safe — one thread at a time.
-4. Mutual exclusion on shared data — locks, monitors, and the synchronized keyword.
-5. Today — synchronized methods, synchronized blocks, and intrinsic locks explained plainly.
-6. Shared memory is powerful. Synchronization keeps it honest.
+In the previous episode, we worked through **Threads Intro**. That gave us a piece of the platform. Today we need the next piece: **Synchronization**.
 
-### Scene `title` (renderer: `title`)
+We are continuing The Java Story, and today's challenge is Synchronization. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
 
-1. Episode Thirty-Seven.
-2. Synchronization — safe access to shared data.
-3. Races, monitors, method versus block locking, and when to synchronize minimally.
+synchronized buys mutual exclusion and visibility — keep sections small.
 
-### Scene `race` (renderer: `race`)
+I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
 
-1. A race condition — outcome depends on thread scheduling order you don't control.
-2. count++ is not atomic — read, increment, write — three separate steps at bytecode level.
-3. Two threads interleave those steps — updates can be lost silently.
-4. The bug is intermittent — hardest kind to reproduce in dev, nastiest in prod.
-5. You need mutual exclusion — only one thread in the critical section at a time.
-6. Synchronization enforces that rule at the language level — compiler and JVM cooperate.
-7. AtomicInteger is an alternative for simple counters — we'll see atomics later in the series.
+### Why this exists
 
-### Scene `sync_method` (renderer: `sync_method`)
+In simple language, synchronization is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
 
-1. synchronized on an instance method locks the instance — the object referenced by this.
-2. synchronized on a static method locks the Class object — one lock for all instances.
-3. Only one thread can execute that synchronized method on the same lock at a time.
-4. Other threads block until the lock is released — park/unpark under the hood.
-5. Simple and readable for small critical sections that fit entirely in one method.
-6. The lock is automatically released when the method exits — even on exception. No forgotten unlock.
-7. Use synchronized methods when the whole method is the critical section — nothing else needs the lock mid-method.
+A helpful picture: Picture Synchronization clearly before edge cases.
 
-### Scene `sync_block` (renderer: `sync_block`)
+Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
 
-1. synchronized block — finer control over exactly what is protected.
-2. synchronized on this — locks the current instance, same as instance method form.
-3. synchronized on a dedicated lock object — private final Object lock = new Object() — clearer intent.
-4. Protect only the few lines that touch shared state — leave non-shared work outside.
-5. Smaller critical sections mean less contention — better throughput under load.
-6. Prefer blocks when only part of a method needs protection — most methods aren't 100% critical.
-7. Never synchronize on String literals or boxed Integer cache values — shared accidental locks across code.
+### Building the idea step by step
 
-### Scene `monitor` (renderer: `monitor`)
+#### Step 1
 
-1. Every Java object has an intrinsic lock — also called a monitor.
-2. Entering synchronized acquires the monitor. Exiting releases it — bytecode monitorenter/monitorexit.
-3. Reentrant — the same thread can acquire a lock it already holds without deadlocking itself.
-4. wait, notify, and notifyAll operate on the monitor — coordination beyond mere exclusion.
-5. The JVM maps monitors to operating-system mutexes under the hood — blocking has real cost.
-6. Understand monitors — they underpin synchronized, wait/notify, and later explicit locks.
-7. One monitor per object — choosing the right lock object is a design decision.
+Now consider this teaching point: Intrinsic locks.
 
-### Scene `when_sync` (renderer: `when_sync`)
+This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
 
-1. When to synchronize — read-modify-write on shared mutable fields.
-2. Invariants that must hold while multiple fields are updated together — transfer between accounts.
-3. Compound actions — check-then-act on shared state — if balance sufficient then deduct.
-4. When not — over-synchronizing everything kills performance and invites deadlocks.
-5. Synchronize the minimum — but synchronize what matters. Missing lock is worse than slow lock.
-6. Immutable objects and thread confinement reduce how much you synchronize — design first.
-7. Concurrent collections help for data structures — not a replacement for all coordination needs.
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
 
-### Scene `code` (renderer: `code`)
+#### Step 2
 
-1. Fix a race with synchronized increment — watch the difference.
+Now consider this teaching point: Happens-before via sync.
+
+Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 3
+
+Now consider this teaching point: Lock on shared state, not on random objects.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 4
+
+Now consider this teaching point: Deadlocks from multiple locks.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 5
+
+Now consider this teaching point: Prefer higher-level concurrency utils when possible.
+
+This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+### Example 1 — the smallest useful illustration
+
+Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
 
 ```java
-public class Counter {
-    private int count = 0;
-
-    public synchronized void increment() {
-        count++;
-    }
-
-    public synchronized int getCount() {
-        return count;
-    }
-
-    public static void main(String[] args) throws InterruptedException {
-        Counter counter = new Counter();
-        Thread t1 = new Thread(() -> { for (int i = 0; i < 1000; i++) counter.increment(); });
-        Thread t2 = new Thread(() -> { for (int i = 0; i < 1000; i++) counter.increment(); });
-        t1.start(); t2.start();
-        t1.join(); t2.join();
-        System.out.println(counter.getCount());  // 2000 — with sync
-    }
-}
+synchronized void incr() { count++; }
 ```
 
-2. synchronized on increment makes read-modify-write atomic relative to other synchronized methods on same lock.
-3. getCount synchronized too — otherwise another thread might read mid-update torn value on some architectures.
-4. Without synchronized, result often below 2000 — lost updates from interleaving.
-5. Two threads, one lock object — the Counter instance monitor.
-6. swap increment body to synchronized block on private lock field — same semantics, clearer for large methods.
+Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
 
-### Scene `mistakes` (renderer: `mistakes`)
+I'll walk this like pair-programming.
 
-1. Three common mistakes.
-2. One — synchronizing on the wrong object — String literals or Integer.valueOf(1) shared across classes.
-3. Two — holding locks while doing slow I/O — blocks every other thread waiting on that lock.
-4. Three — nested locks on different objects in different orders — classic deadlock setup.
-5. Also — assuming synchronized fixes visibility alone for all patterns — volatile and JMM still matter.
-6. Lock only what you must — for as short as possible. Measure contention under load.
+Focus on the idea each line encodes.
 
-### Scene `interview` (renderer: `interview`)
+Then connect to the failure mode.
 
-1. Interview question — synchronized method versus synchronized block?
-2. Both acquire an intrinsic lock on an object — instance this or explicit lock reference.
-3. Method form locks on this or the Class. Block form lets you choose the lock and scope.
-4. Blocks allow finer granularity — protect fewer lines, less contention.
-5. Mention reentrancy and that locks release on exception — unlike manual unlock forget.
-6. Contrast with ReentrantLock when you need tryLock — preview next episodes.
-7. That answer shows you understand monitors, not just keywords.
+Look at `synchronized void incr() { count++; }`.
 
-### Scene `amplify`
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Let me press on point 1 a bit harder.
-2. Intrinsic locks.
-3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-4. If you cannot explain the failure mode, you do not own the feature yet.
-5. Let me press on point 2 a bit harder.
-6. Happens-before via sync.
-7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-8. If you cannot explain the failure mode, you do not own the feature yet.
-9. Let me press on point 3 a bit harder.
-10. Lock on shared state, not on random objects.
-11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-12. If you cannot explain the failure mode, you do not own the feature yet.
-13. Let me press on point 4 a bit harder.
-14. Deadlocks from multiple locks.
-15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-16. If you cannot explain the failure mode, you do not own the feature yet.
-17. Let me press on point 5 a bit harder.
-18. Prefer higher-level concurrency utils when possible.
-19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-20. If you cannot explain the failure mode, you do not own the feature yet.
+After this example, you should be able to point to the code and explain what problem each important line is solving.
 
-### Scene `handbook_spine`
+### Example 2 — make it more realistic
 
-1. How this maps to the reference handbook mindset:
-2. The handbook teaches concept, internal working, mistakes, and interview questions.
-3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
-4. So if a section felt familiar, good: that means the curriculum spine is intact.
+The first example isolates the concept. Real applications rarely stop there. In a practical setting, Synchronization usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
 
-### Scene `practice`
+So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
 
-1. Mini practice before you go.
-2. Pause the video and do this without looking:
-3. 1) Say out loud what Synchronization is for in one sentence.
-4. 2) Write the example from memory — approximate is fine.
-5. 3) Name one mistake from this episode and how you would catch it in review.
-6. That three-step drill turns watching into learning.
-### Scene `summary` (renderer: `summary`)
+A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
 
-1. Races come from unsynchronized shared mutable state.
-2. synchronized = intrinsic lock on object monitor.
-3. Method lock for whole method; block lock for partial critical sections.
-4. Same thread can reenter — reentrant monitors.
-5. Sync minimally; never lock on String literals or boxed caches.
+When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
 
-### Scene `teaser` (renderer: `teaser`)
+### What if we skip this approach?
 
-1. Locks prevent races. But can every thread see your writes?
-2. Episode Thirty-Eight — volatile and Happens-Before.
-3. Memory visibility and the Java Memory Model.
-4. See you there.
+Important concepts become memorable when we see the failure mode without them.
 
-_Total beats: **102** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
+For example, consider this common mistake: Synchronizing on this for public APIs carelessly.
+
+That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+
+This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+
+### Example 3 — a common misunderstanding
+
+**Misunderstanding 1:** Synchronizing on this for public APIs carelessly.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 2:** Huge synchronized methods.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 3:** Nested locks without ordering.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+
+### Interview-style checkpoint
+
+Question: What does synchronized guarantee?
+
+Answer in spoken form: Mutual exclusion and memory visibility among threads using the same lock.
+
+Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+
+### Connecting the thread
+
+We came from **Threads Intro**. That set up a need. **Synchronization** is one of Java's answers to that need.
+
+You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+
+### Looking ahead
+
+Once this is solid, a new challenge appears. That challenge leads us to **volatile and Happens-Before**.
+
+We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
 
 ## Source attribution (reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
-- **Primary handbook lesson:** Lesson **37** — *Synchronization*.
-- **Series catalog:** Episode 37 ↔ handbook lesson 37 — *Synchronization*.
-- **How content was used:** The handbook provided the **topic outline and teaching points**. Spoken lines were **expanded** into a conversational 4–15 minute documentary script with a walked-through code example — not a verbatim paste of handbook prose.
-- **Runtime note:** Earlier short-cut narration was too thin (~4 min headline beats). This revision deepens explanation, examples, mistakes, and interview answer structure while staying under ~15 minutes.
+- **Primary curriculum mapping:** Episode 37 / **Synchronization** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
+- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
+- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
 
-- Full handbook HTML is **not checked into git** (original upload was ephemeral). Attribution for this episode is by **lesson title / topic** from the recovered TOC and the series catalog.
+### Teaching points drawn from the topic bank
 
-### Scene ↔ curriculum intent
-
-- **`hook`** — Threads → Synchronization bridge
-- **`title`** — episode title card
-- **`race`** — race conditions
-- **`sync_method`** — synchronized methods
-- **`sync_block`** — synchronized blocks
-- **`monitor`** — intrinsic locks/monitors
-- **`when_sync`** — when to synchronize
-- **`code`** — synchronized counter walkthrough
-- **`mistakes`** — common mistakes
-- **`interview`** — method vs block sync
-- **`summary`** — revision
-- **`teaser`** — bridge to volatile/JMM
+- Intrinsic locks.
+- Happens-before via sync.
+- Lock on shared state, not on random objects.
+- Deadlocks from multiple locks.
+- Prefer higher-level concurrency utils when possible.

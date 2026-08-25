@@ -5,208 +5,184 @@
 | Episode | 12 |
 | Title | Packages |
 | Catalog handbook column | 12 |
-| Narration source script | Expanded review narration (4–15 min target) |
-| Spoken form | Conversational documentary beats + walkthrough code |
-| Runtime target | **4–15 minutes** (aim ~8–12) |
+| Narration source script | Descriptive instructor narration (4–15 min) |
+| Spoken form | Connected explanatory prose with walked-through examples |
+| Runtime target | **4–15 minutes** (aim ~10–12) |
 
-## Full narration (spoken beats)
+## Full narration
 
-### Scene `hook` (renderer: `hook`)
+### Opening — start with a problem
 
-1. Access needs neighborhoods. Packages are those neighborhoods.
-2. Namespace and boundary — on disk and at runtime.
-3. Prevent name collisions. Shape collaboration.
-4. Folder tree should tell the truth about ownership.
+In the previous episode, we worked through **Access Modifiers**. That gave us a piece of the platform. Today we need the next piece: **Packages**.
 
-### Scene `title` (renderer: `title`)
+A growing project needs namespaces so class names do not collide and folders stay honest.
 
-1. Episode Twelve.
-2. Packages — namespaces, boundaries, and ownership.
+Packages give your codebase a geography — names, folders, and boundaries.
 
-### Scene `namespace` (renderer: `namespace`)
+I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
 
-1. package com.acme.orders.domain — part of binary class name.
-2. com.acme.OrderService distinct from com.other.OrderService.
-3. Directory path must match package declaration.
-4. Break mapping — IDE and compiler angry.
+### Why this exists
 
-### Scene `boundary` (renderer: `boundary`)
+In simple language, packages is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
 
-1. Package-private visibility scoped to package.
-2. External code uses public API types only.
-3. Good packages make illegal dependencies awkward.
-4. One giant util package erases boundaries.
+A helpful picture: Keep a simple picture of Packages.
 
-### Scene `structure` (renderer: `structure`)
+Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
 
-1. Organize by capability — api, application, domain, infrastructure.
-2. Or by feature when teams own features end to end.
-3. Pure layers alone can become anemic and tangled.
-4. Pick structure matching ownership and dependency direction.
+### Building the idea step by step
 
-### Scene `example` (renderer: `example`)
+#### Step 1
 
-1. Walk application root placement.
+Now consider this teaching point: Reverse-DNS naming conventions.
+
+This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 2
+
+Now consider this teaching point: Directory tree must match package declarations.
+
+Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 3
+
+Now consider this teaching point: import vs fully qualified names.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 4
+
+Now consider this teaching point: Star imports hide dependencies.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 5
+
+Now consider this teaching point: Combine packages with access modifiers for real boundaries.
+
+This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+### Example 1 — the smallest useful illustration
+
+Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+
 ```java
-package com.acme.orders;
+package com.shop.order;
+import com.shop.user.User;
 
-import com.acme.orders.domain.Order;
-import com.acme.orders.api.OrderController;
-
-public class OrdersApplication {
-    public static void main(String[] args) {
-        System.out.println("Boot from root package: com.acme.orders");
-    }
+public class OrderService {
+  private final User user;
+  public OrderService(User user) { this.user = user; }
 }
 ```
 
-2. OrdersApplication at com.acme.orders — root for scanning.
-3. Imports show dependency direction toward domain types.
-4. Main at sensible root — frameworks scan downward from here.
+Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
 
-### Scene `spring` (renderer: `spring`)
+I'll walk this example like we're pair-programming.
 
-1. Spring Boot scans from main class package down.
-2. Too deep main — beans missed mysteriously.
-3. Packages are navigation paths for frameworks.
+Focus on the idea each line encodes.
 
-### Scene `deeper` (renderer: `deeper`)
+Then we connect it to the production failure mode.
 
-1. Default package — no package declaration — quick demos only, not production.
-2. Package naming convention — reversed domain — com.company.product.layer.
-3. Never use java or javax as your prefix — reserved and confusing.
-4. Split packages — same package name in two JARs — illegal in modules, fragile on classpath.
-5. JPMS forbids split packages — migration pain point.
-6. package-info.java — package level documentation and annotations.
-7. ArchUnit and similar tools test package dependency rules in CI.
-8. Feature folders versus layers — both valid — align with team ownership.
-9. Monorepo multi-module Maven/Gradle — each module maps to deployable or library boundary.
+Look at `package com.shop.order;`.
 
-### Scene `production` (renderer: `production`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Production context — why this topic stops incidents.
-2. Code review checklist item — catch misuse before merge.
-3. Observability — logs and metrics should name concepts clearly — not mystery abbreviations.
-4. Tests should encode the contracts we discussed — one failing test beats ten slides.
-5. Refactor toward clarity — juniors read this code six months from now.
-6. Interview answers map directly to daily choices — not trivia for trivia's sake.
-7. Connect to handbook lesson themes — JVM, structure, types, concurrency later in series.
-8. Next episodes build on this — skipping fundamentals creates gaps that show in system design.
+Look at `import com.shop.user.User;`.
 
-### Scene `mistakes` (renderer: `mistakes`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Three mistakes.
-2. One — everything in util.
-3. Two — cyclic package dependencies.
-4. Three — buried main class.
-5. Package names that lie about contents.
+Look at `public class OrderService {`.
 
-### Scene `interview` (renderer: `interview`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Interview — why packages matter?
-2. Namespace. Access. Ownership. Framework scanning.
-3. Runtime identity — fully qualified name plus classloader.
-4. Structure enforces architecture when done honestly.
+Look at `private final User user;`.
 
-### Scene `walkthrough2` (renderer: `walkthrough2`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Let's slow down once more with a reviewer mindset.
-2. If you saw this in a pull request, what would you comment?
-3. Naming clarity, null safety, visibility, performance — rotate through that checklist.
-4. Let me say that again in plain language — because this is the kind of detail interviews probe and production punishes.
-5. When you read open-source Java or a teammate's pull request, you'll recognize these patterns immediately.
-6. Pause the video if you want — write a five-line example in your scratch project. Muscle memory beats passive watching.
-7. The handbook treats this as foundational for eighty lessons — JVM tuning, Spring, concurrency all assume you know this cold.
-8. We're not racing the syllabus. We're building mental models that survive version upgrades and job changes.
-9. Senior engineers don't know every API by heart. They know where to look and which mistakes repeat.
-10. Junior engineers who nail fundamentals ramp faster on frameworks — Spring, JPA, Kafka all sit on this base.
-11. Your IDE helps — but only after you understand what the compiler and JVM will accept and reject.
-12. Compile errors are friends. They prevent runtime surprises in customer environments.
-13. Runtime errors with stack traces — read bottom up to your code first, then framework frames.
-14. Unit tests for this topic should be small — one concept per test method — not thousand-line integration only.
-15. When stuck, reduce to main in a scratch class — isolate the language feature from framework noise.
+Look at `public OrderService(User user) { this.user = user; }`.
 
-### Scene `connect` (renderer: `connect`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Connect backward — Episode One gave portability. Episode Two named the toolchain.
-2. Connect forward — collections, streams, and concurrency assume today's concept is solid.
-3. The Java Story is cumulative — skipping an episode creates a hole you feel later as confusion.
-4. Bookmark the handbook lesson that matches this episode — revision sheet before interviews.
-5. Production stories in later episodes reference types and structures we defined in Phase One.
-6. You are still in Phase One — language and platform — the bedrock everything else stands on.
-7. Architects who skipped fundamentals design APIs that leak abstraction — don't skip.
-8. Teaching this to a teammate? Use the same order — hook, example, mistake, interview answer.
-9. Documentation you write for your team should mirror these boundaries — package, type, method.
-10. Code is read more than written — optimize for the reader who has no context yet.
+After this example, you should be able to point to the code and explain what problem each important line is solving.
 
-### Scene `revision` (renderer: `revision`)
+### Example 2 — make it more realistic
 
-1. Quick revision beat — say the definition out loud without looking.
-2. Explain it to an imaginary junior on your team in two sentences.
-3. Name one production mistake this feature prevents when used correctly.
-4. Name one mistake it causes when used incorrectly.
-5. Connect to interview — one question, one crisp answer — practice now.
-6. If you cannot explain it simply, revisit the example scene once more.
-7. Solid Phase One fundamentals make Phase Two collections feel easy instead of magical.
+The first example isolates the concept. Real applications rarely stop there. In a practical setting, Packages usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
 
-### Scene `deep_dive` (renderer: `deep_dive`)
+So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
 
-1. Deep dive moment — watch this carefully.
-2. In a code review, ask: does this code teach the reader the domain rule?
-3. Tests should document edge cases — null, empty, boundary, overflow where relevant.
-4. Logging — log identifiers and outcomes, not secrets — strings appear in logs constantly.
-5. Metrics — count failures of this operation — helps SRE spot regressions after deploy.
-6. Feature flags — control flow at deploy time — still write clear Java structure underneath.
-7. Refactoring — rename for intent before optimizing — clarity first, microseconds second.
-8. Pair with the handbook revision sheet — twenty bullets beat rereading eighty pages blindly.
-9. OpenJDK documentation and Javadoc — authoritative when interview answers need precision.
-10. Stack Overflow answers vary in quality — verify against language spec for edge cases.
-11. Your future self maintains this code — write the explanation you wish you had today.
-12. Teaching solid Java fundamentals reduces incident pages on-call — that is the real ROI.
+A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
 
-### Scene `summary` (renderer: `summary`)
+When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
 
-1. Packages group types under namespace.
-2. Match folders. Control access. Express ownership.
-3. Root package is framework anchor in Spring.
-4. Honest tree beats clever naming.
+### What if we skip this approach?
 
-### Scene `teaser` (renderer: `teaser`)
+Important concepts become memorable when we see the failure mode without them.
 
-1. Boundaries set. Next — type-safe fixed constants.
-2. Episode Thirteen — Enums.
-3. States instead of magic strings.
-4. See you there.
-_Total beats: expanded for ~8–12 minute conversational delivery (well above the 4-minute floor; under the 15-minute ceiling)._
+For example, consider this common mistake: Package/folder mismatch.
+
+That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+
+This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+
+### Example 3 — a common misunderstanding
+
+**Misunderstanding 1:** Package/folder mismatch.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 2:** Giant catch-all packages.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 3:** Relying on star imports in public APIs.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+
+### Interview-style checkpoint
+
+Question: Why packages?
+
+Answer in spoken form: Namespaces, organization, and access boundaries in large codebases.
+
+Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+
+### Connecting the thread
+
+We came from **Access Modifiers**. That set up a need. **Packages** is one of Java's answers to that need.
+
+You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+
+### Looking ahead
+
+Once this is solid, a new challenge appears. That challenge leads us to **Enums**.
+
+We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
 
 ## Source attribution (reference document)
 
-(reference document)
-
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
-- **Primary handbook lesson:** Lesson **12** — *Packages*.
-- **Series catalog:** Episode 12 ↔ handbook lesson 12 — *Packages*.
-- **How content was used:** The handbook provided the **topic outline and teaching points**. Spoken lines were **rewritten** into short documentary beats matched to motion-graphics scenes (per user guidance: own narration synced to presentation; handbook as reference, not a script to read aloud).
+- **Primary curriculum mapping:** Episode 12 / **Packages** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
+- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
+- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
 
-- **Narration expansion:** Spoken lines expanded for **4–15 minute** conversational runtime; handbook still used as topic reference.
+### Teaching points drawn from the topic bank
 
-### Handbook concepts reused (from recovered Lesson 12 excerpt)
-
-- Concept: Packages group related Java types under a namespace. They organize code, prevent class-name collisions, define package-private visibility boundaries, and map source structure to runtime class identity. com.acme.orders |-- api |-- domain |-- persistenc
-
-Full recovered excerpt: `../reference/handbook_lessons_1-12_excerpts.md` (Lesson 12).
-
-### Scene ↔ curriculum intent
-
-- **`hook`** — starts from: _Access needs a neighborhood. Packages are those neighborhoods._
-- **`title`** — starts from: _Episode Twelve._
-- **`namespace`** — starts from: _package com.acme.orders.domain;_
-- **`boundary`** — starts from: _Packages define package-private visibility._
-- **`structure`** — starts from: _Organize by capability when you can._
-- **`spring`** — starts from: _Spring Boot tip — scanning starts from the main class package downward._
-- **`mistakes`** — starts from: _Three common mistakes._
-- **`interview`** — starts from: _Interview question — why do packages matter?_
-- **`teaser`** — starts from: _Boundaries are set. Next — fixed sets of constants with behavior._
-
-- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.
+- Reverse-DNS naming conventions.
+- Directory tree must match package declarations.
+- import vs fully qualified names.
+- Star imports hide dependencies.
+- Combine packages with access modifiers for real boundaries.

@@ -5,137 +5,173 @@
 | Episode | 53 |
 | Title | Heap and Stack |
 | Catalog handbook column | 53 |
-| Narration source script | Expanded review narration (4–15 min target) |
-| Spoken form | Conversational documentary beats + walkthrough code |
+| Narration source script | Descriptive instructor narration (4–15 min) |
+| Spoken form | Connected explanatory prose with walked-through examples |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
-## Full narration (spoken beats)
+## Full narration
 
-### Scene `hook` (renderer: `hook`)
+### Opening — start with a problem
 
-1. Episode Fifty-Two decoded bytecode executing on operand stacks inside method frames.
-2. But where do those frames and the objects they reference actually live in memory?
-3. Each thread owns a stack of frames — locals and operand stacks inside each frame.
-4. The heap holds every object your program allocates with new — shared across all threads.
-5. Class metadata lives in metaspace — separate from the object heap since Java 8.
-6. Today — heap and stack, frames, locals, object layout, and the errors that name each region.
+In the previous episode, we worked through **Bytecode Basics**. That gave us a piece of the platform. Today we need the next piece: **Heap and Stack**.
 
-### Scene `title` (renderer: `title`)
+We are continuing The Java Story, and today's challenge is Heap and Stack. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
 
-1. Episode Fifty-Three.
-2. Heap and Stack.
-3. We'll map variables to regions, walk object headers, and explain StackOverflowError versus OutOfMemoryError.
+Stack is per-call bookkeeping; heap is where objects live.
 
-### Scene `stack_frames` (renderer: `stack_frames`)
+I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
 
-1. Each Java thread has its own call stack — one frame pushed per method invocation.
-2. A frame stores local variables, the operand stack, and a reference to the constant pool for this method.
-3. When a method is invoked, a new frame is pushed — return pops it and discards locals automatically.
-4. StackOverflowError means too many nested calls — usually infinite or runaway recursion.
-5. Frames are thread-local — no sharing between threads on the stack — no locks needed for locals.
-6. The stack is fast and automatically reclaimed when a method returns — no GC involved.
+### Why this exists
+
+In simple language, heap and stack is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
+
+A helpful picture: Picture Heap and Stack clearly.
+
+Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
+
+### Building the idea step by step
+
+#### Step 1
+
+Now consider this teaching point: Frames hold locals and return info.
+
+This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 2
+
+Now consider this teaching point: Objects live on the heap (generally).
+
+Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 3
+
+Now consider this teaching point: Escape analysis may elide allocations.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 4
+
+Now consider this teaching point: StackOverflow vs OutOfMemory.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 5
+
+Now consider this teaching point: GC cares about heap reachability.
+
+This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+### Example 1 — the smallest useful illustration
+
+Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
 
 ```java
-void recurse(int n) {
-    recurse(n + 1);  // StackOverflowError eventually
+void f() {
+  int x = 1;          // stack local
+  User u = new User(); // object on heap
 }
 ```
 
-7. Default stack size per thread is platform-dependent — -Xss tunes it when deep recursion is intentional.
+Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
 
-### Scene `locals_array` (renderer: `locals_array`)
+Walk this like pair-programming.
 
-1. Local variable slot zero is always this for instance methods — static methods skip this slot.
-2. Parameters occupy the next slots in order — iload and istore bytecode reference slot indices.
-3. Wide types long and double consume two consecutive slots — compiler leaves a hole for the second.
-4. Operand stack is separate from locals — temporary computation space for bytecode operations.
-5. Compiler assigns slot numbers — visible in javap -v LocalVariableTable when debug info present.
-6. Locals die with the frame — references on locals stop keeping heap objects alive when frame pops, unless those objects are reachable elsewhere.
+Focus on what each line means.
 
-### Scene `heap_objects` (renderer: `heap_objects`)
+Connect to the failure mode.
 
-1. Every new keyword allocates an object on the heap — arrays included.
-2. All threads share the heap — objects are visible across threads through references.
-3. References on the stack, in fields, or in arrays point to heap instances — not the objects themselves on stack.
-4. Heap memory is managed by the garbage collector — you never free manually like C++.
-5. OutOfMemoryError Java heap space means the heap cannot grow further despite GC attempts.
-6. Large object graphs live here — caches, collections, domain models, session state.
+Look at `void f() {`.
 
-```java
-String label = "hello";           // reference on stack (local)
-StringBuilder buf = new StringBuilder();  // object on heap
-buf.append(label);
-```
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-7. label points at interned or heap String — buf points at StringBuilder instance — classic split.
+Look at `int x = 1;          // stack local`.
 
-### Scene `object_layout` (renderer: `object_layout`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. A heap object starts with a mark word and a klass pointer header — housekeeping and type info.
-2. Instance fields follow the header — primitives inline, references are pointer slots.
-3. Arrays store length then elements — int arrays pack ints contiguously for cache-friendly access.
-4. Object size equals header plus fields plus alignment padding — JVM rounds for alignment.
-5. Compressed oops shorten reference fields on 64-bit JVMs with heaps under roughly 32 GB — saves memory bandwidth.
-6. Understanding layout helps reason about footprint — why padding makes small objects surprisingly large.
+Look at `User u = new User(); // object on heap`.
 
-### Scene `metaspace` (renderer: `metaspace`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Class metadata — method tables, constant pools, field layouts, vtables — lives in metaspace.
-2. Metaspace replaced PermGen in Java 8 — native memory, not counted in -Xmx heap limit.
-3. Grows as classes load — reclaimed when ClassLoader becomes unreachable and GC collects loader.
-4. ClassLoader leaks can exhaust metaspace — common in hot-redeploy app servers without restart.
-5. MaxMetaspaceSize caps growth — default effectively unlimited on 64-bit until OS says no.
-6. Heap holds objects — metaspace holds class definitions — two different OutOfMemoryError stories.
+After this example, you should be able to point to the code and explain what problem each important line is solving.
 
-### Scene `mistakes` (renderer: `mistakes`)
+### Example 2 — make it more realistic
 
-1. Three common mistakes I want burned into your brain.
-2. Mistake one — thinking large objects live on the stack — only references and primitives live in frames, big objects on heap.
-3. Mistake two — assuming stack locals are thread-safe globally — safe only if references do not escape to shared structures.
-4. Mistake three — ignoring metaspace when leaking ClassLoaders in plugin or hot-reload apps.
-5. Also — confusing heap -Xmx with total JVM RSS — native memory, threads, code cache add on top.
-6. Know which memory region each piece of data occupies — debugging starts with the right map.
+The first example isolates the concept. Real applications rarely stop there. In a practical setting, Heap and Stack usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
 
-### Scene `interview` (renderer: `interview`)
+So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
 
-1. Interview time — say this out loud like someone who has shipped code.
-2. Question: Heap versus stack in Java?
-3. Answer: Stack — per-thread frames with locals and operand stacks, automatic cleanup on return.
-4. Heap — shared object storage, garbage collected when unreachable from GC roots.
-5. References on stack or in fields point to objects on heap — not the reverse.
-6. Metaspace holds class metadata — separate from heap since Java 8.
-7. StackOverflowError versus OutOfMemoryError — different regions, different fixes — name both clearly.
+A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
 
-### Scene `teaser` (renderer: `teaser`)
+When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
 
-1. Objects on the heap outlive their frames — something must reclaim unreachable graphs.
-2. Episode Fifty-Four — Garbage Collection Intro.
-3. Roots, mark-sweep, generations, and stop-the-world pauses you feel in latency graphs.
-4. See you there.
+### What if we skip this approach?
 
-_Total beats: expanded for ~10–12 minute conversational delivery (well above the 4-minute floor; under the 15-minute ceiling)._
+Important concepts become memorable when we see the failure mode without them.
+
+For example, consider this common mistake: Confusing heap dumps with stack traces.
+
+That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+
+This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+
+### Example 3 — a common misunderstanding
+
+**Misunderstanding 1:** Confusing heap dumps with stack traces.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 2:** Assuming every new always hits heap forever.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 3:** Ignoring native/stack limits.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+
+### Interview-style checkpoint
+
+Question: Where do objects live?
+
+Answer in spoken form: On the heap generally; references may live in stack frames.
+
+Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+
+### Connecting the thread
+
+We came from **Bytecode Basics**. That set up a need. **Heap and Stack** is one of Java's answers to that need.
+
+You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+
+### Looking ahead
+
+Once this is solid, a new challenge appears. That challenge leads us to **Garbage Collection**.
+
+We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
 
 ## Source attribution (reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
-- **Primary handbook lesson:** Lesson **61** — *Heap*.
-- **Series catalog mapping:** Episode 53 / catalog column `53` / published title *Heap and Stack*.
-- **Note:** Episode number and handbook lesson number are **not 1:1** here (handbook lesson 61 → episode 53). See `../reference/handbook_toc_recovered.md` for documented divergences.
-- **How content was used:** The handbook provided the **topic outline and teaching points**. Spoken lines were **expanded** into a conversational 4–15 minute documentary script with stack versus heap examples — not a verbatim paste of handbook prose.
-- **Runtime note:** Earlier short-cut narration was too thin (~4 min headline beats). This revision deepens explanation, examples, mistakes, and interview answer structure while staying under ~15 minutes.
+- **Primary curriculum mapping:** Episode 53 / **Heap and Stack** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
+- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
+- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
 
-- Full handbook HTML is **not checked into git** (original upload was ephemeral). Attribution for this episode is by **lesson title / topic** from the recovered TOC and the series catalog.
+### Teaching points drawn from the topic bank
 
-### Scene ↔ curriculum intent
-
-- **`hook`** — memory regions beyond operand stack
-- **`title`** — episode title card
-- **`stack_frames`** — per-thread call stacks
-- **`locals_array`** — locals vs operand stack
-- **`heap_objects`** — shared object allocation
-- **`object_layout`** — headers, fields, compressed oops
-- **`metaspace`** — class metadata region
-- **`mistakes`** — stack vs heap confusion, metaspace neglect
-- **`interview`** — heap vs stack interview answer
-- **`teaser`** — bridge to Garbage Collection
+- Frames hold locals and return info.
+- Objects live on the heap (generally).
+- Escape analysis may elide allocations.
+- StackOverflow vs OutOfMemory.
+- GC cares about heap reachability.

@@ -5,130 +5,159 @@
 | Episode | 55 |
 | Title | JIT Compilation |
 | Catalog handbook column | 55 |
-| Narration source script | Expanded review narration (4–15 min target) |
-| Spoken form | Conversational documentary beats + walkthrough code |
+| Narration source script | Descriptive instructor narration (4–15 min) |
+| Spoken form | Connected explanatory prose with walked-through examples |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
-## Full narration (spoken beats)
+## Full narration
 
-### Scene `hook` (renderer: `hook`)
+### Opening — start with a problem
 
-1. Episode Fifty-Four showed the garbage collector reclaiming unreachable heap objects.
-2. But how does bytecode actually run at full speed after startup?
-3. The JVM starts with an interpreter — executing opcodes one by one, collecting profiling data.
-4. Hot methods get compiled to native machine code by the JIT compiler — just-in-time, not ahead-of-time for app code.
-5. C1 compiles fast with basic optimizations — C2 compiles deep and slow with aggressive inlining.
-6. Today — JIT compilation, tiered execution, and deoptimization when assumptions break.
+In the previous episode, we worked through **Garbage Collection**. That gave us a piece of the platform. Today we need the next piece: **JIT Compilation**.
 
-### Scene `title` (renderer: `title`)
+We are continuing The Java Story, and today's challenge is JIT Compilation. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
 
-1. Episode Fifty-Five.
-2. JIT Compilation.
-3. We'll follow the tier pipeline, name hot methods, and explain why your first benchmark lap lies.
+The JIT turns hot interpreted code into optimized native code after warmup.
 
-### Scene `interpreter` (renderer: `interpreter`)
+I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
 
-1. The interpreter executes bytecode without ahead-of-time native compilation for application methods.
-2. Every method starts in interpreted mode — simple, portable, slower per invocation — collects invocation and loop counters.
-3. The JVM profiles execution — which methods run often, which loops spin millions of iterations.
-4. Profiling data feeds the JIT — identifying hot code paths worth compiling to native instructions.
-5. Cold code stays interpreted — no compilation overhead wasted on startup-only configuration paths.
-6. Interpretation is the safety net when compiled code becomes invalid — deoptimization lands back here.
+### Why this exists
 
-### Scene `c1_c2` (renderer: `c1_c2`)
+In simple language, jit compilation is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
 
-1. Tiered compilation uses multiple JIT compilers — C1 client, C2 server on HotSpot.
-2. C1 — fast compile, basic optimizations, quick warmup — good enough for medium-hot code.
-3. C2 — slow compile, aggressive inlining, loop unrolling, escape analysis — peak steady-state performance.
-4. Default on modern JDK — methods escalate from interpreted to C1 to C2 as counters cross thresholds.
-5. Compilation happens on background compiler threads — application keeps running during compiles, mostly.
-6. Compiled native code lives in code cache — native memory separate from Java heap — CodeCache full is a real failure mode.
+A helpful picture: Picture JIT Compilation clearly.
 
-### Scene `hot_methods` (renderer: `hot_methods`)
+Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
 
-1. A method becomes hot when invocation or loop counters exceed CompileThreshold — JVM-specific, tunable.
-2. Inlining replaces callee bodies into caller native code — eliminates call overhead, enables further opts.
-3. Escape analysis can eliminate allocations for non-escaping objects — stack allocate or scalar replace at C2.
-4. Dead code elimination and constant folding happen at compile time — bytecode not equal to native instructions executed.
-5. Profile-guided optimization uses runtime branch frequencies — layout hot paths for instruction cache friendliness.
-6. Watch this — micro-benchmarks that never warm up measure interpreter fiction, not production steady state.
+### Building the idea step by step
+
+#### Step 1
+
+Now consider this teaching point: Interpreter first, compile hot methods.
+
+This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 2
+
+Now consider this teaching point: C1/C2 tiers.
+
+Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 3
+
+Now consider this teaching point: Deoptimization happens.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 4
+
+Now consider this teaching point: Warmup affects benchmarks.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 5
+
+Now consider this teaching point: Use JMH for microbenchmarks.
+
+This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+### Example 1 — the smallest useful illustration
+
+Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
 
 ```java
-public static long sum(int[] data) {
-    long total = 0;
-    for (int v : data) total += v;  // hot loop → C2 may vectorize or unroll
-    return total;
-}
+// first calls may be slow (warmup)
+// steady-state matters for servers
 ```
 
-7. Run that loop billions of times in a server — JIT cares. Run once in a unit test — interpreter only.
+Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
 
-### Scene `deoptimization` (renderer: `deoptimization`)
+Walk this like pair-programming.
 
-1. Deoptimization reverts compiled native code back to interpreter when assumptions break.
-2. Happens when new class loads invalidate monomorphic call sites — uncommon trap to interpreter path.
-3. Uncommon traps guard speculative optimizations — assumed one implementation, reality loaded another subclass.
-4. JVM patches call sites and re-enters interpreted mode safely — correctness preserved, performance dips temporarily.
-5. Recompilation may follow with updated profiling — cycle repeats as code evolves.
-6. Deoptimization is normal — not a bug — it preserves Java semantics under dynamic class loading.
+Focus on what each line means.
 
-### Scene `compilation_tiers` (renderer: `compilation_tiers`)
+Connect to the failure mode.
 
-1. The tiered execution pipeline in order — useful when reading -XX:+PrintCompilation logs.
-2. Level zero — pure interpretation with profiling counters active.
-3. Level one — C1 compiled without full profiling overhead — quick native path.
-4. Levels two and three — C1 with increasing profiling detail — stepping stone to C2.
-5. Level four — C2 fully optimized native code — what you want for hot server loops after warmup.
-6. Understanding tiers explains why first requests after deploy feel slow — cold interpreter, empty code cache.
+After this example, you should be able to point to the code and explain what problem each important line is solving.
 
-### Scene `mistakes` (renderer: `mistakes`)
+### Example 2 — make it more realistic
 
-1. Three common mistakes I want burned into your brain.
-2. Mistake one — disabling tiered compilation without measuring — rarely helps modern workloads, often hurts warmup.
-3. Mistake two — assuming first-run performance equals steady-state — warmup iterations mandatory for honest benchmarks.
-4. Mistake three — micro-benchmarking with JMH but zero warmup forks — still measures cold code if misconfigured.
-5. Also — printing deoptimization floods in production without understanding — noise unless investigating class loading issues.
-6. Benchmark with warmup — let JIT compile before timing — JMH handles this when used correctly.
+The first example isolates the concept. Real applications rarely stop there. In a practical setting, JIT Compilation usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
 
-### Scene `interview` (renderer: `interview`)
+So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
 
-1. Interview time — say this out loud like someone who has shipped code.
-2. Question: How does the JVM JIT work?
-3. Answer: Bytecode starts interpreted — profiler counts hot methods and loops.
-4. C1 fast compile with basic opts — C2 deep optimize with inlining, escape analysis, loop transforms for hot code.
-5. Deoptimization when assumptions fail — new classes, uncommon branches — revert to interpreter safely.
-6. Warmup matters — steady-state performance differs from cold start — mention tiered compilation pipeline.
-7. Connect to Episode Fifty-Nine escape analysis — shows JVM story hangs together.
+A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
 
-### Scene `teaser` (renderer: `teaser`)
+When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
 
-1. GC and JIT both shape runtime performance — but collectors differ wildly in pause behavior.
-2. Episode Fifty-Six — GC Collectors.
-3. Serial, Parallel, G1, ZGC — and when to choose each for your workload.
-4. See you there.
+### What if we skip this approach?
 
-_Total beats: expanded for ~10–12 minute conversational delivery (well above the 4-minute floor; under the 15-minute ceiling)._
+Important concepts become memorable when we see the failure mode without them.
+
+For example, consider this common mistake: Benchmarking during warmup.
+
+That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+
+This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+
+### Example 3 — a common misunderstanding
+
+**Misunderstanding 1:** Benchmarking during warmup.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 2:** Micro-optimizing cold code.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 3:** Assuming JIT always makes it fastest immediately.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+
+### Interview-style checkpoint
+
+Question: Why is the first request slow?
+
+Answer in spoken form: Loading + interpretation + JIT warmup.
+
+Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+
+### Connecting the thread
+
+We came from **Garbage Collection**. That set up a need. **JIT Compilation** is one of Java's answers to that need.
+
+You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+
+### Looking ahead
+
+Once this is solid, a new challenge appears. That challenge leads us to **GC Collectors**.
+
+We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
 
 ## Source attribution (reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
-- **Primary handbook lesson:** Lesson **55** — *JIT Compilation*.
-- **Series catalog:** Episode 55 ↔ handbook lesson 55 — *JIT Compilation*.
-- **How content was used:** The handbook provided the **topic outline and teaching points**. Spoken lines were **expanded** into a conversational 4–15 minute documentary script with hot-loop JIT example — not a verbatim paste of handbook prose.
-- **Runtime note:** Earlier short-cut narration was too thin (~4 min headline beats). This revision deepens explanation, examples, mistakes, and interview answer structure while staying under ~15 minutes.
+- **Primary curriculum mapping:** Episode 55 / **JIT Compilation** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
+- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
+- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
 
-- Full handbook HTML is **not checked into git** (original upload was ephemeral). Attribution for this episode is by **lesson title / topic** from the recovered TOC and the series catalog.
+### Teaching points drawn from the topic bank
 
-### Scene ↔ curriculum intent
-
-- **`hook`** — interpreter vs native speed path
-- **`title`** — episode title card
-- **`interpreter`** — profiling and cold start
-- **`c1_c2`** — tiered compilers and code cache
-- **`hot_methods`** — inlining and profile-guided opts
-- **`deoptimization`** — uncommon traps and reversion
-- **`compilation_tiers`** — level 0–4 pipeline
-- **`mistakes`** — cold benchmarks, disabling tiered comp
-- **`interview`** — JIT workflow interview answer
-- **`teaser`** — bridge to GC Collectors
+- Interpreter first, compile hot methods.
+- C1/C2 tiers.
+- Deoptimization happens.
+- Warmup affects benchmarks.
+- Use JMH for microbenchmarks.

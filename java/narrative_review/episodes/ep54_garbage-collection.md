@@ -5,129 +5,168 @@
 | Episode | 54 |
 | Title | Garbage Collection |
 | Catalog handbook column | 54 |
-| Narration source script | Expanded review narration (4–15 min target) |
-| Spoken form | Conversational documentary beats + walkthrough code |
+| Narration source script | Descriptive instructor narration (4–15 min) |
+| Spoken form | Connected explanatory prose with walked-through examples |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
-## Full narration (spoken beats)
+## Full narration
 
-### Scene `hook` (renderer: `hook`)
+### Opening — start with a problem
 
-1. Episode Fifty-Three placed objects on the shared heap with references from stacks and fields.
-2. Who frees memory when those objects are no longer needed?
-3. Java has no free or delete — the garbage collector reclaims unreachable objects automatically.
-4. GC traces from roots — stack locals, static fields, JNI references — anything strongly reachable stays live.
-5. Generations exploit the observation that most objects die young — optimize for that reality.
-6. Today — garbage collection basics, mark-sweep intuition, generations, and stop-the-world pauses.
+In the previous episode, we worked through **Heap and Stack**. That gave us a piece of the platform. Today we need the next piece: **Garbage Collection**.
 
-### Scene `title` (renderer: `title`)
+We are continuing The Java Story, and today's challenge is Garbage Collection. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
 
-1. Episode Fifty-Four.
-2. Garbage Collection Intro.
-3. We'll follow an object's lifecycle from allocation to collection and read what GC logs mean at a high level.
+GC reclaims unreachable objects — your allocation rate sets the pace.
 
-### Scene `gc_roots` (renderer: `gc_roots`)
+I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
 
-1. GC roots are starting points for reachability analysis — where the trace begins.
-2. Local variables and operand stacks in active frames are roots — your running methods hold references.
-3. Static fields in loaded classes hold root references — singleton caches live here until nulled.
-4. JNI global references and JVM internal structures are roots too — invisible but counted.
-5. An object is live if reachable from any root through a chain of references.
-6. Unreachable objects are garbage — eligible for collection on the next appropriate GC cycle.
+### Why this exists
+
+In simple language, garbage collection is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
+
+A helpful picture: Picture Garbage Collection clearly.
+
+Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
+
+### Building the idea step by step
+
+#### Step 1
+
+Now consider this teaching point: Reachability from GC roots.
+
+This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 2
+
+Now consider this teaching point: Generational hypothesis.
+
+Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 3
+
+Now consider this teaching point: Pauses vs concurrent work.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 4
+
+Now consider this teaching point: Allocation rate drives pressure.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 5
+
+Now consider this teaching point: Tuning without metrics is superstition.
+
+This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+### Example 1 — the smallest useful illustration
+
+Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
 
 ```java
-void process() {
-    byte[] buffer = new byte[1_000_000];  // reachable while method runs
-}  // buffer eligible after return if no other references exist
+// Object becomes collectible when nothing reachable can touch it
+List<byte[]> tmp = new ArrayList<>();
+tmp = null; // if no other refs, GC may reclaim
 ```
 
-7. Eligible is not instant — GC runs when the collector decides, not the moment the last reference disappears.
+Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
 
-### Scene `mark_sweep` (renderer: `mark_sweep`)
+Walk this like pair-programming.
 
-1. Mark-sweep is the foundational GC algorithm every collector variation builds on.
-2. Mark phase — traverse from roots, flag every reachable object in the heap graph.
-3. Sweep phase — walk the heap, reclaim unmarked objects — return memory to allocator pools.
-4. Compact phase in some collectors — defragment live objects to reduce fragmentation over time.
-5. Simple mark-sweep can fragment memory without compaction — free holes scattered between live objects.
-6. Modern collectors extend this with copying young generations and concurrent marking for old regions.
+Focus on what each line means.
 
-### Scene `generations` (renderer: `generations`)
+Connect to the failure mode.
 
-1. The generational hypothesis — most objects die young — short-lived temporaries dominate allocation rate.
-2. Young generation — Eden plus Survivor spaces — frequent minor GC, fast because region is small.
-3. Objects that survive several collections promote to old generation — tenured long-lived data.
-4. Old generation collected less often — more expensive when it runs — major or full GC territory.
-5. Minor GC is fast — scans primarily young region — stop-the-world but usually milliseconds on healthy heaps.
-6. Major or full GC collects broader heap areas — longer pauses — the spikes users feel in P99 latency.
+Look at `List<byte[]> tmp = new ArrayList<>();`.
 
-### Scene `stop_the_world` (renderer: `stop_the_world`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Stop-the-world means all application threads pause during certain GC phases — safepoint synchronization.
-2. Safepoints are bytecode locations where the JVM can safely halt threads — counted loops, method returns, some calls.
-3. During STW phases, roots are scanned accurately — no mutator moving references underneath the collector.
-4. Pause time is the metric users feel — latency spikes in production dashboards and SLA breaches.
-5. Concurrent collectors reduce STW duration but add complexity — barriers, floating garbage, tuning knobs.
-6. GC logs with -Xlog:gc* show pause durations — always monitor in production, not only after incidents.
+Look at `tmp = null; // if no other refs, GC may reclaim`.
 
-### Scene `gc_triggers` (renderer: `gc_triggers`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Minor GC triggers when Eden fills up — allocation failure in young gen kicks collection.
-2. Major GC triggers when old generation is full or metaspace pressure indirectly forces broader collection — or explicit System.gc hint.
-3. System.gc is a hint — JVM may ignore it depending on collector and -XX:+DisableExplicitGC.
-4. OutOfMemoryError fires only after GC fails to reclaim enough space — not on first failed allocation attempt.
-5. Heap flags Xms and Xmx control heap bounds — initial and maximum — collector manages internal generation ratios often automatically.
-6. Tuning starts with understanding what triggers each collection — logs first, knobs second.
+After this example, you should be able to point to the code and explain what problem each important line is solving.
 
-### Scene `mistakes` (renderer: `mistakes`)
+### Example 2 — make it more realistic
 
-1. Three common mistakes I want burned into your brain.
-2. Mistake one — calling System.gc expecting immediate cleanup — unreliable hint, may cause full STW pause at worst time.
-3. Mistake two — setting heap huge without understanding GC pause trade-offs — big heap can mean big pauses on some collectors.
-4. Mistake three — ignoring GC logs until production latency spikes — baseline logs make diffs obvious.
-5. Also — assuming all unreachable objects collect instantly — GC is periodic, not reference-counted immediate.
-6. Measure pause times and allocation rates before tuning — data beats GC folklore from blog posts.
+The first example isolates the concept. Real applications rarely stop there. In a practical setting, Garbage Collection usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
 
-### Scene `interview` (renderer: `interview`)
+So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
 
-1. Interview time — say this out loud like someone who has shipped code.
-2. Question: How does Java GC work?
-3. Answer: Trace from roots — stack locals, statics, JNI refs — mark reachable objects.
-4. Sweep or copy unreachable ones — generational collectors focus on young objects that die fast.
-5. Stop-the-world pauses application threads at safepoints for certain phases — concurrent collectors shorten but do not always eliminate STW.
-6. Collector choice and heap sizing affect pause versus throughput — no free lunch.
-7. Mention you read GC logs in incidents — practical credibility.
+A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
 
-### Scene `teaser` (renderer: `teaser`)
+When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
 
-1. GC reclaims objects — but bytecode still starts in the interpreter until hot paths compile.
-2. Episode Fifty-Five — JIT Compilation.
-3. Interpreter, C1, C2 tiers, hot methods, and deoptimization when assumptions break.
-4. See you there.
+### What if we skip this approach?
 
-_Total beats: expanded for ~10–12 minute conversational delivery (well above the 4-minute floor; under the 15-minute ceiling)._
+Important concepts become memorable when we see the failure mode without them.
+
+For example, consider this common mistake: Caching forever.
+
+That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+
+This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+
+### Example 3 — a common misunderstanding
+
+**Misunderstanding 1:** Caching forever.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 2:** Allocating insanely in tight loops.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 3:** Treating GC as an enemy instead of a partner.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+
+### Interview-style checkpoint
+
+Question: When is an object collectible?
+
+Answer in spoken form: When no GC root can reach it.
+
+Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+
+### Connecting the thread
+
+We came from **Heap and Stack**. That set up a need. **Garbage Collection** is one of Java's answers to that need.
+
+You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+
+### Looking ahead
+
+Once this is solid, a new challenge appears. That challenge leads us to **JIT Compilation**.
+
+We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
 
 ## Source attribution (reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
-- **Primary handbook lesson:** Lesson **65** — *GC Algorithms*.
-- **Series catalog mapping:** Episode 54 / catalog column `54` / published title *Garbage Collection*.
-- **Note:** Episode number and handbook lesson number are **not 1:1** here (handbook lesson 65 → episode 54). See `../reference/handbook_toc_recovered.md` for documented divergences.
-- **How content was used:** The handbook provided the **topic outline and teaching points**. Spoken lines were **expanded** into a conversational 4–15 minute documentary script with reachability examples — not a verbatim paste of handbook prose.
-- **Runtime note:** Earlier short-cut narration was too thin (~4 min headline beats). This revision deepens explanation, examples, mistakes, and interview answer structure while staying under ~15 minutes.
+- **Primary curriculum mapping:** Episode 54 / **Garbage Collection** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
+- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
+- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
 
-- Full handbook HTML is **not checked into git** (original upload was ephemeral). Attribution for this episode is by **lesson title / topic** from the recovered TOC and the series catalog.
+### Teaching points drawn from the topic bank
 
-### Scene ↔ curriculum intent
-
-- **`hook`** — automatic reclamation vs manual free
-- **`title`** — episode title card
-- **`gc_roots`** — reachability from roots
-- **`mark_sweep`** — foundational GC algorithm
-- **`generations`** — young vs old generation hypothesis
-- **`stop_the_world`** — safepoints and pause impact
-- **`gc_triggers`** — what kicks minor and major GC
-- **`mistakes`** — System.gc, huge heap blind, ignoring logs
-- **`interview`** — how Java GC works interview answer
-- **`teaser`** — bridge to JIT Compilation
+- Reachability from GC roots.
+- Generational hypothesis.
+- Pauses vs concurrent work.
+- Allocation rate drives pressure.
+- Tuning without metrics is superstition.

@@ -28,7 +28,7 @@ The full HTML is **not in git**. Recovered fragments live in [`reference/`](refe
 | Standard examples & interview angles | Exact sentence order |
 | Phase structure (language → collections → concurrency → JVM → Spring) | 12–15 minute lesson length |
 
-Videos target a **4–15 minute** conversational documentary (floor 4 minutes, soft aim ~8–12, ceiling ~15) with continuity teasers between episodes. Narration in this pack was **expanded** after review feedback that the first short-cut scripts were too thin.
+Videos target a **4–15 minute** lesson (floor 4, soft aim ~10–12, ceiling ~15). Narration must be **descriptive and example-driven** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions. See `EXPANSION_STYLE.md`.
 
 ## Episode 01 special case
 

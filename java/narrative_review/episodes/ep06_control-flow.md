@@ -5,221 +5,169 @@
 | Episode | 06 |
 | Title | Control Flow |
 | Catalog handbook column | 6 |
-| Narration source script | Expanded review narration (4–15 min target) |
-| Spoken form | Conversational documentary beats + walkthrough code |
-| Runtime target | **4–15 minutes** (aim ~8–12) |
+| Narration source script | Descriptive instructor narration (4–15 min) |
+| Spoken form | Connected explanatory prose with walked-through examples |
+| Runtime target | **4–15 minutes** (aim ~10–12) |
 
-## Full narration (spoken beats)
+## Full narration
 
-### Scene `hook` (renderer: `hook`)
+### Opening — start with a problem
 
-1. Operators decide values. Control flow decides which statements run.
-2. Which path executes? How often? When do we exit?
-3. In production, unclear branching becomes missed edge cases and messy failures.
-4. Distributed systems amplify bad flow — duplicate processing, retry storms, swallowed errors.
-5. Today we make paths visible — flat, explicit, testable.
+In the previous episode, we worked through **Operators**. That gave us a piece of the platform. Today we need the next piece: **Control Flow**.
 
-### Scene `title` (renderer: `title`)
+Your program must choose different paths: pass or fail, retry or abort, loop through a list of students.
 
-1. Episode Six.
-2. Control Flow — if, switch, loops, and clean exits.
+Control flow is how programs make decisions — and how nesting turns into unreadable vines.
 
-### Scene `guards` (renderer: `guards`)
+I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
 
-1. Start with if — but prefer guard clauses.
-2. Validate early. Reject early. Return early.
-3. Flat code beats a pyramid of nested else blocks.
-4. if not valid — return bad request. if not authorized — return forbidden.
-5. Then process the happy path at low indentation.
-6. Readable. Testable. Kind to the next engineer at three a.m.
+### Why this exists
 
-### Scene `switch` (renderer: `switch`)
+In simple language, control flow is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
 
-1. When cases are finite — switch shines.
-2. Modern switch expressions produce a value — arrow labels, no fall-through.
-3. Perfect for statuses — PENDING, PAID, CANCELLED, SHIPPED.
-4. Classic switch without break caused decades of bugs — upgrade the habit.
-5. Pattern matching plus sealed types later make switches exhaustive — Episodes Eighteen and Nineteen.
-6. Finite states belong in switch. Open-ended rules belong in methods.
+### Building the idea step by step
 
-### Scene `loops` (renderer: `loops`)
+#### Step 1
 
-1. Loops repeat work.
-2. for when you know bounds. while when waiting on a condition.
-3. Enhanced for-each when walking collections cleanly.
-4. break exits. continue skips to next iteration.
-5. Unbounded loops become incidents. Off-by-one loops become ArrayIndexOutOfBounds.
-6. Avoid heavy allocation every iteration in hot paths.
+Now consider this teaching point: if/else and modern switch expressions.
 
-### Scene `example` (renderer: `example`)
+This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
 
-1. Walk a switch expression routing order status.
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 2
+
+Now consider this teaching point: for/while/enhanced-for.
+
+Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 3
+
+Now consider this teaching point: break/continue — labeled forms sparingly.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 4
+
+Now consider this teaching point: Pattern matching reduces casts.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 5
+
+Now consider this teaching point: Extract methods instead of deep nesting.
+
+This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+### Example 1 — the smallest useful illustration
+
+Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+
 ```java
-public enum OrderStatus { PENDING, PAID, CANCELLED, SHIPPED }
-
-public class OrderRouter {
-    static String nextAction(OrderStatus status) {
-        return switch (status) {
-            case PENDING -> "await_payment";
-            case PAID -> "fulfill";
-            case CANCELLED -> "archive";
-            case SHIPPED -> "track";
-        };
-    }
+for (int i = 0; i < n; i++) {
+  if (i % 2 == 0) continue;
+  System.out.println(i);
 }
 ```
 
-2. OrderStatus enum — finite set of states.
-3. switch expression returns a String action — each case an arrow label.
-4. Compiler checks exhaustiveness when all enum constants covered.
-5. No break needed — arrow form does not fall through.
-6. This is readable control flow — status to action in one place.
+Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
 
-### Scene `exceptions` (renderer: `exceptions`)
+I'll walk this example like we're pair-programming.
 
-1. Exceptions are for exceptional paths — not everyday outcomes.
-2. try, catch, finally — and try-with-resources for deterministic cleanup.
-3. Open JDBC connection or InputStream in try-with-resources — close called automatically.
-4. Do not throw exceptions to mean not found on every request — that is expensive control flow.
-5. Reserve exceptions for failures you cannot express as a normal return.
-6. Episode Thirty-Two goes deep on exception design — today know the boundary.
+Focus on the idea each line encodes — not memorizing syntax trivia.
 
-### Scene `pipeline` (renderer: `pipeline`)
+Then we'll connect it to the production failure mode.
 
-1. Picture a production request pipeline.
-2. Validate. Authorize. Process. Commit. Respond.
-3. On failure — compensate or retry with idempotency keys and clear rules.
-4. Good flow makes normal and failure paths equally obvious.
-5. Hidden branches are where incidents hide — log and test both paths.
+Look at `for (int i = 0; i < n; i++) {`.
 
-### Scene `deeper` (renderer: `deeper`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. do-while runs body at least once — rare but useful for retry prompts.
-2. Labeled break and continue exist — avoid unless clarifying nested loops.
-3. Pattern matching in switch — switch (obj) { case String s -> ... } — Java 21+ style.
-4. Combines type check and binding — pairs with sealed types later.
-5. Yield in switch blocks when arrow form needs multiple statements.
-6. InterruptedException in loops — restore interrupt flag or exit cleanly.
-7. Ignoring Thread.interrupted() causes shutdown hooks and pool stops to hang.
-8. Finally runs even when return in try — mind return values overwritten by finally return.
-9. Try-with-resources can suppress secondary exceptions from close — suppressed array on primary.
+Look at `if (i % 2 == 0) continue;`.
 
-### Scene `production` (renderer: `production`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Production context — why this topic stops incidents.
-2. Code review checklist item — catch misuse before merge.
-3. Observability — logs and metrics should name concepts clearly — not mystery abbreviations.
-4. Tests should encode the contracts we discussed — one failing test beats ten slides.
-5. Refactor toward clarity — juniors read this code six months from now.
-6. Interview answers map directly to daily choices — not trivia for trivia's sake.
-7. Connect to handbook lesson themes — JVM, structure, types, concurrency later in series.
-8. Next episodes build on this — skipping fundamentals creates gaps that show in system design.
+Look at `System.out.println(i);`.
 
-### Scene `mistakes` (renderer: `mistakes`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Three mistakes.
-2. One — deeply nested branches hiding intent.
-3. Two — missing break in legacy switch — fall-through bugs.
-4. Three — exceptions for common outcomes.
-5. Also — entire business workflows stuffed in controllers — extract services.
+After this example, you should be able to point to the code and explain what problem each important line is solving.
 
-### Scene `interview` (renderer: `interview`)
+### Example 2 — make it more realistic
 
-1. Interview — when use switch expression?
-2. Finite, clear cases that produce a value.
-3. Prefer guard clauses over nesting.
-4. try-with-resources for deterministic cleanup.
-5. Do not use exceptions for normal control flow — cost and clarity.
-6. That package sounds senior.
+The first example isolates the concept. Real applications rarely stop there. In a practical setting, Control Flow usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
 
-### Scene `walkthrough2` (renderer: `walkthrough2`)
+So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
 
-1. Let's slow down once more with a reviewer mindset.
-2. If you saw this in a pull request, what would you comment?
-3. Naming clarity, null safety, visibility, performance — rotate through that checklist.
-4. Let me say that again in plain language — because this is the kind of detail interviews probe and production punishes.
-5. When you read open-source Java or a teammate's pull request, you'll recognize these patterns immediately.
-6. Pause the video if you want — write a five-line example in your scratch project. Muscle memory beats passive watching.
-7. The handbook treats this as foundational for eighty lessons — JVM tuning, Spring, concurrency all assume you know this cold.
-8. We're not racing the syllabus. We're building mental models that survive version upgrades and job changes.
-9. Senior engineers don't know every API by heart. They know where to look and which mistakes repeat.
-10. Junior engineers who nail fundamentals ramp faster on frameworks — Spring, JPA, Kafka all sit on this base.
-11. Your IDE helps — but only after you understand what the compiler and JVM will accept and reject.
-12. Compile errors are friends. They prevent runtime surprises in customer environments.
-13. Runtime errors with stack traces — read bottom up to your code first, then framework frames.
-14. Unit tests for this topic should be small — one concept per test method — not thousand-line integration only.
-15. When stuck, reduce to main in a scratch class — isolate the language feature from framework noise.
+A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
 
-### Scene `connect` (renderer: `connect`)
+When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
 
-1. Connect backward — Episode One gave portability. Episode Two named the toolchain.
-2. Connect forward — collections, streams, and concurrency assume today's concept is solid.
-3. The Java Story is cumulative — skipping an episode creates a hole you feel later as confusion.
-4. Bookmark the handbook lesson that matches this episode — revision sheet before interviews.
-5. Production stories in later episodes reference types and structures we defined in Phase One.
-6. You are still in Phase One — language and platform — the bedrock everything else stands on.
-7. Architects who skipped fundamentals design APIs that leak abstraction — don't skip.
-8. Teaching this to a teammate? Use the same order — hook, example, mistake, interview answer.
-9. Documentation you write for your team should mirror these boundaries — package, type, method.
-10. Code is read more than written — optimize for the reader who has no context yet.
+### What if we skip this approach?
 
-### Scene `workflow` (renderer: `workflow`)
+Important concepts become memorable when we see the failure mode without them.
 
-1. State machines — enum status plus switch — cleaner than string state scattered.
-2. Idempotency keys in HTTP handlers — control flow for retries — same request safe twice.
-3. Circuit breaker — if failures exceed threshold — short-circuit further calls — control flow at system level.
-4. Saga compensation — if step three fails — run undo for step two — explicit failure graph.
+For example, consider this common mistake: Giant nested if pyramids.
 
-### Scene `summary` (renderer: `summary`)
+That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
 
-1. Control flow shapes reliability.
-2. Guard clauses flatten code. Switch handles finite states.
-3. Loops need bounds and allocation discipline.
-4. Exceptions for failures — not regular branches.
-5. Make failure paths as visible as happy paths.
+This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
 
-### Scene `teaser` (renderer: `teaser`)
+### Example 3 — a common misunderstanding
 
-1. Paths are clear. Next — package behavior.
-2. Episode Seven — Methods.
-3. Parameters, returns, overloading — reusable named work.
-4. See you there.
-_Total beats: expanded for ~8–12 minute conversational delivery (well above the 4-minute floor; under the 15-minute ceiling)._
+**Misunderstanding 1:** Giant nested if pyramids.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 2:** Fall-through switch bugs.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 3:** Using continue/break to hide real structure.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+
+### Interview-style checkpoint
+
+Question: Switch expression vs statement?
+
+Answer in spoken form: Expressions return values and encourage exhaustiveness; statements perform actions.
+
+Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+
+### Connecting the thread
+
+We came from **Operators**. That set up a need. **Control Flow** is one of Java's answers to that need.
+
+You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+
+### Looking ahead
+
+Once this is solid, a new challenge appears. That challenge leads us to **Methods**.
+
+We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
 
 ## Source attribution (reference document)
 
-(reference document)
-
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
-- **Primary handbook lesson:** Lesson **6** — *Control Flow*.
-- **Series catalog:** Episode 06 ↔ handbook lesson 6 — *Control Flow*.
-- **How content was used:** The handbook provided the **topic outline and teaching points**. Spoken lines were **rewritten** into short documentary beats matched to motion-graphics scenes (per user guidance: own narration synced to presentation; handbook as reference, not a script to read aloud).
+- **Primary curriculum mapping:** Episode 06 / **Control Flow** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
+- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
+- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
 
-- **Narration expansion:** Spoken lines expanded for **4–15 minute** conversational runtime; handbook still used as topic reference.
+### Teaching points drawn from the topic bank
 
-### Handbook concepts reused (from recovered Lesson 6 excerpt)
-
-- Control flow determines which statements execute, how often they execute, and when execution exits. Java provides
-- , exceptions, and try-with-resources. Production control flow should be readable, testable, and explicit about failure paths.
-- with expressions, arrow labels, pattern matching, and better exhaustiveness for modern type modeling. Try-with-resources was added to reduce resource leaks.
-- Complex branching creates hidden behavior, missing edge cases, resource leaks, and hard-to-test code. In distributed systems, unclear control flow can trigger duplicate processing, missed compensation, retry storms, or swallowed failures.
-- may compile to table or lookup switch bytecode. Exceptions unwind stack frames until a matching handler is found, executing
-- The JVM tracks branch profiles and loop hotness. The JIT optimizes common branches, unrolls some loops, removes redundant checks, and performs deoptimization when assumptions fail. Exception paths are optimized for uncommon use, so exceptions should not contro
-
-Full recovered excerpt: `../reference/handbook_lessons_1-12_excerpts.md` (Lesson 6).
-
-### Scene ↔ curriculum intent
-
-- **`hook`** — starts from: _Operators decide values. Control flow decides the path._
-- **`title`** — starts from: _Episode Six._
-- **`guards`** — starts from: _Start with if — but prefer guard clauses._
-- **`switch`** — starts from: _When cases are finite — switch shines._
-- **`loops`** — starts from: _Loops repeat work._
-- **`exceptions`** — starts from: _Exceptions are for exceptional paths — not everyday outcomes._
-- **`pipeline`** — starts from: _Picture a production request._
-- **`mistakes`** — starts from: _Three common mistakes._
-- **`interview`** — starts from: _Interview question — when do you use a switch expression?_
-- **`teaser`** — starts from: _Paths are clear. Next we package behavior._
-
-- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.
+- if/else and modern switch expressions.
+- for/while/enhanced-for.
+- break/continue — labeled forms sparingly.
+- Pattern matching reduces casts.
+- Extract methods instead of deep nesting.

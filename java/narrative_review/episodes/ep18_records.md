@@ -5,210 +5,174 @@
 | Episode | 18 |
 | Title | Records |
 | Catalog handbook column | 18 |
-| Narration source script | Expanded review narration (4–15 min target) |
-| Spoken form | Conversational documentary beats + walkthrough code |
-| Runtime target | **4–15 minutes** (aim ~8–12) |
+| Narration source script | Descriptive instructor narration (4–15 min) |
+| Spoken form | Connected explanatory prose with walked-through examples |
+| Runtime target | **4–15 minutes** (aim ~10–12) |
 
-## Full narration (spoken beats)
+## Full narration
 
-### Scene `hook` (renderer: `hook`)
+### Opening — start with a problem
 
-1. Reflection digs into types. Records make data honest.
-2. Getters, equals, hashCode, toString — generated for transparent carriers.
-3. Less boilerplate. Clearer intent.
+In the previous episode, we worked through **Reflection**. That gave us a piece of the platform. Today we need the next piece: **Records**.
 
-### Scene `title` (renderer: `title`)
+We are continuing The Java Story, and today's challenge is Records. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
 
-1. Episode Eighteen.
-2. Records — compact immutable data carriers.
+Records are for immutable data carriers — less boilerplate, clearer models.
 
-### Scene `declare` (renderer: `declare`)
+I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
 
-1. record Money(String currency, long minorUnits) — components final.
-2. Canonical constructor, accessors, equals, hashCode, toString generated.
+### Why this exists
 
-### Scene `accessors` (renderer: `accessors`)
+In simple language, records is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
 
-1. currency() not getCurrency — intentional style.
-2. Not classic JavaBeans — libraries adapting.
+A helpful picture: Keep a simple picture of Records.
 
-### Scene `example` (renderer: `example`)
+Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
 
-1. Walk Money record with validation and add.
+### Building the idea step by step
+
+#### Step 1
+
+Now consider this teaching point: Auto equals/hashCode/toString/accessors.
+
+This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 2
+
+Now consider this teaching point: Canonical and compact constructors.
+
+Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 3
+
+Now consider this teaching point: Great with sealed types and pattern matching.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 4
+
+Now consider this teaching point: Not a replacement for every class.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 5
+
+Now consider this teaching point: Implications for serialization and frameworks.
+
+This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+### Example 1 — the smallest useful illustration
+
+Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+
 ```java
-public record Money(String currency, long minorUnits) {
-    public Money {
-        if (currency == null || currency.length() != 3) {
-            throw new IllegalArgumentException("ISO-4217 currency required");
-        }
-        if (minorUnits < 0) {
-            throw new IllegalArgumentException("minorUnits must be non-negative");
-        }
-    }
-
-    public Money add(Money other) {
-        if (!currency.equals(other.currency)) {
-            throw new IllegalArgumentException("currency mismatch");
-        }
-        return new Money(currency, minorUnits + other.minorUnits);
-    }
+record Point(int x, int y) {
+  public Point {
+    if (x < 0 || y < 0) throw new IllegalArgumentException();
+  }
 }
 ```
 
-2. Compact constructor validates currency and non-negative minorUnits.
-3. add returns new record — immutability preserved.
+Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
 
-### Scene `validation` (renderer: `validation`)
+I'll walk this example like we're pair-programming.
 
-1. Compact constructor enforces invariants at creation.
-2. Invalid money cannot exist.
+Focus on the idea each line encodes.
 
-### Scene `when` (renderer: `when`)
+Then we connect it to the production failure mode.
 
-1. DTOs, events, value objects — yes.
-2. Mutable JPA entities with proxies — often no.
+Look at `record Point(int x, int y) {`.
 
-### Scene `limits` (renderer: `limits`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Records implicitly final. Can implement interfaces and add methods.
-2. Do not turn records into services.
+Look at `public Point {`.
 
-### Scene `deeper` (renderer: `deeper`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Record implements implicit final — cannot extend other classes — can implement interfaces.
-2. Nested records — allowed — keep small.
-3. Local records — inside methods — Java 16+ — scoped data carriers.
-4. Serialization — records serialize components — define readObject if migration needed.
-5. Jackson and records — constructor properties — configure naming strategy.
-6. JPA — records as DTOs yes, as entities generally no — mutability and proxies.
-7. Defensive copy — List.copyOf in compact constructor for mutable list components.
-8. Compact constructor assigns to this implicitly after validation — no redundancy needed.
+Look at `if (x < 0 || y < 0) throw new IllegalArgumentException();`.
 
-### Scene `production` (renderer: `production`)
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Production context — why this topic stops incidents.
-2. Code review checklist item — catch misuse before merge.
-3. Observability — logs and metrics should name concepts clearly — not mystery abbreviations.
-4. Tests should encode the contracts we discussed — one failing test beats ten slides.
-5. Refactor toward clarity — juniors read this code six months from now.
-6. Interview answers map directly to daily choices — not trivia for trivia's sake.
-7. Connect to handbook lesson themes — JVM, structure, types, concurrency later in series.
-8. Next episodes build on this — skipping fundamentals creates gaps that show in system design.
+After this example, you should be able to point to the code and explain what problem each important line is solving.
 
-### Scene `mistakes` (renderer: `mistakes`)
+### Example 2 — make it more realistic
 
-1. Mutable list components without defensive copy.
-2. Records as JPA entities expecting mutation.
-3. Skipping validation in compact constructor.
+The first example isolates the concept. Real applications rarely stop there. In a practical setting, Records usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
 
-### Scene `interview` (renderer: `interview`)
+So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
 
-1. Record — immutable data carrier with generated members.
-2. Great for DTOs and values. Compact constructor for rules.
+A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
 
-### Scene `walkthrough2` (renderer: `walkthrough2`)
+When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
 
-1. Let's slow down once more with a reviewer mindset.
-2. If you saw this in a pull request, what would you comment?
-3. Naming clarity, null safety, visibility, performance — rotate through that checklist.
-4. Let me say that again in plain language — because this is the kind of detail interviews probe and production punishes.
-5. When you read open-source Java or a teammate's pull request, you'll recognize these patterns immediately.
-6. Pause the video if you want — write a five-line example in your scratch project. Muscle memory beats passive watching.
-7. The handbook treats this as foundational for eighty lessons — JVM tuning, Spring, concurrency all assume you know this cold.
-8. We're not racing the syllabus. We're building mental models that survive version upgrades and job changes.
-9. Senior engineers don't know every API by heart. They know where to look and which mistakes repeat.
-10. Junior engineers who nail fundamentals ramp faster on frameworks — Spring, JPA, Kafka all sit on this base.
-11. Your IDE helps — but only after you understand what the compiler and JVM will accept and reject.
-12. Compile errors are friends. They prevent runtime surprises in customer environments.
-13. Runtime errors with stack traces — read bottom up to your code first, then framework frames.
-14. Unit tests for this topic should be small — one concept per test method — not thousand-line integration only.
-15. When stuck, reduce to main in a scratch class — isolate the language feature from framework noise.
+### What if we skip this approach?
 
-### Scene `connect` (renderer: `connect`)
+Important concepts become memorable when we see the failure mode without them.
 
-1. Connect backward — Episode One gave portability. Episode Two named the toolchain.
-2. Connect forward — collections, streams, and concurrency assume today's concept is solid.
-3. The Java Story is cumulative — skipping an episode creates a hole you feel later as confusion.
-4. Bookmark the handbook lesson that matches this episode — revision sheet before interviews.
-5. Production stories in later episodes reference types and structures we defined in Phase One.
-6. You are still in Phase One — language and platform — the bedrock everything else stands on.
-7. Architects who skipped fundamentals design APIs that leak abstraction — don't skip.
-8. Teaching this to a teammate? Use the same order — hook, example, mistake, interview answer.
-9. Documentation you write for your team should mirror these boundaries — package, type, method.
-10. Code is read more than written — optimize for the reader who has no context yet.
+For example, consider this common mistake: Using records for mutable entities casually.
 
-### Scene `revision` (renderer: `revision`)
+That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
 
-1. Quick revision beat — say the definition out loud without looking.
-2. Explain it to an imaginary junior on your team in two sentences.
-3. Name one production mistake this feature prevents when used correctly.
-4. Name one mistake it causes when used incorrectly.
-5. Connect to interview — one question, one crisp answer — practice now.
-6. If you cannot explain it simply, revisit the example scene once more.
-7. Solid Phase One fundamentals make Phase Two collections feel easy instead of magical.
+This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
 
-### Scene `deep_dive` (renderer: `deep_dive`)
+### Example 3 — a common misunderstanding
 
-1. Deep dive moment — watch this carefully.
-2. In a code review, ask: does this code teach the reader the domain rule?
-3. Tests should document edge cases — null, empty, boundary, overflow where relevant.
-4. Logging — log identifiers and outcomes, not secrets — strings appear in logs constantly.
-5. Metrics — count failures of this operation — helps SRE spot regressions after deploy.
-6. Feature flags — control flow at deploy time — still write clear Java structure underneath.
-7. Refactoring — rename for intent before optimizing — clarity first, microseconds second.
-8. Pair with the handbook revision sheet — twenty bullets beat rereading eighty pages blindly.
-9. OpenJDK documentation and Javadoc — authoritative when interview answers need precision.
-10. Stack Overflow answers vary in quality — verify against language spec for edge cases.
-11. Your future self maintains this code — write the explanation you wish you had today.
-12. Teaching solid Java fundamentals reduces incident pages on-call — that is the real ROI.
+**Misunderstanding 1:** Using records for mutable entities casually.
 
-### Scene `floor` (renderer: `floor`)
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
 
-1. Before we wrap — one more real-world tie-in.
-2. Teams that document these choices in ADRs avoid re-debating them every sprint.
-3. Onboarding docs linking to this episode save senior engineers from repeating the same lecture.
-4. Lint rules and static analysis encode some of this — SpotBugs, Error Prone, Checkstyle — pick your stack.
-5. Consistency across microservices matters — shared library for Money type beats ten incompatible doubles.
+**Misunderstanding 2:** Huge validation logic stuffed awkwardly.
 
-### Scene `summary` (renderer: `summary`)
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
 
-1. Records reduce boilerplate for immutable data.
-2. Validate at construction. Mind component mutability.
-3. Not replacement for all classes.
+**Misunderstanding 3:** Forgetting they are final/shallow-immutable by default.
 
-### Scene `teaser` (renderer: `teaser`)
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
 
-1. Data carriers clean. Next — restrict hierarchies.
-2. Episode Nineteen — Sealed Classes.
-3. Controlled subclasses, exhaustive switches.
-4. See you there.
-_Total beats: expanded for ~8–12 minute conversational delivery (well above the 4-minute floor; under the 15-minute ceiling)._
+If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+
+### Interview-style checkpoint
+
+Question: Record vs class?
+
+Answer in spoken form: Records model transparent immutable data; classes model richer encapsulated behavior.
+
+Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+
+### Connecting the thread
+
+We came from **Reflection**. That set up a need. **Records** is one of Java's answers to that need.
+
+You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+
+### Looking ahead
+
+Once this is solid, a new challenge appears. That challenge leads us to **Sealed Classes**.
+
+We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
 
 ## Source attribution (reference document)
 
-(reference document)
-
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
-- **Primary handbook lesson:** Lesson **18** — *Records*.
-- **Series catalog:** Episode 18 ↔ handbook lesson 18 — *Records*.
-- **How content was used:** The handbook provided the **topic outline and teaching points**. Spoken lines were **rewritten** into short documentary beats matched to motion-graphics scenes (per user guidance: own narration synced to presentation; handbook as reference, not a script to read aloud).
+- **Primary curriculum mapping:** Episode 18 / **Records** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
+- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
+- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
 
-- Full handbook HTML is **not checked into git** (original upload was ephemeral). Attribution for this episode is by **lesson title / topic** from the recovered TOC and the series catalog.
+### Teaching points drawn from the topic bank
 
-- **Narration expansion:** Spoken lines expanded for **4–15 minute** conversational runtime; handbook still used as topic reference.
-
-### Scene ↔ curriculum intent
-
-- **`hook`** — starts from: _Reflection can dig into types. Records make simple data types honest._
-- **`title`** — starts from: _Episode Eighteen._
-- **`declare`** — starts from: _A record declaration is short on purpose._
-- **`accessors`** — starts from: _Accessors are named after components — currency, minorUnits._
-- **`validation`** — starts from: _Records can still validate._
-- **`when`** — starts from: _When to choose a record._
-- **`limits`** — starts from: _Know the limits._
-- **`mistakes`** — starts from: _Three common mistakes._
-- **`interview`** — starts from: _Interview question — what is a Java record?_
-- **`teaser`** — starts from: _Data carriers are clean. Next — restricting hierarchies._
-
-- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.
+- Auto equals/hashCode/toString/accessors.
+- Canonical and compact constructors.
+- Great with sealed types and pattern matching.
+- Not a replacement for every class.
+- Implications for serialization and frameworks.

@@ -5,217 +5,183 @@
 | Episode | 39 |
 | Title | Explicit Locks |
 | Catalog handbook column | 39 |
-| Narration source script | Expanded review narration (4–15 min target) |
-| Spoken form | Conversational documentary beats + walkthrough code |
+| Narration source script | Descriptive instructor narration (4–15 min) |
+| Spoken form | Connected explanatory prose with walked-through examples |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
-## Full narration (spoken beats)
+## Full narration
 
-### Scene `hook` (renderer: `hook`)
+### Opening — start with a problem
 
-1. synchronized is built in — simple, JVM-managed, hard to forget to release.
-2. But sometimes you need more control than a keyword can offer.
-3. What if you want to try acquiring a lock without blocking forever?
-4. What if you need multiple wait conditions on the same lock — not one wait set?
-5. Explicit locks in java.util.concurrent give you those options — ReentrantLock and Condition.
-6. Today — explicit locks beyond synchronized, with the discipline they demand.
+In the previous episode, we worked through **volatile and Happens-Before**. That gave us a piece of the platform. Today we need the next piece: **Explicit Locks**.
 
-### Scene `title` (renderer: `title`)
+We are continuing The Java Story, and today's challenge is Explicit Locks. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
 
-1. Episode Thirty-Nine.
-2. Explicit Locks — ReentrantLock and Condition.
-3. tryLock, fairness, interruptible waits, and when synchronized still wins.
+ReentrantLock adds tryLock, conditions, and fairness when synchronized is not enough.
 
-### Scene `reentrant` (renderer: `reentrant`)
+I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
 
-1. ReentrantLock is a mutual-exclusion lock with an explicit Java API.
-2. lock acquires. unlock releases — you must unlock in a finally block every time. No exceptions.
-3. Reentrant — the same thread can lock again without deadlocking itself — hold count tracked internally.
-4. Fair mode optional — new ReentrantLock(true) — threads acquire in approximate arrival order.
-5. Fair locks reduce starvation but cost throughput — measure before enabling globally.
-6. ReentrantLock provides the same exclusion as synchronized — plus optional features synchronized lacks.
-7. isHeldByCurrentThread helps assert lock ownership in complex refactors.
+### Why this exists
 
-### Scene `trylock` (renderer: `trylock`)
+In simple language, explicit locks is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
 
-1. tryLock attempts acquisition without indefinite blocking — returns boolean immediately or after timeout.
-2. Returns true if the lock was acquired — false if not available right now.
-3. tryLock with timeout — wait up to Duration or milliseconds, then give up gracefully.
-4. Useful for avoiding deadlocks — back off, log, retry, or fail with user-visible error.
-5. lockInterruptibly responds to thread interruption while waiting — shutdown-friendly blocking.
-6. Explicit locks shine when blocking forever is not acceptable — UI threads, deadline-bound requests.
-7. Always handle false return from tryLock — don't assume you hold the lock.
+A helpful picture: Picture Explicit Locks clearly before edge cases.
 
-### Scene `condition` (renderer: `condition`)
+Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
 
-1. Condition replaces Object wait and notify with a clearer, more flexible API.
-2. lock.newCondition creates a condition variable bound to that specific lock instance.
-3. await releases the lock and waits. signal wakes one waiter. signalAll wakes all waiters on that condition.
-4. Multiple conditions per lock — separate queues for "not empty" and "not full" — producer-consumer clarity.
-5. Always await inside a loop checking the predicate — spurious wakeups happen, Java allows them.
-6. Condition variables enable producer-consumer patterns cleanly — BoundedBuffer textbook case.
-7. awaitNanos and awaitUntil support timed waits — don't block past shutdown deadline.
+### Building the idea step by step
 
-### Scene `compare` (renderer: `compare`)
+#### Step 1
 
-1. ReentrantLock versus synchronized — when does each win?
-2. Both provide mutual exclusion and memory visibility via happens-before.
-3. synchronized is simpler — automatic release on exit, no forgotten unlock, less boilerplate.
-4. ReentrantLock adds tryLock, fairness, interruptible lock acquisition, multiple Conditions, lock polling.
-5. synchronized is fine for most cases — do not reach for ReentrantLock by default in every service.
-6. Use explicit locks when you need their specific capabilities — documented in code review.
-7. StampedLock adds optimistic reads — even more specialized, easy to misuse — advanced topic.
+Now consider this teaching point: Always unlock in finally.
 
-### Scene `when_locks` (renderer: `when_locks`)
+This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
 
-1. When to choose explicit locks — timed or non-blocking lock attempts with tryLock.
-2. Fair ordering when starvation of low-priority threads is a real observed problem.
-3. Multiple condition variables on one lock object — bounded queues with separate empty/full signals.
-4. When not — simple critical sections protecting a few lines — synchronized is cleaner and safer for juniors.
-5. Measure contention before optimizing lock strategy — premature ReentrantLock adds noise.
-6. Always unlock in finally — treat lock like Closeable resource mentally.
-7. Lock ordering across objects prevents deadlocks — same rule as synchronized nested locks.
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
 
-### Scene `code` (renderer: `code`)
+#### Step 2
 
-1. tryLock with timeout — fail gracefully instead of blocking forever.
+Now consider this teaching point: tryLock avoids dead waiting.
+
+Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 3
+
+Now consider this teaching point: Multiple conditions.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 4
+
+Now consider this teaching point: Fairness costs throughput.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 5
+
+Now consider this teaching point: Prefer synchronized unless you need features.
+
+This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+### Example 1 — the smallest useful illustration
+
+Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
 
 ```java
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
-
-public class TryLockDemo {
-    private final ReentrantLock lock = new ReentrantLock();
-
-    public boolean tryUpdate() {
-        boolean acquired = false;
-        try {
-            acquired = lock.tryLock(100, TimeUnit.MILLISECONDS);
-            if (!acquired) {
-                System.out.println("Could not acquire lock — skipping update");
-                return false;
-            }
-            // critical section
-            System.out.println("Update applied");
-            return true;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
-        } finally {
-            if (acquired) {
-                lock.unlock();
-            }
-        }
-    }
-
-    public static void main(String[] args) {
-        new TryLockDemo().tryUpdate();
-    }
+lock.lock();
+try {
+  work();
+} finally {
+  lock.unlock();
 }
 ```
 
-2. tryLock with timeout — waits up to 100ms then returns false — no infinite stall.
-3. acquired flag tracks whether we hold lock — unlock only if we acquired — critical pattern.
-4. finally unlock — even if critical section throws — same discipline as synchronized auto-release.
-5. Interrupt during wait — restore interrupt flag, return false — don't swallow interruption.
-6. Contrast with lock() — blocks until available — tryLock for degradable operations.
+Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
 
-### Scene `mistakes` (renderer: `mistakes`)
+I'll walk this like pair-programming.
 
-1. Three common mistakes.
-2. One — forgetting unlock in finally — lock leaked forever, all other threads block eternally.
-3. Two — calling await or signal without holding the lock — IllegalMonitorStateException at runtime.
-4. Three — using tryLock but not handling the false return path — logic runs without holding lock, races return.
-5. Also — enabling fair locks globally without measuring — throughput cliff on high-contention paths.
-6. Explicit locks demand discipline — synchronized is harder to misuse for simple cases.
+Focus on the idea each line encodes.
 
-### Scene `interview` (renderer: `interview`)
+Then connect to the failure mode.
 
-1. Interview question — ReentrantLock versus synchronized?
-2. Both provide mutual exclusion and happens-before visibility.
-3. ReentrantLock offers tryLock, fairness option, interruptible lock, multiple Conditions per lock.
-4. synchronized is simpler — JVM-managed, always released on exit including exceptions.
-5. Prefer synchronized unless you need a specific ReentrantLock feature — justify in design review.
-6. Mention always unlocking in finally with explicit locks — interviewers love hearing finally.
-7. Condition.await loop checking predicate — shows producer-consumer understanding.
+Look at `lock.lock();`.
 
-### Scene `amplify`
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Let me press on point 1 a bit harder.
-2. Always unlock in finally.
-3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-4. If you cannot explain the failure mode, you do not own the feature yet.
-5. Let me press on point 2 a bit harder.
-6. tryLock avoids dead waiting.
-7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-8. If you cannot explain the failure mode, you do not own the feature yet.
-9. Let me press on point 3 a bit harder.
-10. Multiple conditions.
-11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-12. If you cannot explain the failure mode, you do not own the feature yet.
-13. Let me press on point 4 a bit harder.
-14. Fairness costs throughput.
-15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-16. If you cannot explain the failure mode, you do not own the feature yet.
-17. Let me press on point 5 a bit harder.
-18. Prefer synchronized unless you need features.
-19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-20. If you cannot explain the failure mode, you do not own the feature yet.
+Look at `try {`.
 
-### Scene `handbook_spine`
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. How this maps to the reference handbook mindset:
-2. The handbook teaches concept, internal working, mistakes, and interview questions.
-3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
-4. So if a section felt familiar, good: that means the curriculum spine is intact.
+Look at `work();`.
 
-### Scene `practice`
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-1. Mini practice before you go.
-2. Pause the video and do this without looking:
-3. 1) Say out loud what Explicit Locks is for in one sentence.
-4. 2) Write the example from memory — approximate is fine.
-5. 3) Name one mistake from this episode and how you would catch it in review.
-6. That three-step drill turns watching into learning.
-### Scene `summary` (renderer: `summary`)
+Look at `} finally {`.
 
-1. ReentrantLock = explicit synchronized with extras.
-2. tryLock and timeouts avoid indefinite blocking and aid deadlock recovery.
-3. Condition replaces wait/notify with multiple wait sets per lock.
-4. unlock in finally — non-negotiable.
-5. Default to synchronized; upgrade when features justify complexity.
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-### Scene `teaser` (renderer: `teaser`)
+Look at `lock.unlock();`.
 
-1. Locks coordinate threads. Who manages the threads themselves?
-2. Episode Forty — ExecutorService and Thread Pools.
-3. Submit tasks, reuse threads, and shut down gracefully.
-4. See you there.
+Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
 
-_Total beats: **102** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
+After this example, you should be able to point to the code and explain what problem each important line is solving.
+
+### Example 2 — make it more realistic
+
+The first example isolates the concept. Real applications rarely stop there. In a practical setting, Explicit Locks usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+
+So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+
+A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+
+When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+
+### What if we skip this approach?
+
+Important concepts become memorable when we see the failure mode without them.
+
+For example, consider this common mistake: Forgetting unlock.
+
+That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+
+This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+
+### Example 3 — a common misunderstanding
+
+**Misunderstanding 1:** Forgetting unlock.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 2:** Locking without clear ownership.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 3:** Fair locks by default without need.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+
+### Interview-style checkpoint
+
+Question: When ReentrantLock over synchronized?
+
+Answer in spoken form: When you need tryLock, timeouts, multiple conditions, or fairness.
+
+Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+
+### Connecting the thread
+
+We came from **volatile and Happens-Before**. That set up a need. **Explicit Locks** is one of Java's answers to that need.
+
+You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+
+### Looking ahead
+
+Once this is solid, a new challenge appears. That challenge leads us to **ExecutorService**.
+
+We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
 
 ## Source attribution (reference document)
 
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
-- **Primary handbook lesson:** Lesson **39** — *Explicit Locks*.
-- **Series catalog:** Episode 39 ↔ handbook lesson 39 — *Explicit Locks*.
-- **How content was used:** The handbook provided the **topic outline and teaching points**. Spoken lines were **expanded** into a conversational 4–15 minute documentary script with a walked-through code example — not a verbatim paste of handbook prose.
-- **Runtime note:** Earlier short-cut narration was too thin (~4 min headline beats). This revision deepens explanation, examples, mistakes, and interview answer structure while staying under ~15 minutes.
+- **Primary curriculum mapping:** Episode 39 / **Explicit Locks** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
+- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
+- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
 
-- Full handbook HTML is **not checked into git** (original upload was ephemeral). Attribution for this episode is by **lesson title / topic** from the recovered TOC and the series catalog.
+### Teaching points drawn from the topic bank
 
-### Scene ↔ curriculum intent
-
-- **`hook`** — volatile → Explicit Locks bridge
-- **`title`** — episode title card
-- **`reentrant`** — ReentrantLock basics
-- **`trylock`** — tryLock and timeouts
-- **`condition`** — Condition variables
-- **`compare`** — vs synchronized
-- **`when_locks`** — when to choose explicit locks
-- **`code`** — tryLock walkthrough
-- **`mistakes`** — common mistakes
-- **`interview`** — ReentrantLock vs synchronized
-- **`summary`** — revision
-- **`teaser`** — bridge to ExecutorService
+- Always unlock in finally.
+- tryLock avoids dead waiting.
+- Multiple conditions.
+- Fairness costs throughput.
+- Prefer synchronized unless you need features.

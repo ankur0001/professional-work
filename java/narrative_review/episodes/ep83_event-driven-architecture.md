@@ -5,50 +5,75 @@
 | Episode | 83 |
 | Title | Event-Driven Architecture |
 | Catalog handbook column | S2 |
-| Narration source script | Expanded review narration (4–15 min target) |
-| Spoken form | Conversational documentary beats + walkthrough example |
-| Runtime target | **4–15 minutes** (aim ~8–12) |
+| Narration source script | Descriptive instructor narration (4–15 min) |
+| Spoken form | Connected explanatory prose with walked-through examples |
+| Runtime target | **4–15 minutes** (aim ~10–12) |
 
-## Full narration (spoken beats)
+## Full narration
 
-### Scene `hook`
+### Opening — start with a problem
 
-1. In the last episode, we worked through API Design Deep Dive.
-2. If that made sense, today builds on it. If it was fuzzy, today usually makes it click.
-3. Events are facts — consumers must tolerate at-least-once delivery.
-4. I am not going to machine-gun definitions at you.
-5. We will go slowly: mental model, worked example, traps, then an interview-ready answer.
-6. Settle in for a real lesson — roughly eight to twelve minutes of talking, with room up to about fifteen if you pause on the example.
-7. The floor is four minutes, but we are not doing the thin headline version anymore.
+In the previous episode, we worked through **API Design Deep Dive**. That gave us a piece of the platform. Today we need the next piece: **Event-Driven Architecture**.
 
-### Scene `title`
+We are continuing The Java Story, and today's challenge is Event-Driven Architecture. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
 
-1. Episode 83.
-2. Event-Driven Architecture.
-3. By the end, you should explain this out loud without reading notes.
-4. If you can teach it, you own it.
+Events are facts — consumers must tolerate at-least-once delivery.
 
-### Scene `concept`
+I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
 
-1. First, the why — then the syntax.
-2. Picture Event-Driven Architecture clearly.
-3. Here are the points that matter when code meets production:
-4. Point 1: Facts vs commands.
-5. If you remember only one thing, make it that.
-6. Point 2: Idempotent consumers.
-7. This is usually where tutorials stop — we will not.
-8. Point 3: Outbox pattern.
-9. Point 4: Ordering is partial.
-10. Point 5: Schema evolution.
-11. That last point is often the senior-level differentiator in interviews.
-12. Notice how these points connect: mechanism, usage, and failure mode.
-13. Hold them in your head while we look at code.
+### Why this exists
 
-### Scene `example_intro`
+In simple language, event-driven architecture is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
 
-1. Example time. Do not skim.
-2. Every line maps to something we just said.
-3. If you need to, pause and retype it yourself after the walkthrough.
+A helpful picture: Picture Event-Driven Architecture clearly.
+
+Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
+
+### Building the idea step by step
+
+#### Step 1
+
+Now consider this teaching point: Facts vs commands.
+
+This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 2
+
+Now consider this teaching point: Idempotent consumers.
+
+Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 3
+
+Now consider this teaching point: Outbox pattern.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 4
+
+Now consider this teaching point: Ordering is partial.
+
+Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+#### Step 5
+
+Now consider this teaching point: Schema evolution.
+
+This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
+
+Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
+
+### Example 1 — the smallest useful illustration
+
+Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
 
 ```java
 // transactionally write Order + OutboxEvent
@@ -56,111 +81,84 @@
 // consumers handle OrderCreated idempotently
 ```
 
-### Scene `example_walk`
+Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
 
-1. Walkthrough.
-2. Walk this like pair-programming.
-3. Focus on what each line means.
-4. Connect to the failure mode.
-5. Comment cue: transactionally write Order + OutboxEvent
-6. Comment cue: publisher relays outbox to the bus
-7. Comment cue: consumers handle OrderCreated idempotently
-8. If you can explain those lines to a teammate, you understand the episode.
-9. If you only recognize the keywords, rewind the concept section once.
+Walk this like pair-programming.
 
-### Scene `deeper`
+Focus on what each line means.
 
-1. One level deeper — the part short videos skip.
-2. Ask: what happens under load? Under failure? Under bad input?
-3. With Event-Driven Architecture, mastery is not more jargon.
-4. Mastery is knowing which trade-off you are choosing: clarity versus speed, flexibility versus safety, simplicity versus control.
-5. In production, second-order effects matter: the next engineer’s reading speed, three-a.m. operability, and whether tests still tell the truth.
-6. So when you adopt a feature from this episode, adopt the operational story too.
-7. Write one sentence in your notes: when I use this, I accept ___, and I mitigate ___ .
+Connect to the failure mode.
 
-### Scene `mistakes`
+After this example, you should be able to point to the code and explain what problem each important line is solving.
 
-1. Reality check — common mistakes.
-2. Mistake 1: Dual writes without outbox.
-3. I have seen this in real code reviews — including my own older code.
-4. Mistake 2: Assuming exactly-once.
-5. I have seen this in real code reviews — including my own older code.
-6. Mistake 3: Fat events that couple everything.
-7. I have seen this in real code reviews — including my own older code.
-8. If you recognize one, good. Recognition is the first control.
+### Example 2 — make it more realistic
 
-### Scene `interview`
+The first example isolates the concept. Real applications rarely stop there. In a practical setting, Event-Driven Architecture usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
 
-1. Interview time. Speak like someone who has shipped.
-2. Question: Why outbox?
-3. Answer: Atomically record state change + event to avoid lost messages.
-4. Then add one trade-off or failure-mode sentence.
-5. That extra sentence is what interviewers remember.
-6. Practice once without looking at the screen.
+So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
 
-### Scene `amplify`
+A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
 
-1. Let me press on point 1 a bit harder.
-2. Facts vs commands.
-3. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-4. If you cannot explain the failure mode, you do not own the feature yet.
-5. Let me press on point 2 a bit harder.
-6. Idempotent consumers.
-7. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-8. If you cannot explain the failure mode, you do not own the feature yet.
-9. Let me press on point 3 a bit harder.
-10. Outbox pattern.
-11. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-12. If you cannot explain the failure mode, you do not own the feature yet.
-13. Let me press on point 4 a bit harder.
-14. Ordering is partial.
-15. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-16. If you cannot explain the failure mode, you do not own the feature yet.
-17. Let me press on point 5 a bit harder.
-18. Schema evolution.
-19. In practice, this shows up when a teammate asks why a change is risky — you answer with the mechanism, not a slogan.
-20. If you cannot explain the failure mode, you do not own the feature yet.
+When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
 
-### Scene `handbook_spine`
+### What if we skip this approach?
 
-1. How this maps to the reference handbook mindset:
-2. The handbook teaches concept, internal working, mistakes, and interview questions.
-3. We are doing the same job in spoken form — compressed for video, but not reduced to headlines.
-4. So if a section felt familiar, good: that means the curriculum spine is intact.
+Important concepts become memorable when we see the failure mode without them.
 
-### Scene `practice`
+For example, consider this common mistake: Dual writes without outbox.
 
-1. Mini practice before you go.
-2. Pause the video and do this without looking:
-3. 1) Say out loud what Event-Driven Architecture is for in one sentence.
-4. 2) Write the example from memory — approximate is fine.
-5. 3) Name one mistake from this episode and how you would catch it in review.
-6. That three-step drill turns watching into learning.
-### Scene `summary`
+That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
 
-1. Landing the plane.
-2. Today was Event-Driven Architecture.
-3. You got a mental model, a worked example, traps, and an interview answer.
-4. Pause and retype the example from memory if you can — that beats passive rewatching.
-5. Next time you see this topic in a codebase, you should feel oriented, not lost.
+This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
 
-### Scene `teaser`
+### Example 3 — a common misunderstanding
 
-1. Next episode keeps the story moving.
-2. Episode 84: Performance Playbook.
-3. It builds directly on today’s mental model.
-4. If something clicked, stick around. I will see you there.
+**Misunderstanding 1:** Dual writes without outbox.
 
-_Total beats: **96** — expanded for ~8–12 minute conversational delivery (4-minute floor, 15-minute ceiling)._
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 2:** Assuming exactly-once.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+**Misunderstanding 3:** Fat events that couple everything.
+
+When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+
+If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+
+### Interview-style checkpoint
+
+Question: Why outbox?
+
+Answer in spoken form: Atomically record state change + event to avoid lost messages.
+
+Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+
+### Connecting the thread
+
+We came from **API Design Deep Dive**. That set up a need. **Event-Driven Architecture** is one of Java's answers to that need.
+
+You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+
+### Looking ahead
+
+Once this is solid, a new challenge appears. That challenge leads us to **Performance Playbook**.
+
+We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
 
 ## Source attribution (reference document)
 
-(reference document)
-
 Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
 
-- **Episode 83** is a **Season 2 production-systems bonus** track. It is **not** one of the handbook’s 80 lessons.
-- Topic framing for the video: **Event-Driven Architecture** (continuity after Episode 80’s architecture interview wrap).
-- Narration was **original written for the video** (scene-synced beats), not copied verbatim from the handbook.
+- **Episode 83** is Season 2 bonus content (not one of the handbook's 80 lessons). Topic framing: **Event-Driven Architecture**.
+- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
+- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
 
-- **Runtime note:** Narration expanded for a **4–15 minute** conversational lesson (aim ~8–12) with a worked example — not the ultra-short headline cut.
+### Teaching points drawn from the topic bank
+
+- Facts vs commands.
+- Idempotent consumers.
+- Outbox pattern.
+- Ordering is partial.
+- Schema evolution.
