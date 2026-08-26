@@ -18,6 +18,8 @@ The answer is not "because new languages are fashionable." The answer is that C+
 
 In C++, you manage memory yourself. That power is real — and so is the cost. One small mistake can become a leak, a crash, or a security hole that only appears under load. Platform dependency is another tax. Code that works on one operating system can break on another. If your product must run in many places, you may end up rewriting and retesting the same business logic again and again.
 
+Those two costs — memory risk and platform rewrite — stacked on top of each other. A team could survive one of them for a while. Both at once slowed shipping to a crawl.
+
 So the industry was facing a very practical question: can we keep strong application development, but reduce the pain of memory mistakes and platform-specific rewrites?
 
 That question is why Java exists.

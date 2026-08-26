@@ -4,6 +4,10 @@ Use **EP01, EP04, and EP07** as the **narrative quality benchmark**, but do not 
 
 Extract the underlying teaching technique.
 
+**Approved direction:** make every episode as narratively coherent and example-driven as EP01/04/07, while preserving each episode's own natural flow.
+
+Do **not** ask for "more descriptive" content. Descriptive expansion is already solved. The missing quality is continuous spoken-lesson coherence.
+
 ---
 
 ## The goal
@@ -103,14 +107,11 @@ If it sounds like several documentation sections joined together, rewrite it.
 
 ---
 
-## Gold standards gate
+## Gold standards (approved)
 
-Approve these three before any series-wide rewrite:
+* `episodes/ep01_why-java-exists-introduction-to-java.md` — approve with minor refinement
+* `episodes/ep04_variables-and-data-types.md` — approved
+* `episodes/ep07_methods.md` — approved
+* Narrative methodology — approved
 
-* `episodes/ep01_why-java-exists-introduction-to-java.md`
-* `episodes/ep04_variables-and-data-types.md`
-* `episodes/ep07_methods.md`
-
-Until they are approved as genuinely excellent continuous spoken lessons, **do not mass-regenerate EP01–EP85**.
-
-When expanding other episodes later: extract the **technique** from those three — not their wording, analogies, or transition phrases.
+Apply the **technique** (not wording) across EP01–EP85.
