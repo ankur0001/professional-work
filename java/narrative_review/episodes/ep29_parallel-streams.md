@@ -77,6 +77,8 @@ Finally, remember that parallel streams do not replace architecture. Throughput 
 
 Numbers first, parallel second: that ordering keeps the common pool healthy and the code honest.
 
+If you cannot cite a measurement, leave the stream sequential. Parallelism is an optimization with a concurrency bill attached.
+
 So let's reconnect the chain. Independent CPU work suggested parallelism. The common ForkJoinPool powered parallel streams. Purity and sizing constraints appeared. Ordering and shared mutation failed loudly. IO-bound work pointed elsewhere. Measurement closed the argument.
 
 Pipelines and collectors still have one more everyday absence problem: a lookup that might not find a user, a parse that might not yield a number. Returning null works until it doesn't. Is there a type that makes absence explicit at the boundary?

@@ -109,6 +109,8 @@ When teaching teammates, draw the shapes: `Stream<List<T>>` versus `Stream<T>`. 
 
 That judgment call is the real skill this episode trains — not the spelling of flatMap.
 
+Prefer that shape question over memorizing snippets. When the types line up, the operator choice usually becomes obvious.
+
 So let's reconnect the chain. Nested collections made `map` produce the wrong shape. `flatMap` flattened streams of streams. Optional flatMap handled multi-step absence. Readability set the limit on how far to push pipeline style.
 
 Once sequential pipelines feel comfortable, someone asks the speed question: can we run this in parallel and use more cores? Sometimes yes. Often not for the reason people hope.
