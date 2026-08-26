@@ -31,7 +31,7 @@ For serverless-style or scale-to-zero Java, startup becomes part of product late
 
 Ways to improve startup, said as an engineer: reduce classpath and initialization work first, use CDS or AppCDS where it pays, lean on lazy and deliberate lifecycle init, and consider native image or checkpoint/restore when the deployment model demands fast bring-up. Doing heavy work in static initializers and shipping enormous classpaths are the mistakes that make exotic tools look necessary before you have earned them.
 
-We closed the JVM's life cycle from cold start through steady-state pauses. Episode Sixty-Six wraps this JVM arc for interviews: how to tell one coherent story from load to diagnosis without buzzword bingo.
+We closed the JVM's life cycle from cold start through steady-state pauses. The remaining gap is telling that arc as one coherent interview story — from load to diagnosis — without buzzword bingo.
 
 ## Source attribution
 

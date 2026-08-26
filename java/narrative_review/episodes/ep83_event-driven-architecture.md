@@ -32,7 +32,7 @@ Schema evolution needs compatibility rules: additive fields, careful renames, co
 
 Connect events to observability. Every event should carry correlation ids so a checkout trace includes the async legs that fire after the HTTP response. When events cross team boundaries, ownership of schema becomes political — decide who may add fields and how compatibility is tested. Technology alone does not solve governance.
 
-Events are facts; consumers must tolerate at-least-once; outbox protects producers from dual-write loss. That triad is the episode in one breath. Event-driven designs shine when they reduce coupling and absorb load spikes. They punish teams that skip idempotency, outbox, and observability. Performance across sync and async paths still needs a disciplined loop — Episode Eighty-Four.
+Events are facts; consumers must tolerate at-least-once; outbox protects producers from dual-write loss. That triad is the episode in one breath. Event-driven designs shine when they reduce coupling and absorb load spikes. They punish teams that skip idempotency, outbox, and observability. Performance across sync and async paths still needs a disciplined loop — measure, hypothesize, change one thing, remeasure.
 
 ## Source attribution
 

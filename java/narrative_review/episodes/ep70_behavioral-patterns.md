@@ -36,7 +36,7 @@ Behavioral patterns also meet concurrency. Strategy objects should usually be st
 
 Do not over-abstract one-off code. Behavioral patterns shine when communication or algorithm variation is a recurring pain. They dull when every method becomes an interface hierarchy "for testing" without a second implementation in sight. Prefer the smallest structure that keeps change local. Interviewers who ask for a behavioral pattern you used want a story: we replaced a switch with Strategy because marketing added three discount types in a quarter. Mechanisms plus timeline beat trivia.
 
-Behavioral patterns close the classical catalog arc. Next we enter the ecosystem where many of these ideas are industrialized for enterprise Java: Spring — dependency injection, portable abstractions, and a container mindset. Episode Seventy-One begins that story with a practical situation, not a feature brochure.
+Behavioral patterns close the classical catalog arc. Next we enter the ecosystem where many of these ideas are industrialized for enterprise Java: Spring — dependency injection, portable abstractions, and a container mindset — starting from a practical situation, not a feature brochure.
 
 ## Source attribution
 

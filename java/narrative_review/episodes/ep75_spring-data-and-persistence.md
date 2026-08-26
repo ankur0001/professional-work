@@ -32,7 +32,7 @@ Read-write splitting appears as you scale, but the first victory is simpler: kno
 
 Biggest JPA pitfall? Lazy loading surprises and N+1 queries. Say it, then say how you detect it: SQL logging in staging, metrics on query counts per request, and SQL-counting tests on critical list endpoints in CI. That turns a trivia answer into an engineering answer. Spring Data speeds repositories — keep saying the second half aloud — you still own SQL and N+1 reality.
 
-Persistence without security is an open door. Episode Seventy-Six is Spring Security — filter chains, authentication versus authorization, and never inventing crypto.
+Persistence without security is an open door. The next question is how Spring Security draws that door — filter chains, authentication versus authorization, and never inventing crypto.
 
 ## Source attribution
 

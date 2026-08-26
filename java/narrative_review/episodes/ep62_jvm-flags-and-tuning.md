@@ -30,7 +30,7 @@ Cargo-cult lists fail predictably. A flag that helped a four-gigabyte heap may h
 
 This episode does not memorize every `-XX`. The catalog is large and version-dependent. What transfers is discipline: intentional heap, visible GC behavior, evidence, documentation, cleanup. When someone suggests a flag, ask "what symptom?", "what measurement changed?", and "how do we know to revert?" Missing answers mean the flag is a rumor with a dash prefix.
 
-We turned flags from magic words into a scientific habit. Zoom in further: sometimes the "memory problem" is not GC policy but the shape of objects themselves — headers, padding, compressed oops. Episode Sixty-Three is object layout, and it explains why a "tiny" object is never as tiny as its fields suggest.
+We turned flags from magic words into a scientific habit. Zoom in further: sometimes the "memory problem" is not GC policy but the shape of objects themselves — headers, padding, compressed oops — and why a "tiny" object is never as tiny as its fields suggest.
 
 ## Source attribution
 

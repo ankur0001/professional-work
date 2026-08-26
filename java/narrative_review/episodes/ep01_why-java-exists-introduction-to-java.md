@@ -65,9 +65,9 @@ This is also where a common misunderstanding begins. People say, "Java runs on W
 
 And that mix-up is not a side note. It is the next problem waiting for us.
 
-Today we answered why Java exists, how portability actually works, and what happens when a tiny program runs. The natural next question is: when people say install Java, what are they actually installing?
+Today we answered why Java exists, how portability actually works, and what happens when a tiny program runs. The natural next question is still waiting in plain language: when people say "install Java," what are they actually installing — and why do three different acronyms show up as if they were the same thing?
 
-That is Episode Two — JDK, JRE, and JVM — and once you see them as layers, the confusion starts to disappear.
+Once those layers are clear, the confusion starts to disappear.
 
 ## Source attribution
 

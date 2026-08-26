@@ -31,7 +31,7 @@ Leaky entities as DTOs couple clients to persistence and leak lazy-loading probl
 
 Mature POST behavior: validate, apply once, return consistent bodies on replay, and never return 500 with a half-applied side effect without a recovery story. Status codes are part of the contract: 201 or 200 on success, 409 when a key reuses different bodies, 400 when validation fails before charge. Breaking changes casually — renaming amount fields from cents to dollars without versioning — cause real financial events. Treat API changes with the seriousness of schema migrations.
 
-Interview answers should stress contracts, idempotency, and error consistency — not only annotation trivia. When APIs need to fan work out asynchronously, events enter. Episode Eighty-Three is event-driven architecture.
+Interview answers should stress contracts, idempotency, and error consistency — not only annotation trivia. When APIs need to fan work out asynchronously, events enter — and with them a new failure mode: at-least-once delivery without double-applying side effects.
 
 ## Source attribution
 

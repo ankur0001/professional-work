@@ -34,7 +34,7 @@ Rehearse humility too. "I have not used NMT in production, but here is when I wo
 
 How to structure a JVM answer? Define, mechanism, failure mode, diagnostic tools. That wrap only works if the earlier episodes gave you real mechanisms to hang on those hooks. If you can tell the pipeline story in under two minutes and then take a diagnostic fork, you are ready for the JVM portion of a senior conversation.
 
-This closes the JVM deep-dive arc. The next arc steps up from runtime machinery to design vocabulary: recurring structures teams name so they can talk about trade-offs faster. Episode Sixty-Seven introduces design patterns without turning them into stamps you smash onto every class.
+This closes the JVM deep-dive arc. The next hunger steps up from runtime machinery to design vocabulary: recurring structures teams name so they can talk about trade-offs faster — without turning patterns into stamps you smash onto every class.
 
 ## Source attribution
 

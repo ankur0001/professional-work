@@ -29,7 +29,7 @@ Bring `Tiny` into a product decision. A telemetry pipeline boxes every metric sa
 
 So why is a tiny object bigger than expected? Headers, alignment, and references add overhead. Say that in an interview. Then say what you would do next: measure retained sizes with a heap dump or instrumentation, ask whether the design needs millions of tiny objects at all, and only then worry about packing. Estimating by field sizes only, ignoring reference costs, and layout-obsessing before algorithms are the three mistakes this episode exists to prevent.
 
-Object layout makes the heap's accounting honest. But pauses are not only about how big objects are. Sometimes latency appears when the JVM needs all threads to reach a safe state before a VM operation. Those rendezvous points are safepoints — and Episode Sixty-Four explains why time-to-safepoint can show up as mysterious latency even when "GC was slow" is not the whole story.
+Object layout makes the heap's accounting honest. But pauses are not only about how big objects are. Sometimes latency appears when the JVM needs all threads to reach a safe state before a VM operation. Those rendezvous points are safepoints — and time-to-safepoint can show up as mysterious latency even when "GC was slow" is not the whole story.
 
 ## Source attribution
 

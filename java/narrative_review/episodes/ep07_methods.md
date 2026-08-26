@@ -112,7 +112,7 @@ So let's reconnect the chain. We started with duplicated order math and asked wh
 
 Once we can name behavior, another need becomes obvious: we often need many values under one name, accessible by position — a list of prices, a list of scores, a list of ids. Copying `price1`, `price2`, `price3` into separate variables is the same kind of trap we just escaped with methods.
 
-That is the natural door into Episode Eight: arrays.
+That is the natural door into arrays — many values under one name, addressed by position.
 
 ## Source attribution
 

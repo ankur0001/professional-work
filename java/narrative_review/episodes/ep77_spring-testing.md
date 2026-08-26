@@ -35,7 +35,7 @@ Close with a team policy you can actually run. Every service class with pure log
 
 When `@SpringBootTest`? When you truly need the full context; prefer slices for speed. Then mention Testcontainers for the integration layer where contracts with real infrastructure matter. If a suite cannot fail for the right reason, it cannot protect production.
 
-This closes the Spring core arc: container, Boot, web, data, security, tests. Next we zoom out to systems of services — microservices basics — where network failure becomes a design input, not an exception. Episode Seventy-Eight.
+This closes the Spring core arc: container, Boot, web, data, security, tests. Next we zoom out to systems of services — where network failure becomes a design input, not an exception.
 
 ## Source attribution
 

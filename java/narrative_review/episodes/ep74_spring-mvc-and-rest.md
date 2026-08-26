@@ -34,7 +34,7 @@ REST is not only JSON over HTTP. Resource modeling matters: nouns for resources,
 
 Controller return types in an interview? Body for simple success, `ResponseEntity` when status and headers matter, reactive types when you are on a reactive stack — always choose status and errors deliberately. Mention deliberate status and error handling, not only "we return the object and Spring Jacksonifies it."
 
-APIs need durable data. Spring Data speeds repositories, but you still own SQL reality, transactions, and N+1 — Episode Seventy-Five.
+APIs need durable data. Spring Data speeds repositories, but you still own SQL reality, transactions, and N+1 — and that ownership gap is the next pressure.
 
 ## Source attribution
 

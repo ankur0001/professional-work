@@ -33,7 +33,7 @@ Walk a design conversation. "Should we facade the payment SDK?" If three service
 
 Composition keeps showing up as the safe default. Adapter for foreign shapes. Decorator for layered policies on one interface. Facade for a curated subsystem door. Proxy for controlled access and infrastructure concerns. Spring's AOP proxies are not a different universe; they are this idea with a framework engine. Before you leave structure, notice how these appear in reviews without the names: "wrap this client to add retries" is decorator talk; "hide these five SDK calls behind one method" is facade talk; "translate this third-party DTO at the boundary" is adapter talk.
 
-When structural assembly is in place, the next question is how objects communicate and how algorithms vary without rewriting callers. That is behavioral patterns — Strategy, Observer, Command, and friends — in Episode Seventy.
+When structural assembly is in place, the next question is how objects communicate and how algorithms vary without rewriting callers — Strategy, Observer, Command, and friends.
 
 ## Source attribution
 

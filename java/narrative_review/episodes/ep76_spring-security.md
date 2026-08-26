@@ -36,7 +36,7 @@ AuthN versus AuthZ remains the interview staple. Authentication: who are you? Au
 
 Build a minimal checklist before merge. Is authentication happening at the edge? Are authorization rules enforced on the server for every sensitive route? Are passwords encoded with a modern encoder? Is CSRF configured for the actual client type? Are Actuator and admin endpoints locked down? Did anyone disable security in a profile that could be active in production? Also reconnect to testing: security rules without tests drift. Anonymous access tests and forbidden-role tests belong beside happy-path controller tests.
 
-You can wire secure APIs and still ship regressions if tests are slow, flaky, or missing. Episode Seventy-Seven is Spring testing — slices before full context, and realism when you need it.
+You can wire secure APIs and still ship regressions if tests are slow, flaky, or missing. The next pressure is Spring testing — slices before full context, and realism when you need it.
 
 ## Source attribution
 

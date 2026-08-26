@@ -34,7 +34,7 @@ Circular dependencies are a design smell. OrderService needs InventoryService; I
 
 Put the preference hierarchy in one spoken checklist. Required collaborators: constructor parameters, final fields. Optional collaborators: optional parameters or setters with defaults. Lookups mid-method: debt. Field injection in new code: avoid. Why constructor injection? Required dependencies are explicit, final, and easy to unit test — then mention scopes and circular dependencies as the next maturity topics.
 
-Once wiring is clear, teams still drown in configuration for HTTP servers, JSON, DataSource, and logging. Spring Boot exists to make the happy path executable with opinions and auto-configuration — Episode Seventy-Three.
+Once wiring is clear, teams still drown in configuration for HTTP servers, JSON, DataSource, and logging. Spring Boot exists to make the happy path executable with opinions and auto-configuration — but what does that classpath-driven magic actually buy, and what can it hide?
 
 ## Source attribution
 

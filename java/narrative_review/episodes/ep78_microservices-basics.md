@@ -31,7 +31,7 @@ Return to the monolith morning. Deploys queue because every feature shares one r
 
 One closing caution: microservices multiply JVM processes, each with its own heap, GC, metaspace, and startup profile. Everything from Episodes Fifty-Six through Sixty-Five becomes a fleet concern. If you cannot operate one JVM well, operating thirty will not teach you by magic — it will page you in parallel.
 
-Microservices without visibility and without timeouts become a slower monolith with worse nights. Episode Seventy-Nine is observability and resilience — how you see the system and how you survive dependency failure.
+Microservices without visibility and without timeouts become a slower monolith with worse nights. The next pressure is observability and resilience — how you see the system and how you survive dependency failure.
 
 ## Source attribution
 

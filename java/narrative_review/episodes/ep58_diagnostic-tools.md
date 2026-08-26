@@ -39,7 +39,7 @@ Put that playbook next to a concrete night. Latency spikes at 2:14. Error rate i
 
 If an interview asks what you reach for first when an app is stuck, say thread dump and/or JFR to see blockers — and that restart without capture guarantees a repeat incident with less data. Offer the correlation habit: metrics for timing, dumps for mechanism.
 
-We now have collectors, leak hunting, and an incident toolkit. Step back from the war room: the JIT and the allocator still decide whether short-lived objects ever become real heap pressure. Escape analysis — Episode Fifty-Nine — explains why some allocations you "see" in source never show up the way you expect in profiles.
+We now have collectors, leak hunting, and an incident toolkit. Step back from the war room: the JIT and the allocator still decide whether short-lived objects ever become real heap pressure. Escape analysis explains why some allocations you "see" in source never show up the way you expect in profiles.
 
 ## Source attribution
 

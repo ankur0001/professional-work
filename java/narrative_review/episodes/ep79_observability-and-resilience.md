@@ -29,7 +29,7 @@ Walk an incident with the toolkit. Checkout p99 rises. The dashboard shows inven
 
 First resilience rule in an interview? Set timeouts; unbounded waits become outages. Then mention retries with jitter plus idempotency, circuit breakers, and SLO-based alerts so the answer sounds like a system, not a single flag.
 
-Seeing and surviving make distribution operable. Next we wrap architecture talk for interviews: trade-offs under constraints, with JVM awareness in the story. Episode Eighty.
+Seeing and surviving make distribution operable. Next we wrap architecture talk for interviews: trade-offs under constraints, with JVM awareness in the story.
 
 ## Source attribution
 

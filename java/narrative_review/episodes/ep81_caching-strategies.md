@@ -27,11 +27,11 @@ Invalidation is the boss fight because freshness and hit rate pull opposite dire
 
 Stampede control matters when a popular key expires and a hundred requests miss together. Single-flight loading — like `LoadingCache`'s loader — slightly staggered TTLs, or soft values reduce the thundering herd. Measure hit rate and staleness together. A high hit rate serving wrong data is not a win. If hit rate is high and origin load is still high, dig into miss traces before growing the cache cluster — you may be caching the wrong grain or suffering stampedes at expiry.
 
-Caching non-idempotent results blindly is how duplicates appear. Caching a POST response that creates a seat reservation means a retry can return success without a seat. Separate read models you cache from write side effects you do not. Cache keys should follow resource identifiers clients already understand — Episode Eighty-Two will deepen contracts. Personalized responses demand extra care for privacy and correctness.
+Caching non-idempotent results blindly is how duplicates appear. Caching a POST response that creates a seat reservation means a retry can return success without a seat. Separate read models you cache from write side effects you do not. Cache keys should follow resource identifiers clients already understand — and those identifiers live inside longer-lived API contracts. Personalized responses demand extra care for privacy and correctness.
 
 Hardest cache problem? Invalidation and stampede under concurrent misses. Say that, then mention bounds, TTL, and explicit delete-on-write as the ordinary tools that prevent heroic outages. Caches buy latency with correctness risk — keep saying both halves.
 
-APIs that sit in front of caches and databases need long-term contracts. Episode Eighty-Two is API design — idempotency, errors, and compatibility.
+APIs that sit in front of caches and databases need long-term contracts — idempotency, errors, and compatibility — or every cache win becomes a client migration tax.
 
 ## Source attribution
 

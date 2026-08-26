@@ -33,7 +33,7 @@ Reference queues close the loop. When the GC clears a reference, it can enqueue 
 
 If an interview asks weak versus soft, answer with reachability policy: weak references clear when the object is only weakly reachable; soft references are retained longer and cleared under memory pressure according to the collector's policy. Neither replaces an explicit eviction policy for a serious cache, and `finalize` is not your cleanup plan.
 
-We learned that reachability is not only strong-or-gone. Next the conversation turns operational again: which JVM flags you set, how you change them without cargo-culting, and how evidence beats folklore. Episode Sixty-Two is JVM flags and tuning.
+We learned that reachability is not only strong-or-gone. Next the conversation turns operational again: which JVM flags you set, how you change them without cargo-culting, and how evidence beats folklore.
 
 ## Source attribution
 

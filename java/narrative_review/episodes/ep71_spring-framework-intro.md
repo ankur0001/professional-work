@@ -35,7 +35,7 @@ One last orientation: Spring did not abolish design. If your domain is a mud bal
 
 What is Spring at heart? A DI-centered programming and configuration model with a large ecosystem around web, data, security, and integration. Say that, then connect it to why your team chose it: testability, consistent structure, and battle-tested integrations.
 
-Curiosity should already be tugging: how exactly should we inject — constructor, setter, field — and why do tests become easier? That is the next episode: IoC and dependency injection in practice.
+Curiosity should already be tugging: how exactly should we inject — constructor, setter, field — and why do tests become easier when construction is honest?
 
 ## Source attribution
 

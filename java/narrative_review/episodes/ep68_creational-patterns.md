@@ -44,7 +44,7 @@ Walk a failure mode. A team makes a "service locator" singleton that hands out d
 
 If asked builder versus telescoping constructors, say: builder keeps call sites readable when many optional fields exist. If asked about singletons, admit caveats: global mutable state, testing pain, and that containers often own the one-instance story now. On double-checked locking: say why people reached for it historically, why it was easy to get wrong, and what you would do now instead.
 
-Creation sets the stage for structure: once objects exist, how do we assemble them so behavior can grow without subclass explosions? Episode Sixty-Nine is structural patterns — adapters, decorators, facades, and proxies.
+Creation sets the stage for structure: once objects exist, how do we assemble them so behavior can grow without subclass explosions — adapters, decorators, facades, and proxies?
 
 ## Source attribution
 

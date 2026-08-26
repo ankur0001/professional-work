@@ -36,7 +36,7 @@ War-room misunderstandings: guessing instead of dumping; fixating on GC settings
 
 If someone asks what a classic Java leak looks like, answer with mechanisms: unbounded caches, static collections, forgotten listeners, ThreadLocal values left on pooled threads. Then add how you would prove it — heap dump under load, dominator tree, retained size, path to GC roots. That second half separates vocabulary from on-call readiness.
 
-We started from a climbing heap that GC could not save and arrived at reachability as the real subject. But production pain is not only memory. Sometimes the app is stuck, slow, or mysteriously idle-burning CPU. Episode Fifty-Eight puts jcmd, JFR, thread dumps, and profilers into one incident playbook.
+We started from a climbing heap that GC could not save and arrived at reachability as the real subject. But production pain is not only memory. Sometimes the app is stuck, slow, or mysteriously idle-burning CPU. Then you need one incident playbook — jcmd, JFR, thread dumps, and profilers — before anyone reaches for restart folklore.
 
 ## Source attribution
 

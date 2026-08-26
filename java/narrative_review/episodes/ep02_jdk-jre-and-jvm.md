@@ -43,7 +43,7 @@ So Episode One asked why Java exists and showed bytecode plus the JVM. Today we 
 
 And yet a new frustration appears as soon as those tools work. You write a class, name a file, maybe add a package, and the compiler or launcher refuses until the pieces agree. Why does Java care so much about where `main` lives, what the filename is, and how packages map to folders?
 
-That structural stubbornness is how the compiler and JVM find your code — and it is exactly where the next episode begins.
+That structural stubbornness is how the compiler and JVM find your code — which is why the next natural question is: why do filenames, packages, and `main` have to agree before anything will run?
 
 ## Source attribution
 

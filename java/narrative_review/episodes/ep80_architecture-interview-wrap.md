@@ -28,7 +28,7 @@ Tie this wrap to the JVM wrap from Episode Sixty-Six. Same scaffold spirit: defi
 
 How to answer as a Java engineer? Requirements, design, JVM and runtime concerns, failure modes, observability — practice until the order is muscle memory, then let the specific domain fill the blanks. Admit trade-offs: microservices versus modular monolith, consistency versus availability, freshness versus cache hit rate.
 
-This wrap sets you up for deeper production topics that still show up in senior conversations: caching, API contracts, events, performance loops, and readiness. Episode Eighty-One starts with caching — latency bought with correctness risk.
+This wrap sets you up for deeper production topics that still show up in senior conversations: caching, API contracts, events, performance loops, and readiness. Caching comes first — latency bought with correctness risk.
 
 ## Source attribution
 

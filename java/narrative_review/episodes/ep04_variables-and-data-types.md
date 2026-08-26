@@ -108,7 +108,7 @@ So let's connect the chain. We started with a nameless `25` and asked what it me
 
 Once we can remember values, the next natural pressure appears: we need to combine them, compare them, and make decisions with them. A single character — `=` versus `==`, `/` between ints versus doubles — can change the meaning of a whole expression.
 
-That pressure is exactly why Episode Five exists: operators.
+That pressure is exactly why operators come next — the symbols that combine, compare, and decide.
 
 ## Source attribution
 

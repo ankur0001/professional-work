@@ -35,7 +35,7 @@ What does Boot add? Opinionated auto-configuration so you ship with less boilerp
 
 A practical Boot day ends with: main class runs, one controller answers, config externalized, health endpoint protected appropriately, and auto-config overrides documented. Then you are ready to deepen MVC rather than collect more starters.
 
-Boot is the executable face of Spring for most modern teams. Next we aim that executable app at HTTP: MVC, REST controllers, validation, and status codes — Episode Seventy-Four.
+Boot is the executable face of Spring for most modern teams. Next we aim that executable app at HTTP: MVC, REST controllers, validation, and status codes — where the wrong return type or a spilled entity turns a clean Boot app into a production incident.
 
 ## Source attribution
 

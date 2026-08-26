@@ -35,7 +35,7 @@ So when do you care? When allocation profiles under real load show pressure. Whe
 
 If asked what escape analysis is, say: the JIT analyzes whether an object escapes a method or thread; if it does not, optimizations like scalar replacement and sometimes lock elision become legal. Then add humility: do not micro-optimize assuming every `new` escapes, and do not rewrite clear code for imaginary allocations.
 
-Today's lesson connects the JIT back to the heap: not every object you construct becomes collector work. Next we leave the "objects on the heap" frame. Processes die with free heap space when native memory, metaspace, or container limits are the real budget — Episode Sixty.
+Today's lesson connects the JIT back to the heap: not every object you construct becomes collector work. Next we leave the "objects on the heap" frame. Processes die with free heap space when native memory, metaspace, or container limits are the real budget — and that paradox needs its own explanation.
 
 ## Source attribution
 

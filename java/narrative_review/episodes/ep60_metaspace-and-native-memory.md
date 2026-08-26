@@ -35,7 +35,7 @@ Connect this back to Episode Fifty-Seven. If loaders cannot unload, metaspace tr
 
 So why can a JVM die with free heap? Because native memory, metaspace, stacks, direct buffers, and container limits live beyond `-Xmx`. Say that in an interview, then say how you would confirm: compare RSS or cgroup usage to heap, check metaspace growth, inspect direct buffer metrics, enable NMT when needed, and look for loader growth across redeploys. Dying with free heap is not a paradox. It is a reminder that the heap is one account in a larger bank.
 
-We widened memory from "the heap" to "the process." Next we return to the heap with more precision: soft, weak, and phantom references — ways to cooperate with GC for caches and cleanup without pretending reachability is only strong-or-gone. That is Episode Sixty-One.
+We widened memory from "the heap" to "the process." Next we return to the heap with more precision: soft, weak, and phantom references — ways to cooperate with GC for caches and cleanup without pretending reachability is only strong-or-gone.
 
 ## Source attribution
 

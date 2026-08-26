@@ -33,7 +33,7 @@ A healthy team uses pattern names as compression. "This is a facade over the pay
 
 In interviews, when asked whether patterns still matter, answer with team compression and evolving catalogs: one example where a language feature replaced a classical shape, and one where naming Strategy or Decorator still clarifies a review.
 
-Today we demystified patterns as vocabulary under constraints. Next we get concrete with creational patterns — how objects come to life, where singletons go wrong, when builders beat telescoping constructors, and how containers often own lifecycle in modern Java. That is Episode Sixty-Eight.
+Today we demystified patterns as vocabulary under constraints. Next we get concrete with creational patterns — how objects come to life, where singletons go wrong, when builders beat telescoping constructors, and how containers often own lifecycle in modern Java.
 
 ## Source attribution
 

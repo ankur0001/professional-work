@@ -29,7 +29,7 @@ Safepoints are not evil. They are how the VM keeps a consistent world while relo
 
 If asked what a safepoint is, say: a state where the JVM can consistently pause threads for VM operations such as certain GC phases. Mention that time-to-safepoint matters for latency and that not every pause story is "the collector was slow at reclaiming." Offer one failure mode: a thread that rarely polls can stretch the rendezvous and look like a GC incident from the outside. Low latency means budgeting for coordination, choosing collectors and heap sizes that keep stop-the-world work small, and measuring TTSP when spikes disagree with GC pause charts — an engineering envelope, not the absence of safepoints.
 
-We added the coordination layer behind many pauses. Next we go to the beginning of a process's life: what happens between `java -jar` and a ready service, and why cold start is its own performance domain. Episode Sixty-Five is JVM startup.
+We added the coordination layer behind many pauses. Next we go to the beginning of a process's life: what happens between `java -jar` and a ready service, and why cold start is its own performance domain.
 
 ## Source attribution
 

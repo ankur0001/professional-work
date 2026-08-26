@@ -31,7 +31,7 @@ Close with a refusal list. Refuse to tune without a baseline. Refuse to optimize
 
 First performance question? Which percentile or error budget fails under what load? Then profile under that load, change one variable, remeasure. When allocation dominates, ask whether the design creates too many temporary objects, whether caching helps, or whether a representation change beats micro-edits. When locks dominate, ask whether shardable state from the concurrency arc applies. Measure, hypothesize, change one thing, remeasure — that loop is the answer.
 
-Performance readiness is necessary but not sufficient. Production readiness also means ownership, rollback, and runbooks — Episode Eighty-Five closes the series there.
+Performance readiness is necessary but not sufficient. Production readiness also means ownership, rollback, and runbooks — the socio-technical layer that decides whether a fast system stays alive at 3 a.m.
 
 ## Source attribution
 

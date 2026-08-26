@@ -36,7 +36,7 @@ People fall down when they copy blog flags for a different heap and allocation p
 
 If an interview asks how you choose a collector, answer under constraints: match pause and throughput goals to the workload, respect heap and CPU budget, then measure under realistic load. G1 for a solid server default; ZGC or Shenandoah when latency SLOs demand it and you can afford the cost; a throughput collector when batch wall-clock wins. Say what you will look at in the GC log — and what you will refuse to change until allocation behavior is understood.
 
-Today we moved from "GC exists" to "GC is a product decision with algorithms behind it." The next pain usually arrives after you pick a collector and the heap still climbs: objects that should have died are still reachable. That is not a collector bug. That is a reference leak — and Episode Fifty-Seven is where we find those chains with dumps and profilers.
+Today we moved from "GC exists" to "GC is a product decision with algorithms behind it." The next pain usually arrives after you pick a collector and the heap still climbs: objects that should have died are still reachable. That is not a collector bug. That is a reference leak — and the next skill is finding those chains with dumps and profilers.
 
 ## Source attribution
 
