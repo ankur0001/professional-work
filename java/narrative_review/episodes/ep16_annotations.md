@@ -12,11 +12,15 @@
 
 Generics taught the compiler what a collection holds. Sometimes what we need to say is not a type parameter, but a note about intent — a note that another tool should notice.
 
-Suppose you override `toString` on a domain class. You type carefully… and misspell the method as `tostring`. Without help, Java treats that as a brand-new method. Your override never runs. Equality debugging becomes mysterious. The compiler did not fail you; it simply never knew you meant to override.
+Suppose you override `toString` on a domain class. You type carefully… and misspell the method as `tostring`. Without help, Java treats that as a brand-new method. Your override never runs. Logging still shows the useless default. Equality debugging becomes mysterious because you thought you customized the display. The compiler did not fail you; it simply never knew you meant to override.
 
 So the question appears: can we declare intent so the compiler verifies it?
 
-That is the doorway into annotations. Annotations are structured metadata attached to declarations. Compilers, build tools, and frameworks listen to them.
+You have already felt a milder version of this idea with access modifiers and overrides — the language tries to catch mismatches early. Annotations generalize that instinct: they let you attach machine-readable claims that tools beyond the core language can enforce.
+
+
+That is the doorway into annotations. Annotations are structured metadata attached to declarations. Compilers, build tools, and frameworks listen to them. Think of an annotation as a structured sticky note: humans can read it, but more importantly, programs can read it without parsing comments. That habit of treating metadata as machine-readable — not decorative — will matter again when frameworks scan your code.
+
 
 ```java
 @Override
@@ -25,13 +29,13 @@ public String toString() {
 }
 ```
 
-`@Override` is the smallest useful illustration. It does not change runtime behavior by itself. It tells the compiler: this method must match a superclass or interface method. If the signature is wrong, compilation fails. That is what `@Override` buys you — compile-time proof you actually overrode something. Typos in method names without `@Override` are the classic opposite: silent wrong methods that look fine until behavior diverges.
+`@Override` is the smallest useful illustration. It does not change runtime behavior by itself. It tells the compiler: this method must match a superclass or interface method. If the signature is wrong, compilation fails. That is what `@Override` buys you — compile-time proof you actually overrode something. Typos in method names without `@Override` are the classic opposite: silent wrong methods that look fine until behavior diverges. Put `@Override` on every method you believe is an override. Let the compiler argue with you early.
 
 Once you accept that metadata can drive tools, retention becomes the next natural question. How long does the annotation live?
 
-Java defines three retentions. `SOURCE` means the annotation helps during compilation and may disappear afterward — useful for things only the compiler or an annotation processor needs. `CLASS` means it is recorded in the class file but not necessarily visible through normal reflection. `RUNTIME` means the annotation remains available while the program runs, so frameworks can read it with reflection.
+Java defines three retentions. `SOURCE` means the annotation helps during compilation and may disappear afterward — useful for things only the compiler or an annotation processor needs. `CLASS` means it is recorded in the class file but not necessarily visible through normal reflection. `RUNTIME` means the annotation remains available while the program runs, so frameworks can read it with reflection. Assuming all annotations exist at runtime is a common misunderstanding; check `@Retention` before you blame the framework.
 
-That last case is why annotations feel ubiquitous in modern Java. Dependency injection, web mappings, test runners, and serializers lean on runtime annotations. A method marked for a request path, a field marked for injection, a test marked to ignore — the framework scans, reads the metadata, and wires behavior. The annotation is the hook; the framework is the listener.
+That runtime case is why annotations feel ubiquitous in modern Java. Dependency injection, web mappings, test runners, and serializers lean on runtime annotations. A method marked for a request path, a field marked for injection, a test marked to ignore — the framework scans, reads the metadata, and wires behavior. The annotation is the hook; the framework is the listener.
 
 ```java
 @Retention(RetentionPolicy.RUNTIME)
@@ -39,19 +43,46 @@ That last case is why annotations feel ubiquitous in modern Java. Dependency inj
 public @interface Route {
     String path();
 }
+
+public class HelloController {
+    @Route(path = "/hello")
+    public String hello() {
+        return "hi";
+    }
+}
 ```
 
-A custom annotation like this does nothing alone. Custom annotations need processors at build time, or reflection at runtime, to mean anything. Writing `@Route` without a reader is like writing a sticky note and never looking at it. The metadata model is powerful precisely because something else consumes it.
+A custom annotation like `@Route` does nothing alone. Custom annotations need processors at build time, or reflection at runtime, to mean anything. Writing `@Route` without a reader is like writing a sticky note and never looking at it. The metadata model is powerful precisely because something else consumes it.
 
 What if we over-annotate instead of simplifying design?
 
 Teams sometimes decorate every class with a forest of markers while the underlying API stays confused. Annotations do not replace good API design. They amplify a design that already makes sense, and they can obscure one that does not. Prefer a clear method and a clear type. Then add the annotation that tools need — not the annotation that makes the file look "framework native."
 
-Another misunderstanding: assuming every annotation exists at runtime. If retention is `SOURCE` or `CLASS`, reflective lookup may find nothing. When a framework "ignores" your annotation, check retention and target before rewriting the business logic.
+
+Now watch how a test runner might use the same idea. You mark a method, and a tool decides what to do.
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Test { }
+
+public class MathTest {
+    @Test
+    public void adds() {
+        if (1 + 1 != 2) throw new AssertionError();
+    }
+}
+```
+
+A tiny runner would scan `MathTest`, keep methods annotated with `@Test`, and invoke them. Without `@Retention(RUNTIME)`, reflective lookup finds nothing and the suite looks empty for mysterious reasons. Without a clear method design, sprinkling `@Test` on helpers that are not tests only adds noise. The annotation is a signal — the design still has to be worth signaling.
 
 So let's reconnect the chain. A missed override showed why intent needs verification. `@Override` answered with compiler-checked metadata. Retention explained how long that metadata survives. Frameworks showed why runtime annotations dominate application architecture. Custom annotations revealed they need processors or reflection. Over-annotating reminded us that metadata is not architecture.
 
 And if frameworks read annotations at runtime by inspecting classes and methods, how does that inspection work? What API lets a program look at itself?
+
+Notice the pattern across the last few episodes: enums gave us vocabulary, wrappers bridged representations, generics parameterized types, and annotations parameterized intent for tools. Each mechanism answers a different "how do we say this so the platform can help?" question. Annotations are easy to overuse precisely because they look like free power. The discipline is to annotate contracts that tools must enforce, not to decorate every line that feels important.
+
+A final check when you invent a custom annotation: name the consumer in the same pull request. If nobody reads it — no processor, no reflective scanner, no compiler plugin — delete it. Dead metadata is worse than no metadata because it teaches the team that annotations are decorative.
 
 That curiosity is Episode Seventeen — Reflection.
 
@@ -59,7 +90,7 @@ That curiosity is Episode Seventeen — Reflection.
 
 Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 16 (*Annotations*).
 
-Narration technique: missed-override situation → annotation as answer → @Override walkthrough → retention policies → framework runtime use → custom annotations need consumers → design caution → next natural problem (reflection). Continuity-checked transitions.
+Narration technique: missed-override situation → annotation as answer → @Override → retention → framework runtime use → custom annotations need consumers → design caution → next natural problem (reflection). Continuity-checked transitions.
 
 ### Teaching points drawn from the topic bank
 

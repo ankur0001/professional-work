@@ -10,11 +10,15 @@
 
 ## Full narration
 
-Sealed types closed hierarchies inside the language. Platforms still faced a different leak: on the classic classpath, every public type in every jar was fair game. Internal packages were only a naming convention. Reflection and deep dependency graphs made "please don't touch that" unenforceable.
+Sealed types closed hierarchies inside the language. Platforms still faced a different leak: on the classic classpath, every public type in every jar was fair game. Internal packages were only a naming convention. Reflection and deep dependency graphs made "please don't touch that" unenforceable. Accidental coupling across jars was normal.
 
 So teams asked a practical question: can we declare, up front, what a library requires and what it actually exports?
 
-That is the Java Platform Module System — JPMS. A module is a named collection of packages with an explicit boundary. The declaration lives in `module-info.java`.
+Packages gave us neighborhoods. Modules give those neighborhoods a customs checkpoint: you may be public inside your module and still invisible outside it unless exported. That single rule repairs years of "but it compiled on my classpath" accidents.
+
+
+That is the Java Platform Module System — JPMS. Modules restore strong encapsulation the classpath erased. The feature landed with Java 9 and reshaped how the JDK itself is packaged — which is why even classpath applications feel module-related error messages when they touch JDK internals. Reading those messages with a module graph in mind turns confusion into a checklist.
+ A module is a named collection of packages with an explicit boundary. The declaration lives in `module-info.java`.
 
 ```java
 module com.shop.app {
@@ -23,19 +27,40 @@ module com.shop.app {
 }
 ```
 
-Walk the meaning. `module com.shop.app` names this module. `requires com.shop.core` states an explicit dependency — the module graph is not a pile of jars hoping their transitive types appear. `exports com.shop.app.api` makes only that package usable to other modules. Sibling packages in the same module can stay hidden even if their types are public. That is stronger encapsulation than packages alone. Public no longer means "visible to the whole classpath world."
+Walk the meaning. `module com.shop.app` names this module. `requires com.shop.core` states an explicit dependency — the module graph is not a pile of jars hoping their transitive types appear. `exports com.shop.app.api` makes only that package usable to other modules. Sibling packages in the same module can stay hidden even if their types are `public`. That is stronger encapsulation than packages alone. Public no longer means "visible to the whole classpath world."
 
-`opens` appears when reflective frameworks need deep access to otherwise hidden packages. Opening is a deliberate door, not the default. Opening everything "just to make it work" recreates classpath porosity with module syntax. Prefer exporting a stable API and opening only what a known tool requires.
+`opens` appears when reflective frameworks need deep access to otherwise hidden packages. Opening is a deliberate door, not the default.
 
-Migration can be incremental. Many applications still run on the classpath. Classpath apps still exist — know both worlds. You can modularize the JDK usage, modularize libraries gradually, or stay on the classpath while learning the module graph of the platform itself. JPMS is not an all-or-nothing cliff for every codebase on day one. It is a tool for reliable configuration and clearer boundaries when you need them.
+```java
+module com.shop.app {
+    requires com.shop.core;
+    exports com.shop.app.api;
+    opens com.shop.app.internal to spring.core;
+}
+```
 
-What problem do modules solve in one sentence? Reliable configuration and stronger encapsulation than a flat classpath. Missing `requires` fail early. Illegal access to non-exported packages fail clearly. Circular module dependencies become design smells you can see in the graph instead of surprise ClassNotFound puzzles at runtime.
+Opening everything "just to make it work" recreates classpath porosity with module syntax. Prefer exporting a stable API and opening only what a known tool requires, ideally `to` a named module. Circular module dependencies become design smells you can see in the graph instead of surprise linkage puzzles at runtime.
+
+Migration can be incremental. Many applications still run on the classpath. Classpath apps still exist — know both worlds. You can modularize JDK usage, modularize libraries gradually, or stay on the classpath while learning the module graph of the platform itself. JPMS is not an all-or-nothing cliff for every codebase on day one. It is a tool for reliable configuration and clearer boundaries when you need them.
+
+What problem do modules solve in one sentence? Reliable configuration and stronger encapsulation than a flat classpath. Missing `requires` fail early. Illegal access to non-exported packages fails clearly instead of succeeding by accident.
 
 Modules alone do not equal good architecture. You can still invent tangled exports and leaky APIs inside a modular build. The module system enforces boundaries you declare; it does not invent a clean domain for you. Treat `module-info` as architecture visible to the compiler and runtime — write it with the same care you give package structure.
+
+
+Picture two jars on an old classpath: `shop-core` and `shop-app`. A public class named `InternalHasher` lived in `com.shop.core.internal`. Nothing stopped `shop-app` from calling it. A year later the core team renamed the hasher and half the apps broke. Packages said "internal" in the name; the platform did not enforce it.
+
+With modules, `com.shop.core` simply does not export `com.shop.core.internal`. The app must use the exported API. That failure happens at launch or compile time for modular apps, not as a surprise `NoSuchMethodError` after a refactor. Explicit dependencies make the graph reviewable: if `shop-app` needs JSON, it `requires` a JSON module instead of relying on a transitive jar that happened to be present in a fat classpath.
+
+Teams mid-migration often keep the app on the classpath while depending on modular libraries. That hybrid is normal. Knowing both worlds matters because error messages, reflective access, and service loading behave differently depending on whether you launched with a module path, a classpath, or both.
 
 So let's reconnect the chain. The classpath erased strong encapsulation. Modules restored explicit `requires`, `exports`, and careful `opens`. Encapsulation grew sharper than public packages alone. Incremental migration kept classpath apps in the real world. Architecture discipline remained our job.
 
 With the language and platform boundaries clearer, everyday programs still need to hold sequences of values — shopping carts, timelines, search results. Arrays were fixed-size. The next natural tool is a resizable, ordered collection you will use constantly.
+
+In day-to-day work you will still meet build tools that blur the story: a classpath application depending on the modular JDK, a modular library tested on the classpath, a container image that jlinks a custom runtime. Do not let the tooling vocabulary erase the underlying idea. Somewhere there is still a graph of what is required and what is exported — even if your build file writes it differently than a hand-authored `module-info.java`. Learning to read that graph is part of learning modern Java.
+
+If you are maintaining a library, exporting fewer packages is usually kinder than exporting everything "for flexibility." Flexibility for callers becomes fragility for you. Start narrow. Export more only when a real client need appears. The same advice applies to `opens`: grant reflective access like you grant production credentials — specifically, temporarily if needed, and never as a blanket default.
 
 That is Episode Twenty-One — Lists.
 
