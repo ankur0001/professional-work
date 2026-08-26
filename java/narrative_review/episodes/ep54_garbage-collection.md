@@ -5,168 +5,66 @@
 | Episode | 54 |
 | Title | Garbage Collection |
 | Catalog handbook column | 54 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Heap and stack showed where objects live and where locals keep references. The next pressure is automatic: we are not calling `free()`. So who reclaims memory, and what makes an object reclaimable?
 
-In the previous episode, we worked through **Heap and Stack**. That gave us a piece of the platform. Today we need the next piece: **Garbage Collection**.
-
-We are continuing The Java Story, and today's challenge is Garbage Collection. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-GC reclaims unreachable objects — your allocation rate sets the pace.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, garbage collection is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Garbage Collection clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Reachability from GC roots.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Generational hypothesis.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Pauses vs concurrent work.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Allocation rate drives pressure.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Tuning without metrics is superstition.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Garbage collection reclaims unreachable objects. Your allocation rate sets the pace. Treat GC as a partner that responds to how fast you allocate and how long you retain — not as an enemy that randomly pauses your app for sport.
 
 ```java
 // Object becomes collectible when nothing reachable can touch it
 List<byte[]> tmp = new ArrayList<>();
+tmp.add(new byte[1024 * 1024]);
 tmp = null; // if no other refs, GC may reclaim
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk the reachability idea. While `tmp` points at the list, and the list points at the big array, those objects are reachable from a stack local — a GC root. When you set `tmp = null` (or the frame ends), if nothing else references that list, the list and its array become unreachable. They are then eligible for collection. "Eligible" is not "collected this millisecond." The collector runs according to its strategy and heap pressure. Correctness is reachability; timing is policy.
 
-Walk this like pair-programming.
+GC roots include stack references, static fields, JNI references, and a few other anchors. Mentally graph from roots downward. Anything not in that graph can go. Caching forever — static maps that only ever grow — keeps objects reachable on purpose and then surprises you when the heap fills. The GC is not leaking. Your retention policy is.
 
-Focus on what each line means.
+The generational hypothesis says most objects die young. Collectors exploit that: concentrate effort on young generations where most garbage appears, and promote survivors to older spaces. You will meet specific collectors later. Today, hold the why: allocation patterns that create many short-lived objects play to generational strengths; gigantic mid-life retention patterns stress them differently.
 
-Connect to the failure mode.
+Pauses versus concurrent work is the latency story. Some collection work stops application threads briefly; some runs concurrently with them. Different collectors balance throughput, pause goals, and footprint differently. Tuning without metrics is superstition. Before you flip flags, measure allocation rate, pause times, heap occupancy, and promotion. The flags exist to respond to evidence.
 
-Look at `List<byte[]> tmp = new ArrayList<>();`.
+```text
+allocate fast → young collections more often
+retain long → more old-generation pressure
+cache forever → eventual OutOfMemory or endless full collections
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+What if we allocate insanely in tight loops — building strings with `+` in a hot path, creating temporary objects per packet — and then blame GC for "too many pauses"?
 
-Look at `tmp = null; // if no other refs, GC may reclaim`.
+GC is responding to the trash you produce. Reduce allocation, reuse buffers carefully, or change the algorithm. Treating GC as the villain while ignoring allocation rate is backwards. Profiling allocation is often the real performance move.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Tuning without metrics deserves a second scolding. Copying a blog's `-Xmx` and collector choice from a different workload can make things worse. Start with defaults, measure, change one thing, measure again. Collector-specific episodes will expand the menu; curiosity should already be tied to evidence.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Allocation rate is the heartbeat GC hears. A service allocating hundreds of megabytes per second will collect frequently even with a huge heap. A service allocating modestly but retaining everything in a static cache will promote and fill old space until a painful collection or OOM. Two different pathologies; both show up as "GC problem" in chat until you measure.
 
-### Example 2 — make it more realistic
+Young collections being frequent is not automatically bad if pauses are tiny and throughput is fine. Full collections thrashing is bad. Learn to read the difference in logs before you retune. Collector-specific episodes will name G1, ZGC, and friends — for now, demand metrics first, logos second.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Garbage Collection usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+What if we "fix" a leak by increasing `-Xmx` every week? We delay the incident and grow the blast radius. Retention bugs deserve graphs and heap dumps, not larger handbags for the same junk.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Hold a practical checklist: collectibility is reachability; retention is a product decision; allocation rate drives pace; generational behavior explains young vs old pressure; measure before tuning. Meet those and GC stops being a superstition contest.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+When you open logs, look for frequency of collections, pause times, and whether the heap recovers after a collection. A heap that never frees after full GC is a retention problem wearing a collector costume.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Picture two services with identical heap sizes. One allocates temporary buffers per request and discards them; young GC is busy and pauses stay small. The other accumulates session state forever; old generation grows until a long pause or OOM. Same `-Xmx`, opposite outcomes. GC policy cannot save a retention strategy that never forgets.
 
-### What if we skip this approach?
+When product asks for a bigger heap as the first move, ask for allocation and occupancy charts first. Bigger heaps can mean rarer but longer pauses on some collectors — another reason evidence beats folklore.
 
-Important concepts become memorable when we see the failure mode without them.
+ Prefer reducing retention and allocation waste before exotic collector flags. Collectors differ, but none thrive on infinite caches and pointless object churn. Partner with GC by making less garbage and keeping less junk.
 
-For example, consider this common mistake: Caching forever.
+ That partnership mindset — measure, reduce churn, then tune — is the entire skill this episode is trying to install before collector deep-dives begin.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+So reconnect the chain. Unreachable objects become collectible. Roots and retention explain why. Generational behavior explains common patterns. Pauses and concurrency explain latency trade-offs. Allocation rate and metrics-first tuning keep you honest. The next runtime curiosity is how hot code stops being interpreted and becomes optimized native code — and why the first requests after startup feel slower.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Episode Fifty-Five: JIT compilation.
 
-### Example 3 — a common misunderstanding
+## Source attribution
 
-**Misunderstanding 1:** Caching forever.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 54 (*Garbage Collection*).
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Allocating insanely in tight loops.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Treating GC as an enemy instead of a partner.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: When is an object collectible?
-
-Answer in spoken form: When no GC root can reach it.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Heap and Stack**. That set up a need. **Garbage Collection** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **JIT Compilation**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 54 / **Garbage Collection** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Reachability from GC roots.
-- Generational hypothesis.
-- Pauses vs concurrent work.
-- Allocation rate drives pressure.
-- Tuning without metrics is superstition.
+Narration technique: who-reclaims situation → reachability walkthrough → roots/caching → generational hypothesis → pauses vs concurrent → allocation rate → next natural problem (JIT).

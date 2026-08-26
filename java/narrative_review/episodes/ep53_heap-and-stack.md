@@ -5,173 +5,65 @@
 | Episode | 53 |
 | Title | Heap and Stack |
 | Catalog handbook column | 53 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Bytecode runs inside a model of memory. If you only remember "objects on the heap," you already have a useful half-truth. The other half — the stack — explains recursion limits, local variables, and why a crash dump's stack trace is not a heap dump.
 
-In the previous episode, we worked through **Bytecode Basics**. That gave us a piece of the platform. Today we need the next piece: **Heap and Stack**.
-
-We are continuing The Java Story, and today's challenge is Heap and Stack. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Stack is per-call bookkeeping; heap is where objects live.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, heap and stack is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Heap and Stack clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Frames hold locals and return info.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Objects live on the heap (generally).
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Escape analysis may elide allocations.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: StackOverflow vs OutOfMemory.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: GC cares about heap reachability.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+The stack is per-call bookkeeping. The heap is where objects live (generally). Mixing those stories is how people misread incidents.
 
 ```java
 void f() {
-  int x = 1;          // stack local
-  User u = new User(); // object on heap
+    int x = 1;           // stack local in the frame
+    User u = new User(); // object on the heap; reference in the frame
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk a call. When `f` is invoked, the JVM creates a stack frame for that call on the current thread's stack. The frame holds locals — including `x` and the reference `u` — plus bookkeeping for return. `new User()` allocates an object on the heap. The local variable does not contain the whole object; it contains a reference pointing at the heap object. When `f` returns, the frame is discarded. If nothing else references that `User`, the object becomes eligible for garbage collection later. The reference died with the frame; the object's fate depends on reachability.
 
-Walk this like pair-programming.
+Frames hold locals and return info. Deep recursion creates many frames and can throw `StackOverflowError`. Huge or many objects can exhaust the heap and throw `OutOfMemoryError`. Those errors sound similar in a chat message and mean different missing resources. Confusing heap dumps with stack traces is a classic ops mix-up: one shows objects and retention; the other shows who called whom when something blew up. You often need both, but they answer different questions.
 
-Focus on what each line means.
+Escape analysis may elide allocations. The JIT sometimes proves an object never leaves a method and can allocate it in a way that avoids a full heap object — or scale it into registers and stack-like storage. That is why "every `new` always hits the heap forever" is too strong. You do not need the full escape-analysis episode yet. You need enough humility to know optimizations can change allocation stories after warmup.
 
-Connect to the failure mode.
+```java
+void printSum(int a, int b) {
+    Integer boxed = Integer.valueOf(a + b); // may allocate
+    System.out.println(boxed);
+}
+```
 
-Look at `void f() {`.
+Whether `boxed` becomes a real heap object in steady state depends on escape and JIT decisions. Microbenchmarks that ignore warmup lie about these effects — another foreshadow of the JIT episode.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+GC cares about heap reachability from GC roots — including references in stack frames, static fields, and JNI handles. An object is collectible when no GC root can reach it. Stack frames are temporary roots for their locals. That is why a long-lived thread stuck in a method can pin objects through locals, and why finishing the method can suddenly make a large graph collectible.
 
-Look at `int x = 1;          // stack local`.
+What if we ignore native and stack limits while staring only at `-Xmx`?
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+We miss `StackOverflowError`, thread stack sizing, and native memory. Heap is central, not total. Earlier episodes warned that Java memory is more than the heap; today you see why stacks are part of that more.
 
-Look at `User u = new User(); // object on heap`.
+Thread stacks have size limits configured by the runtime. Many threads mean many stacks — a footprint cost separate from the heap. Virtual threads change the economics of stack usage for blocking workloads, but the conceptual split remains: frame state versus heap objects. When you read a stack overflow, look at recursion depth and huge frames (large local arrays allocated as locals can hurt too). When you read a heap OOM, look at retention charts.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+A heap dump answers "what objects dominate and who retains them?" A stack trace answers "what was this thread doing?" An incident that shows both — a thread stuck holding a large structure in locals while others allocate — teaches why the two views belong together.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Escape analysis foreshadow: a builder used only inside a method may vanish as a heap citizen after JIT. That does not make allocation-free programming automatic. It makes absolute statements about `new` suspect without measurement.
 
-### Example 2 — make it more realistic
+Hold a practical checklist: frames for locals and control; heap for objects; SO vs OOM as different resources; heap dumps vs stack traces as different questions; escape analysis as a reason to measure before declaring allocation fate. Meet those and memory talk stops collapsing into a single vague "Java used too much RAM."
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Heap and Stack usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Native memory — direct buffers, thread stacks, metaspace — still waits in later episodes. Today's split is the foundation those chapters build on.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Picture a recursive XML parser that dies with `StackOverflowError` on a hostile deep document. The heap may be fine. Raising heap size does nothing. Bounding depth or switching to an explicit stack structure does. The stack/heap split decides the fix family before you touch a single flag.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Picture the opposite: a cache growing without eviction until `OutOfMemoryError: Java heap space`. Stack traces show random request threads; the heap dump shows the cache. Different tool, different truth.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+ Prefer the right dump for the question. If the question is retention, dump the heap. If the question is "who called what," read the stack. If the question is "why are we out of memory," you may need both — plus native metrics later.
 
-### What if we skip this approach?
+So reconnect the chain. Bytecode needed a place to keep locals and objects. Frames on a per-thread stack kept call state. The heap kept objects. Escape analysis and GC reachability linked the two stories. StackOverflow versus OutOfMemory separated failure modes. The next question is the reclaim story itself: how and when unused objects go away, and what your allocation rate does to that pace.
 
-Important concepts become memorable when we see the failure mode without them.
+Episode Fifty-Four: garbage collection.
 
-For example, consider this common mistake: Confusing heap dumps with stack traces.
+## Source attribution
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 53 (*Heap and Stack*).
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Confusing heap dumps with stack traces.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Assuming every new always hits heap forever.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Ignoring native/stack limits.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Where do objects live?
-
-Answer in spoken form: On the heap generally; references may live in stack frames.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Bytecode Basics**. That set up a need. **Heap and Stack** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Garbage Collection**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 53 / **Heap and Stack** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Frames hold locals and return info.
-- Objects live on the heap (generally).
-- Escape analysis may elide allocations.
-- StackOverflow vs OutOfMemory.
-- GC cares about heap reachability.
+Narration technique: memory-model situation → frame vs heap walkthrough → SO vs OOM → escape foreshadow → GC roots → mistakes → next natural problem (GC).
