@@ -36,7 +36,7 @@ public class OrderService {
 
 The first line claims a package. On disk, this file should live under folders that mirror `com/shop/order`. The import brings `User` from another package into short-name scope. `OrderService` can depend on `User` without living in the same package — and because they differ, package-private members of `User` stay hidden. Packages and access modifiers combine into real boundaries, not just folder cosmetics.
 
-Episode Three already introduced packages as addresses for the compiler. Today the stakes are higher: packages are how a growing product stays navigable, and how "same package" remains a meaningful friendship for package-private types.
+Episode Three already introduced packages as addresses for the compiler. Today the stakes are higher: packages are how a growing product stays navigable, and how "same package" remains a meaningful friendship for package-private types. If everything sits in one package, package-private collapses into "visible to the whole app," and Episode Eleven's careful ladder loses a rung.
 
 That directory rule is the one that burns beginners. The package declaration must match the directory tree. If the file says `com.shop.order` but sits in `com/shop/orders` or directly under `src`, tools will fail to resolve types, or you will compile one layout and run another. The mismatch feels like busywork until you debug a classpath that contains two almost-right trees. Build tools like Maven and Gradle assume this layout; fighting it means fighting every tutorial and every teammate's muscle memory.
 

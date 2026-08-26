@@ -29,7 +29,7 @@ public class Api {
 }
 ```
 
-Walk each choice as a decision, not a label. `secret` is `private`: only code inside `Api` should see it. `pack` has no modifier: it is package-private, visible to other classes in the same package, hidden from the outside world. `hook` is `protected`: same package, plus subclasses — including subclasses that live in other packages, with cross-package rules that surprise people who thought protected meant "only children." `open` is `public`: part of the advertised surface.
+Walk each choice as a decision, not a label. `secret` is `private`: only code inside `Api` should see it. `pack` has no modifier: it is package-private, visible to other classes in the same package, hidden from the outside world. `hook` is `protected`: same package, plus subclasses — including subclasses that live in other packages, with cross-package rules that surprise people who thought protected meant "only children." `open` is `public`: part of the advertised surface. Same four words appear in every textbook; the craft is matching each one to a real caller.
 
 Think of shipping a library jar to another team. Everything you mark `public` becomes a promise. Rename it later and you break callers you do not control. Package-private and private keep room to refactor. That is why "default to the tightest access that works" shows up in reviews: widen on purpose, not by habit.
 

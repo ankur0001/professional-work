@@ -37,7 +37,7 @@ String result = sb.toString();
 
 The builder holds a mutable buffer. Each `append` changes that buffer instead of inventing a brand-new `String` for every step. At the end, `toString()` gives you an immutable string to share. Building with `+` inside a tight loop is attractive because it looks short. The cost shows up as needless allocation and slower code when the loop is hot.
 
-A single `+` in ordinary code is fine — `"Hello, " + name` is readable and clear. The rule of thumb is about repetition under load, not about fear of every plus sign.
+A single `+` in ordinary code is fine — `"Hello, " + name` is readable and clear. The rule of thumb is about repetition under load, not about fear of every plus sign. If a profiler never sees the loop, clarity wins; if the loop is hot, the builder earns its keep.
 
 Comparison is the next place strings surprise people — and it connects straight back to operators and references.
 
