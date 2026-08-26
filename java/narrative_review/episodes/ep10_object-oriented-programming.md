@@ -55,7 +55,7 @@ class OrderService {
 }
 ```
 
-`OrderService` is not a subclass of `Pricing`. It holds a `Pricing` and uses it. You can swap pricing strategies without rewriting the service's type hierarchy. Prefer inheritance when you truly have a stable subtype relationship and polymorphism needs a shared type. Prefer composition when you mainly wanted reuse.
+`OrderService` is not a subclass of `Pricing`. It holds a `Pricing` and uses it. You can swap pricing strategies without rewriting the service's type hierarchy. Prefer inheritance when you truly have a stable subtype relationship and polymorphism needs a shared type. Prefer composition when you mainly wanted reuse. A deep tree that exists only to share three utility methods is usually a composition opportunity wearing an inheritance costume.
 
 Polymorphism is the payoff that makes abstractions worth depending on. Callers program to a general type; runtime chooses the specific behavior.
 
@@ -88,7 +88,7 @@ Finally, once objects live in sets and maps, identity and equality stop being ph
 // Equal users must hash equally or HashSet/HashMap will surprise you.
 ```
 
-You will deepen this when collections take center stage. For now, treat equality as part of the type's meaning, not an afterthought you paste from a generator without reading.
+You will deepen this when collections take center stage. For now, treat equality as part of the type's meaning, not an afterthought you paste from a generator without reading. If two `User` objects with the same id should be interchangeable in a `HashSet`, the type must say so consistently.
 
 What if we skip the modeling discipline? Public fields everywhere, god classes that know every feature, inheritance used as a junk drawer — the program still runs until change arrives. Then every feature touches everything, and invariants live only in tribal memory. OOP did not fail. Design refused to use the tools for their purpose.
 

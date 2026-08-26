@@ -58,7 +58,7 @@ int[][] week = {
 System.out.println(week[1][0]);   // 75 — second row, first column
 ```
 
-`week[1]` is the second row. `week[1][0]` is the first value in that row. Rows can even have different lengths in Java — "ragged" arrays — which is powerful and easy to misuse. For many apps, a clear rectangular mental model is enough.
+`week[1]` is the second row. `week[1][0]` is the first value in that row. Rows can even have different lengths in Java — "ragged" arrays — which is powerful and easy to misuse. For many apps, a clear rectangular mental model is enough. When you loop a grid, nest carefully: outer loop over rows, inner over `week[r].length`, so a jagged row cannot silently read past its end.
 
 Now the design question that arrays force: what happens when the number of scores is not known up front, or keeps changing as users add and remove items?
 
@@ -75,6 +75,8 @@ double[] samples = new double[3];
 The first form reserves three slots. You fill them by index. You cannot append a fourth without a new array. That constraint is the point of the type, not a missing feature.
 
 Assuming arrays grow is one of the most common early mistakes. Someone writes `nums[nums.length] = 99` hoping to extend the array and gets an exception instead. The honest move is either a correctly sized array from the start or a `List` that is allowed to grow.
+
+Interviewers often ask `array.length` versus `List.size()`. Remember the shape: arrays expose a `length` field because the size is part of the array object itself; collections expose `size()` because their size is behavior that can change. Mixing the two names is a symptom of mixing the two tools.
 
 So reconnect the chain. Methods packaged repeated behavior. Arrays package repeated values by position. Length is fixed after creation. Indexes start at zero. Multi-dimensional data is arrays of arrays. `Arrays` helpers cover sorting and printing. When the size must change as a product requirement, lists take over.
 

@@ -47,6 +47,8 @@ public class Team {
 
 A safer return might be an unmodifiable view or a defensive copy. The modifier on the field did its job. The method signature undid the boundary. That is why tight access and careful returns travel together. Start narrow. Widen only when a real caller outside the boundary needs the name.
 
+Another quiet leak: a public method that accepts or returns a mutable array the class still keeps. Callers can rewrite slots. The field looked private. The API still handed out the keys.
+
 `protected` deserves an extra beat because it is the most misunderstood middle ground.
 
 ```java
@@ -65,7 +67,7 @@ public class WebAccount extends Account {
 
 Subclass access across packages is intentional for frameworks and extension hooks. It is also easy to overuse. If everything interesting is `protected`, you have built an inheritance API whether you meant to or not. People also confuse protected with package-private: package-private never opens the door to a subclass in another package; protected can. Prefer `private` or package-private until a genuine extension point appears.
 
-Modern Java adds another tightening layer: modules. The module system can hide packages from code outside the module even if a type is `public`. Think of modifiers as the first wall and modules as a second wall for larger codebases. You do not need to master `module-info` today. You only need to know that "public" does not always mean "visible to the entire universe forever."
+Modern Java adds another tightening layer: modules. The module system can hide packages from code outside the module even if a type is `public`. Think of modifiers as the first wall and modules as a second wall for larger codebases. You do not need to master `module-info` today. You only need to know that "public" does not always mean "visible to the entire universe forever." Reflection and tests sometimes punch holes on purpose; treat those as deliberate exceptions, not reasons to leave production fields public.
 
 What if we skip the discipline and make everything `public` so demos compile faster? The cost arrives when internals become de facto API. Callers depend on fields you wanted to rename. Tests couple to helpers you wanted to delete. Refactors turn into negotiations. Access that is wider than necessary is debt with compound interest.
 

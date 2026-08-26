@@ -48,7 +48,7 @@ System.out.println(x == y);       // false — identity
 System.out.println(x.equals(y));  // true  — content
 ```
 
-`==` asks whether two references point at the same object. `equals` asks whether the character content matches. Literal pooling can make `==` look correct in a tiny demo and then fail when the same letters arrive from a file, a scanner, or a constructor. When you mean content, call `equals`. When you mean identity, keep `==` and know why.
+`==` asks whether two references point at the same object. `equals` asks whether the character content matches. Literal pooling can make `==` look correct in a tiny demo and then fail when the same letters arrive from a file, a scanner, or a constructor. When you mean content, call `equals`. When you mean identity, keep `==` and know why. Null-safe comparison also matters: `Objects.equals(a, b)` or putting the literal first in `"ada".equals(x)` avoids calling equals on a null reference.
 
 What about longer text — SQL, HTML snippets, sample payloads — where quote-escaped one-liners become unreadable?
 
@@ -62,7 +62,7 @@ String query = """
         """;
 ```
 
-The content can span lines. Indentation rules strip a shared indent so the string is not polluted by how far you indented the code. Use text blocks when the text itself is multiline. Keep ordinary quotes for short values.
+The content can span lines. Indentation rules strip a shared indent so the string is not polluted by how far you indented the code. Use text blocks when the text itself is multiline. Keep ordinary quotes for short values. Mixing styles randomly in one class makes reviews harder than the feature deserves.
 
 One more boundary problem appears the moment strings leave the comfortable world of Java characters and meet bytes — files, sockets, HTTP bodies. Encoding mistakes are silent until a name with an accent turns into garbage or a checksum stops matching.
 

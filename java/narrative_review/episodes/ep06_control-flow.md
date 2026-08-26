@@ -66,7 +66,7 @@ if (value instanceof String s) {
 }
 ```
 
-If `value` is a `String`, `s` is already that string inside the block. You are not performing a separate cast that can drift out of sync with the check. The control flow and the type narrowing travel together.
+If `value` is a `String`, `s` is already that string inside the block. You are not performing a separate cast that can drift out of sync with the check. The control flow and the type narrowing travel together. Older code would write `if (value instanceof String) { String s = (String) value; ... }` — two steps that can disagree after a rushed edit. Pattern matching collapses them on purpose.
 
 Now look at the design failure that control flow tempts: the giant nested if pyramid.
 
@@ -95,6 +95,8 @@ boolean canCheckout(User user, Order order) {
 Now the nested pyramid becomes a flat checklist. Control flow syntax cannot save a design that refuses to name its decisions — but naming the decision often shrinks the syntax you need.
 
 So reconnect the chain. Operators produced the booleans and comparisons we needed. Control flow uses those results to choose branches, return values from switches, repeat with loops, skip or stop with `continue` and `break`, and narrow types with pattern matching. The skill is not collecting keywords. It is keeping the path readable as the rules multiply.
+
+What if every decision stays inline in `main`? You can ship a demo. Then product asks for retries, partial success, and a second user role. The vine thickens. Extracting a method is not a later "clean code" luxury — it is how control flow stays teachable to the next person who opens the file, including you after a weekend away.
 
 Once `main` can decide and loop, another trap appears. The same decision logic — calculate a total, validate an order, format a line — gets copied into every place that needs it. Behavior wants a name.
 

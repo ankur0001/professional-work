@@ -38,7 +38,7 @@ The first line claims a package. On disk, this file should live under folders th
 
 Episode Three already introduced packages as addresses for the compiler. Today the stakes are higher: packages are how a growing product stays navigable, and how "same package" remains a meaningful friendship for package-private types.
 
-That directory rule is the one that burns beginners. The package declaration must match the directory tree. If the file says `com.shop.order` but sits in `com/shop/orders` or directly under `src`, tools will fail to resolve types, or you will compile one layout and run another. The mismatch feels like busywork until you debug a classpath that contains two almost-right trees.
+That directory rule is the one that burns beginners. The package declaration must match the directory tree. If the file says `com.shop.order` but sits in `com/shop/orders` or directly under `src`, tools will fail to resolve types, or you will compile one layout and run another. The mismatch feels like busywork until you debug a classpath that contains two almost-right trees. Build tools like Maven and Gradle assume this layout; fighting it means fighting every tutorial and every teammate's muscle memory.
 
 Once packages exist, you choose how to name foreign types in source: import the short name, or write the fully qualified name at the use site.
 
@@ -51,7 +51,7 @@ User u = new User("ada");
 
 Fully qualified names are clear when two types share a simple name — `java.util.Date` versus `java.sql.Date` is the classic collision. Imports keep ordinary code readable. Star imports — `import com.shop.user.*;` — pull every type from a package into scope. They hide dependencies. A reader cannot see which types you actually use, and a new class added to that package can create ambiguous references later. Prefer explicit imports in code you maintain; let the IDE manage the list. In a public API surface, star imports are especially noisy: they obscure what you are committing to.
 
-What if the project ignores packaging discipline? Giant catch-all packages appear — `com.shop.util`, `com.shop.misc` — where everything is package-private friends with everything else. Access modifiers stop meaning "module interior" and start meaning "the whole application can see my fields." Folder structure drifts from declarations. Onboarding becomes archaeology.
+What if the project ignores packaging discipline? Giant catch-all packages appear — `com.shop.util`, `com.shop.misc` — where everything is package-private friends with everything else. Access modifiers stop meaning "module interior" and start meaning "the whole application can see my fields." Folder structure drifts from declarations. Onboarding becomes archaeology. Star imports on those giant packages make the fog thicker: suddenly fifty names are in scope and nobody knows why a simple rename broke three unrelated files.
 
 A healthier shape groups types that change together and hide together: `com.shop.order` for order internals, `com.shop.user` for user internals, public types only at the seams you intend. Combine packages with the tightest access that works. The package is not only a namespace. It is the unit that makes package-private a design tool.
 
