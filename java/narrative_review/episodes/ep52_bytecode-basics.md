@@ -66,6 +66,8 @@ Opcodes will feel less alien each time you return. Literacy compounds. You are n
 
 Come back to `javap` whenever a language feature feels like magic — sugar leaves footprints, and footprints are teachable.
 
+Those footprints are the curriculum.
+
 So reconnect the chain. Loaders brought classes in. Bytecode showed the instruction language inside. Operand stack, locals, and constant pool sketched the machine model. `javap` made it readable. Sugar and optimization humility followed. The next natural split is where values live while those instructions run — stack frames versus heap objects.
 
 Episode Fifty-Three: heap and stack.
