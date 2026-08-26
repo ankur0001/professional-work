@@ -5,173 +5,84 @@
 | Episode | 09 |
 | Title | Strings |
 | Catalog handbook column | 9 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Arrays gave us a way to hold many values by position. That helps for scores and samples. Most applications, though, spend at least as much energy on text: a customer name, a log line, an order id, a JSON body. If arrays are shelves for numbers, strings are the language the rest of the system speaks — and language has rules.
 
-In the previous episode, we worked through **Arrays**. That gave us a piece of the platform. Today we need the next piece: **Strings**.
-
-Almost every application handles text: names, messages, IDs. Strings look simple until modification and comparison surprise you.
-
-Strings are everywhere — and immutability changes how you write loops.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, strings is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: String is immutable; concatenation creates new objects.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: StringBuilder for repeated appends.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: equals for content; == for identity.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Text blocks for multiline.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Beware silent charset issues at boundaries.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Text feels simple until you try to change it, compare it, or move it across a network boundary. So start from a small action that looks harmless. You have a greeting and you want to add emphasis.
 
 ```java
 String a = "hi";
 String b = a + "!";
-StringBuilder sb = new StringBuilder();
-for (int i = 0; i < 100; i++) sb.append(i);
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+`a` still refers to `"hi"`. `b` refers to a new string `"hi!"`. Nothing edited the original characters in place. In Java, `String` is immutable. Concatenation does not mutate; it creates another object. That design buys safer sharing, simpler reasoning about aliases, and reliable behavior when strings are used as map keys — at the cost of allocating when you keep building new text.
 
-I'll walk this example like we're pair-programming.
+Why bake immutability into the type everyone uses? Because text crosses trust boundaries constantly — path names, class names, passwords in older APIs, cache keys. If any caller could silently change the characters underneath a shared reference, security and hashing would become nightmares. Immutability is not purity theater. It is a trade: more objects sometimes, fewer alias surprises often.
 
-Focus on the idea each line encodes — not memorizing syntax trivia.
+Immutability raises a practical question the first time you build a result in a loop: if every `+` can mean a new object, what do you do when you append hundreds of pieces?
 
-Then we'll connect it to the production failure mode.
+Use `StringBuilder` for repeated appends.
 
-Look at `String a = "hi";`.
+```java
+StringBuilder sb = new StringBuilder();
+for (int i = 0; i < 100; i++) {
+    sb.append(i);
+}
+String result = sb.toString();
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+The builder holds a mutable buffer. Each `append` changes that buffer instead of inventing a brand-new `String` for every step. At the end, `toString()` gives you an immutable string to share. Building with `+` inside a tight loop is attractive because it looks short. The cost shows up as needless allocation and slower code when the loop is hot.
 
-Look at `String b = a + "!";`.
+A single `+` in ordinary code is fine — `"Hello, " + name` is readable and clear. The rule of thumb is about repetition under load, not about fear of every plus sign.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Comparison is the next place strings surprise people — and it connects straight back to operators and references.
 
-Look at `StringBuilder sb = new StringBuilder();`.
+```java
+String x = new String("ada");
+String y = new String("ada");
+System.out.println(x == y);       // false — identity
+System.out.println(x.equals(y));  // true  — content
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+`==` asks whether two references point at the same object. `equals` asks whether the character content matches. Literal pooling can make `==` look correct in a tiny demo and then fail when the same letters arrive from a file, a scanner, or a constructor. When you mean content, call `equals`. When you mean identity, keep `==` and know why.
 
-Look at `for (int i = 0; i < 100; i++) sb.append(i);`.
+What about longer text — SQL, HTML snippets, sample payloads — where quote-escaped one-liners become unreadable?
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Text blocks give you multiline string literals without drowning in `\n` noise.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+```java
+String query = """
+        SELECT id, name
+        FROM students
+        WHERE passed = true
+        """;
+```
 
-### Example 2 — make it more realistic
+The content can span lines. Indentation rules strip a shared indent so the string is not polluted by how far you indented the code. Use text blocks when the text itself is multiline. Keep ordinary quotes for short values.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Strings usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+One more boundary problem appears the moment strings leave the comfortable world of Java characters and meet bytes — files, sockets, HTTP bodies. Encoding mistakes are silent until a name with an accent turns into garbage or a checksum stops matching.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+```java
+byte[] bytes = name.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+String again = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+```
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Always be explicit at the boundary. "The platform default charset" is not a team agreement; it is a future incident. You do not need the full I/O chapter yet. You only need the habit: text and bytes are different, and the mapping between them has a name.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+What if we ignore these rules? A loop that builds CSV with `+`, a login check that uses `==`, a file reader that assumes the default charset — each one works in a demo and fails under slightly wider reality. Strings look simple because the type is everywhere. The discipline exists because the type is everywhere.
 
-### What if we skip this approach?
+So reconnect the chain. Arrays handled positional values. Strings handle text with an immutability rule that reshapes how you concatenate. `StringBuilder` absorbs repeated appends. `equals` compares content; `==` compares identity. Text blocks serve multiline literals. Charset discipline protects the edges of the system.
 
-Important concepts become memorable when we see the failure mode without them.
+Once text, numbers, and methods are comfortable, another modeling pressure appears. A student is not only a name string and an age int living as loose locals in `main`. The data and the rules that protect it want to travel together as one idea — create a student, keep the id valid, refuse impossible states.
 
-For example, consider this common mistake: Building strings with + inside tight loops.
+That pressure opens Episode Ten: object-oriented programming.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+## Source attribution
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 9 (*Strings*).
 
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Building strings with + inside tight loops.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Using == for String content.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Ignoring encoding when crossing bytes/text.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Why is String immutable?
-
-Answer in spoken form: Security, safe sharing, reliable hashing, and simpler reasoning about aliases.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Arrays**. That set up a need. **Strings** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Object-Oriented Programming**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 09 / **Strings** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- String is immutable; concatenation creates new objects.
-- StringBuilder for repeated appends.
-- equals for content; == for identity.
-- Text blocks for multiline.
-- Beware silent charset issues at boundaries.
+Narration technique: text-everywhere situation → immutability and concatenation → StringBuilder → equals vs == → text blocks → charset boundaries → next natural problem (bundling data + behavior / OOP). Continuity-checked transitions.

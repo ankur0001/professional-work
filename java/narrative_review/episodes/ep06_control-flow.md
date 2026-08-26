@@ -5,169 +5,103 @@
 | Episode | 06 |
 | Title | Control Flow |
 | Catalog handbook column | 6 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Operators can tell you that a score is high enough, that a name is non-null, that a counter has not reached its limit. Those answers are still just values. A program that only computes and never chooses is a calculator stuck on one path.
 
-In the previous episode, we worked through **Operators**. That gave us a piece of the platform. Today we need the next piece: **Control Flow**.
+Picture a registration desk. You can compute age from a birth year. That still does not enroll anyone. You need a fork: if age is at least eighteen, continue; otherwise refuse. Then you need a loop: for each applicant in today's list, repeat the check. Control is what turns facts into actions.
 
-Your program must choose different paths: pass or fail, retry or abort, loop through a list of students.
+So the next natural question is: how does Java take a boolean — or a set of cases — and send the program down different routes?
 
-Control flow is how programs make decisions — and how nesting turns into unreadable vines.
+That is control flow. It is how programs make decisions and how they repeat work. It is also how nesting turns into vines nobody wants to read.
 
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, control flow is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: if/else and modern switch expressions.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: for/while/enhanced-for.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: break/continue — labeled forms sparingly.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Pattern matching reduces casts.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Extract methods instead of deep nesting.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Start with the choice you already feel after Episode Five: if this, then that.
 
 ```java
-for (int i = 0; i < n; i++) {
-  if (i % 2 == 0) continue;
-  System.out.println(i);
+if (averageMarks >= 40.0) {
+    System.out.println("passed");
+} else {
+    System.out.println("failed");
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+The condition is an expression that yields a boolean. One branch runs. The other does not. When the decision has several labeled outcomes instead of a true/false fork, modern Java prefers switch expressions that return a value and push you toward covering the cases.
 
-I'll walk this example like we're pair-programming.
+```java
+String grade = switch (score / 10) {
+    case 10, 9 -> "A";
+    case 8 -> "B";
+    case 7 -> "C";
+    default -> "needs review";
+};
+```
 
-Focus on the idea each line encodes — not memorizing syntax trivia.
+A switch expression is not just new syntax for old `switch` statements. It encourages exhaustiveness and makes the result a value you can store. Old fall-through statement switches still exist, and forgetting a `break` is still a classic bug — one missing break and "B" accidentally does "C" work as well. Prefer the form that matches the job: expression when you want a result, statement when you are performing actions.
 
-Then we'll connect it to the production failure mode.
+Picture a support desk routing tickets by priority code. An if/else chain works until the codes multiply and each branch grows. A switch expression keeps the mapping visible: this code yields that label. The control structure becomes a table you can read, not a staircase you fall down.
 
-Look at `for (int i = 0; i < n; i++) {`.
+Choosing once is not enough. Often the same kind of decision must happen for every item in a collection of work — every student, every retry attempt, every page of results. That pressure brings loops: `for`, `while`, and the enhanced-for when you simply walk each element.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+```java
+for (int i = 0; i < n; i++) {
+    if (i % 2 == 0) continue;
+    System.out.println(i);
+}
+```
 
-Look at `if (i % 2 == 0) continue;`.
+This loop visits indexes from zero up to, but not including, `n`. When `i` is even, `continue` skips the rest of that iteration and moves to the next. When `i` is odd, it prints. `break` would leave the loop entirely.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+`while` fits when you do not know the trip count in advance — keep polling until a flag flips, keep reading until the stream ends. Enhanced-for fits when you already have a collection and only need each element: `for (Student s : students)`. Index `for` still wins when the position itself matters.
 
-Look at `System.out.println(i);`.
+Labeled `break` and `continue` exist for nested loops; use them sparingly. If you need a label to explain the control, the structure may be asking for a method instead.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+As programs grow, another control-flow pain appears: you receive an `Object` or a general type, check what it really is, cast, then use it. Pattern matching reduces those casts by binding the narrowed type in the same test.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+```java
+if (value instanceof String s) {
+    System.out.println(s.toUpperCase());
+}
+```
 
-### Example 2 — make it more realistic
+If `value` is a `String`, `s` is already that string inside the block. You are not performing a separate cast that can drift out of sync with the check. The control flow and the type narrowing travel together.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Control Flow usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Now look at the design failure that control flow tempts: the giant nested if pyramid.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+```java
+if (user != null) {
+    if (user.isActive()) {
+        if (order != null) {
+            if (order.total() > 0) {
+                // finally do the work
+            }
+        }
+    }
+}
+```
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Each condition feels reasonable. Together they bury the real work and make every new rule add another indent. `continue` and `break` can hide the same problem when they become the only way to escape a maze. The healthier move is often to extract methods — early returns for guard clauses, named helpers for each policy — so each block has one job.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+```java
+boolean canCheckout(User user, Order order) {
+    if (user == null || !user.isActive()) return false;
+    if (order == null || order.total() <= 0) return false;
+    return true;
+}
+```
 
-### What if we skip this approach?
+Now the nested pyramid becomes a flat checklist. Control flow syntax cannot save a design that refuses to name its decisions — but naming the decision often shrinks the syntax you need.
 
-Important concepts become memorable when we see the failure mode without them.
+So reconnect the chain. Operators produced the booleans and comparisons we needed. Control flow uses those results to choose branches, return values from switches, repeat with loops, skip or stop with `continue` and `break`, and narrow types with pattern matching. The skill is not collecting keywords. It is keeping the path readable as the rules multiply.
 
-For example, consider this common mistake: Giant nested if pyramids.
+Once `main` can decide and loop, another trap appears. The same decision logic — calculate a total, validate an order, format a line — gets copied into every place that needs it. Behavior wants a name.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+That need is Episode Seven: methods.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+## Source attribution
 
-### Example 3 — a common misunderstanding
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 6 (*Control Flow*).
 
-**Misunderstanding 1:** Giant nested if pyramids.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Fall-through switch bugs.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Using continue/break to hide real structure.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Switch expression vs statement?
-
-Answer in spoken form: Expressions return values and encourage exhaustiveness; statements perform actions.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Operators**. That set up a need. **Control Flow** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Methods**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 06 / **Control Flow** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- if/else and modern switch expressions.
-- for/while/enhanced-for.
-- break/continue — labeled forms sparingly.
-- Pattern matching reduces casts.
-- Extract methods instead of deep nesting.
+Narration technique: computed-values-need-routes situation → if/else and switch expressions → loops → break/continue → pattern matching → nesting failure → extract methods → next natural problem (named behavior). Continuity-checked transitions.

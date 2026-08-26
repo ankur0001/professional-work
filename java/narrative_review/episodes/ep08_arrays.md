@@ -5,168 +5,85 @@
 | Episode | 08 |
 | Title | Arrays |
 | Catalog handbook column | 8 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Episode Seven gave behavior a name. Methods let us calculate a total once and call it from checkout, invoice, and refund. That solves duplicated verbs. It does not solve another kind of duplication that shows up the moment you have more than a few values of the same kind.
 
-In the previous episode, we worked through **Methods**. That gave us a piece of the platform. Today we need the next piece: **Arrays**.
+Suppose you need three quiz scores. You could write `score1`, `score2`, `score3`. Then a fourth quiz appears. Then you need to average them, sort them, or pass them into a method that should not grow a new parameter every semester. Separate variables do not scale. Methods cannot save you if the inputs themselves are an exploding family of names. You need many values under one name, reachable by position.
 
-You need to store a fixed list of scores and access them by position.
+That need is an array. An array is a fixed-length sequence of elements of one type. You create it with a length, and that length does not grow later. Indexes start at zero. The last valid index is `length - 1`.
 
-Arrays are the fixed-length backbone under many collections.
+```java
+int[] scores = {88, 91, 74};
+System.out.println(scores.length);   // 3
+System.out.println(scores[0]);       // 88
+```
 
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
+`scores` is one variable. Inside it live three ints. `scores.length` is a field, not a method — that detail matters when you later meet `List.size()`. Reading `scores[0]` is the first element. Asking for `scores[3]` throws, because three is past the end. Off-by-one bugs are not a personality flaw. They are what happens when zero-based indexing meets a human habit of counting from one.
 
-### Why this exists
+Try averaging without an array and you feel the pain immediately: `score1 + score2 + score3` does not generalize. With an array you loop.
 
-In simple language, arrays is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
+```java
+int sum = 0;
+for (int i = 0; i < scores.length; i++) {
+    sum += scores[i];
+}
+double average = sum / (double) scores.length;
+```
 
-### Building the idea step by step
+Notice the cast to `double` — Episode Four's integer-division trap still applies. The array did not invent new arithmetic; it gave the loop a single place to read from.
 
-#### Step 1
-
-Now consider this teaching point: Length fixed after creation.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Indexes from zero.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Arrays of arrays for multi-dimensional.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Use Arrays helper methods.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Prefer List when size changes.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Once the happy path is clear, helpers save you from hand-rolling common work.
 
 ```java
 int[] nums = {3, 1, 4};
-System.out.println(nums.length);
 java.util.Arrays.sort(nums);
+System.out.println(java.util.Arrays.toString(nums));
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+`Arrays.sort` rearranges the same array in place. `Arrays.toString` gives a readable print. If you call `System.out.println(nums)` directly, you usually see a type-and-hash style string, not the contents — another beginner surprise that looks like a broken array when the array is fine. Binary search, filling, and copying also live on `Arrays`. Reach for the helper before reinventing a loop you will get slightly wrong.
 
-I'll walk this example like we're pair-programming.
+What if the data is not a single line of scores but a grid — seats in a theater, pixels, a small table of daily temperatures by week?
 
-Focus on the idea each line encodes — not memorizing syntax trivia.
+Java models that as arrays of arrays. A two-dimensional shape is an array whose elements are themselves arrays.
 
-Then we'll connect it to the production failure mode.
+```java
+int[][] week = {
+    {70, 72, 68},
+    {75, 71, 73}
+};
+System.out.println(week[1][0]);   // 75 — second row, first column
+```
 
-Look at `int[] nums = {3, 1, 4};`.
+`week[1]` is the second row. `week[1][0]` is the first value in that row. Rows can even have different lengths in Java — "ragged" arrays — which is powerful and easy to misuse. For many apps, a clear rectangular mental model is enough.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Now the design question that arrays force: what happens when the number of scores is not known up front, or keeps changing as users add and remove items?
 
-Look at `System.out.println(nums.length);`.
+Arrays do not grow. To "add" an element you allocate a larger array and copy. That is fine for fixed tables, buffers with a known capacity, or performance-sensitive paths. When size changes as a normal part of the feature, prefer a `List`. Arrays remain the fixed-length backbone under many collections — including how some lists are implemented — but they are not the default tool for an open-ended shopping cart.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+```java
+// fixed: three lab measurements known in advance
+double[] samples = new double[3];
 
-Look at `java.util.Arrays.sort(nums);`.
+// growing: prefer List when the count keeps changing
+// List<Double> samples = new ArrayList<>();
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+The first form reserves three slots. You fill them by index. You cannot append a fourth without a new array. That constraint is the point of the type, not a missing feature.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Assuming arrays grow is one of the most common early mistakes. Someone writes `nums[nums.length] = 99` hoping to extend the array and gets an exception instead. The honest move is either a correctly sized array from the start or a `List` that is allowed to grow.
 
-### Example 2 — make it more realistic
+So reconnect the chain. Methods packaged repeated behavior. Arrays package repeated values by position. Length is fixed after creation. Indexes start at zero. Multi-dimensional data is arrays of arrays. `Arrays` helpers cover sorting and printing. When the size must change as a product requirement, lists take over.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Arrays usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+And yet many programs are not mainly lists of numbers. They are full of text — names, messages, ids, error lines. You can store characters in a `char[]`, but almost nobody wants to manage text that way day to day. Java's `String` type looks friendly until modification and comparison surprise you.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+That surprise is Episode Nine: strings.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+## Source attribution
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 8 (*Arrays*).
 
-### What if we skip this approach?
-
-Important concepts become memorable when we see the failure mode without them.
-
-For example, consider this common mistake: Off-by-one index bugs.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Off-by-one index bugs.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Assuming arrays grow.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Printing an array with println and getting a type@hash.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: array.length vs List.size()?
-
-Answer in spoken form: Arrays use a length field; collections use size().
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Methods**. That set up a need. **Arrays** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Strings**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 08 / **Arrays** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Length fixed after creation.
-- Indexes from zero.
-- Arrays of arrays for multi-dimensional.
-- Use Arrays helper methods.
-- Prefer List when size changes.
+Narration technique: many-values-under-one-name situation → fixed length and zero indexes → Arrays helpers → arrays of arrays → List when size changes → next natural problem (text / strings). Continuity-checked transitions.

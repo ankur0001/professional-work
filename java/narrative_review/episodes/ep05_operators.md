@@ -5,168 +5,85 @@
 | Episode | 05 |
 | Title | Operators |
 | Catalog handbook column | 5 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+In the previous episode we learned how to remember values with types. A student can have an age, a name, a percentage, a pass flag. That solves storage. It does not yet solve work.
 
-In the previous episode, we worked through **Variables and Data Types**. That gave us a piece of the platform. Today we need the next piece: **Operators**.
+Suppose the gradebook already holds `marks` and `passingScore`. We need to know whether the student passed, compute a weighted total, maybe bump a counter. We are no longer asking "what is this value?" We are asking "what do we do with these values together?"
 
-You have variables. Now you need to calculate, compare, and combine them without writing accidental bugs.
+That is where operators arrive. An operator is a compact way to combine, compare, or transform values. The danger is not that operators are hard to spell. The danger is that a single character can change the meaning of a whole expression — and the code can still compile.
 
-Operators look easy until precedence and side effects show up in an interview whiteboard.
+Before lists of symbols, learn the rules that actually decide outcomes: precedence and associativity. Precedence answers which operator binds first. Associativity answers how equal-precedence operators group when they sit side by side. Memorizing every trivia table is less useful than knowing when to add parentheses because the default reading is not the reading you meant.
 
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
+```java
+int total = 10 + 2 * 5;      // 20, not 60
+boolean inRange = x >= 0 && x < 100;
+```
 
-### Why this exists
+`10 + 2 * 5` is twenty because multiplication binds tighter than addition. If you wanted sixty, you needed parentheses — or a clearer rewrite. `x >= 0 && x < 100` is a common range check; the comparisons happen, then `&&` combines the booleans. Precedence is not decoration. It is the grammar of expressions.
 
-In simple language, operators is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
+Put that grammar inside the gradebook for a moment. Weighted marks might look like `labs * 0.4 + exam * 0.6`. Without parentheses you still get the right answer here because multiplication binds first — but the moment someone writes `bonus + labs * 0.4 + exam * 0.6` thinking "add bonus to the weighted total," they may have meant `(bonus + labs) * 0.4`. Parentheses are how you document intent for the next reader, including future you.
 
-### Building the idea step by step
+Assignment versus equality is another one-character fork. `=` stores. `==` compares. Mixing them in a condition is rarer in modern Java because booleans and types catch more mistakes than C did — but the mental mix-up still shows up when people read code aloud and say "equals" for both.
 
-#### Step 1
-
-Now consider this teaching point: Precedence and associativity beat memorizing trivia lists.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: ++/-- side effects confuse people.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: && short-circuits; & does not.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: == vs equals for objects.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Bitwise ops appear in flags and low-level code.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Once arithmetic and comparison feel familiar, side effects show up and confuse people — especially `++` and `--`.
 
 ```java
 int x = 5;
 int y = x++ + ++x;
-boolean ok = (x > 0) && (y / x > 1);
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk it carefully. `x++` yields the current value of `x`, then increments. `++x` increments first, then yields the new value. Starting at five, the left side contributes five and leaves `x` at six; the right side bumps `x` to seven and contributes seven; `y` becomes twelve. The expression is legal. It is also a terrible place to hide business logic. Prefer clarity over clever increments. Interviews love this puzzle because production code should almost never write it.
 
-I'll walk this example like we're pair-programming.
+Another operator trap looks quieter: boolean operators that short-circuit versus ones that do not.
 
-Focus on the idea each line encodes — not memorizing syntax trivia.
+`&&` stops early. If the left side is false, the right side never runs. `&` on booleans evaluates both sides. That difference matters when the right side has a cost — or a crash.
 
-Then we'll connect it to the production failure mode.
+```java
+String name = null;
+boolean bad = (name != null) & name.length() > 0;   // NPE
+boolean ok  = (name != null) && name.length() > 0;  // safe
+```
 
-Look at `int x = 5;`.
+With `&`, both sides run, so `name.length()` executes even when `name` is null. With `&&`, the null check protects the second call. Using `&` when you meant `&&` is a classic "it looked the same" bug. The same short-circuit idea applies to `||`: if the left side is already true, the right side is skipped. That is useful for defaulting and for cheap checks guarding expensive ones.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Then comes the comparison question that follows naturally from Episode Four's primitive-versus-reference split: when you write `==`, what are you comparing?
 
-Look at `int y = x++ + ++x;`.
+For primitives, `==` compares values. For objects, `==` compares identity — whether two references point at the same object. Content equality usually means `equals`.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+```java
+String a = new String("hi");
+String b = new String("hi");
+System.out.println(a == b);        // false — different objects
+System.out.println(a.equals(b));   // true  — same characters
+```
 
-Look at `boolean ok = (x > 0) && (y / x > 1);`.
+If you accidentally use `==` for string content, you may get true in a demo because of interning, then false in production when the strings were built differently. Prefer `equals` when you mean content. Save `==` for identity, null checks, and enums where identity is the point.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+One more family appears less often in beginner apps but shows up in flags and low-level code: bitwise operators. They work on bits inside integers — masks, permissions, packed options.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+```java
+int READ = 1;      // 001
+int WRITE = 2;     // 010
+int flags = READ | WRITE;
+boolean canRead = (flags & READ) != 0;
+```
 
-### Example 2 — make it more realistic
+Here `|` combines flag bits and `&` tests one. That is a different job from boolean `||` and `&&`. You do not need to become a bit-twiddling specialist today. You only need to recognize the family so you do not mix it with boolean logic by accident — another interview classic.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Operators usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+What if we treat operators as trivia to memorize in a weekend? You can recite the table and still ship a bug the first time precedence, short-circuiting, and `==` collide in one condition. The durable skill is slower: read an expression the way the compiler does, then rewrite it until a human can too.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+So reconnect the chain. Variables gave us named values. Operators let us compute and decide with those values. Precedence decides grouping. Increment side effects punish cleverness. Short-circuiting protects expensive or unsafe right-hand sides. `==` versus `equals` respects the primitive/reference distinction. Bitwise tools wait for flag-shaped problems.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+But once you can produce a boolean, a new pressure appears. Knowing that `passed` is true is not enough. The program must take different paths — print a pass message, retry a download, loop through every student. Computation alone does not choose a route.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+That pressure is Episode Six: control flow.
 
-### What if we skip this approach?
+## Source attribution
 
-Important concepts become memorable when we see the failure mode without them.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 5 (*Operators*).
 
-For example, consider this common mistake: Writing clever increment expressions.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Writing clever increment expressions.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Using & when you meant &&.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Comparing objects with == by accident.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Explain x++ + ++x carefully.
-
-Answer in spoken form: Evaluate left to right with side effects; prefer clarity over clever increments.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Variables and Data Types**. That set up a need. **Operators** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Control Flow**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 05 / **Operators** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Precedence and associativity beat memorizing trivia lists.
-- ++/-- side effects confuse people.
-- && short-circuits; & does not.
-- == vs equals for objects.
-- Bitwise ops appear in flags and low-level code.
+Narration technique: stored-values-need-work situation → operators as answer → precedence → increment side effects → short-circuit → == vs equals → bitwise as later pressure → next natural problem (choosing paths). Continuity-checked transitions.

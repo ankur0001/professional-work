@@ -5,183 +5,80 @@
 | Episode | 11 |
 | Title | Access Modifiers |
 | Catalog handbook column | 11 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Episode Ten put data and behavior inside classes and drew a boundary with encapsulation. That boundary only works if the language can enforce who may cross it. Otherwise `private` is a comment, and every teammate can reach into the wiring "just for now."
 
-In the previous episode, we worked through **Object-Oriented Programming**. That gave us a piece of the platform. Today we need the next piece: **Access Modifiers**.
+Imagine you finish a `BankAccount` with a careful withdraw method. A colleague adds `account.balance -= 50` from a UI class because the field was left public. Your invariant — never go below zero without a check — evaporates. The bug is not cleverness. It is missing permission language.
 
-Once you have classes, you need rules about who is allowed to touch what.
+So the natural question is: what vocabulary does Java give us for "allowed to touch"?
 
-Access modifiers are API design — who is allowed to touch what.
+Access modifiers answer that. They are API design in miniature — rules about visibility for types and members.
 
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, access modifiers is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Keep a simple picture of Access Modifiers.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: private, package-private, protected, public.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Encapsulation is a boundary, not a checkbox.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Protected includes subclass rules across packages.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Modules tighten access further.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Default to the tightest access that works.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Java's everyday ladder has four rungs: `private`, package-private (no modifier), `protected`, and `public`.
 
 ```java
 public class Api {
-  private int secret;
-  protected void hook() {}
-  void pack() {}
-  public void open() {}
+    private int secret;
+    void pack() { }           // package-private
+    protected void hook() { }
+    public void open() { }
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk each choice as a decision, not a label. `secret` is `private`: only code inside `Api` should see it. `pack` has no modifier: it is package-private, visible to other classes in the same package, hidden from the outside world. `hook` is `protected`: same package, plus subclasses — including subclasses that live in other packages, with cross-package rules that surprise people who thought protected meant "only children." `open` is `public`: part of the advertised surface.
 
-I'll walk this example like we're pair-programming.
+Think of shipping a library jar to another team. Everything you mark `public` becomes a promise. Rename it later and you break callers you do not control. Package-private and private keep room to refactor. That is why "default to the tightest access that works" shows up in reviews: widen on purpose, not by habit.
 
-Focus on the idea each line encodes.
+Encapsulation is a boundary, not a checkbox. Marking a field `private` and then returning the mutable list inside it from a public method still leaks the inside. Access modifiers constrain names. They do not automatically constrain the objects those names hand out.
 
-Then we connect it to the production failure mode.
+```java
+public class Team {
+    private final java.util.List<String> members = new java.util.ArrayList<>();
 
-Look at `public class Api {`.
+    public java.util.List<String> members() {
+        return members;   // leak — callers can mutate internals
+    }
+}
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+A safer return might be an unmodifiable view or a defensive copy. The modifier on the field did its job. The method signature undid the boundary. That is why tight access and careful returns travel together. Start narrow. Widen only when a real caller outside the boundary needs the name.
 
-Look at `private int secret;`.
+`protected` deserves an extra beat because it is the most misunderstood middle ground.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+```java
+// package com.shop.core
+public class Account {
+    protected void audit(String event) { /* ... */ }
+}
 
-Look at `protected void hook() {}`.
+// package com.shop.web — subclass in another package
+public class WebAccount extends Account {
+    void onLogin() {
+        audit("login");   // allowed via subclass access
+    }
+}
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Subclass access across packages is intentional for frameworks and extension hooks. It is also easy to overuse. If everything interesting is `protected`, you have built an inheritance API whether you meant to or not. People also confuse protected with package-private: package-private never opens the door to a subclass in another package; protected can. Prefer `private` or package-private until a genuine extension point appears.
 
-Look at `void pack() {}`.
+Modern Java adds another tightening layer: modules. The module system can hide packages from code outside the module even if a type is `public`. Think of modifiers as the first wall and modules as a second wall for larger codebases. You do not need to master `module-info` today. You only need to know that "public" does not always mean "visible to the entire universe forever."
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+What if we skip the discipline and make everything `public` so demos compile faster? The cost arrives when internals become de facto API. Callers depend on fields you wanted to rename. Tests couple to helpers you wanted to delete. Refactors turn into negotiations. Access that is wider than necessary is debt with compound interest.
 
-Look at `public void open() {}`.
+Confusing protected with package-private, or leaking mutable internals from public getters, are the same story in different clothes: the modifier on the declaration did not match the boundary you actually needed.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+So reconnect the chain. OOP introduced insides and outsides. Access modifiers name who may cross. Private for implementation, package-private for collaborating types in one package, protected for deliberate subclass hooks, public for the supported surface. Boundaries must hold through what methods return. Modules can tighten further. Default tight; widen on purpose.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Once visibility rules exist, another organizational pressure grows with the codebase itself. Class names collide. Folders drift from declarations. Collaborating types need a shared neighborhood so package-private access means something real — not "whatever happens to sit nearby." The project needs geography.
 
-### Example 2 — make it more realistic
+That geography is Episode Twelve: packages.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Access Modifiers usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+## Source attribution
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 11 (*Access Modifiers*).
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
-
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
-
-### What if we skip this approach?
-
-Important concepts become memorable when we see the failure mode without them.
-
-For example, consider this common mistake: Making everything public 'for now'.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Making everything public 'for now'.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Confusing protected with package-private.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Leaking mutable internals from public methods.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: protected vs package-private?
-
-Answer in spoken form: Package-private: same package only. Protected: same package plus subclasses (with cross-package rules).
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Object-Oriented Programming**. That set up a need. **Access Modifiers** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Packages**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 11 / **Access Modifiers** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- private, package-private, protected, public.
-- Encapsulation is a boundary, not a checkbox.
-- Protected includes subclass rules across packages.
-- Modules tighten access further.
-- Default to the tightest access that works.
+Narration technique: encapsulation-needs-enforcement situation → four access levels → boundary vs checkbox / leaking internals → protected across packages → modules → public-everywhere failure → next natural problem (packages as geography). Continuity-checked transitions.

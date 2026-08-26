@@ -5,174 +5,101 @@
 | Episode | 10 |
 | Title | Object-Oriented Programming |
 | Catalog handbook column | 10 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+We can store values, operate on them, choose paths, name behavior with methods, hold lists in arrays, and work with text. For a while, that is enough — until the same cluster of fields keeps appearing together, and the rules about those fields are scattered across every method that touches them.
 
-In the previous episode, we worked through **Strings**. That gave us a piece of the platform. Today we need the next piece: **Object-Oriented Programming**.
+Imagine a user id that must never be blank, a balance that must never go negative, an order that must keep its line items consistent. If those values live as public fields floating beside unrelated helpers, any line of code can break the rules. You end up with comments that say "do not set this directly" — which is another way of admitting the language is not helping you.
 
-Scattered variables are no longer enough. Related data and behavior want to travel together.
+So a natural question appears: can related data and the behavior that protects it travel as one unit?
 
-OOP is a modeling tool — not a religion. Encapsulation first.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, object-oriented programming is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Encapsulation protects invariants.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Inheritance is coupling; composition is often healthier.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Polymorphism lets callers depend on abstractions.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Overriding vs overloading.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: equals/hashCode are part of the object contract.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+That question is what object-oriented programming answers in Java — as a modeling tool, not a religion. Start with encapsulation: hide the representation, expose a controlled surface, protect invariants.
 
 ```java
 class User {
-  private final String id;
-  User(String id) { this.id = id; }
-  String id() { return id; }
+    private final String id;
+
+    User(String id) {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("id required");
+        }
+        this.id = id;
+    }
+
+    String id() {
+        return id;
+    }
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+The field is private. Construction validates. Callers can read the id through a method, but they cannot assign `user.id = ""` from outside. Encapsulation is not a checkbox labeled "I used a class." It is a boundary that keeps illegal states harder to create.
 
-I'll walk this example like we're pair-programming.
+Contrast that with the scattered version everyone writes first: a string `id` in `main`, a helper that assumes it is non-blank, another helper that forgets to check. The rules exist only as hope. An object gathers the noun and the verbs that protect it.
 
-Focus on the idea each line encodes — not memorizing syntax trivia.
+Once you have objects, reuse becomes the next temptation. Inheritance looks like the fastest reuse: a subclass "is a" kind of parent and picks up its fields and methods. The cost is coupling. Changes in the parent ripple through every child. Deep inheritance trees feel clever on a whiteboard and brittle in a year-old codebase. Composition — "has a" collaborator you call — often evolves more safely.
 
-Then we'll connect it to the production failure mode.
+```java
+class OrderService {
+    private final Pricing pricing;
 
-Look at `class User {`.
+    OrderService(Pricing pricing) {
+        this.pricing = pricing;
+    }
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+    double total(Cart cart) {
+        return pricing.price(cart);
+    }
+}
+```
 
-Look at `private final String id;`.
+`OrderService` is not a subclass of `Pricing`. It holds a `Pricing` and uses it. You can swap pricing strategies without rewriting the service's type hierarchy. Prefer inheritance when you truly have a stable subtype relationship and polymorphism needs a shared type. Prefer composition when you mainly wanted reuse.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Polymorphism is the payoff that makes abstractions worth depending on. Callers program to a general type; runtime chooses the specific behavior.
 
-Look at `User(String id) { this.id = id; }`.
+```java
+interface Notifier {
+    void send(String message);
+}
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+class EmailNotifier implements Notifier {
+    public void send(String message) { /* email */ }
+}
 
-Look at `String id() { return id; }`.
+class SmsNotifier implements Notifier {
+    public void send(String message) { /* sms */ }
+}
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+void welcome(Notifier notifier) {
+    notifier.send("Welcome");
+}
+```
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+`welcome` does not care which notifier arrived. It depends on the abstraction. New channels can appear without rewriting every caller. That is polymorphism earning its keep.
 
-### Example 2 — make it more realistic
+Two words collide for beginners: overriding and overloading. Overloading is same name, different parameter lists, resolved at compile time — we met that with methods. Overriding is a subclass replacing a superclass method with the same signature, resolved at runtime for instance methods. If you "override" with a different parameter list, you actually overloaded — and the parent method still runs when callers use the parent type. Mixing the terms in an interview usually means mixing the mechanisms in code.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Object-Oriented Programming usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Finally, once objects live in sets and maps, identity and equality stop being philosophy. `equals` and `hashCode` are part of the object contract. If two objects are equal, their hash codes must match. Break that pair and collections misbehave in ways that look like ghost bugs.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+```java
+// If you override equals, override hashCode in tandem.
+// Equal users must hash equally or HashSet/HashMap will surprise you.
+```
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+You will deepen this when collections take center stage. For now, treat equality as part of the type's meaning, not an afterthought you paste from a generator without reading.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+What if we skip the modeling discipline? Public fields everywhere, god classes that know every feature, inheritance used as a junk drawer — the program still runs until change arrives. Then every feature touches everything, and invariants live only in tribal memory. OOP did not fail. Design refused to use the tools for their purpose.
 
-### What if we skip this approach?
+So reconnect the chain. Scattered data needed a boundary; encapsulation provided one. Reuse needed a safer default than deep trees; composition often wins. Callers needed stability; polymorphism provided abstractions. Overriding and overloading needed clear separation. Equality needed a contract. OOP is how Java lets you model those pressures — not a requirement to turn every script into a framework.
 
-Important concepts become memorable when we see the failure mode without them.
+As soon as classes have insides and outsides, a sharper question appears: who is allowed to see the private field, call the helper, or extend the hook? Without language-level permissions, encapsulation is only a polite agreement.
 
-For example, consider this common mistake: Deep inheritance trees.
+That vocabulary is Episode Eleven: access modifiers.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+## Source attribution
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 10 (*Object-Oriented Programming*).
 
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Deep inheritance trees.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Public fields everywhere.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** God classes that know everything.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Inheritance vs composition?
-
-Answer in spoken form: Inheritance is is-a coupling; composition reuses via has-a and usually evolves more safely.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Strings**. That set up a need. **Object-Oriented Programming** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Access Modifiers**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 10 / **Object-Oriented Programming** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Encapsulation protects invariants.
-- Inheritance is coupling; composition is often healthier.
-- Polymorphism lets callers depend on abstractions.
-- Overriding vs overloading.
-- equals/hashCode are part of the object contract.
+Narration technique: scattered-fields situation → encapsulation → inheritance vs composition → polymorphism → overriding vs overloading → equals/hashCode → failure modes → next natural problem (who may touch what). Continuity-checked transitions.

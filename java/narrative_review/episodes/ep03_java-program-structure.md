@@ -5,71 +5,32 @@
 | Episode | 03 |
 | Title | Java Program Structure |
 | Catalog handbook column | 3 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Episode Two ended on a frustration that arrives the moment the tools work. You write a class, name a file, maybe add a package — and the compiler or the launcher refuses until those pieces agree with each other.
 
-In the previous episode, we worked through **JDK, JRE, and JVM**. That gave us a piece of the platform. Today we need the next piece: **Java Program Structure**.
+That refusal is not Java being petty. It is Java answering a practical question: when you type `java Something`, how does the runtime find the right bytecode, and when you type `javac`, how does the compiler know what belongs together?
 
-You want to run a program, but Java refuses until the file, class, package, and entry point agree with each other.
+Start with the smallest piece of that puzzle: a single source file.
 
-If you don't know where main lives or why public classes match filenames, every later lesson feels cursed.
+A `.java` file is a compilation unit. Inside it you can declare types. The rule that trips almost everyone first is this: if a top-level class is `public`, its name must match the filename, including case. `App` lives in `App.java`. Not `app.java`. Not `Application.java`. The compiler is not decorating your disk for fun. Filenames are how tools locate the public type you asked them to compile.
 
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
+```java
+public class App {
+    public static void main(String[] args) {
+        System.out.println("ready");
+    }
+}
+```
 
-### Why this exists
+Save that as `App.java`, compile it, run it. Now rename the file to `Demo.java` without renaming the class and compile again. The error is teaching you the contract: public top-level type and filename are one identity.
 
-In simple language, java program structure is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
+But a real project is not one lonely class in the current folder. Names collide. Two teams invent `User`. Two libraries invent `Util`. So the next natural question is: how do we give types an address so the same short name can exist in different places without chaos?
 
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: A .java file is a compilation unit; one public top-level class must match the filename.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Packages are namespaces that map to directories.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: main(String[] args) is the classic launcher entry point.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Imports bring types into scope; classpath/module path finds classes.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Structure is not paperwork — it is how the compiler and JVM find your code.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Packages are that address. A package is a namespace, and on disk it maps to directories. `package com.example.demo;` is not a comment. It claims that this type lives under folders that mirror those segments. If the declaration says `com.example.demo` and the file sits in the wrong tree, the tools lose the trail.
 
 ```java
 package com.example.demo;
@@ -81,100 +42,48 @@ public class App {
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk the pieces. The package line places `App` in `com.example.demo`. The public class still matches `App.java`. Inside it, `public static void main(String[] args)` is the classic launcher entry point. When you run the program, the JVM looks for a method with that shape. `args` is how command-line words arrive as a string array. Printing `args.length` is a tiny proof that the entry point was found and executed.
 
-I'll walk this example like we're pair-programming.
+Notice what we have assembled: file identity, package geography, and a door the JVM can knock on. Structure is not paperwork. It is how the compiler and the JVM find your code.
 
-Focus on the idea each line encodes — not memorizing syntax trivia.
+That raises another everyday question. Once types live in packages, how does one file talk about a type from another package without writing the full address every time?
 
-Then we'll connect it to the production failure mode.
+Imports bring types into scope. An import does not copy code into your file. It tells the compiler which fully qualified name you mean when you write the short name. Behind that sits another mechanism: the classpath — and later the module path — which tells the tools where to look for already-compiled classes. If the type is not on that path, the import cannot save you. The working directory alone is not a magic finder.
 
-Look at `package com.example.demo;`.
+```java
+package com.example.demo;
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+import java.util.ArrayList;
 
-Look at `public class App {`.
+public class App {
+    public static void main(String[] args) {
+        ArrayList<String> names = new ArrayList<>();
+        names.add("Ada");
+        System.out.println(names);
+    }
+}
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+`import java.util.ArrayList;` means: when I say `ArrayList`, I mean that type from the standard library. Without the import, you could still write `java.util.ArrayList` in full. The import is convenience with a clear cost — you are declaring a dependency on a specific type. If someone deletes the import and the short name still "works," something else is in scope, and that something else may not be the type you think.
 
-Look at `public static void main(String[] args) {`.
+Now look at the failure modes that make these rules feel expensive until you need them.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+First: public class name does not match the filename. The compiler stops you. That stop is cheaper than a runtime hunt for the wrong type.
 
-Look at `System.out.println("args length = " + args.length);`.
+Second: package declaration does not match folders. You may compile in one layout and fail to launch from another, or watch tools resolve a different class with a similar name. The map between package and directory is the GPS for your types.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Third: assuming the working directory alone finds classes without a classpath. It sometimes looks true for tiny demos. Then a second jar appears, or you run from a different folder, and suddenly "it worked on my machine" becomes a classpath story. Structure is how tools search. If the search path is wrong, perfect source still fails at launch.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+What if we treat these rules as paperwork and invent shortcuts — wrong filenames, packages that do not match folders, `main` hidden in a non-static method? Each shortcut saves a minute and spends an hour later when the JVM cannot find the entry point or the compiler refuses a public type. The stubbornness is the feature.
 
-### Example 2 — make it more realistic
+So reconnect the chain. Episode Two named the layers that build and run bytecode. Today we answered why those layers care so much about agreement: a compilation unit binds public type to filename, packages bind names to directories, `main` is the launcher door, and imports plus classpath tell the tools which types you mean and where they live.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Java Program Structure usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Once a program has a home and an entry point, a more basic need appears. Before the program can do useful work, it must remember information — an age, a name, a flag — with meaning attached, not as anonymous literals scattered through `main`.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+That need is Episode Four: variables and data types.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+## Source attribution
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 3 (*Java Program Structure*).
 
-### What if we skip this approach?
-
-Important concepts become memorable when we see the failure mode without them.
-
-For example, consider this common mistake: Public class name does not match filename.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Public class name does not match filename.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Package declaration does not match folders.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Assuming the working directory alone finds classes without classpath.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: What must be true about a public top-level class and its file?
-
-Answer in spoken form: Filename must match the public class name exactly (case-sensitive) and end with .java.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **JDK, JRE, and JVM**. That set up a need. **Java Program Structure** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Variables and Data Types**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 03 / **Java Program Structure** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- A .java file is a compilation unit; one public top-level class must match the filename.
-- Packages are namespaces that map to directories.
-- main(String[] args) is the classic launcher entry point.
-- Imports bring types into scope; classpath/module path finds classes.
-- Structure is not paperwork — it is how the compiler and JVM find your code.
+Narration technique: structural-stubbornness situation → filename/public-class contract → packages as addresses → main as entry → imports/classpath → mismatch failures → next natural problem (remembering values). Continuity-checked transitions.
