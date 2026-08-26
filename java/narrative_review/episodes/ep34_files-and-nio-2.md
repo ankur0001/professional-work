@@ -5,75 +5,16 @@
 | Episode | 34 |
 | Title | Files and NIO.2 |
 | Catalog handbook column | 34 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Try-with-resources made opening and closing honest. The next question is what we open when the thing we care about is a path on disk.
 
-In the previous episode, we worked through **try-with-resources**. That gave us a piece of the platform. Today we need the next piece: **Files and NIO.2**.
+Suppose a batch job must write a short status file and read it back later. Older Java pushed you toward `java.io.File` plus streams glued together by hand. It works. It is also noisy, easy to get charset-wrong, and awkward for modern path operations like walking a tree or moving a file atomically. So teams kept asking: what is the modern way Java talks to the filesystem?
 
-We are continuing The Java Story, and today's challenge is Files and NIO.2. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-NIO.2 Path/Files is how modern Java talks to the filesystem.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, files and nio.2 is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Files and NIO.2 clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Path.of and Files helpers.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Always think about charset.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Walk/glob utilities.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Atomic move caveats.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Prefer NIO.2 over legacy File for new code.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+NIO.2 answers with `Path` and `Files`. Prefer them for new code. `File` is legacy you will still meet; it is not the model you should reach for first.
 
 ```java
 Path p = Path.of("data.txt");
@@ -81,96 +22,35 @@ Files.writeString(p, "hello");
 String s = Files.readString(p);
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk the idea. `Path.of("data.txt")` builds a path value — a location, not the bytes themselves. `Files.writeString` writes text to that location. `Files.readString` reads it back. The helpers hide a lot of boilerplate while still throwing clear I/O exceptions when the world disagrees. Combined with try-with-resources for streams when you need them, this is the everyday filesystem vocabulary.
 
-I'll walk this like pair-programming.
+Charset is the quiet requirement inside those helpers. Text is not "just bytes with letters on them." If you assume the default charset, a machine in another locale — or a container with a different default — can reinterpret your file. Be explicit when the content is text meant to travel. When you drop to stream APIs, carry the same discipline: pick `UTF_8` (or another intentional charset) instead of hoping defaults match production.
 
-Focus on the idea each line encodes.
+Walking and globbing appear as soon as "one file" becomes "a directory of inputs":
 
-Then connect to the failure mode.
+```java
+try (var paths = Files.walk(Path.of("incoming"))) {
+    paths.filter(path -> path.toString().endsWith(".csv"))
+         .forEach(path -> System.out.println(path));
+}
+```
 
-Look at `Path p = Path.of("data.txt");`.
+`Files.walk` gives you a stream of paths. Filter to the names you care about. Close the stream — try-with-resources again — because walking can hold directory resources. Glob helpers exist for pattern matching when the pattern is the point. The design goal is the same: express filesystem intent without hand-rolling recursion badly.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Atomic move caveats matter the first time you try to publish a file safely. You write to a temp path, then move into the final name so readers never see a half-written file. On some systems and filesystems, "atomic move" has constraints — especially across storage volumes. The API lets you request options; the operating system still has the last word. Treat atomic rename as a tool with documented limits, not as a spell.
 
-Look at `Files.writeString(p, "hello");`.
+Path traversal is the security sibling of these APIs. If any part of a path comes from user input, a string like `../../etc/passwd` is not a cute edge case — it is an attack. Resolve and normalize against a known root, and reject paths that escape it. NIO.2 makes path math clearer; it does not make untrusted input safe by itself.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Common mistakes line up with those pressures. Assuming default charset corrupts text across environments. Not handling `NoSuchFileException` turns a missing input into an opaque crash. Blindly concatenating user strings into paths invites traversal. None of these are advanced topics. They are the cost of treating the filesystem as a dumb string bag.
 
-Look at `String s = Files.readString(p);`.
+So reconnect the chain. We needed a modern filesystem vocabulary. `Path` and `Files` provided it. Charset kept text honest. Walk and glob scaled to directories. Atomic moves and traversal showed production edges. Legacy `File` can wait in maintenance code; new design should start with NIO.2.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+And yet reading and writing "strings" still hides a deeper split: sometimes the payload is text, and sometimes it is raw bytes. Bridging those worlds — and doing it efficiently — is the job of readers, writers, and the streams underneath them.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+That is Episode Thirty-Five.
 
-### Example 2 — make it more realistic
+## Source attribution
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Files and NIO.2 usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 34 (*Files and NIO.2*).
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
-
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
-
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
-
-### What if we skip this approach?
-
-Important concepts become memorable when we see the failure mode without them.
-
-For example, consider this common mistake: Assuming default charset.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Assuming default charset.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Not handling NoSuchFileException.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Path traversal in user inputs.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Path vs File?
-
-Answer in spoken form: Path/NIO.2 is modern; File is legacy.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **try-with-resources**. That set up a need. **Files and NIO.2** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Readers and Writers**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 34 / **Files and NIO.2** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Path.of and Files helpers.
-- Always think about charset.
-- Walk/glob utilities.
-- Atomic move caveats.
-- Prefer NIO.2 over legacy File for new code.
+Narration technique: status-file situation → Path/Files as modern answer → charset → walk/glob → atomic move → traversal → mistakes → next natural problem (readers/writers).

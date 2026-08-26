@@ -5,172 +5,78 @@
 | Episode | 14 |
 | Title | Wrappers and Autoboxing |
 | Catalog handbook column | 14 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Enums gave us type-safe vocabulary. Now the language runs into a different friction: Java's collections and many APIs speak in objects, while everyday numbers still want to be primitives.
 
-In the previous episode, we worked through **Enums**. That gave us a piece of the platform. Today we need the next piece: **Wrappers and Autoboxing**.
-
-Collections cannot store raw int values directly — they need objects. Wrappers bridge that gap.
-
-Wrappers let primitives participate in collections — with costs and NPE traps.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, wrappers and autoboxing is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Keep a simple picture of Wrappers and Autoboxing.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Integer/Boolean/etc. wrap primitives.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Autoboxing/unboxing is convenient and sneaky.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Cached small Integer values.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Prefer primitives in hot loops.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Null wrappers unbox into NPEs.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Imagine a shopping cart that stores item quantities. You reach for a list:
 
 ```java
-Integer a = 10;
-int b = a;
-List<Integer> list = new ArrayList<>();
-list.add(b);
+List quantities = new ArrayList();
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+You try to put an `int` in it and the type system pushes back — historically and conceptually, a raw list holds objects, not raw primitives. So the question becomes unavoidable: how does a primitive participate in an object world?
 
-I'll walk this example like we're pair-programming.
+The answer is wrapper types. `Integer` wraps `int`. `Boolean` wraps `boolean`. `Double` wraps `double`. Each wrapper is a reference type that holds a primitive value and can sit in a collection, return from a generic method, or represent "maybe missing" with `null`.
 
-Focus on the idea each line encodes.
+Java then softens the ceremony with autoboxing and unboxing. You can write code that looks like it mixes primitives and wrappers, and the compiler inserts the conversions.
 
-Then we connect it to the production failure mode.
+```java
+Integer a = 10;          // autobox int → Integer
+int b = a;               // unbox Integer → int
+List<Integer> list = new ArrayList<>();
+list.add(b);             // autobox again when adding
+```
 
-Look at `Integer a = 10;`.
+Walk the lines. `10` is an `int` literal; assigning it to `Integer a` boxes it into an object. Reading `a` into `int b` unboxes it. `list.add(b)` boxes again so the list can store an `Integer`. The convenience is real. The danger is that the conversions become invisible, so costs and null failures become invisible too.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Here is the failure that every Java developer meets eventually:
 
-Look at `int b = a;`.
+```java
+Integer score = null;
+int value = score;   // NullPointerException
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Unboxing needs a real object. A null wrapper has nothing to unwrap. The line looks like a simple assignment. At runtime it is a crash. Prefer primitives when absence is not part of the meaning. If absence matters, keep the wrapper — and check it before you unbox.
 
-Look at `List<Integer> list = new ArrayList<>();`.
+Autoboxing has another subtle trap around identity. Small `Integer` values are cached. That means this can look "true" by accident:
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+```java
+Integer x = 40;
+Integer y = 40;
+System.out.println(x == y);      // often true (cache)
+Integer p = 400;
+Integer q = 400;
+System.out.println(p == q);      // often false
+```
 
-Look at `list.add(b);`.
+`==` on wrappers compares references, not numeric value. Use `equals` — or better, unbox thoughtfully and compare primitives — when you mean numeric equality. The cache is an optimization, not a contract you should design around.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Once you see the conversions, performance questions follow. In a tight numeric loop, prefer primitives. Repeated boxing creates objects, pressure on the allocator, and noise in profiles. Wrappers are the right tool at API boundaries and in collections. They are the wrong default inside a hot sum of a million numbers.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+```java
+int total = 0;
+for (int n : values) {
+    total += n;   // stay primitive in the hot path
+}
+```
 
-### Example 2 — make it more realistic
+What if we ignore wrappers and try to force everything through primitives at collection boundaries? We end up inventing parallel arrays, parallel lists of different lengths, or object bags with manual casts. Wrappers exist so primitives can cross into the object APIs cleanly. Autoboxing exists so that crossing does not drown every call site in `Integer.valueOf`. The trade is that convenience can hide null and allocation.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Wrappers and Autoboxing usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+So let's reconnect the chain. Collections needed objects; wrappers answered. Autoboxing made the bridge quiet. Null unboxing and `==` on cached Integers showed the traps. Hot loops reminded us to prefer primitives where wrappers add no meaning.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+And yet once lists of `Integer` feel natural, another problem shows up: a list that can hold anything forces casts and hides bugs until runtime. How do we tell a collection "these are strings" or "these are orders" and have the compiler enforce it?
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+That is Episode Fifteen — Generics.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+## Source attribution
 
-### What if we skip this approach?
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 14 (*Wrappers and Autoboxing*).
 
-Important concepts become memorable when we see the failure mode without them.
-
-For example, consider this common mistake: Unboxing null.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Unboxing null.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Using wrappers in tight numeric loops without measuring.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Identity comparisons on Integers.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: When does unboxing throw NPE?
-
-Answer in spoken form: When the wrapper reference is null and a primitive is required.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Enums**. That set up a need. **Wrappers and Autoboxing** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Generics**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 14 / **Wrappers and Autoboxing** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
+Narration technique: primitives-vs-collections friction → wrappers as answer → autoboxing walkthrough → null unboxing → Integer cache/`==` → prefer primitives in hot loops → next natural problem (typed collections / generics). Continuity-checked transitions.
 
 ### Teaching points drawn from the topic bank
 

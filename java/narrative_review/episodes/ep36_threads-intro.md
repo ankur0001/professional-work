@@ -5,75 +5,18 @@
 | Episode | 36 |
 | Title | Threads Intro |
 | Catalog handbook column | 36 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+So far, a Java program has mostly felt like one cook in one kitchen: start at `main`, do the next step, finish. That model breaks the moment you need progress on two fronts at once.
 
-In the previous episode, we worked through **Readers and Writers**. That gave us a piece of the platform. Today we need the next piece: **Threads Intro**.
+Imagine a server handling a request while also refreshing a cache in the background. Or a UI that must stay responsive while a long export runs. If everything stays on one thread, the export freezes the rest of the world. The practical question is not academic: how does Java run an independent path of execution beside the one we are already on?
 
-We are continuing The Java Story, and today's challenge is Threads Intro. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
+A thread is that independent path. Shared memory is what makes threads powerful — and dangerous. Multiple threads can see the same objects. Without a coordination story, they can also step on each other.
 
-A thread is an independent path of execution — shared memory makes it interesting.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, threads intro is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Threads Intro clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Thread vs Runnable.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: start schedules; run does not.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: join and interrupt basics.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Shared mutation needs coordination.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Unbounded thread creation hurts.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+The everyday unit of work is often a `Runnable` — a task with a `run` method — and a `Thread` that will execute it:
 
 ```java
 Thread t = new Thread(() -> doWork());
@@ -81,96 +24,29 @@ t.start();
 t.join();
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk this carefully. We create a `Thread` whose work is the lambda `() -> doWork()`. Calling `start()` asks the JVM to schedule a new thread that will eventually execute that work. Calling `join()` waits until that thread finishes. The calling thread and the worker thread are now two timelines that meet again at `join`.
 
-I'll walk this like pair-programming.
+The classic beginner trap sits in one method name. `start` schedules. `run` does not start a new thread — it executes the work on the current thread, like a normal method call. If you call `run()` by accident, your program may look multi-threaded in the source and still be single-threaded in behavior.
 
-Focus on the idea each line encodes.
+```java
+Thread t = new Thread(() -> doWork());
+t.run();  // still on the caller's thread — no new timeline
+```
 
-Then connect to the failure mode.
+Interrupt basics appear as soon as you need cooperative cancellation. You can interrupt a thread to request that it stop waiting or finish early. Well-behaved blocking calls notice the interrupt and throw or exit. Code that swallows interrupts without restoring status becomes hard to shut down cleanly. You do not need every interrupt pattern today — you need respect for the signal.
 
-Look at `Thread t = new Thread(() -> doWork());`.
+Shared mutation is the deeper issue. If two threads increment the same counter with `count++`, you can lose updates, because that one line is not one atomic action under the hood. If they write a compound structure with no protocol, you can observe half-built state. Creating threads does not create safety. It creates the need for a protocol — and that protocol is the next stretch of the concurrency story.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Unbounded thread creation hurts for a different reason. Spawning a new OS-backed thread per task feels simple under light load and catastrophic under a spike. Threads cost memory and scheduling time. A burst of work can exhaust the machine before your business logic has a chance to be wrong. Hold that worry; thread pools will address it once we understand the basics.
 
-Look at `t.start();`.
+So reconnect the chain. We needed a second path of execution. Threads and `Runnable` provided it. `start` versus `run` separated scheduling from plain calling. `join` and interrupt sketched coordination and cancellation. Shared mutation and unbounded creation showed why "just add threads" is not a strategy.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+The moment two threads touch the same mutable data, a new question dominates everything else: how do we take turns safely, and how do we make sure one thread's writes become visible to another?
 
-Look at `t.join();`.
+That is Episode Thirty-Seven: synchronization.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+## Source attribution
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 36 (*Threads Intro*).
 
-### Example 2 — make it more realistic
-
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Threads Intro usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
-
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
-
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
-
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
-
-### What if we skip this approach?
-
-Important concepts become memorable when we see the failure mode without them.
-
-For example, consider this common mistake: Calling run() instead of start().
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Calling run() instead of start().
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Ignoring interrupt status.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Sharing mutable state with no protocol.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: start() vs run()?
-
-Answer in spoken form: start schedules a new thread; run executes on the current thread.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Readers and Writers**. That set up a need. **Threads Intro** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Synchronization**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 36 / **Threads Intro** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Thread vs Runnable.
-- start schedules; run does not.
-- join and interrupt basics.
-- Shared mutation needs coordination.
-- Unbounded thread creation hurts.
+Narration technique: dual-work situation → thread as answer → start/join walkthrough → run trap → interrupt → shared mutation → unbounded creation → next natural problem (synchronization).

@@ -5,168 +5,56 @@
 | Episode | 33 |
 | Title | try-with-resources |
 | Catalog handbook column | 33 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Last time we treated exceptions as part of an API. That conversation almost always collides with another duty: if your code opened something, it must close it.
 
-In the previous episode, we worked through **Exceptions**. That gave us a piece of the platform. Today we need the next piece: **try-with-resources**.
+Picture a method that reads a whole file into memory. You open an input stream, read bytes, and return them. On the happy path you remember to close. On the exception path — a mid-read failure — you might forget. Or you close in `finally`, but `close()` itself throws, and the original read failure disappears behind the close failure. Leaks and lost causes are not dramatic in a demo. They are dramatic after a week of open file handles in production.
 
-We are continuing The Java Story, and today's challenge is try-with-resources. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
+So the question writes itself: can closing become boring and correct?
 
-If it opens, it must close — try-with-resources makes that boring and correct.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, try-with-resources is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture try-with-resources clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: AutoCloseable resources.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Suppressed exceptions.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Multiple resources in one try.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Prefer over manual finally close.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Custom resources should be AutoCloseable.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Try-with-resources is Java's answer. If a resource implements `AutoCloseable`, you can declare it in the try header, and Java will close it automatically when the block exits — whether by return or by exception.
 
 ```java
 try (var in = Files.newInputStream(path)) {
-  return in.readAllBytes();
+    return in.readAllBytes();
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk the mechanics. `Files.newInputStream(path)` opens the stream. The variable `in` is scoped to the try-with-resources. Inside the body you read. When the body finishes, the runtime calls `close()` on `in` for you. You did not write a `finally`. You did not nest close logic beside business logic. The structure itself encodes the rule: if it opens here, it closes here.
 
-I'll walk this like pair-programming.
+Multiple resources belong in one try when their lifetimes match:
 
-Focus on the idea each line encodes.
+```java
+try (var in = Files.newInputStream(src);
+     var out = Files.newOutputStream(dst)) {
+    in.transferTo(out);
+}
+```
 
-Then connect to the failure mode.
+They close in reverse order of declaration. That ordering matches how nested resources usually depend on each other. Prefer this over manual finally chains that close in the wrong order under stress.
 
-Look at `try (var in = Files.newInputStream(path)) {`.
+Suppressed exceptions are the detail that makes the feature trustworthy. Suppose the body throws exception A, and then `close()` throws exception B. Older manual patterns often lost A or B depending on how you wrote finally. Try-with-resources keeps A as the primary exception and attaches B as a suppressed exception. Debugging tools and logs can surface both. Ignoring suppressed exceptions means you only ever see half the story when close fails during an already-failing operation.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Why prefer this over a hand-written finally close? Because the hand-written version is easy to almost get right. Null checks, ordering, secondary failures, and early returns all compete for attention. Try-with-resources is the pattern that removes those degrees of freedom for the common case.
 
-Look at `return in.readAllBytes();`.
+Custom resources should follow the same contract. If your class owns a socket, a lock file, or an external session, implement `AutoCloseable` (or `Closeable`) and let callers use try-with-resources. That is how your type joins the platform's cleanup story instead of inventing a private `dispose()` ritual everyone forgets.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Where do people still stumble?
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Closing in finally incorrectly — closing only on success, or catching close failures empty-handed — recreates the leaks this feature was meant to end. Ignoring suppressed exceptions during incident review hides the close-time clue. Forgetting resources in tests is quieter: tests pass while production leaks, because the test process exits before the OS pressure appears.
 
-### Example 2 — make it more realistic
+So reconnect the chain. Exceptions taught us failure is part of the contract. Open resources taught us success still has duties. Try-with-resources made `AutoCloseable` cleanup automatic, preserved suppressed exceptions, and scaled to multiple resources. Custom types inherit the same discipline.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, try-with-resources usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Once closing files is reliable, the next hunger is richer: we want to talk to the filesystem with modern path APIs — create, read, write, walk directories — without living forever in legacy `File` habits.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+That is Episode Thirty-Four: files and NIO.2.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+## Source attribution
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 33 (*try-with-resources*).
 
-### What if we skip this approach?
-
-Important concepts become memorable when we see the failure mode without them.
-
-For example, consider this common mistake: Closing in finally incorrectly.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Closing in finally incorrectly.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Ignoring suppressed exceptions.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Forgetting resources in tests.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Why try-with-resources?
-
-Answer in spoken form: Guaranteed close with correct suppression semantics.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Exceptions**. That set up a need. **try-with-resources** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Files and NIO.2**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 33 / **try-with-resources** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- AutoCloseable resources.
-- Suppressed exceptions.
-- Multiple resources in one try.
-- Prefer over manual finally close.
-- Custom resources should be AutoCloseable.
+Narration technique: leak/lost-cause situation → try-with-resources as answer → walkthrough → multiple resources → suppressed exceptions → custom AutoCloseable → mistakes → next natural problem (NIO.2 files).

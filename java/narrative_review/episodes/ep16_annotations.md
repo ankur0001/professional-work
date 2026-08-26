@@ -5,168 +5,61 @@
 | Episode | 16 |
 | Title | Annotations |
 | Catalog handbook column | 16 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Generics taught the compiler what a collection holds. Sometimes what we need to say is not a type parameter, but a note about intent — a note that another tool should notice.
 
-In the previous episode, we worked through **Generics**. That gave us a piece of the platform. Today we need the next piece: **Annotations**.
+Suppose you override `toString` on a domain class. You type carefully… and misspell the method as `tostring`. Without help, Java treats that as a brand-new method. Your override never runs. Equality debugging becomes mysterious. The compiler did not fail you; it simply never knew you meant to override.
 
-We are continuing The Java Story, and today's challenge is Annotations. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
+So the question appears: can we declare intent so the compiler verifies it?
 
-Annotations are structured metadata — compilers and frameworks listen to them.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, annotations is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Keep a simple picture of Annotations.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: @Override catches signature mistakes.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Retention: SOURCE/CLASS/RUNTIME.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Frameworks use runtime annotations heavily.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Custom annotations need processors or reflection.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Annotations don't replace good API design.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+That is the doorway into annotations. Annotations are structured metadata attached to declarations. Compilers, build tools, and frameworks listen to them.
 
 ```java
 @Override
 public String toString() {
-  return "ok";
+    return "ok";
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+`@Override` is the smallest useful illustration. It does not change runtime behavior by itself. It tells the compiler: this method must match a superclass or interface method. If the signature is wrong, compilation fails. That is what `@Override` buys you — compile-time proof you actually overrode something. Typos in method names without `@Override` are the classic opposite: silent wrong methods that look fine until behavior diverges.
 
-I'll walk this example like we're pair-programming.
+Once you accept that metadata can drive tools, retention becomes the next natural question. How long does the annotation live?
 
-Focus on the idea each line encodes.
+Java defines three retentions. `SOURCE` means the annotation helps during compilation and may disappear afterward — useful for things only the compiler or an annotation processor needs. `CLASS` means it is recorded in the class file but not necessarily visible through normal reflection. `RUNTIME` means the annotation remains available while the program runs, so frameworks can read it with reflection.
 
-Then we connect it to the production failure mode.
+That last case is why annotations feel ubiquitous in modern Java. Dependency injection, web mappings, test runners, and serializers lean on runtime annotations. A method marked for a request path, a field marked for injection, a test marked to ignore — the framework scans, reads the metadata, and wires behavior. The annotation is the hook; the framework is the listener.
 
-Look at `@Override`.
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Route {
+    String path();
+}
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+A custom annotation like this does nothing alone. Custom annotations need processors at build time, or reflection at runtime, to mean anything. Writing `@Route` without a reader is like writing a sticky note and never looking at it. The metadata model is powerful precisely because something else consumes it.
 
-Look at `public String toString() {`.
+What if we over-annotate instead of simplifying design?
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Teams sometimes decorate every class with a forest of markers while the underlying API stays confused. Annotations do not replace good API design. They amplify a design that already makes sense, and they can obscure one that does not. Prefer a clear method and a clear type. Then add the annotation that tools need — not the annotation that makes the file look "framework native."
 
-Look at `return "ok";`.
+Another misunderstanding: assuming every annotation exists at runtime. If retention is `SOURCE` or `CLASS`, reflective lookup may find nothing. When a framework "ignores" your annotation, check retention and target before rewriting the business logic.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+So let's reconnect the chain. A missed override showed why intent needs verification. `@Override` answered with compiler-checked metadata. Retention explained how long that metadata survives. Frameworks showed why runtime annotations dominate application architecture. Custom annotations revealed they need processors or reflection. Over-annotating reminded us that metadata is not architecture.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+And if frameworks read annotations at runtime by inspecting classes and methods, how does that inspection work? What API lets a program look at itself?
 
-### Example 2 — make it more realistic
+That curiosity is Episode Seventeen — Reflection.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Annotations usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+## Source attribution
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 16 (*Annotations*).
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
-
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
-
-### What if we skip this approach?
-
-Important concepts become memorable when we see the failure mode without them.
-
-For example, consider this common mistake: Typos in method names without @Override.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Typos in method names without @Override.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Assuming all annotations exist at runtime.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Over-annotating instead of simplifying design.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: What does @Override buy you?
-
-Answer in spoken form: Compile-time proof you actually overrode a superclass/interface method.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Generics**. That set up a need. **Annotations** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Reflection**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 16 / **Annotations** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
+Narration technique: missed-override situation → annotation as answer → @Override walkthrough → retention policies → framework runtime use → custom annotations need consumers → design caution → next natural problem (reflection). Continuity-checked transitions.
 
 ### Teaching points drawn from the topic bank
 

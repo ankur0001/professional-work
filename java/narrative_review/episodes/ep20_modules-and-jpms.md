@@ -5,168 +5,45 @@
 | Episode | 20 |
 | Title | Modules and JPMS |
 | Catalog handbook column | 20 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Sealed types closed hierarchies inside the language. Platforms still faced a different leak: on the classic classpath, every public type in every jar was fair game. Internal packages were only a naming convention. Reflection and deep dependency graphs made "please don't touch that" unenforceable.
 
-In the previous episode, we worked through **Sealed Classes**. That gave us a piece of the platform. Today we need the next piece: **Modules and JPMS**.
+So teams asked a practical question: can we declare, up front, what a library requires and what it actually exports?
 
-We are continuing The Java Story, and today's challenge is Modules and JPMS. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Modules restore strong encapsulation the classpath erased.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, modules and jpms is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Keep a simple picture of Modules and JPMS.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: module-info requires/exports/opens.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Explicit dependencies.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Stronger encapsulation than packages alone.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Migration can be incremental.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Classpath apps still exist — know both worlds.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+That is the Java Platform Module System — JPMS. A module is a named collection of packages with an explicit boundary. The declaration lives in `module-info.java`.
 
 ```java
 module com.shop.app {
-  requires com.shop.core;
-  exports com.shop.app.api;
+    requires com.shop.core;
+    exports com.shop.app.api;
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk the meaning. `module com.shop.app` names this module. `requires com.shop.core` states an explicit dependency — the module graph is not a pile of jars hoping their transitive types appear. `exports com.shop.app.api` makes only that package usable to other modules. Sibling packages in the same module can stay hidden even if their types are public. That is stronger encapsulation than packages alone. Public no longer means "visible to the whole classpath world."
 
-I'll walk this example like we're pair-programming.
+`opens` appears when reflective frameworks need deep access to otherwise hidden packages. Opening is a deliberate door, not the default. Opening everything "just to make it work" recreates classpath porosity with module syntax. Prefer exporting a stable API and opening only what a known tool requires.
 
-Focus on the idea each line encodes.
+Migration can be incremental. Many applications still run on the classpath. Classpath apps still exist — know both worlds. You can modularize the JDK usage, modularize libraries gradually, or stay on the classpath while learning the module graph of the platform itself. JPMS is not an all-or-nothing cliff for every codebase on day one. It is a tool for reliable configuration and clearer boundaries when you need them.
 
-Then we connect it to the production failure mode.
+What problem do modules solve in one sentence? Reliable configuration and stronger encapsulation than a flat classpath. Missing `requires` fail early. Illegal access to non-exported packages fail clearly. Circular module dependencies become design smells you can see in the graph instead of surprise ClassNotFound puzzles at runtime.
 
-Look at `module com.shop.app {`.
+Modules alone do not equal good architecture. You can still invent tangled exports and leaky APIs inside a modular build. The module system enforces boundaries you declare; it does not invent a clean domain for you. Treat `module-info` as architecture visible to the compiler and runtime — write it with the same care you give package structure.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+So let's reconnect the chain. The classpath erased strong encapsulation. Modules restored explicit `requires`, `exports`, and careful `opens`. Encapsulation grew sharper than public packages alone. Incremental migration kept classpath apps in the real world. Architecture discipline remained our job.
 
-Look at `requires com.shop.core;`.
+With the language and platform boundaries clearer, everyday programs still need to hold sequences of values — shopping carts, timelines, search results. Arrays were fixed-size. The next natural tool is a resizable, ordered collection you will use constantly.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+That is Episode Twenty-One — Lists.
 
-Look at `exports com.shop.app.api;`.
+## Source attribution
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 20 (*Modules and JPMS*).
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
-
-### Example 2 — make it more realistic
-
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Modules and JPMS usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
-
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
-
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
-
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
-
-### What if we skip this approach?
-
-Important concepts become memorable when we see the failure mode without them.
-
-For example, consider this common mistake: Opening everything 'just to make it work'.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Opening everything 'just to make it work'.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Circular module dependencies.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Assuming modules alone equal good architecture.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: What problem do modules solve?
-
-Answer in spoken form: Reliable configuration and stronger encapsulation than a flat classpath.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Sealed Classes**. That set up a need. **Modules and JPMS** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Lists**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 20 / **Modules and JPMS** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
+Narration technique: classpath encapsulation leak → module-info as answer → requires/exports/opens walkthrough → incremental migration → architecture caution → next natural problem (ordered collections / lists). Continuity-checked transitions.
 
 ### Teaching points drawn from the topic bank
 

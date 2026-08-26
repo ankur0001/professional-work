@@ -5,168 +5,43 @@
 | Episode | 40 |
 | Title | ExecutorService |
 | Catalog handbook column | 40 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+We can start threads. We can synchronize them. We can lock with more control when we must. None of that excuses inventing a new thread for every piece of work that arrives.
 
-In the previous episode, we worked through **Explicit Locks**. That gave us a piece of the platform. Today we need the next piece: **ExecutorService**.
+Picture a burst of a thousand short tasks. Spawning a thousand platform threads can exhaust memory and scheduling capacity before the tasks finish doing anything useful. Unbounded thread creation is not a strategy. It is a load test you accidentally run in production. So the natural question is: how do we reuse workers and bound concurrency on purpose?
 
-We are continuing The Java Story, and today's challenge is ExecutorService. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Thread pools bound concurrency — unbounded thread creation is not a strategy.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, executorservice is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture ExecutorService clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Fixed/cached/scheduled pools.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: shutdown vs shutdownNow.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Bounded queues and rejection policies.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Always have a failure story.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Virtual threads change some defaults later.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+`ExecutorService` is Java's standard answer. Thread pools bound concurrency, reuse threads, and give you a place to attach queueing and rejection policy. Submit work; do not babysit thread lifecycles by hand for every task.
 
 ```java
 try (var exec = Executors.newFixedThreadPool(4)) {
-  exec.submit(() -> task());
+    exec.submit(() -> task());
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk the shape. `newFixedThreadPool(4)` creates a pool with four worker threads. `submit` hands a task to that pool. Using try-with-resources (on modern executor APIs that are `AutoCloseable`) ties pool shutdown to scope exit so the pool does not outlive the method by accident. Even when you manage shutdown manually, the idea is the same: pools have a lifecycle, and ignoring that lifecycle leaks threads.
 
-I'll walk this like pair-programming.
+Pool flavors exist because workloads differ. A fixed pool caps the number of concurrent workers. A cached pool creates threads as needed and reuses idle ones — convenient, and dangerous if an unbounded burst arrives with no other limit. A scheduled pool runs delayed or periodic work. Choose the shape that matches the workload, not the factory method you memorized first.
 
-Focus on the idea each line encodes.
+Shutdown has two common verbs. `shutdown` lets submitted tasks finish and refuses new ones. `shutdownNow` attempts to cancel in-flight work and drains the queue, typically by interrupting workers. Neither is "the rude one" or "the polite one" in the abstract — they are different policies. Always have a failure and stop story: how does this pool die when the application stops, and what happens to tasks still waiting?
 
-Then connect to the failure mode.
+Bounded queues and rejection policies are how pools survive overload. If the queue can grow forever, you have not bounded anything meaningful — you have moved the OOM from threads to queue memory. When the queue is full and workers are busy, the rejection policy decides whether to run the task on the caller, discard it, abort with an exception, or follow another rule. Ignoring `RejectedExecutionException` is how overload becomes a mysterious lost task.
 
-Look at `try (var exec = Executors.newFixedThreadPool(4)) {`.
+Virtual threads will later change some defaults for blocking workloads — cheap threads make "one task, one thread" sensible again in many servers. That does not erase pools for every case, especially CPU-bound work that still needs bounding. Hold the curiosity; we will get there. Today the lesson is older and still vital: manage concurrency as a resource.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Common mistakes are predictable. Using a cached pool for unbounded bursty work without another limit. Never shutting down pools in long-running processes. Treating rejection as an impossible edge instead of an expected pressure valve.
 
-Look at `exec.submit(() -> task());`.
+So reconnect the chain. Unbounded `new Thread` failed under burst. Executors reused workers and capped concurrency. Shutdown verbs and rejection policies made lifecycle and overload explicit. Different pool types matched different jobs.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Submitting work raises a new hunger immediately: many tasks produce a result, may fail with a checked exception, and must not be waited on forever. `Runnable` is not enough for that contract.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Episode Forty-One introduces `Callable` and `Future`.
 
-### Example 2 — make it more realistic
+## Source attribution
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, ExecutorService usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 40 (*ExecutorService*).
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
-
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
-
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
-
-### What if we skip this approach?
-
-Important concepts become memorable when we see the failure mode without them.
-
-For example, consider this common mistake: Cached pools for unbounded bursty IO without limits.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Cached pools for unbounded bursty IO without limits.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Not shutting down pools.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Ignoring RejectedExecutionException.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Why pools?
-
-Answer in spoken form: Reuse threads, bound concurrency, control rejection.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Explicit Locks**. That set up a need. **ExecutorService** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Callable and Future**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 40 / **ExecutorService** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Fixed/cached/scheduled pools.
-- shutdown vs shutdownNow.
-- Bounded queues and rejection policies.
-- Always have a failure story.
-- Virtual threads change some defaults later.
+Narration technique: burst-of-tasks situation → pools as answer → fixed pool walkthrough → pool flavors → shutdown → bounded queue/rejection → virtual-thread foreshadow → next natural problem (Callable/Future).

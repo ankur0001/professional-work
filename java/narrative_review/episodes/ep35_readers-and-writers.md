@@ -5,168 +5,59 @@
 | Episode | 35 |
 | Title | Readers and Writers |
 | Catalog handbook column | 35 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+NIO.2 gave us paths and helpers. The helpers are polite enough that you can forget an older, sharper lesson: text is not bytes.
 
-In the previous episode, we worked through **Files and NIO.2**. That gave us a piece of the platform. Today we need the next piece: **Readers and Writers**.
+Imagine you open a file that contains names with accents, or currency symbols, or text produced on another operating system. If you read it as raw bytes and casually turn those bytes into a `String` with the wrong encoding, the data is not "mostly fine." Characters break. Comparisons fail. Logs look haunted. The bug is not in your business rule. It is in the boundary between byte streams and character streams.
 
-We are continuing The Java Story, and today's challenge is Readers and Writers. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
+So the question becomes: how does Java force that boundary into the open?
 
-Text is not bytes — Readers/Writers force you to confront encoding.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, readers and writers is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Readers and Writers clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Character streams vs byte streams.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Buffering is not optional for performance.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Specify Charset.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: InputStreamReader bridges bytes to chars.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Flush/close semantics matter.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Readers and writers are character streams. Input streams and output streams are byte streams. When you mean text, prefer readers and writers — or higher helpers that still take an explicit charset. When you mean binary — images, compressed payloads, protobuf — stay with bytes.
 
 ```java
 try (var w = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
-  w.write("line\n");
+    w.write("line\n");
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk it. `newBufferedWriter` gives you a `Writer` already buffered, tied to a path, with UTF-8 named in the call. You write a line of text. Try-with-resources closes and flushes according to the resource contract. The charset is not an afterthought buried in platform defaults. It is part of the method call you can read in review.
 
-I'll walk this like pair-programming.
+Buffering is not optional for performance once writes or reads happen in a loop. Unbuffered tiny writes — one character at a time to a cold OS call — can crush throughput. Buffered readers and writers batch the expensive boundary crossing. You still must understand flush: buffering means "not necessarily on disk yet." If another process must see the data before close, flush intentionally. Close also flushes for well-behaved writers, which is another reason try-with-resources matters.
 
-Focus on the idea each line encodes.
+`InputStreamReader` is the bridge when you already have bytes and need characters:
 
-Then connect to the failure mode.
+```java
+try (var reader = new BufferedReader(
+        new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+    String line = reader.readLine();
+}
+```
 
-Look at `try (var w = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {`.
+Bytes arrive on `inputStream`. `InputStreamReader` decodes them with UTF-8 into characters. `BufferedReader` makes line-oriented reading practical. Each layer has one job. Skipping the charset argument is how you invite the default-encoding bug back in through a side door.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+What if we ignore the distinction and read text as raw bytes "because it is simpler"?
 
-Look at `w.write("line\n");`.
+```java
+byte[] raw = Files.readAllBytes(path);
+String s = new String(raw); // default charset — portable programs regret this
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+It looks small. It is one of the classic portability traps. Prefer `Files.readString(path, StandardCharsets.UTF_8)` or an explicit decoding path. The rule is not ceremony. It is how text survives the trip between machines.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Flush and close semantics close the lesson. Writers may hold data in memory. Streams may hold native resources. If you neither flush nor close, another reader can see a truncated file, and the process can leak handles. If you flush obsessively after every character, you may be correct and still slow. Intention beats habit: buffer by default, flush when a checkpoint is required, close with try-with-resources.
 
-### Example 2 — make it more realistic
+So reconnect the chain. Filesystem helpers made paths easy. Character versus byte streams made encoding visible. Buffering made the boundary affordable. Explicit charset made text portable. Bridges like `InputStreamReader` connected the two worlds without pretending they are the same.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Readers and Writers usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Until now, our programs have mostly walked one path of execution from `main` downward. Real systems often need more than one path at once — a background worker, a concurrent request, a timer — and that is where threads enter the story.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Episode Thirty-Six begins there.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+## Source attribution
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 35 (*Readers and Writers*).
 
-### What if we skip this approach?
-
-Important concepts become memorable when we see the failure mode without them.
-
-For example, consider this common mistake: Reading text as raw bytes.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Reading text as raw bytes.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Ignoring charset.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Unbuffered tiny writes in a loop.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Reader vs InputStream?
-
-Answer in spoken form: Text vs binary.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Files and NIO.2**. That set up a need. **Readers and Writers** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Threads Intro**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 35 / **Readers and Writers** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Character streams vs byte streams.
-- Buffering is not optional for performance.
-- Specify Charset.
-- InputStreamReader bridges bytes to chars.
-- Flush/close semantics matter.
+Narration technique: encoding-corruption situation → readers/writers vs bytes → buffered writer walkthrough → InputStreamReader bridge → default charset trap → flush/close → next natural problem (threads).

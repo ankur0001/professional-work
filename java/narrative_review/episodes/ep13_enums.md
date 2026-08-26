@@ -5,168 +5,82 @@
 | Episode | 13 |
 | Title | Enums |
 | Catalog handbook column | 13 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Packages gave our types a home. That does not yet solve a quieter mess that shows up the moment a domain has a fixed vocabulary.
 
-In the previous episode, we worked through **Packages**. That gave us a piece of the platform. Today we need the next piece: **Enums**.
+Suppose we are building an order system. An order can be new, paid, or shipped. The fastest way to encode that is a string field: `"NEW"`, `"PAID"`, `"SHIPPED"`. It compiles. It demos well. Then someone writes `"Payed"`, or `"paid"`, or `"SHIPED"`. The compiler shrugs. The bug arrives in production as a status that matches nothing.
 
-Magic strings like "NEW" and "PAID" start causing typos that compile and fail later.
+So a natural question appears: if the set of legal values is known and closed, why are we letting arbitrary text pretend to be a state?
 
-Enums replace magic strings/ints with type-safe domain vocabulary.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, enums is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Keep a simple picture of Enums.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Type-safe constants.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Enums can have fields and methods.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Great with switch.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: EnumSet/EnumMap are specialized and fast.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Model states explicitly.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+That question is why enums exist. An enum is a type-safe set of named constants. Instead of magic strings or magic ints, you get a vocabulary the compiler understands.
 
 ```java
 enum Status {
-  NEW, PAID, SHIPPED;
-  boolean terminal() { return this == SHIPPED; }
+    NEW, PAID, SHIPPED
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+`Status` is now a real type. A method that takes `Status` cannot accidentally receive `"SHIPED"`. The allowed values live in one place. When a teammate reads the code, the domain speaks for itself.
 
-I'll walk this example like we're pair-programming.
+But enums in Java are not only labels. Once you have a named state, behavior often wants to hang off that state. Is this status terminal? Can we refund from here? That pressure turns the enum into a small class with fields and methods.
 
-Focus on the idea each line encodes.
+```java
+enum Status {
+    NEW, PAID, SHIPPED;
 
-Then we connect it to the production failure mode.
+    boolean terminal() {
+        return this == SHIPPED;
+    }
+}
+```
 
-Look at `enum Status {`.
+Walk through what this buys you. `NEW`, `PAID`, and `SHIPPED` are the only instances. `terminal()` answers a domain question without a scattered `if` chain of strings. Call sites write `order.status().terminal()` and stay readable. The method belongs next to the vocabulary it depends on.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Enums also shine with `switch`, because the set of cases is finite. When you switch on a `Status`, every legal value is visible. Modern Java can even warn or error when a switch is not exhaustive. That is different from switching on a `String`, where the compiler cannot know which typos you forgot.
 
-Look at `NEW, PAID, SHIPPED;`.
+```java
+String label(Status status) {
+    return switch (status) {
+        case NEW -> "Awaiting payment";
+        case PAID -> "Ready to ship";
+        case SHIPPED -> "Done";
+    };
+}
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Each case is a real constant, not a quoted guess. If someone later adds `CANCELLED` to the enum, the incomplete switch becomes a compile-time problem instead of a silent default path.
 
-Look at `boolean terminal() { return this == SHIPPED; }`.
+What if we skip enums and keep stringly-typed status codes?
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+```java
+void advance(String status) {
+    if (status.equals("PAID")) {
+        // ship...
+    }
+}
+```
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+It looks small. Then `"Paid"` sneaks in from a form, or a partner API sends `"paid"`. Equality fails. The order never ships. Or worse, a giant switch grows without exhaustiveness thinking, and one forgotten branch becomes a production incident. Enums exist to make those mistakes hard.
 
-### Example 2 — make it more realistic
+There is one more practical detail once enums become common: collections specialized for them. `EnumSet` and `EnumMap` are fast, compact structures tuned for enum keys and values. If you need a set of flags that are themselves enum constants, reach for `EnumSet` before a general `HashSet`. You do not need every collection chapter yet — you only need to know the specialized tools exist when the key type is an enum.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Enums usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+One failure mode still bites people who treat enums like mutable bags: mutable enum fields that change under you. Prefer enums as immutable vocabulary with behavior, not as disguised global variables. Model states explicitly. If a value can be anything, it is not an enum problem. If a value must be one of a closed set, it is.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+So let's reconnect the chain. We started with status strings that compiled and lied. Enums answered with type-safe constants. Fields and methods let vocabulary carry behavior. Switch made exhaustive handling natural. `EnumSet` and `EnumMap` showed specialized collections for the same idea. Skipping enums showed the stringly-typed trap.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Once constants can be objects, another pressure appears: collections and APIs often want objects, while hot paths still want primitives. How does an `int` sit inside a `List`?
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+That bridge is Episode Fourteen — Wrappers and Autoboxing.
 
-### What if we skip this approach?
+## Source attribution
 
-Important concepts become memorable when we see the failure mode without them.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 13 (*Enums*).
 
-For example, consider this common mistake: Stringly-typed status codes.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Stringly-typed status codes.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Giant switch without exhaustiveness thinking.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Mutable enum fields causing surprises.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Why enums over public static final int?
-
-Answer in spoken form: Type safety, namespacing, and attached behavior.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Packages**. That set up a need. **Enums** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Wrappers and Autoboxing**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 13 / **Enums** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
+Narration technique: magic-string status problem → enum as answer → behavior on constants → switch exhaustiveness → EnumSet/EnumMap → mutable-field trap → next natural problem (primitives in object APIs). Continuity-checked transitions.
 
 ### Teaching points drawn from the topic bank
 

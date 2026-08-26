@@ -5,172 +5,60 @@
 | Episode | 31 |
 | Title | java.time |
 | Catalog handbook column | 31 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Optional taught us to make absence explicit. Time is the next place Java APIs used to hide too much — and punish you for guessing.
 
-In the previous episode, we worked through **Optional**. That gave us a piece of the platform. Today we need the next piece: **java.time**.
+Imagine you are building a deadline feature. A task is due seven days from today. You might reach for `java.util.Date` or `Calendar` because older tutorials still show them. They compile. They even seem to work on your laptop. Then a teammate in another city opens the same record and sees a different calendar day. Or a daylight-saving transition shifts a "local afternoon" by an hour. Suddenly the bug is not in your arithmetic — it is in the type you chose to mean "a day" versus "a moment on the timeline."
 
-We are continuing The Java Story, and today's challenge is java.time. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
+So the natural question is: what types does modern Java give us so those meanings stop colliding?
 
-Date/Calendar are legacy — java.time is the modern contract with time.
+That is why `java.time` exists. `Date` and `Calendar` are legacy. The modern contract with time lives in `java.time`, and it splits meanings that used to share one blurry class.
 
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, java.time is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture java.time clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: LocalDate/LocalDateTime/Instant/ZonedDateTime.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Immutable API.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Zones are where bugs live.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Prefer Instant for timestamps.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Formatting/parsing with DateTimeFormatter.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Start with a calendar date that does not claim to be a universal instant:
 
 ```java
 LocalDate today = LocalDate.now();
 LocalDate due = today.plusDays(7);
+```
+
+`LocalDate` is a date without a time-of-day and without a zone — year, month, day. Adding seven days is calendar arithmetic on that date. If your product rule is "due in seven calendar days," this is the right shape. Notice something else: `plusDays` does not mutate `today`. It returns a new value. The API is immutable. That is not decoration. Shared date values stop surprising you mid-request because some other method called `setMonth` on the same object.
+
+But deadlines are not the only story. Sometimes you need "two-thirty in the afternoon on this calendar day" without claiming which city that afternoon belongs to. That is `LocalDateTime`. Sometimes you need a true point on the timeline — something you can store as "this event happened then," independent of how a wall clock labels it. That is `Instant`.
+
+```java
 Instant ts = Instant.now();
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+`Instant` is a timestamp on the UTC timeline. Prefer it when you mean "a moment," especially for logging, auditing, and cross-system records. The interview question "Instant versus LocalDateTime?" is really this design question in disguise: does this value have a zone, or is it only a local civil date-time with no zone attached? `LocalDateTime` has no zone. Treat it as a wall-clock reading without a city, not as a portable moment.
 
-I'll walk this like pair-programming.
+Zones are where production bugs live. `ZonedDateTime` attaches a time zone — and time zones change with politics and daylight-saving rules. Hardcoding a zone string because "the server is in one place" works until the product expands, the cloud region moves, or a user travels. When you need local civil time in a place, make the zone intentional. When you need a moment, store an `Instant` and convert for display.
 
-Focus on the idea each line encodes.
+Formatting and parsing close the loop for humans and APIs:
 
-Then connect to the failure mode.
+```java
+DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+String text = due.format(fmt);
+LocalDate parsed = LocalDate.parse(text, fmt);
+```
 
-Look at `LocalDate today = LocalDate.now();`.
+Walk that carefully. You define how a date should look as text, format the due date into that shape, and parse it back. Prefer explicit formatters over hoping default `toString` shapes stay stable across versions and locales. Parsing without a clear formatter is how silent mismatches sneak into imports and reports.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+What goes wrong if we ignore these distinctions?
 
-Look at `LocalDate due = today.plusDays(7);`.
+Storing a `LocalDateTime` as if it were a moment — then converting later with an assumed zone — recreates the teammate-in-another-city bug. Mixing `Date` and `java.time` in the same module without a clear boundary creates two mental models for one domain. Hardcoding zones hides the real dependency until the first outage that is not a code bug but a calendar rule.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+So reconnect the chain. We started with a seven-day deadline and watched legacy date types blur "day," "local date-time," and "instant." `java.time` answers with separate types, immutability, intentional zones, `Instant` for timestamps, and `DateTimeFormatter` for text. The types are the design.
 
-Look at `Instant ts = Instant.now();`.
+Once we can represent time cleanly, another pressure appears: what happens when an operation cannot finish successfully? Reading a file that is missing, parsing text that is garbage, calling a service that is down — success is not the only path a method can take.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+That pressure is Episode Thirty-Two: exceptions.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+## Source attribution
 
-### Example 2 — make it more realistic
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 31 (*java.time*).
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, java.time usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
-
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
-
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
-
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
-
-### What if we skip this approach?
-
-Important concepts become memorable when we see the failure mode without them.
-
-For example, consider this common mistake: Storing LocalDateTime as if it were a moment.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Storing LocalDateTime as if it were a moment.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Mixing Date and java.time carelessly.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Hardcoding zones.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Instant vs LocalDateTime?
-
-Answer in spoken form: Instant is a timeline timestamp; LocalDateTime has no zone.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Optional**. That set up a need. **java.time** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Exceptions**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 31 / **java.time** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- LocalDate/LocalDateTime/Instant/ZonedDateTime.
-- Immutable API.
-- Zones are where bugs live.
-- Prefer Instant for timestamps.
-- Formatting/parsing with DateTimeFormatter.
+Narration technique: deadline situation → Date/Calendar confusion → typed java.time answers → immutability → Instant vs local → zones → formatter walkthrough → failure modes → next natural problem (exceptions).

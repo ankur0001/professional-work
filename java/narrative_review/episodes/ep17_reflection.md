@@ -5,75 +5,14 @@
 | Episode | 17 |
 | Title | Reflection |
 | Catalog handbook column | 17 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Annotations gave us metadata. Frameworks still need a way to discover that metadata — and the shapes of classes — while the program is running. Ordinary application code does not need that superpower every day. Frameworks do.
 
-In the previous episode, we worked through **Annotations**. That gave us a piece of the platform. Today we need the next piece: **Reflection**.
-
-We are continuing The Java Story, and today's challenge is Reflection. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Reflection powers frameworks — and can wreck application code if used casually.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, reflection is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Keep a simple picture of Reflection.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Inspect classes/methods/fields at runtime.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Slow and brittle compared to direct calls.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Modules restrict deep reflective access.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Prefer interfaces or codegen when possible.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Security managers and agents change the rules.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Imagine you are writing a tiny serializer. You do not want a handwritten method for every domain type. You want to ask an object: what fields do you have, what are their names, what values are inside? That question is reflection: inspect classes, methods, and fields at runtime, then optionally invoke or read them.
 
 ```java
 Class<?> c = String.class;
@@ -81,91 +20,37 @@ var m = c.getMethod("length");
 int n = (int) m.invoke("hi");
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk the example slowly. `String.class` is a `Class` object — a runtime handle on the type. `getMethod("length")` looks up a public method by name. `invoke("hi")` calls that method on the instance `"hi"` and returns the result, which we cast to `int`. Nothing in this snippet names `length` as a normal Java call. The call path is data-driven. That is exactly how many frameworks wire controllers, inject dependencies, and map JSON.
 
-I'll walk this example like we're pair-programming.
+So when is reflection justified? Frameworks, tools, serializers, debuggers — places where the set of types is not known when the library was compiled. In day-to-day domain code, prefer a direct call. Reflection is slower and more brittle than `string.length()`. Names become strings. Refactors break silently until runtime. Exceptions become `InvocationTargetException` wrappers. The mechanism is powerful; casual use wrecks readability and performance.
 
-Focus on the idea each line encodes.
+Modules tighten the story further. The module system can restrict deep reflective access to internal packages. Code that once called `setAccessible(true)` on private fields may now fail unless the module `opens` that package. Ignoring `setAccessible` and module failures is a common misunderstanding when older libraries meet modern JDKs. Reflection did not vanish; the default trust boundary moved.
 
-Then we connect it to the production failure mode.
+Because of cost and brittleness, prefer interfaces or codegen when possible. If you control both sides, a clear interface beats scanning private fields. If you need speed at scale, annotation processors and generated code often outperform repeated reflective lookup. When reflection is unavoidable, cache the `Method` and `Field` handles — looking them up on every request pays the search cost again and again.
 
-Look at `Class<?> c = String.class;`.
+Security managers and agents can change the rules too. Agents may redefine classes; security policies may deny reflective access. You do not need the full security chapter yet. You only need enough caution to treat reflection as a privileged tool, not a default coding style.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+What if we use reflection for ordinary business logic?
 
-Look at `var m = c.getMethod("length");`.
+```java
+Object result = order.getClass()
+    .getMethod("total")
+    .invoke(order);
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+It works until the method is renamed, overloaded, or moved. The compiler cannot protect you. Tests must cover the stringly-named path. That is the wrong trade for a total that could have been `order.total()`.
 
-Look at `int n = (int) m.invoke("hi");`.
+So let's reconnect the chain. Frameworks needed runtime discovery; reflection answered. A small `Class` / `Method` / `invoke` walkthrough showed the mechanism. Cost and brittleness explained why domain code should stay direct. Modules showed restricted deep access. Interfaces and codegen offered better defaults. Caching and security reminded us this is infrastructure power, not everyday syntax.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+After living in that reflective, framework-heavy world, another fatigue appears: so many classes exist only to carry a few immutable fields, yet we still write constructors, accessors, `equals`, `hashCode`, and `toString` by hand. Is there a tighter way to model plain data?
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+That pressure opens Episode Eighteen — Records.
 
-### Example 2 — make it more realistic
+## Source attribution
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Reflection usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 17 (*Reflection*).
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
-
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
-
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
-
-### What if we skip this approach?
-
-Important concepts become memorable when we see the failure mode without them.
-
-For example, consider this common mistake: Using reflection for ordinary business logic.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Using reflection for ordinary business logic.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Ignoring setAccessible/module failures.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Caching nothing and paying lookup costs repeatedly.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: When is reflection justified?
-
-Answer in spoken form: Frameworks, tools, serializers — rarely in day-to-day domain code.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Annotations**. That set up a need. **Reflection** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Records**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 17 / **Reflection** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
+Narration technique: framework discovery need → reflection as answer → Class/Method/invoke walkthrough → when justified → cost/brittleness → modules restrict access → prefer interfaces/codegen → next natural problem (data carriers / records). Continuity-checked transitions.
 
 ### Teaching points drawn from the topic bank
 
