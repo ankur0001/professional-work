@@ -4,157 +4,58 @@
 |---|---|
 | Episode | 85 |
 | Title | Production Readiness Capstone |
-| Catalog handbook column | S2 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Catalog handbook column | 85 |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+We began with why Java exists and how a hello world runs on a JVM. We walked language, APIs, concurrency, the JVM's memory and execution machinery, design vocabulary, Spring, and distributed systems. The last question is not another feature. It is whether you would sleep the night after shipping. Production-ready means observable, recoverable, capacity-tested, and owned — not merely running.
 
-In the previous episode, we worked through **Performance Playbook**. That gave us a piece of the platform. Today we need the next piece: **Production Readiness Capstone**.
-
-We are continuing The Java Story, and today's challenge is Production Readiness Capstone. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Production-ready means observable, recoverable, capacity-tested, and owned.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, production readiness capstone is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Production Readiness Capstone clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: SLOs and alerts.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Dashboards that answer questions.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Rollback plan.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Dependency limits.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Runbooks and ownership.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
-
-```java
+```text
 // checklist: SLO, dashboard, alert, runbook, rollback, load test, dependency timeouts
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+SLOs and alerts come first. What does healthy mean in user terms, and who gets paged when error budgets burn? Dashboards that answer questions beat dashboards that display vanity charts — is success rate healthy, which dependency hurts, are we near saturation? Rollback plan before deploy: can you revert quickly when the new version lies? Dependency limits — timeouts, bulkheads, circuit breakers — keep one slow friend from taking you down. Runbooks and ownership mean a human knows what to do at 3 a.m. and has permission to do it. Shipping without rollback, alerts nobody understands, and no owner for 3 a.m. are how "we are in production" becomes fiction.
 
-Walk this like pair-programming.
+What is production-ready? Observable, recoverable, capacity-tested, and owned. Capacity-tested ties to Episode Eighty-Four's load loops. Observable and recoverable tie to Seventy-Nine. Owned is cultural: pages route to people who can act. The JVM skills still matter inside that envelope — heap dumps, GC logs, thread dumps — tools in a readiness story, not trophies.
 
-Focus on what each line means.
+This series does not end because Java ends. It ends because you now have a chain of thought: situation, problem, mechanism, evidence, trade-off. Carry that into every new library and every incident. When the next unfamiliar topic appears, you do not need a flashcard first. You need a question the system is already asking you — and a way to answer it with code, measurements, and clear speech.
 
-Connect to the failure mode.
+Observable means you can explain a bad minute with metrics, traces, and logs — and that the JVM toolkit from earlier episodes is reachable when the bad minute is a heap climb or a stuck thread. Recoverable means timeouts, retries done safely, circuit breakers, and a rollback you have rehearsed. Capacity-tested means load tests that look like production and SLOs you actually measure. Owned means names on runbooks and pages, not a distribution list nobody reads.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Walk a launch gate. Before traffic: SLO written, dashboard live, alert routed, runbook linked, rollback tested in staging, load test signed off, dependency timeouts set, security checks on. After traffic: watch error budgets for the first hours, keep a human near the rollback button, compare JVM and HTTP metrics to the baseline. That is production readiness as a practice, not a poster.
 
-### Example 2 — make it more realistic
+This capstone is also a farewell to the series' teaching method. We refused syllabus dumps. We started from situations — portability pain, leaking references, cargo-cult flags, double charges on retry — and let Java's answers arrive as necessities. Carry that method into frameworks we never named and into systems you will invent. The final test remains: if you remove the headings, does your explanation still sound like one engineer thinking with a teammate for ten minutes? If yes, you learned the real curriculum.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Production Readiness Capstone usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Ownership closes loops the tools cannot. A perfect dashboard with no human who can roll back is decoration. A runbook that has never been exercised in a game day is fiction. Rehearse failure. Adjust the checklist when reality disagrees.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Dependency limits reconnect to microservices humility. Every added client is an added way to die. Timeouts, budgets, and fallbacks are part of the API of a good citizen service — not optional polish.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Capacity-tested means you know the RPS at which p99 breaks and what you will do — scale out, shed load, disable a feature. Surprises at twice yesterday's traffic are mostly untested assumptions.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+As we close The Java Story's narration arc, remember the continuity check from the style guide: every next topic should arrive because the previous problem demanded it. Your career will offer topics we never covered. Demand the same of them — and of yourself when you teach others.
 
-### What if we skip this approach?
+Dashboards that answer questions might be only three panels for a small service: user-success SLO, dependency error rates, and resource saturation. More panels can wait until a question appears that they answer. Vanity heatmaps impress demos and slow incidents.
 
-Important concepts become memorable when we see the failure mode without them.
+Rollback plan includes database migrations. Expand/contract so rollback does not require reverse mythology. If you cannot roll back, you cannot ship safely — delay the launch.
 
-For example, consider this common mistake: Shipping without rollback.
+No owner for 3 a.m. is a management defect as much as an engineering one. Rotate ownership, compensate it, train it. Production readiness is socio-technical. The series taught mechanisms; this capstone insists on people and practice around those mechanisms.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Observable, recoverable, capacity-tested, and owned — keep that definition. When a shiny new platform claims to make you production-ready automatically, ask it those four questions and listen for silence.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Alerts nobody understands get silenced. Write alerts in the language of user pain and attach the runbook link in the page itself. Review noisy alerts like flaky tests — fix or delete. An unread alert stream is worse than a smaller honest one.
 
-### Example 3 — a common misunderstanding
+Shipping without rollback turns every deploy into a one-way door. Prefer doors with handles on both sides. Feature flags can help when coordinated with the same ownership model.
 
-**Misunderstanding 1:** Shipping without rollback.
+The series close is intentional: no Episode Eighty-Six bridge. Your bridge is the next production system you touch. Take the chain of thought with you — situation, problem, question, mechanism, evidence, trade-off — and the Java Story keeps teaching after the narration ends.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Welcome to building and operating Java systems with eyes open. The story continues in your repositories and your on-call rotations — write the next chapter carefully.
 
-**Misunderstanding 2:** Alerts nobody understands.
+## Source attribution
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Production Readiness Capstone (Episode 85).
 
-**Misunderstanding 3:** No owner for 3 a.m.
+Narration technique: series arc callback → production-ready thesis → checklist walk → misconceptions → interview woven → series close (no next-episode bridge).
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: What is production-ready?
-
-Answer in spoken form: Observable, recoverable, capacity-tested, and owned — not merely running.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Performance Playbook**. That set up a need. **Production Readiness Capstone** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Closing
-
-If you can teach this episode to someone else with an example and a warning about a common mistake, you did not just watch Java — you learned it.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Episode 85** is Season 2 bonus content (not one of the handbook's 80 lessons). Topic framing: **Production Readiness Capstone**.
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- SLOs and alerts.
-- Dashboards that answer questions.
-- Rollback plan.
-- Dependency limits.
-- Runbooks and ownership.
+Teaching points preserved: SLOs/alerts; dashboards that answer questions; rollback; dependency limits; runbooks/ownership.

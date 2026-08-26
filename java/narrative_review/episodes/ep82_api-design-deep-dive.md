@@ -4,76 +4,15 @@
 |---|---|
 | Episode | 82 |
 | Title | API Design Deep Dive |
-| Catalog handbook column | S2 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Catalog handbook column | 82 |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Caches and services only help if clients can depend on your HTTP contract for years. APIs are long-term contracts — idempotency and errors matter as much as happy paths. A beautiful endpoint that double-charges on retry is not beautiful.
 
-In the previous episode, we worked through **Caching Strategies**. That gave us a piece of the platform. Today we need the next piece: **API Design Deep Dive**.
-
-We are continuing The Java Story, and today's challenge is API Design Deep Dive. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-APIs are long-term contracts — idempotency and errors matter as much as happy paths.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, api design deep dive is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture API Design Deep Dive clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Resource modeling.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Idempotency keys.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Consistent error shape.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Versioning/compatibility.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Pagination and filtering.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Resource modeling comes first. Prefer nouns and HTTP verbs that match: `POST /orders` creates, `GET /orders/{id}` reads, `POST /orders/{id}/cancel` may be justified when cancel is a real action. Breaking changes casually — renaming fields, changing meaning, removing properties without versioning or negotiation — punish every client. Versioning and compatibility strategies differ by team; the requirement is intentionality.
 
 ```java
 @PostMapping("/orders")
@@ -82,96 +21,52 @@ ResponseEntity<OrderResponse> create(@Valid @RequestBody OrderRequest req) {
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Validation at the edge keeps the domain cleaner. Consistent error shapes let clients automate handling. Pagination and filtering prevent "return the entire table" accidents. Idempotency keys on POSTs that matter mean a client can retry safely after a timeout without creating two orders. Why idempotency? Clients retry; servers must not double-apply side effects. Store the key, return the original result on replay.
 
-Walk this like pair-programming.
+Leaky entities as DTOs couple clients to persistence. No idempotency for money-moving POSTs is an incident factory. Breaking changes without a plan force synchronized releases — a distributed monolith of contracts.
 
-Focus on what each line means.
+Idempotency keys need storage and TTL policy. The client sends a key; the server stores the first result; replays return the same response. Without TTL, the idempotency table grows forever. Without uniqueness scoped correctly, different users collide. Money, bookings, and side-effecting POSTs earn this machinery; pure GETs do not need it.
 
-Connect to the failure mode.
+Consistent error shape might look like `code`, `message`, `fields`, `traceId`. Clients can branch on `code`. Humans read `message`. Support uses `traceId`. Changing that shape later is itself a breaking change — design it once with care.
 
-Look at `@PostMapping("/orders")`.
+Versioning options include URL versions, header versions, or compatible evolution with additive fields. Casual breaking changes force synchronized client releases. Prefer additive evolution when you can; reserve hard versions for true breaks.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Pagination and filtering protect the database as much as the contract. Cursor pagination often ages better than deep offset pages. Filter parameters should be documented and capped. Resource modeling that returns entire collections "for convenience" becomes an outage on a popular account.
 
-Look at `ResponseEntity<OrderResponse> create(@Valid @RequestBody OrderRequest req) {`.
+Leaky entities as DTOs also leak lazy-loading problems from Episode Seventy-Five into public JSON. The API deep dive and the persistence episode are one seam — keep entities inward.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Compatibility is a social contract with other teams. Publish changelog discipline. Prefer additive JSON fields. Deprecate before removal. Provide dual-write or dual-read windows when renaming matters. Breaking changes casually destroy trust faster than outages — outages end; broken clients linger.
 
-Look at `return ResponseEntity.created(uri).body(service.create(req));`.
+Pagination should state max page size server-side. Clients asking for a million rows should fail loudly. Filtering should use indexed columns where possible; document expensive filters. Resource modeling that ignores these operators pushes accidental denial-of-service into your own API.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Idempotency and errors together define mature POST behavior: validate, apply once, return consistent bodies on replay, and never return 500 with a half-applied side effect without a recovery story. That is API design as production design.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Resource modeling examples help. Prefer `/users/{id}/orders` over `/getUserOrders`. Prefer 404 for missing resources and 409 for conflicts like duplicate idempotency with different bodies if that is your rule. Prefer problem-details or a documented JSON error envelope over free-text. Clients should not parse English sentences to branch logic.
 
-### Example 2 — make it more realistic
+Versioning and compatibility also cover error codes. Recycling a code to mean something new is a silent break. Add new codes; deprecate old ones.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, API Design Deep Dive usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Idempotency keys for POSTs that matter — payments, bookings, submissions — should appear in public API docs with examples. If clients do not know to send them, they will not. Server support without client education is half a solution.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+APIs are long-term contracts. Design them as if strangers will depend on them for years — because they will, including your future self.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Walk a payment POST with idempotency. Client sends Idempotency-Key. Server sees first request, charges once, stores response. Network drops the response. Client retries with the same key. Server returns the stored response without charging again. That story is why idempotency exists. Without it, support refunds duplicates all afternoon.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Consistent errors in that flow matter too: a 409 with a clear code when the key reuses different bodies; a 402 or 400 when validation fails before charge; a 201 or 200 with the payment representation on success. Status codes are part of the contract, not decoration.
 
-### What if we skip this approach?
+Pagination for listing payments should be cursored when history is long. Filtering by date ranges should be bounded. Resource modeling keeps payment as a resource with subresources for refunds rather than a RPC soup.
 
-Important concepts become memorable when we see the failure mode without them.
+Breaking changes casually — renaming amount fields from cents to dollars without versioning — cause real financial events. Treat API changes with the seriousness of schema migrations.
 
-For example, consider this common mistake: Breaking changes casually.
+Public API docs should show happy paths and failure paths side by side. An OpenAPI file that only lists 200 responses lies by omission. Include validation failures, auth failures, and idempotent replays. Documentation is part of the contract — treat it with the same review rigor as code.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Idempotency, consistent errors, and compatible evolution are how APIs survive contact with retries, partial failures, and multiple client teams. Happy-path JSON is the easy part; the contract is the hard part — and the part this episode exists to elevate.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Interview answers should stress contracts, idempotency, and error consistency — not only annotation trivia. When APIs need to fan work out asynchronously, events enter. Episode Eighty-Three is event-driven architecture.
 
-### Example 3 — a common misunderstanding
+## Source attribution
 
-**Misunderstanding 1:** Breaking changes casually.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — API Design Deep Dive (Episode 82).
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Narration technique: long-term contract thesis → resource modeling → create endpoint → validation/errors/pagination/idempotency → misconceptions → interview woven → bridge to events.
 
-**Misunderstanding 2:** No idempotency for POSTs that matter.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Leaky entities as DTOs.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Why idempotency?
-
-Answer in spoken form: Clients retry; servers must not double-apply side effects.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Caching Strategies**. That set up a need. **API Design Deep Dive** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Event-Driven Architecture**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Episode 82** is Season 2 bonus content (not one of the handbook's 80 lessons). Topic framing: **API Design Deep Dive**.
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Resource modeling.
-- Idempotency keys.
-- Consistent error shape.
-- Versioning/compatibility.
-- Pagination and filtering.
+Teaching points preserved: resource modeling; idempotency keys; consistent errors; versioning/compatibility; pagination/filtering.

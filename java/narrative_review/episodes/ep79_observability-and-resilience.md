@@ -5,159 +5,58 @@
 | Episode | 79 |
 | Title | Observability and Resilience |
 | Catalog handbook column | 79 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Episode Seventy-Eight admitted the network is unreliable. That admission is useless without two capabilities: you must see what the system is doing, and you must survive when a dependency fails. If you cannot see it and cannot survive dependency failure, you are not production-ready — you are hosted.
 
-In the previous episode, we worked through **Microservices Basics**. That gave us a piece of the platform. Today we need the next piece: **Observability and Resilience**.
+Observability rests on three pillars that answer different questions. Logs tell stories about particular requests and errors. Metrics tell aggregate truths — rates, saturations, latencies, error percentages. Traces show a request's path across services so "slow checkout" becomes "inventory took 800ms." Emit metrics for latency and errors; propagate a trace id across hops. Without correlation, you have three museums instead of one investigation.
 
-We are continuing The Java Story, and today's challenge is Observability and Resilience. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-If you can't see it and can't survive dependency failure, you're not production-ready.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, observability and resilience is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Observability and Resilience clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Logs, metrics, traces.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Timeouts everywhere.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Retries with jitter + idempotency.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Circuit breakers.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: SLOs drive alerts.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Resilience begins with a blunt rule: set timeouts. Unbounded waits become outages. A dependency that never answers should not hold your threads forever — platform threads or virtual threads, the product still stalls. Retries need jitter and idempotency. Blind retries amplify an outage into a retry storm that finishes the dependency off. Circuit breakers stop calling a sick dependency for a cool-down so your service can fail fast and recover when the dependency returns. Bulkheads isolate pools so one integration cannot exhaust the whole process.
 
 ```java
 // pseudo: call dependency with timeout + retry + circuit breaker
-// emit metrics for latency/errors; propagate trace ids
+// emit metrics for latency/errors; propagate trace id
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+SLOs drive alerts. Alerting on raw CPU because it is easy produces pages nobody respects. Alert on error budget burn and latency percentiles that users feel. Dashboards should answer questions: is user success healthy, which dependency hurts, are we near a limit?
 
-Walk this like pair-programming.
+Misunderstandings cluster. Retry storms from unbounded retries without backoff. No timeouts anywhere. Alerts on CPU instead of SLOs. Each one feels like diligence until the night it pages uselessly or fails to page at all.
 
-Focus on what each line means.
+First resilience rule in an interview? Set timeouts; unbounded waits become outages. Then mention retries with jitter plus idempotency, circuit breakers, and SLO-based alerts so the answer sounds like a system, not a single flag.
 
-Connect to the failure mode.
+Make the timeout story concrete. An HTTP client defaults to infinite or absurdly long waits. Under dependency slowness, your threads pile up, your queue grows, your own health check fails, and the platform kills you — even though your code was "fine." Explicit timeouts on every remote call, including DNS and connection establishment, turn an unbounded risk into a bounded error you can handle.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Retries without idempotency double-charge cards and double-create orders. Retries without jitter synchronize thundering herds after an outage. Circuit breakers without metrics are guesswork; open the circuit based on error rates and latency, half-open carefully, and alert when circuits stay open.
 
-### Example 2 — make it more realistic
+Logs, metrics, and traces need cardinality discipline. A metric label for every user id will explode your monitoring bill and drown signal. Trace sampling strategies matter at high QPS. Structured logs with correlation ids beat novel-length unstructured dumps.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Observability and Resilience usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+SLO-driven alerts change culture. Page on symptoms users feel — high error rate, high p99 — and use CPU as a diagnostic detail, not a primary pager. Runbooks linked from alerts close the loop so a page includes the next action.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+If you cannot see it and cannot survive dependency failure, you are not production-ready — keep that sentence as the episode's spine when architecture interviews ask what "operable" means.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Correlate metrics with dumps when the problem is a single JVM — Episode Fifty-Eight's lesson still applies inside each microservice. Traces get you to the guilty service; thread dumps and JFR finish the diagnosis inside that process. Observability is layered: system graph first, process toolkit second.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Circuit breakers need clear fallbacks. Returning a cached read may be fine; returning a silent success for a write is not. Decide fallback semantics per use case. Retries belong on idempotent reads and carefully keyed writes — never on non-idempotent POSTs without keys.
 
-### What if we skip this approach?
+SLOs drive alerts only if SLOs are real. Copy-pasted "three nines" without traffic math creates either constant pages or never pages. Compute error budgets from actual demand. Review budgets weekly as a product conversation, not only as an ops ritual.
 
-Important concepts become memorable when we see the failure mode without them.
+Timeouts everywhere includes message consumers, database calls, and DNS. Partial stacks with one unbounded call undo the rest of your resilience work. First resilience rule stays: set timeouts; unbounded waits become outages. Build the rest of the toolkit on that floor.
 
-For example, consider this common mistake: Retry storms.
+Walk an incident with the toolkit. Checkout p99 rises. The dashboard shows inventory latency rising. A trace confirms time in the inventory client. Inventory's metrics show DB pool exhaustion. Inventory's thread dump shows threads waiting on connections. Timeout on the checkout-to-inventory call saved checkout from total collapse, but the circuit breaker should have opened earlier — the alert on inventory error budget was missing. That story uses logs, metrics, traces, timeouts, and SLOs together. Resilience without observability is flying blind; observability without resilience is watching the crash in high definition.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Retry storms deserve a numeric picture. One hundred pods retrying a sick dependency ten times with no jitter can produce a synchronized thundering herd exactly when the dependency tries to recover. Exponential backoff with jitter turns a stampede into a trickle. Idempotency turns a trickle of duplicates into safe no-ops.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Set timeouts; retries with care; break circuits; alert on SLOs — that is the spoken checklist to take into architecture interviews and on-call rotations alike.
 
-### Example 3 — a common misunderstanding
+Seeing and surviving make distribution operable. Next we wrap architecture talk for interviews: trade-offs under constraints, with JVM awareness in the story. Episode Eighty.
 
-**Misunderstanding 1:** Retry storms.
+## Source attribution
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Observability and Resilience (Episode 79).
 
-**Misunderstanding 2:** No timeouts.
+Narration technique: network admission → see + survive thesis → logs/metrics/traces → timeouts/retries/circuits → SLOs → misconceptions → interview woven → bridge to architecture wrap.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Alerts on raw CPU instead of SLOs.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: First resilience rule?
-
-Answer in spoken form: Set timeouts; unbounded waits become outages.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Microservices Basics**. That set up a need. **Observability and Resilience** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Architecture Interview Wrap**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 79 / **Observability and Resilience** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Logs, metrics, traces.
-- Timeouts everywhere.
-- Retries with jitter + idempotency.
-- Circuit breakers.
-- SLOs drive alerts.
+Teaching points preserved: logs/metrics/traces; timeouts; retries with jitter+idempotency; circuit breakers; SLOs drive alerts.

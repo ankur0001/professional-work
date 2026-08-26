@@ -4,162 +4,71 @@
 |---|---|
 | Episode | 84 |
 | Title | Performance Playbook |
-| Catalog handbook column | S2 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Catalog handbook column | 84 |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+You have APIs, caches, events, and GC knowledge. Someone says the system is "slow." Performance is a loop: measure, hypothesize, change one thing, remeasure. Without a baseline, tuning is superstition — the same lesson as JVM flags, now applied across the stack.
 
-In the previous episode, we worked through **Event-Driven Architecture**. That gave us a piece of the platform. Today we need the next piece: **Performance Playbook**.
+Define SLOs and percentiles. Which percentile fails under what load? p50 pride means nothing if p99 burns the error budget. Capture baseline percentiles under a load test that resembles production mix — not a synthetic hammer on one endpoint with empty caches.
 
-We are continuing The Java Story, and today's challenge is Performance Playbook. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Performance is a loop: measure, hypothesize, change one thing, remeasure.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, performance playbook is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Performance Playbook clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Define SLOs/percentiles.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: JFR/profilers.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Allocation and locks.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Avoid premature micro-opts.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Load tests that resemble reality.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
-
-```java
+```text
 // 1) capture baseline percentiles
 // 2) profile under load
 // 3) change one variable
 // 4) remeasure
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+JFR and profilers show where CPU and allocation go. Allocation and locks are frequent villains in Java services. Avoid premature micro-opts on cold paths — escape analysis and JIT may already help hot ones, and readability still matters. Load tests that are not production-like teach false confidence.
 
-Walk this like pair-programming.
+First performance question? Which percentile or error budget fails under what load? Then profile under that load, change one variable, remeasure. Tuning without baseline, optimizing cold paths, and unrealistic load tests are the anti-patterns.
 
-Focus on what each line means.
+A worked loop helps. Baseline: checkout p99 is 900ms at 200 RPS. Hypothesis: inventory HTTP calls dominate. JFR or tracing shows 700ms in the inventory client. Change: cache inventory availability with a thirty-second TTL and stampede control. Remeasure: p99 drops to 350ms, hit rate 92%, staleness acceptable per product rules. That story is performance engineering. Jumping straight to rewriting JSON serialization would have optimized a cold path.
 
-Connect to the failure mode.
+Allocation and locks reconnect to the JVM arc. High allocation rates drive GC pressure. Hot locks show up in JFR contention events and thread dumps. Fix algorithms and contention before micro-tuning flags. Avoid premature micro-opts that muddy code without profiles.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Load tests must resemble reality: cache warmth, data shape, authentication, and dependency latency. A test against empty tables with auth disabled will green-light fantasies. Include failure injection — dependency slow, dependency down — as part of performance, because resilience and speed share a budget.
 
-### Example 2 — make it more realistic
+First question remains which percentile fails under what load. Everything else hangs from that needle.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Performance Playbook usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+JFR under load is the bridge between "the service is slow" and "this method allocates" or "this lock contends." Profilers without load show startup or idle fantasies. Always profile the scenario that violates the SLO.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Change one variable — collector flag, cache TTL, query, pool size — so results are attributable. Changing five things and declaring victory teaches nothing for the next incident.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Avoid premature micro-opts also means refusing to rewrite clear code for imaginary allocations when Episode Fifty-Nine's escape analysis may already apply. Measure first. Performance playbooks that skip measurement are fashion magazines.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Define SLOs and percentiles before tools. Tools without goals produce pretty flame graphs of the wrong fire.
 
-### What if we skip this approach?
+Expand the baseline step. Capture not only HTTP percentiles but dependency percentiles, GC pause percentiles, allocation rate, and saturation of pools and CPUs. A single number called "latency" hides which layer moved. The playbook is a differential diagnosis across the stack you have been building all series long.
 
-Important concepts become memorable when we see the failure mode without them.
+Hypothesize in mechanism language: "I think the lock on inventory reservation is contended under this SKU skew," not "I think we need more pods." Pods may still be the fix after the mechanism is confirmed — but mechanism-first prevents expensive wrong scaling.
 
-For example, consider this common mistake: Tuning without baseline.
+Remeasure against the same load recipe. Changing the load recipe between baseline and candidate confounds the experiment. Store load scripts beside the service like tests.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Performance is a loop. Interviews that ask how you approach slowness want that loop, not a favorite flag.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Allocation and locks connect to earlier episodes explicitly. High allocation may be real heap traffic or may be mitigated by escape analysis — profile to know. Hot locks may be safepoint-adjacent or pure contention — JFR distinguishes. The playbook reuses the diagnostic toolkit rather than inventing a parallel religion of performance.
 
-### Example 3 — a common misunderstanding
+Load tests that resemble reality include authentication, cache state, and noisy neighbors if those exist in production. Synthetic perfection is a different product.
 
-**Misunderstanding 1:** Tuning without baseline.
+Measure, hypothesize, change one thing, remeasure — when someone asks for your performance philosophy, that loop is the answer. Tools are how you execute steps two and sometimes three.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Close the loop with a refusal list. Refuse to tune without a baseline. Refuse to optimize code paths that traces never enter. Refuse load tests that skip auth and caches. Refuse multi-variable changes. The playbook is as much about what you will not do as about flame graphs. Which percentile fails under what load — ask it every time — then earn the next change with evidence.
 
-**Misunderstanding 2:** Optimizing cold paths.
+A final worked refusal: a developer wants to switch collectors because a blog promised lower pauses. Ask which percentile fails under what load. Open GC logs and traces from a production-like test. If pauses are not on the critical path, refuse the change. The playbook protects the system from fashionable fixes. Measure, hypothesize, change one thing, remeasure — then ship the improvement that earned its place against the SLO.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Production-like load tests should also include a warm-up window when JIT matters, so you do not confuse cold-start behavior with steady-state SLOs — Episode Sixty-Five's distinction returns here. Label your graphs with life stage. Mislabelled graphs create wrong hypotheses and wasted flags.
 
-**Misunderstanding 3:** Load tests that aren't production-like.
+When allocation dominates, ask whether the design creates too many temporary objects on the hot path, whether caching helps, or whether a representation change beats micro-edits. When locks dominate, ask whether shardable state or lock-free structures from the concurrency arc apply. The playbook ends where good engineering judgment begins: use evidence to pick the next design move, not the next superstition.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Performance readiness is necessary but not sufficient. Production readiness also means ownership, rollback, and runbooks — Episode Eighty-Five closes the series there.
 
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+## Source attribution
 
-### Interview-style checkpoint
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Performance Playbook (Episode 84).
 
-Question: First performance question?
+Narration technique: "slow" → measure loop thesis → SLOs/percentiles → profile steps → allocation/locks → misconceptions → interview woven → bridge to capstone.
 
-Answer in spoken form: Which percentile/error budget fails under what load?
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Event-Driven Architecture**. That set up a need. **Performance Playbook** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Production Readiness Capstone**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Episode 84** is Season 2 bonus content (not one of the handbook's 80 lessons). Topic framing: **Performance Playbook**.
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Define SLOs/percentiles.
-- JFR/profilers.
-- Allocation and locks.
-- Avoid premature micro-opts.
-- Load tests that resemble reality.
+Teaching points preserved: define SLOs/percentiles; JFR/profilers; allocation and locks; avoid premature micro-opts; production-like load tests.

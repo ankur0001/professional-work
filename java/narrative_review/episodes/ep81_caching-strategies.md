@@ -4,178 +4,67 @@
 |---|---|
 | Episode | 81 |
 | Title | Caching Strategies |
-| Catalog handbook column | S2 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Catalog handbook column | 81 |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+A product page is hot. The database is not. Someone says "add a cache." Caches buy latency with correctness risk — and invalidation is the boss fight. Without an invalidation story, you have a faster way to be wrong.
 
-In the previous episode, we worked through **Architecture Interview Wrap**. That gave us a piece of the platform. Today we need the next piece: **Caching Strategies**.
-
-We are continuing The Java Story, and today's challenge is Caching Strategies. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Caches buy latency with correctness risk — invalidation is the boss fight.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, caching strategies is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Caching Strategies clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Local vs distributed.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: TTL/TTI/size eviction.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Cache-aside vs read-through.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Stampede control.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Measure hit rate and staleness.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Local caches live in-process — fast, simple, per instance. Distributed caches shared across instances avoid each node reloading the same miss, at the cost of network and operational complexity. Choose deliberately. A local Caffeine cache may be enough for read-mostly data with short TTL on each pod. A Redis-style cache may be needed when hit rate must be shared or eviction coordinated.
 
 ```java
 LoadingCache<String, User> cache = Caffeine.newBuilder()
-  .maximumSize(10_000)
-  .expireAfterWrite(Duration.ofMinutes(5))
-  .build(this::loadUser);
+    .maximumSize(10_000)
+    .expireAfterWrite(Duration.ofMinutes(5))
+    .build(this::loadUser);
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Size bounds, TTL or TTI eviction — time to live or idle — keep the cache from becoming Episode Fifty-Seven's unbounded map. Cache-aside means the app checks the cache, loads on miss, then populates. Read-through means the cache library loads for you via a loader — as above. Write policies vary: write-through, write-behind, invalidate on write. Pick one and document it.
 
-Walk this like pair-programming.
+Stampede control matters when a popular key expires and a hundred requests miss together, all hitting the database. Single-flight loading, slightly staggered TTLs, or soft values reduce the thundering herd. Measure hit rate and staleness. A high hit rate serving wrong data is not a win. Caching non-idempotent results blindly — like "create payment" responses — is how duplicates appear.
 
-Focus on what each line means.
+Hardest cache problem? Invalidation and stampede under concurrent misses. Say that, then mention bounds, TTL, and explicit delete-on-write as the ordinary tools that prevent heroic outages.
 
-Connect to the failure mode.
+Invalidation is the boss fight because freshness and hit rate pull opposite directions. Short TTL increases misses and load. Long TTL increases staleness. Delete-on-write keeps freshness for that key but needs every write path to cooperate — including admin tools and batch jobs that bypass the app. Document who is allowed to mutate the source of truth and how the cache learns.
 
-Look at `LoadingCache<String, User> cache = Caffeine.newBuilder()`.
+Local versus distributed also changes failure modes. Local caches go stale independently per instance after a write to another instance unless you broadcast invalidations. Distributed caches add a dependency that can be down — your resilience story must include cache miss fallback without melting the database.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Stampede control can be as simple as `LoadingCache`'s single-flight loader, or as deliberate as locking on a miss key. Measure not only hit rate but miss latency and origin load. A cache that "works" while the database CPU spikes on expiry waves is unfinished.
 
-Look at `.maximumSize(10_000)`.
+Caching non-idempotent results blindly deserves an example: caching a POST response that creates a seat reservation. A retry hits the cache and returns success without a seat. Separate read models you cache from write side effects you do not.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Measure hit rate and staleness together. A dashboard that shows only hits hides whether users see yesterday's price. Product rules define acceptable staleness; engineering enforces them with TTL and invalidation. When rules are unspoken, caches become political.
 
-Look at `.expireAfterWrite(Duration.ofMinutes(5))`.
+Cache-aside versus read-through is mostly about where load logic lives. Keep it consistent across the codebase. Mixed patterns without documentation cause double-fetches and inconsistent invalidation.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Unbounded caches return from Episode Fifty-Seven wearing performance clothing. maximumSize and expireAfterWrite are not optional decorations on the Caffeine builder — they are the difference between acceleration and a leak. Soft references alone are not a substitute, as Episode Sixty-One warned.
 
-Look at `.build(this::loadUser);`.
+Hardest cache problem remains invalidation and stampede under concurrent misses — because both are timing problems under load, invisible in quiet staging.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Write-path discipline completes the design. On update, do you update the cache, delete the key, or wait for TTL? Delete-on-write is often safest for correctness; update-on-write is faster when you can guarantee every writer cooperates. Batch jobs that bypass services are famous for forgetting the cache. Put invalidation beside every write in code review checklists.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Local caches in a fleet of twenty pods mean twenty independent views after a write unless you publish invalidation messages. That may be acceptable for short TTL display data and unacceptable for permissions. Match strategy to risk.
 
-### Example 2 — make it more realistic
+Stampede control under concurrent misses is the other half of the hardest problem. Even perfect invalidation can create a miss storm at expiry. Combine bounded size, TTL, single-flight load, and origin protection — shed or queue — when the origin is fragile.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Caching Strategies usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Caches buy latency with correctness risk. Keep saying both halves. Interviewers hear the second half and trust you more.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Connect caching to API design next door. Cache keys should follow resource identifiers clients already understand. Do not invent a parallel key taxonomy nobody can invalidate. When an API response is personalized, cache carefully or not at all — privacy and correctness both suffer when one user receives another's cached page.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+TTL, size, invalidation, stampede control, hit rate, staleness — if your design doc names those, you are ready to implement. If it only says "use Redis," you are not.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Before shipping a cache, write the invalidation sentence in the PR: "On product update, we delete key product:{id}; TTL is five minutes as a backstop; loader is single-flight." If you cannot write that sentence, the cache is not designed yet. Implementation without that sentence recreates unbounded maps with prettier APIs.
 
-### What if we skip this approach?
+If hit rate is high and origin load is still high, you are caching the wrong grain or suffering stampedes at expiry — dig into miss traces before growing the cache cluster again. Growing Redis to hide a stampede wastes money and delays the real fix.
 
-Important concepts become memorable when we see the failure mode without them.
+APIs that sit in front of caches and databases need long-term contracts. Episode Eighty-Two is API design — idempotency, errors, and compatibility.
 
-For example, consider this common mistake: Unbounded caches.
+## Source attribution
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Caching Strategies (Episode 81).
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Narration technique: hot page situation → latency vs correctness → local vs distributed → Caffeine example → TTL/size/cache-aside → stampede → interview woven → bridge to API design.
 
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Unbounded caches.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** No invalidation story.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Caching non-idempotent results blindly.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Hardest cache problem?
-
-Answer in spoken form: Invalidation and stampede under concurrent misses.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Architecture Interview Wrap**. That set up a need. **Caching Strategies** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **API Design Deep Dive**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Episode 81** is Season 2 bonus content (not one of the handbook's 80 lessons). Topic framing: **Caching Strategies**.
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Local vs distributed.
-- TTL/TTI/size eviction.
-- Cache-aside vs read-through.
-- Stampede control.
-- Measure hit rate and staleness.
+Teaching points preserved: local vs distributed; TTL/TTI/size; cache-aside vs read-through; stampede control; measure hit rate/staleness.

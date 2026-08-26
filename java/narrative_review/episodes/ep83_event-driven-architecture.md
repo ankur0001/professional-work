@@ -4,76 +4,17 @@
 |---|---|
 | Episode | 83 |
 | Title | Event-Driven Architecture |
-| Catalog handbook column | S2 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Catalog handbook column | 83 |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Synchronous APIs couple latency: your checkout waits on inventory. Sometimes you need facts to propagate without blocking the caller. Events are facts — something that happened — and consumers must tolerate at-least-once delivery. Assuming exactly-once is how systems lie to themselves.
 
-In the previous episode, we worked through **API Design Deep Dive**. That gave us a piece of the platform. Today we need the next piece: **Event-Driven Architecture**.
+Distinguish facts from commands. `OrderCreated` is a fact. `CreateOrder` is a command. Facts let multiple consumers react — email, analytics, inventory — without the producer knowing each one. Ordering is partial: across partitions or consumers, time is not a single global line. Schema evolution matters because old consumers and new producers coexist during deploys.
 
-We are continuing The Java Story, and today's challenge is Event-Driven Architecture. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Events are facts — consumers must tolerate at-least-once delivery.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, event-driven architecture is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Event-Driven Architecture clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Facts vs commands.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Idempotent consumers.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Outbox pattern.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Ordering is partial.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Schema evolution.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Dual writes without an outbox are a classic failure. You write the order row, then publish to the broker, and crash between. The message is lost. Or you publish first and fail to write. The outbox pattern records the state change and the event in one transaction; a publisher relays outbox rows to the bus.
 
 ```java
 // transactionally write Order + OutboxEvent
@@ -81,84 +22,50 @@ Let's start with the smallest example that still teaches the real idea. Read it 
 // consumers handle OrderCreated idempotently
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Why outbox? Atomically record state change plus event to avoid lost messages. Idempotent consumers handle duplicates from at-least-once delivery — using event ids or natural keys. Fat events that couple everything — dumping entire object graphs — make schema change painful; prefer necessary facts with clear versioning.
 
-Walk this like pair-programming.
+At-least-once delivery means duplicates are normal. Consumers must treat redelivery as expected, not as a broker bug. Idempotency keys, dedupe tables, or natural unique constraints turn duplicates into no-ops. Exactly-once end-to-end across independent systems is a marketing phrase more often than an engineering guarantee — be precise in interviews.
 
-Focus on what each line means.
+Outbox versus dual write is the reliability fork. Dual write looks shorter in a demo. Outbox looks like extra tables and a publisher. Under failure injection, outbox wins. Transactional outbox plus a relay process is boring infrastructure that prevents silent data loss.
 
-Connect to the failure mode.
+Schema evolution needs compatibility rules: additive fields, careful renames, consumers that ignore unknowns. Fat events that embed every nested entity make evolution and PII handling harder. Prefer identifiers plus essential attributes, with consumers fetching details when needed — balancing chatty reads against coupling.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Partial ordering means you design for "inventory update may arrive before the email consumer is ready" and for partition-level order only when you key messages carefully. If your business needs strong global order, events may be the wrong primary tool for that slice.
 
-### Example 2 — make it more realistic
+Facts versus commands keep producers honest. Emitting commands disguised as events couples producers to consumer intent. Emit what happened; let consumers decide what to do.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Event-Driven Architecture usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Connect events to the observability episode. Every event should carry correlation ids so a checkout trace includes the async legs that fire after the HTTP response. Without that, event-driven systems become un-debuggable fog.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Outbox publishers need their own monitoring: lag, failure counts, poison messages. An outbox that stops draining is a silent outage — the API looks healthy while downstream consumers starve. Production readiness later will call this ownership; start the habit now.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Schema evolution pairs with consumer deployment order. Prefer expand/contract: add fields, deploy consumers that tolerate them, then switch producers, then remove old fields later. Fat events fight this discipline by making every change large.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Idempotent consumers plus outbox plus partial-order awareness is the minimum responsible set for event-driven Java services. Skip any one and the architecture interview should dock you — and production will too.
 
-### What if we skip this approach?
+A concrete dual-write failure seals the lesson. Transaction commits the order. Process crashes before Kafka send returns. Customer sees success; inventory never hears. Support tickets multiply. Outbox would have left a row to relay on restart. That single story converts skeptics faster than abstract diagrams.
 
-Important concepts become memorable when we see the failure mode without them.
+Consumers handle OrderCreated idempotently by remembering processed event ids or by upserting state keyed by order id. Choose the approach that matches your domain. Test redelivery in CI. Untested idempotency is hopeful naming.
 
-For example, consider this common mistake: Dual writes without outbox.
+Ordering is partial — design workflows that tolerate inventory-before-email or email-before-inventory unless you intentionally serialize through a single key and partition. When business truly needs a saga with orchestration, say so; do not pretend a firehose of events gives you global transaction semantics for free.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Events are facts; consumers must tolerate at-least-once; outbox protects producers from dual-write loss. That triad is the episode in one breath.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Schema evolution example: add an optional `shippingMethod` field to OrderCreated. Old consumers ignore it. New consumers use it. Later remove a deprecated field only after all consumers deploy. That expand/contract rhythm is how events age without stop-the-world upgrades.
 
-### Example 3 — a common misunderstanding
+Fat events that couple everything tempt producers to embed customer, inventory, and pricing snapshots. Then every consumer breaks when pricing shape changes. Prefer essential facts; let consumers query what they need or maintain their own read models from smaller events.
 
-**Misunderstanding 1:** Dual writes without outbox.
+At-least-once plus outbox plus idempotent consumers is not optional garnish for "serious" companies only — it is the baseline for any event-driven path that moves money or inventory. Demoing Kafka without those pieces is a demo of risk.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+When events cross team boundaries, ownership of schema becomes political. Decide who may add fields, how compatibility is tested, and where the schema registry lives if you use one. Technology alone does not solve governance; name the owners like production readiness will demand in the final episode.
 
-**Misunderstanding 2:** Assuming exactly-once.
+Tolerate at-least-once, record facts through an outbox, and evolve schemas additively. That sentence is enough to start a design review. The rest of the episode exists so you can defend each clause when someone proposes skipping one for speed.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Event-driven designs shine when they reduce coupling and absorb load spikes. They punish teams that skip idempotency, outbox, and observability. Performance across sync and async paths still needs a disciplined loop — Episode Eighty-Four.
 
-**Misunderstanding 3:** Fat events that couple everything.
+## Source attribution
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Event-Driven Architecture (Episode 83).
 
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+Narration technique: sync coupling pain → events as facts → facts vs commands → dual write failure → outbox code → idempotent consumers → interview woven → bridge to performance.
 
-### Interview-style checkpoint
-
-Question: Why outbox?
-
-Answer in spoken form: Atomically record state change + event to avoid lost messages.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **API Design Deep Dive**. That set up a need. **Event-Driven Architecture** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Performance Playbook**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Episode 83** is Season 2 bonus content (not one of the handbook's 80 lessons). Topic framing: **Event-Driven Architecture**.
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Facts vs commands.
-- Idempotent consumers.
-- Outbox pattern.
-- Ordering is partial.
-- Schema evolution.
+Teaching points preserved: facts vs commands; idempotent consumers; outbox; partial ordering; schema evolution.

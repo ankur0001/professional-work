@@ -5,159 +5,54 @@
 | Episode | 78 |
 | Title | Microservices Basics |
 | Catalog handbook column | 78 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Your Spring monolith ships. Teams grow. Deploys queue behind each other. One noisy feature takes the whole process down. Someone says the word: microservices. That word is not a trophy. Microservices are a scalability and organization choice — and distributed failure is the price of admission. If you cannot name the organizational or scale problem you are solving, you are not ready to pay that price.
 
-In the previous episode, we worked through **Spring Testing**. That gave us a piece of the platform. Today we need the next piece: **Microservices Basics**.
-
-We are continuing The Java Story, and today's challenge is Microservices Basics. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Microservices are a scalability/org choice — distributed failure is the price.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, microservices basics is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Microservices Basics clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Boundaries by business capability.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Independent deployability.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Network is unreliable.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Data ownership.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Modular monolith first often.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Start with boundaries by business capability. Orders are not "the database layer" and "the web layer" split into two repos that still share one schema and must deploy together. That split is a distributed monolith: network latency with none of the independence. Service A owns orders; Service B owns inventory. They communicate through APIs or events — not by reaching into each other's tables.
 
 ```java
 // Service A owns orders; Service B owns inventory
 // Communicate via API/events — not shared DB tables
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Independent deployability is the test. Can the orders team release on Tuesday without a coordinated inventory release, as long as contracts hold? If every change still needs a lockstep release train, you have multiplied repos without multiplying autonomy. Data ownership follows the same honesty: each service owns its persistence. Shared databases feel convenient and couple you silently.
 
-Walk this like pair-programming.
+The network is unreliable. Calls time out, retry, duplicate, arrive reordered. What was a method call in a monolith becomes a failure mode you must design for. Ignoring observability in that world is negligence — you cannot debug a graph of services with stdout on one laptop. Later episodes will deepen resilience and events; today you need the humility: distribution makes everything harder on purpose, in exchange for team and scale leverage you must actually need.
 
-Focus on what each line means.
+Modular monolith first often wins. Keep module boundaries inside one deployable until the boundaries hurt for real — separate release cadence, separate scaling, separate failure isolation. Splitting by technical layers only — "controllers service," "service service," "repository service" — usually fails. Split where the business language already splits.
 
-Connect to the failure mode.
+When not microservices? Small team, simple domain, early product — a modular monolith may win on focus and operability. Say that in interviews without embarrassment. Then say what would change your mind: independent scaling of a hotspot, team autonomy blocked by a single release train, or a clear bounded context ready to isolate.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Independent deployability deserves a sharper test than repo count. Two services that must change a shared library and a shared database migration in lockstep are one system wearing two costumes. Contracts — versioned APIs, consumer-driven tests, or event schemas — are what make independence real. Without contract discipline, microservices become a distributed waterfall.
 
-### Example 2 — make it more realistic
+Data ownership fights a common shortcut: the shared "reporting" schema everyone writes to. Reporting needs can be served by events, read replicas owned carefully, or a dedicated analytics pipeline that consumes facts. Crossing into another service's tables to "just join" recreates the monolith's coupling with weaker transactions.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Microservices Basics usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Organizational scaling is a valid reason to split — Conway's law is not a joke — but only when teams already struggle to ship inside one codebase with clear modules. If one team owns everything, microservices mainly add operational tax. Fit the architecture to the org and the domain stage.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Network unreliability shows up as partial failure: inventory succeeded, billing timed out, the user clicked again. Idempotency and correlation ids are not optional extras; they are the price of distribution. Observability, next episode, is how you see those partial failures instead of guessing.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+When someone sells microservices as the default for every Java shop, ask what modular monolith option was tried and what metric proved it insufficient. That question alone prevents entire classes of premature distribution.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Return to the monolith morning that started this episode. Deploys queue because every feature shares one release train. That organizational friction can justify extraction even before traffic demands it — if the domain boundary is real. Extract the inventory context behind an API, give it its own database, and keep the orders service talking through a client with timeouts. Measure whether deploy frequency actually rises. If it does not, you paid the network tax for nothing and should reconsider the cut.
 
-### What if we skip this approach?
+Distributed failure is not only total outage. It is slow dependency, stale cache, duplicated request, and clock skew between nodes. Designing for those modes from day one is cheaper than bolting them on after the first major incident. That is why the next episode exists immediately after this one: observability and resilience are not "phase two." They are part of the microservice definition if you are honest.
 
-Important concepts become memorable when we see the failure mode without them.
+Splitting by technical layers only creates chatty services: a "controller service" calling a "logic service" calling a "data service" for one user click. Prefer vertical slices of business capability that can answer meaningful requests with minimal synchronous fan-out. When fan-out is required, budgets and bulkheads become first-class.
 
-For example, consider this common mistake: Splitting by technical layers only.
+Modular monolith first often means packages or Gradle modules with enforced boundaries, not a wish and a wiki diagram. Architecture fitness functions and code ownership inside one deployable train teams for the day a real split is needed. Microservices then become a relocation of an existing boundary, not an invention under panic.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+One closing caution: microservices multiply JVM processes, each with its own heap, GC, metaspace, and startup profile. Everything from Episodes Fifty-Six through Sixty-Five becomes a fleet concern. If you cannot operate one JVM well, operating thirty will not teach you by magic — it will page you in parallel.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Microservices without visibility and without timeouts become a slower monolith with worse nights. Episode Seventy-Nine is observability and resilience — how you see the system and how you survive dependency failure.
 
-### Example 3 — a common misunderstanding
+## Source attribution
 
-**Misunderstanding 1:** Splitting by technical layers only.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Microservices Basics (Episode 78).
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Narration technique: monolith pain → trade-off thesis → capability boundaries + code comment → independent deploy/data ownership → network unreliability → modular monolith first → interview woven → bridge to observability.
 
-**Misunderstanding 2:** Distributed monolith.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Ignoring observability.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: When not microservices?
-
-Answer in spoken form: Small team/simple domain — modular monolith may win.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Spring Testing**. That set up a need. **Microservices Basics** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Observability and Resilience**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 78 / **Microservices Basics** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Boundaries by business capability.
-- Independent deployability.
-- Network is unreliable.
-- Data ownership.
-- Modular monolith first often.
+Teaching points preserved: boundaries by capability; independent deployability; network unreliable; data ownership; modular monolith first often.
