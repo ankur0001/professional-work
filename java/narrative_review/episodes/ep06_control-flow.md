@@ -39,11 +39,9 @@ String grade = switch (score / 10) {
 };
 ```
 
-A switch expression is not just new syntax for old `switch` statements. It encourages exhaustiveness and makes the result a value you can store. Old fall-through statement switches still exist, and forgetting a `break` is still a classic bug — one missing break and "B" accidentally does "C" work as well. Prefer the form that matches the job: expression when you want a result, statement when you are performing actions.
+A switch expression is not just new syntax for old `switch` statements. It encourages exhaustiveness and makes the result a value you can store. Old fall-through statement switches still exist, and forgetting a `break` is still a classic bug. Prefer the form that matches the job: expression when you want a result, statement when you are performing actions.
 
-Picture a support desk routing tickets by priority code. An if/else chain works until the codes multiply and each branch grows. A switch expression keeps the mapping visible: this code yields that label. The control structure becomes a table you can read, not a staircase you fall down.
-
-Choosing once is not enough. Often the same kind of decision must happen for every item in a collection of work — every student, every retry attempt, every page of results. That pressure brings loops: `for`, `while`, and the enhanced-for when you simply walk each element.
+Choosing once is not enough. Often the same kind of decision must happen for every item — every student, every retry attempt, every page of results. That pressure brings loops: `for`, `while`, and the enhanced-for when you simply walk each element.
 
 ```java
 for (int i = 0; i < n; i++) {
@@ -52,11 +50,7 @@ for (int i = 0; i < n; i++) {
 }
 ```
 
-This loop visits indexes from zero up to, but not including, `n`. When `i` is even, `continue` skips the rest of that iteration and moves to the next. When `i` is odd, it prints. `break` would leave the loop entirely.
-
-`while` fits when you do not know the trip count in advance — keep polling until a flag flips, keep reading until the stream ends. Enhanced-for fits when you already have a collection and only need each element: `for (Student s : students)`. Index `for` still wins when the position itself matters.
-
-Labeled `break` and `continue` exist for nested loops; use them sparingly. If you need a label to explain the control, the structure may be asking for a method instead.
+This loop visits indexes from zero up to, but not including, `n`. When `i` is even, `continue` skips the rest of that iteration. When `i` is odd, it prints. `break` would leave the loop entirely. `while` fits when you do not know the trip count in advance. Enhanced-for fits when you already have a collection and only need each element. Index `for` still wins when the position itself matters. Labeled `break` and `continue` exist for nested loops; use them sparingly — if you need a label to explain the control, the structure may be asking for a method instead.
 
 As programs grow, another control-flow pain appears: you receive an `Object` or a general type, check what it really is, cast, then use it. Pattern matching reduces those casts by binding the narrowed type in the same test.
 
@@ -66,7 +60,7 @@ if (value instanceof String s) {
 }
 ```
 
-If `value` is a `String`, `s` is already that string inside the block. You are not performing a separate cast that can drift out of sync with the check. The control flow and the type narrowing travel together. Older code would write `if (value instanceof String) { String s = (String) value; ... }` — two steps that can disagree after a rushed edit. Pattern matching collapses them on purpose.
+If `value` is a `String`, `s` is already that string inside the block. Older code would write a separate cast that can drift out of sync with the check. Pattern matching collapses them on purpose.
 
 Now look at the design failure that control flow tempts: the giant nested if pyramid.
 
@@ -82,7 +76,7 @@ if (user != null) {
 }
 ```
 
-Each condition feels reasonable. Together they bury the real work and make every new rule add another indent. `continue` and `break` can hide the same problem when they become the only way to escape a maze. The healthier move is often to extract methods — early returns for guard clauses, named helpers for each policy — so each block has one job.
+Each condition feels reasonable. Together they bury the real work. The healthier move is often to extract methods — early returns for guard clauses, named helpers for each policy — so each block has one job.
 
 ```java
 boolean canCheckout(User user, Order order) {
@@ -94,13 +88,11 @@ boolean canCheckout(User user, Order order) {
 
 Now the nested pyramid becomes a flat checklist. Control flow syntax cannot save a design that refuses to name its decisions — but naming the decision often shrinks the syntax you need.
 
-So reconnect the chain. Operators produced the booleans and comparisons we needed. Control flow uses those results to choose branches, return values from switches, repeat with loops, skip or stop with `continue` and `break`, and narrow types with pattern matching. The skill is not collecting keywords. It is keeping the path readable as the rules multiply.
-
-What if every decision stays inline in `main`? You can ship a demo. Then product asks for retries, partial success, and a second user role. The vine thickens. Extracting a method is not a later "clean code" luxury — it is how control flow stays teachable to the next person who opens the file, including you after a weekend away.
+Operators produced the booleans and comparisons we needed. Control flow uses those results to choose branches, return values from switches, repeat with loops, and narrow types with pattern matching. The skill is not collecting keywords. It is keeping the path readable as the rules multiply.
 
 Once `main` can decide and loop, another trap appears. The same decision logic — calculate a total, validate an order, format a line — gets copied into every place that needs it. Behavior wants a name.
 
-That need is Episode Seven: methods.
+That need is what methods exist to answer.
 
 ## Source attribution
 

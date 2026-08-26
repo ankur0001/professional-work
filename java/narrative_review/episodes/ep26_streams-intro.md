@@ -36,7 +36,7 @@ Walk the pipeline. `list.stream()` is the source. `filter` and `map` are interme
 
 Pipelines always have that shape: source, intermediate ops, terminal op. Forget the terminal and you have a description that never runs — a common beginner surprise when they expect `map` alone to print something.
 
-Prefer purity in lambdas. A filter should decide, not update a database. A map should transform, not quietly mutate a shared list. Side effects inside stream lambdas make order, laziness, and later parallelism hard to reason about. If you need a side effect, an ordinary loop is often clearer.
+Prefer purity in lambdas. A filter should decide, not update a database. A map should transform, not quietly mutate a shared list. Side effects inside stream lambdas make order, laziness, and later parallelism hard to reason about.
 
 ```java
 long count = list.stream()
@@ -44,19 +44,9 @@ long count = list.stream()
     .count();
 ```
 
-Here the terminal is `count`. No intermediate list required. The pipeline expresses the question: how many strings start with A?
+Here the terminal is `count`. No intermediate list required. Modern Java's `toList()` returns an unmodifiable list — handy for returning results safely. Older code uses `collect(Collectors.toList())`, which is mutable.
 
-Modern Java's `toList()` collector (from the stream itself) returns an unmodifiable list — handy for returning results safely. Older code uses `collect(Collectors.toList())`, which is mutable. Know which one you are calling when a caller later tries to `add`.
-
-Streams are not always faster. They shine for clarity on bulk data transformations. On tiny lists, a simple loop can be easier to read and cheaper to run. On hot paths, measure. Do not rewrite every for-loop into a stream for fashion. Prefer the form that makes the intent obvious and the cost acceptable.
-
-What if we treat streams as magic speed buttons?
-
-```java
-// tiny list, complex parallel stream, harder stack traces — no win
-```
-
-You pay abstraction cost without gaining clarity or performance. Use streams when the pipeline reads closer to the problem than the loop does.
+Streams are not always faster. They shine for clarity on bulk data transformations. On tiny lists, a simple loop can be easier to read and cheaper to run. Do not rewrite every for-loop into a stream for fashion.
 
 A slightly richer example shows composition without nesting:
 
@@ -68,8 +58,7 @@ List<String> names = users.stream()
     .toList();
 ```
 
-Filter, sort, map, collect — each step one idea. Comparators from the previous episode drop in naturally. The result list is the answer to a sentence you could say out loud.
-
+Filter, sort, map, collect — each step one idea. Comparators from the previous episode drop in naturally.
 
 Laziness becomes tangible with short-circuit terminals.
 
@@ -80,51 +69,28 @@ Optional<String> first = list.stream()
     .findFirst();
 ```
 
-If the first element already qualifies, later elements need not be mapped. A handwritten loop that always uppercases everything before finding does extra work. Streams can skip that when the terminal allows it.
+If the first element already qualifies, later elements need not be mapped. Also remember streams are single-use. Call a terminal, and the stream is consumed. If you need two results, collect once or stream from the source twice.
 
-Debugging tip: intermediate `peek` exists for observation, but leave it out of production pipelines. It encourages side effects. Prefer unit-testing the functions you pass to `map` and `filter` as ordinary methods.
-
-Also remember streams are single-use. Call a terminal, and the stream is consumed. A second terminal throws. If you need two results, collect once or stream from the source twice.
-
-
-Infinite streams exist — `Stream.iterate`, `Stream.generate` — and they make the terminal's role unmistakable. Without `limit` or a short-circuit terminal, they never finish. That extreme case teaches the everyday rule: intermediate ops describe; terminals decide.
+Infinite streams exist — `Stream.iterate`, `Stream.generate` — and they make the terminal's role unmistakable. Without `limit` or a short-circuit terminal, they never finish.
 
 ```java
 Stream.iterate(0, n -> n + 1).limit(5).toList(); // 0..4
 ```
 
-Method references keep pipelines tidy when a lambda would only call one method. When logic grows beyond a line, extract a named method and reference it — readability beats inline cleverness.
-
-
-
-Exception handling inside lambdas is deliberately awkward — checked exceptions do not pass through Functional interfaces cleanly. That friction pushes you to keep stream bodies simple and to handle awkward I/O outside the pipeline or with wrapping helpers. It is another quiet reminder that streams favor pure transformations.
-
-So let's reconnect the chain. Hand-built loops mixed filter, map, and collect. Streams named those steps as a lazy pipeline. Purity kept lambdas honest. `toList()` modernized collection of results. Performance humility kept us from cargo-culting.
-
-Once pipelines feel natural, the terminal step gets more interesting: sometimes you need a `Set`, a `Map`, or groups of elements. How do you collect into richer structures?
-
-Think of a stream as a view over a computation, not as a stored collection. The source list is still the data. The stream is the recipe. That mental model explains laziness, single-use rules, and why mutating the source while streaming is a bad idea.
-
-Primitive streams — `IntStream`, `LongStream`, `DoubleStream` — avoid boxing when you map to numbers and sum or average. They are part of the same pipeline idea with less wrapper traffic. Reach for them when the payload is numeric end to end.
+Primitive streams — `IntStream`, `LongStream`, `DoubleStream` — avoid boxing when you map to numbers and sum or average:
 
 ```java
 int sum = list.stream().mapToInt(String::length).sum();
 ```
 
-When a pipeline is hard to name in one sentence, it is probably doing too much. Split it. Streams amplify clear steps; they punish kitchen-sink lambdas.
+Hand-built loops mixed filter, map, and collect. Streams named those steps as a lazy pipeline. Purity kept lambdas honest. Performance humility kept us from cargo-culting.
 
-That is Episode Twenty-Seven — Stream Collectors.
+Once pipelines feel natural, the terminal step gets more interesting: sometimes you need a `Set`, a `Map`, or groups of elements. How do you collect into richer structures?
+
+That is the pressure that brings stream collectors.
 
 ## Source attribution
 
 Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 26 (*Streams Intro*).
 
 Narration technique: loop-as-pipeline situation → stream source/intermediate/terminal → laziness → purity → toList → not always faster → next natural problem (richer collection / collectors). Continuity-checked transitions.
-
-### Teaching points drawn from the topic bank
-
-- Pipelines: source, intermediate ops, terminal op.
-- Lazy until terminal.
-- Prefer purity in lambdas.
-- toList() modern collectors.
-- Streams aren't always faster.

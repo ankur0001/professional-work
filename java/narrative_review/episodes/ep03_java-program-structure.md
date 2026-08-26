@@ -14,9 +14,9 @@ Episode Two ended on a frustration that arrives the moment the tools work. You w
 
 That refusal is not Java being petty. It is Java answering a practical question: when you type `java Something`, how does the runtime find the right bytecode, and when you type `javac`, how does the compiler know what belongs together?
 
-Start with the smallest piece of that puzzle: a single source file.
+Start with the smallest piece: a single source file.
 
-A `.java` file is a compilation unit. Inside it you can declare types. The rule that trips almost everyone first is this: if a top-level class is `public`, its name must match the filename, including case. `App` lives in `App.java`. Not `app.java`. Not `Application.java`. The compiler is not decorating your disk for fun. Filenames are how tools locate the public type you asked them to compile.
+A `.java` file is a compilation unit. The rule that trips almost everyone first is this: if a top-level class is `public`, its name must match the filename, including case. `App` lives in `App.java`. Not `app.java`. Not `Application.java`. Filenames are how tools locate the public type you asked them to compile.
 
 ```java
 public class App {
@@ -42,13 +42,11 @@ public class App {
 }
 ```
 
-Walk the pieces. The package line places `App` in `com.example.demo`. The public class still matches `App.java`. Inside it, `public static void main(String[] args)` is the classic launcher entry point. When you run the program, the JVM looks for a method with that shape. `args` is how command-line words arrive as a string array. Printing `args.length` is a tiny proof that the entry point was found and executed.
+Walk the pieces. The package line places `App` in `com.example.demo`. The public class still matches `App.java`. Inside it, `public static void main(String[] args)` is the classic launcher entry point — the door the JVM knocks on. `args` is how command-line words arrive. Printing `args.length` is a tiny proof that the entry point was found and executed.
 
-Notice what we have assembled: file identity, package geography, and a door the JVM can knock on. Structure is not paperwork. It is how the compiler and the JVM find your code.
+Once types live in packages, how does one file talk about a type from another package without writing the full address every time?
 
-That raises another everyday question. Once types live in packages, how does one file talk about a type from another package without writing the full address every time?
-
-Imports bring types into scope. An import does not copy code into your file. It tells the compiler which fully qualified name you mean when you write the short name. Behind that sits another mechanism: the classpath — and later the module path — which tells the tools where to look for already-compiled classes. If the type is not on that path, the import cannot save you. The working directory alone is not a magic finder.
+Imports bring types into scope. An import does not copy code into your file. It tells the compiler which fully qualified name you mean when you write the short name. Behind that sits the classpath — and later the module path — which tells the tools where to look for already-compiled classes. If the type is not on that path, the import cannot save you.
 
 ```java
 package com.example.demo;
@@ -64,23 +62,15 @@ public class App {
 }
 ```
 
-`import java.util.ArrayList;` means: when I say `ArrayList`, I mean that type from the standard library. Without the import, you could still write `java.util.ArrayList` in full. The import is convenience with a clear cost — you are declaring a dependency on a specific type. If someone deletes the import and the short name still "works," something else is in scope, and that something else may not be the type you think.
+`import java.util.ArrayList;` means: when I say `ArrayList`, I mean that type from the standard library. Without the import, you could still write `java.util.ArrayList` in full. The import is convenience with a clear cost — you are declaring a dependency on a specific type.
 
-Now look at the failure modes that make these rules feel expensive until you need them.
+These rules feel expensive until you need them. A public class that does not match its filename stops at compile time — cheaper than a runtime hunt. A package that does not match its folders may compile in one layout and fail to launch from another. Assuming the working directory alone finds classes works for tiny demos, then a second jar appears and "it worked on my machine" becomes a classpath story. Structure is how tools search. If the search path is wrong, perfect source still fails at launch.
 
-First: public class name does not match the filename. The compiler stops you. That stop is cheaper than a runtime hunt for the wrong type.
-
-Second: package declaration does not match folders. You may compile in one layout and fail to launch from another, or watch tools resolve a different class with a similar name. The map between package and directory is the GPS for your types.
-
-Third: assuming the working directory alone finds classes without a classpath. It sometimes looks true for tiny demos. Then a second jar appears, or you run from a different folder, and suddenly "it worked on my machine" becomes a classpath story. Structure is how tools search. If the search path is wrong, perfect source still fails at launch.
-
-What if we treat these rules as paperwork and invent shortcuts — wrong filenames, packages that do not match folders, `main` hidden in a non-static method? Each shortcut saves a minute and spends an hour later when the JVM cannot find the entry point or the compiler refuses a public type. The stubbornness is the feature.
-
-So reconnect the chain. Episode Two named the layers that build and run bytecode. Today we answered why those layers care so much about agreement: a compilation unit binds public type to filename, packages bind names to directories, `main` is the launcher door, and imports plus classpath tell the tools which types you mean and where they live.
+Episode Two named the layers that build and run bytecode. Today we answered why those layers care so much about agreement: a compilation unit binds public type to filename, packages bind names to directories, `main` is the launcher door, and imports plus classpath tell the tools which types you mean and where they live.
 
 Once a program has a home and an entry point, a more basic need appears. Before the program can do useful work, it must remember information — an age, a name, a flag — with meaning attached, not as anonymous literals scattered through `main`.
 
-That need is Episode Four: variables and data types.
+That need is what variables and data types exist to solve.
 
 ## Source attribution
 
