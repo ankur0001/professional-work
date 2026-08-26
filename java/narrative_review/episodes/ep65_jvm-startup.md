@@ -5,163 +5,46 @@
 | Episode | 65 |
 | Title | JVM Startup |
 | Catalog handbook column | 65 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
-
-In the previous episode, we worked through **Safepoints**. That gave us a piece of the platform. Today we need the next piece: **JVM Startup**.
-
-We are continuing The Java Story, and today's challenge is JVM Startup. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Startup is a feature — classloading and init dominate cold starts.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, jvm startup is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture JVM Startup clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Classloading + verification + init.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: CDS/AppCDS.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: AOT / Graal native image trade-offs.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: CRaC for snapshotted restarts.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Lazy init carefully.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Steady-state performance has dominated our recent episodes: GC, JIT warmup, safepoints, heap shape. Then you deploy to a scale-to-zero environment, or you restart pods on every deploy, or you run short-lived CLI tools that should feel instant. Suddenly the question is not p99 after warmup. The question is: how long from process start until the app can do useful work? Startup is a feature. Teams that only optimize the warmed steady state discover that truth the first time readiness probes fail in a rolling deploy.
 
 ```bash
 java -jar app.jar
 # measure cold start separately from steady-state
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+That command looks simple. Behind it, the JVM loads classes, verifies bytecode, initializes classes, runs static initializers, and begins with a cold JIT. Your framework likely scans the classpath, wires beans, opens connection pools, and warms caches you did not ask to warm at boot. Classloading, verification, and initialization dominate many cold starts. A fat classpath makes that worse — every jar is more work before business logic matters. Ignoring classpath bloat while "optimizing startup" is rearranging furniture during a flood.
 
-Walk this like pair-programming.
+Heavy work in static initializers is a classic self-inflicted wound. A class loads because something touched it, its static initializer hits a database, reads a huge file, or builds a giant cache, and suddenly first-request latency includes an accidental boot ritual. Lazy initialization helps — carefully. Lazy means "not at class init time," not "no concurrency story." Initialize on first use with clear thread safety, or initialize on a deliberate lifecycle hook you can see in metrics and logs. Hidden static work is how startup times become undebuggable folklore.
 
-Focus on what each line means.
+The platform offers acceleration paths once you understand the cost drivers. CDS and AppCDS — class data sharing — archive class metadata so subsequent runs spend less time loading and linking common classes. That can shave meaningful time off cold starts when you invest in the archive workflow. Ahead-of-time compilation and Graal native image go further: trade some dynamic JIT flexibility and reflection freedom for a native binary with faster startup and a different peak-performance profile. CRaC — Coordinated Restore at Checkpoint — aims at snapshotted restarts: warm a process, checkpoint, restore later into a ready state. Each technique has a fit. None is free. Native image constraints can surprise teams that relied on runtime reflection everywhere. Checkpoint restore needs discipline about what state is safe to freeze.
 
-Connect to the failure mode.
+Measure cold start separately from steady-state. A load test that only watches warmed instances will not catch the pod that takes twelve seconds before readiness. Optimizing startup without measuring — without distinguishing process start, readiness success, first successful request, and post-JIT steady state — produces arguments instead of progress. The graphs must be labeled with which life stage they show.
 
-Look at `java -jar app.jar`.
+Ways to improve startup, said as an engineer: reduce classpath and initialization work first, use CDS or AppCDS where it pays, lean on lazy and deliberate lifecycle init, and consider native image or checkpoint/restore when the deployment model demands fast bring-up. Doing heavy work in static initializers and shipping enormous classpaths are the mistakes that make exotic tools look necessary before you have earned them.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+We closed the JVM's life cycle from cold start through steady-state pauses. Episode Sixty-Six wraps this JVM arc for interviews: how to tell one coherent story from load to diagnosis without buzzword bingo.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Distinguish three clocks that teams mix up. Wall time to process start is not wall time to readiness, which is not wall time to stable p99 after JIT warmup. A service can pass a shallow readiness probe while still loading classes lazily on the first real traffic wave. Another service can be "slow to start" because static initializers are doing real work that should be a deliberate warm step with metrics. Measure each clock separately or you will optimize the wrong one.
 
-### Example 2 — make it more realistic
+Classpath bloat has a human story. Someone adds a starter dependency for one annotation processor, transitive jars multiply, and boot scanning time grows. Native image later looks attractive because startup hurt — but the cheaper first move may be deleting unused dependencies and delaying initialization. AOT and CRaC are powerful; they are not substitutes for a lean boot path.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, JVM Startup usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Distinguish three clocks that teams mix up. Wall time to process start is not wall time to readiness, which is not wall time to stable p99 after JIT warmup. A service can pass a shallow readiness probe while still loading classes lazily on the first real traffic wave. Another service can be "slow to start" because static initializers are doing real work that should be a deliberate warm step with metrics. Measure each clock separately or you will optimize the wrong one.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Classpath bloat has a human story. Someone adds a starter dependency for one annotation processor, transitive jars multiply, and boot scanning time grows. Native image later looks attractive because startup hurt — but the cheaper first move may be deleting unused dependencies and delaying initialization. AOT and CRaC are powerful; they are not substitutes for a lean boot path.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+For serverless-style or scale-to-zero Java, startup becomes part of product latency. That is when CDS, native image, or checkpoint/restore move from interesting to necessary. For a long-lived monolith that restarts monthly, spend your energy on steady-state SLOs first. Fit the tool to the deployment model, the same way we fitted collectors to SLOs.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+For serverless-style or scale-to-zero Java, startup becomes part of product latency. That is when CDS, native image, or checkpoint/restore move from interesting to necessary. For a long-lived monolith that restarts monthly, spend your energy on steady-state SLOs first. Fit the tool to the deployment model, the same way we fitted collectors to SLOs.
 
-### What if we skip this approach?
+## Source attribution
 
-Important concepts become memorable when we see the failure mode without them.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — JVM Startup (Episode 65).
 
-For example, consider this common mistake: Doing heavy work in static initializers.
+Narration technique: steady-state vs cold start → classloading/init → classpath & static init → CDS/AOT/CRaC → measure separately → interview woven → bridge to interview wrap.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Doing heavy work in static initializers.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Ignoring class path bloat.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Optimizing startup without measuring.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Ways to improve startup?
-
-Answer in spoken form: Reduce classpath work, CDS, lazy init, native image where it fits.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Safepoints**. That set up a need. **JVM Startup** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **JVM Interview Wrap**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 65 / **JVM Startup** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Classloading + verification + init.
-- CDS/AppCDS.
-- AOT / Graal native image trade-offs.
-- CRaC for snapshotted restarts.
-- Lazy init carefully.
+Teaching points preserved: classloading/verification/init; CDS/AppCDS; AOT/native image; CRaC; lazy init carefully.

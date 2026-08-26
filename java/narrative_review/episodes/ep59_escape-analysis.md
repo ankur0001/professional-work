@@ -5,167 +5,48 @@
 | Episode | 59 |
 | Title | Escape Analysis |
 | Catalog handbook column | 59 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+We have been talking about heaps, collectors, and dumps as if every `new` in source code becomes a heap object that GC must eventually judge. That mental model is useful — and incomplete. After the JIT warms up, the runtime may prove that some objects never escape the method that created them. If nothing outside needs to see that object as an object, the JIT can optimize it away. That analysis is called escape analysis, and it is one reason microbenchmarks lie and why "I allocated less in source" does not always match profiles.
 
-In the previous episode, we worked through **Diagnostic Tools**. That gave us a piece of the platform. Today we need the next piece: **Escape Analysis**.
-
-We are continuing The Java Story, and today's challenge is Escape Analysis. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-The JIT may prove an object never escapes — then scalar-replace it.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, escape analysis is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Escape Analysis clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Escape analysis enables stack allocation/scalar replacement.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Lock elision possible.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Don't micro-opt assuming every new escapes.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Readability still wins.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Measure with real workloads.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Here is a tiny example that forces the question:
 
 ```java
 Point p = new Point(1, 2);
 return p.x() + p.y(); // may not need a real heap object
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+In source, you clearly constructed a `Point`. In a hot method, after inlining and escape analysis, the JIT may scalar-replace that object: keep `1` and `2` in registers or stack slots, never allocate a real heap `Point`, and still return the sum. From the programmer's view there was an object. From the machine's view there may only have been values. If you open an allocation profile and wonder where `Point` went, the answer might be "it never became a heap citizen on this path."
 
-Walk this like pair-programming.
+What does "escape" mean here? If the object is returned to an unknown caller, stored in a field, placed into a collection that outlives the method, published to another thread, or otherwise made reachable outside the analyzing scope, it escapes. If it stays local and the JIT can see all uses, it may not escape. Non-escaping objects enable scalar replacement — breaking an object into its constituent fields. And sometimes more: if you synchronize on an object that the JIT proves is thread-local and never escapes, lock elision becomes possible. The lock was protecting you from contention that cannot happen. The source still shows `synchronized`; the optimized native code may not pay for a real monitor. That is not a license to sprinkle synchronized blocks randomly. It is an explanation of why some synchronized local objects do not show up as contended locks in profiles.
 
-Focus on what each line means.
+This is exciting in interviews and dangerous in code reviews. The wrong reaction is to rewrite clear code into contortions because you imagine every `new` is expensive. Readability still wins for code that is not on a proven hot path. The JIT may already be removing the allocation you are about to make uglier. Another wrong reaction is to trust a tiny microbenchmark that "proves" allocations vanished — or did not — without JMH and without a warmup story that matches production. Escape analysis depends on inlining and profile-guided decisions. A cold microbench can miss the optimization. A poorly written one can fool you into celebrating nothing, or into panicking about allocations that disappear in the real service.
 
-Connect to the failure mode.
+So when do you care? When allocation profiles under real load show pressure, and you are deciding whether a particular allocation site is real heap traffic. When you see synchronized blocks on obviously local objects and wonder whether contention is imaginary. When someone claims "Java always allocates this" as a reason to rewrite an API into primitive soup before measuring. Escape analysis is the mechanism that makes those claims incomplete. It does not make measurement optional; it makes naive reading of source allocation counts incomplete.
 
-Look at `Point p = new Point(1, 2);`.
+Walk the reasoning with the `Point` example again, with variations. If `Point` is a simple carrier and `p` never leaves the method, scalar replacement may apply. If you store `p` into a list that outlives the method, it escapes — heap allocation is required. If you return `p` itself, it escapes. If you pass `p` into a method the JIT cannot inline or analyze fully, escape may be assumed conservatively. The keyword is not "never allocate." The keyword is "allocate when the object must be visible as an object." Ignoring when objects truly escape is how people invent conspiracy theories about the JIT "not working."
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Measure with real workloads. JFR allocation samples and async-profiler allocation mode show what survived into the heap, not what your eyes saw in source. That pairing — source intent versus runtime evidence — is the mature way to talk about escape analysis. Rewriting clear code for imaginary allocations, and trusting microbenchmarks without JMH, are the twin failure modes of this topic.
 
-Look at `return p.x() + p.y(); // may not need a real heap object`.
+If asked what escape analysis is, say: the JIT analyzes whether an object escapes a method or thread; if it does not, optimizations like scalar replacement and sometimes lock elision become legal. Then add the humility clause: do not micro-optimize assuming every `new` escapes, and do not rewrite clear code for imaginary allocations.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Today's lesson connects the JIT back to the heap: not every object you construct becomes collector work. Next we leave the "objects on the heap" frame for a moment. Processes die with free heap space when native memory, metaspace, or container limits are the real budget — and that is Episode Sixty.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Connect this back to GC pressure conversations. A developer points at a line that constructs a temporary object inside a hot loop and declares victory after deleting it. Sometimes allocation profiles improve. Sometimes nothing changes because the object never escaped and never hit the heap after warmup. Sometimes something gets worse because the "optimization" blocked inlining or made the code harder for the JIT to see through. Escape analysis does not forbid caring about allocations. It forbids caring about them without profiles from the warmed path.
 
-### Example 2 — make it more realistic
+Connect this back to GC pressure conversations. A developer points at a line that constructs a temporary object inside a hot loop and declares victory after deleting it. Sometimes allocation profiles improve. Sometimes nothing changes because the object never escaped and never hit the heap after warmup. Sometimes something gets worse because the "optimization" blocked inlining or made the code harder for the JIT to see through. Escape analysis does not forbid caring about allocations. It forbids caring about them without profiles from the warmed path.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Escape Analysis usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Lock elision deserves one more grounded picture. You write a helper that synchronizes on a freshly created local lock object "to be safe." No other thread can see that object. After JIT optimization, the monitor may disappear. The code review conversation should still ask why the lock exists — clarity for readers matters — but the performance conversation should not assume contention that the runtime proved impossible.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Lock elision deserves one more grounded picture. You write a helper that synchronizes on a freshly created local lock object "to be safe." No other thread can see that object. After JIT optimization, the monitor may disappear. The code review conversation should still ask why the lock exists — clarity for readers matters — but the performance conversation should not assume contention that the runtime proved impossible.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+## Source attribution
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Escape Analysis (Episode 59).
 
-### What if we skip this approach?
+Narration technique: every-new-is-heap assumption → Point example → escape definition → scalar replacement + lock elision → anti-patterns → when to care → variations → measure → interview woven → bridge to metaspace/native.
 
-Important concepts become memorable when we see the failure mode without them.
-
-For example, consider this common mistake: Rewriting clear code for imaginary allocations.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Rewriting clear code for imaginary allocations.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Trusting microbenchmarks without JMH.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Ignoring when objects truly escape.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: What is escape analysis?
-
-Answer in spoken form: Analysis of whether an object escapes a method/thread, enabling optimizations.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Diagnostic Tools**. That set up a need. **Escape Analysis** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Metaspace and Native Memory**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 59 / **Escape Analysis** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Escape analysis enables stack allocation/scalar replacement.
-- Lock elision possible.
-- Don't micro-opt assuming every new escapes.
-- Readability still wins.
-- Measure with real workloads.
+Teaching points preserved: escape analysis / scalar replacement; lock elision; don't micro-opt every new; readability; measure real workloads.
