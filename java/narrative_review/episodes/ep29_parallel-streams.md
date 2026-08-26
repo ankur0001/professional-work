@@ -77,7 +77,7 @@ Finally, remember that parallel streams do not replace architecture. Throughput 
 
 Numbers first, parallel second: that ordering keeps the common pool healthy and the code honest.
 
-If you cannot cite a measurement, leave the stream sequential. Parallelism is an optimization with a concurrency bill attached.
+If you cannot cite a measurement, leave the stream sequential. Parallelism is an optimization with a concurrency bill attached. Pay the bill only when the speedup is real.
 
 So let's reconnect the chain. Independent CPU work suggested parallelism. The common ForkJoinPool powered parallel streams. Purity and sizing constraints appeared. Ordering and shared mutation failed loudly. IO-bound work pointed elsewhere. Measurement closed the argument.
 
