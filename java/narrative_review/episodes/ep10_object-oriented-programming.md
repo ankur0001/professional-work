@@ -16,7 +16,7 @@ Imagine a user id that must never be blank, a balance that must never go negativ
 
 So a natural question appears: can related data and the behavior that protects it travel as one unit?
 
-That question is what object-oriented programming answers in Java — as a modeling tool, not a religion. Start with encapsulation: hide the representation, expose a controlled surface, protect invariants.
+That question is what object-oriented programming answers in Java — as a modeling tool, not a religion. You do not need an inheritance diagram for a twenty-line script. You do need a way to stop illegal states from becoming normal. Start with encapsulation: hide the representation, expose a controlled surface, protect invariants.
 
 ```java
 class User {
@@ -57,7 +57,7 @@ class OrderService {
 
 `OrderService` is not a subclass of `Pricing`. It holds a `Pricing` and uses it. You can swap pricing strategies without rewriting the service's type hierarchy. Prefer inheritance when you truly have a stable subtype relationship and polymorphism needs a shared type. Prefer composition when you mainly wanted reuse. A deep tree that exists only to share three utility methods is usually a composition opportunity wearing an inheritance costume.
 
-Polymorphism is the payoff that makes abstractions worth depending on. Callers program to a general type; runtime chooses the specific behavior.
+Polymorphism is the payoff that makes abstractions worth depending on. Callers program to a general type; runtime chooses the specific behavior. Without that, every new channel forces edits through every `welcome` call site — the same duplication methods already taught us to hate, now at the type level.
 
 ```java
 interface Notifier {

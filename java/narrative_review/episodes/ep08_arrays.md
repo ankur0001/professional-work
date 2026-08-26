@@ -14,7 +14,7 @@ Episode Seven gave behavior a name. Methods let us calculate a total once and ca
 
 Suppose you need three quiz scores. You could write `score1`, `score2`, `score3`. Then a fourth quiz appears. Then you need to average them, sort them, or pass them into a method that should not grow a new parameter every semester. Separate variables do not scale. Methods cannot save you if the inputs themselves are an exploding family of names. You need many values under one name, reachable by position.
 
-That need is an array. An array is a fixed-length sequence of elements of one type. You create it with a length, and that length does not grow later. Indexes start at zero. The last valid index is `length - 1`.
+That need is an array. An array is a fixed-length sequence of elements of one type. You create it with a length, and that length does not grow later. Indexes start at zero. The last valid index is `length - 1`. Those three facts — fixed length, zero-based indexes, typed slots — explain most beginner array bugs before they happen.
 
 ```java
 int[] scores = {88, 91, 74};

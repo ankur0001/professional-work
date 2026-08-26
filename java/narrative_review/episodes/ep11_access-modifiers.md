@@ -18,7 +18,7 @@ So the natural question is: what vocabulary does Java give us for "allowed to to
 
 Access modifiers answer that. They are API design in miniature — rules about visibility for types and members.
 
-Java's everyday ladder has four rungs: `private`, package-private (no modifier), `protected`, and `public`.
+Java's everyday ladder has four rungs: `private`, package-private (no modifier), `protected`, and `public`. Memorizing the ladder is easy. Choosing a rung under product pressure is the real skill — every widen is a promise, every narrow is freedom to change.
 
 ```java
 public class Api {
@@ -74,6 +74,8 @@ What if we skip the discipline and make everything `public` so demos compile fas
 Confusing protected with package-private, or leaking mutable internals from public getters, are the same story in different clothes: the modifier on the declaration did not match the boundary you actually needed.
 
 So reconnect the chain. OOP introduced insides and outsides. Access modifiers name who may cross. Private for implementation, package-private for collaborating types in one package, protected for deliberate subclass hooks, public for the supported surface. Boundaries must hold through what methods return. Modules can tighten further. Default tight; widen on purpose.
+
+Hold one review habit: before marking anything public, ask who the caller is and what happens when you rename this next month. If you cannot name the caller, the access is probably too wide.
 
 Once visibility rules exist, another organizational pressure grows with the codebase itself. Class names collide. Folders drift from declarations. Collaborating types need a shared neighborhood so package-private access means something real — not "whatever happens to sit nearby." The project needs geography.
 

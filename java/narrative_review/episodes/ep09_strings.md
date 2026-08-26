@@ -21,7 +21,7 @@ String b = a + "!";
 
 `a` still refers to `"hi"`. `b` refers to a new string `"hi!"`. Nothing edited the original characters in place. In Java, `String` is immutable. Concatenation does not mutate; it creates another object. That design buys safer sharing, simpler reasoning about aliases, and reliable behavior when strings are used as map keys — at the cost of allocating when you keep building new text.
 
-Why bake immutability into the type everyone uses? Because text crosses trust boundaries constantly — path names, class names, passwords in older APIs, cache keys. If any caller could silently change the characters underneath a shared reference, security and hashing would become nightmares. Immutability is not purity theater. It is a trade: more objects sometimes, fewer alias surprises often.
+Why bake immutability into the type everyone uses? Because text crosses trust boundaries constantly — path names, class names, passwords in older APIs, cache keys. If any caller could silently change the characters underneath a shared reference, security and hashing would become nightmares. Immutability is not purity theater. It is a trade: more objects sometimes, fewer alias surprises often. Once you accept that trade, a lot of "why can't I change this string in place?" frustration turns into a design feature.
 
 Immutability raises a practical question the first time you build a result in a loop: if every `+` can mean a new object, what do you do when you append hundreds of pieces?
 

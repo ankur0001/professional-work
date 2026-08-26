@@ -18,7 +18,7 @@ So the natural question is: how does Java give types an address space large enou
 
 Packages are that geography — names, folders, and boundaries together.
 
-Java's common convention is reverse-DNS style naming: `com.shop.order`, `org.example.tools`. The point is uniqueness and hierarchy, not fashion. You own a domain, you flip it, you nest features underneath. Even without owning a domain, the habit keeps team projects from inventing flat names that collide the week a second module arrives.
+Java's common convention is reverse-DNS style naming: `com.shop.order`, `org.example.tools`. The point is uniqueness and hierarchy, not fashion. You own a domain, you flip it, you nest features underneath. Even without owning a domain, the habit keeps team projects from inventing flat names that collide the week a second module arrives. `order` alone is a fight waiting to happen. `com.shop.order` is an address.
 
 ```java
 package com.shop.order;
@@ -81,7 +81,7 @@ Outside `com.shop.order`, callers see `Order` and its public methods. They do no
 
 So reconnect the chain. Access control needed neighborhoods. Packages provide namespaces, map them to directories, and give imports a way to name foreign types. Reverse-DNS conventions scale names. Directory honesty keeps tools aligned. Explicit imports keep dependencies visible. Combined with modifiers, packages become boundaries — and catch-all packages dissolve those boundaries again.
 
-Once types are organized, another modeling need shows up for values that are not free-form strings but a known set of named constants — order status, ticket priority, direction of a move. You can fake that with magic ints and string literals, and then every typo becomes a runtime surprise that the compiler never saw.
+Once types are organized, another modeling need shows up for values that are not free-form strings but a known set of named constants — order status, ticket priority, direction of a move. You can fake that with magic ints and string literals, and then every typo becomes a runtime surprise that the compiler never saw. The codebase has geography now. It still needs a typed vocabulary for closed sets of meanings.
 
 That pressure leads to Episode Thirteen: enums.
 
