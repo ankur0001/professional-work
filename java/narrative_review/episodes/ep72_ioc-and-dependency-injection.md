@@ -5,75 +5,14 @@
 | Episode | 72 |
 | Title | IoC and Dependency Injection |
 | Catalog handbook column | 72 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Episode Seventy-One said Spring wires beans so your code can depend on interfaces. Today we make that wiring honest. IoC inverts construction — your class no longer news up its collaborators. Dependency injection is how the inverted control delivers those collaborators. The style you choose changes testability, clarity, and failure modes.
 
-In the previous episode, we worked through **Spring Framework Intro**. That gave us a piece of the platform. Today we need the next piece: **IoC and Dependency Injection**.
-
-We are continuing The Java Story, and today's challenge is IoC and Dependency Injection. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-IoC inverts construction — constructor injection makes dependencies honest.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, ioc and dependency injection is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture IoC and Dependency Injection clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Constructor injection preferred.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: IoC vs service locator.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Testability skyrockets.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Avoid field injection in new code.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Scopes matter.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Here is the shape you want in new code:
 
 ```java
 @Service
@@ -83,100 +22,44 @@ class OrderService {
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Constructor injection preferred. Required dependencies are explicit, `final`, and impossible to forget if you construct the object yourself in a unit test. `new OrderService(fakeRepo)` is a complete story. No Spring container required for that unit test. That is why testability skyrockets when constructors tell the truth.
 
-Walk this like pair-programming.
+Contrast service locator: code asks a global registry for dependencies when it feels like it. Dependencies become invisible in the signature. Hidden static dependencies create the same fog. Field injection — `@Autowired` on fields — looks tidy and makes testing and immutability harder; avoid field injection in new code unless you have a constrained reason. Setters can work for optional dependencies; required ones belong in the constructor.
 
-Focus on what each line means.
+IoC versus service locator is worth saying aloud. Both can avoid `new` inside business logic. IoC with injection pushes dependencies inward from the outside. Service locator pulls them from a deep hole in the middle of a method. Pulling hides graph shape. Pushing reveals it.
 
-Connect to the failure mode.
+Scopes matter once the container owns lifecycle. A singleton-scoped bean is one shared instance — fine for stateless services, dangerous if you stash request state in fields. Request or session scopes exist for web concerns. Mixing scopes carelessly — injecting a narrower-scoped bean into a singleton without care — creates subtle bugs. Circular dependencies are a design smell; frameworks may work around them, but the honest move is to break the cycle in the domain model.
 
-Look at `@Service`.
+Walk the failure modes. Field injection everywhere until tests need reflection hacks. Hidden static gateways that bypass the container and freeze concrete types. Circular dependencies ignored until startup fails in a different environment. Each failure is a construction honesty problem.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Why constructor injection? Required dependencies are explicit, final, and easy to unit test. Keep that sentence ready. Then add: prefer interfaces at boundaries, let the container provide implementations, and keep business logic free of lookup calls.
 
-Look at `class OrderService {`.
+Make the unit-test story loud. With constructor injection, a pure unit test creates the service with a fake repository and asserts a domain rule — no Spring test slice required. That speed changes how often people run tests. Field injection quietly destroys that path: you need reflection or a container to populate private fields. The annotation looked shorter. The feedback loop got longer.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Circular dependencies often mean two types each need the other to exist. Sometimes the real fix is a third type that owns the interaction. Sometimes it is an event. Sometimes it is splitting a god service. Framework workarounds that inject proxies to break cycles can boot the app and still leave a confused domain. Treat the cycle as a design alarm.
 
-Look at `private final OrderRepo repo;`.
+Scopes bite when a singleton service stores request-specific state in an instance field. Under concurrent requests, users see each other's data. The DI style did not cause that alone — mutability plus scope did — but injection makes it easy to share one instance widely. Prefer stateless services; pass request data as method arguments.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+IoC also clarifies boundaries for future microservices. A service that depends on an interface can later be wired to a local impl or a remote adapter. Dishonest static dependencies freeze you in place.
 
-Look at `OrderService(OrderRepo repo) { this.repo = repo; }`.
+Constructor injection preferred remains the headline. Support it with: explicit required deps, immutability, easy fakes, clearer graphs, fewer hidden nulls after construction.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Compare three constructors aloud. No-args plus setters: the object exists before it is ready. Field injection: the object looks ready in source but is not constructible in tests. Constructor with required deps: the object cannot exist unfinished. That progression is the teaching point. Frameworks that encourage unfinished objects make illegal states representable; constructor injection fights that.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Service locator versus IoC also shows up in legacy migrations. You may find getBean calls mid-method. Treat them as debt. Replace with injection at the boundary when you can. Each lookup you remove makes the graph more visible and the test suite more honest.
 
-### Example 2 — make it more realistic
+When someone asks why constructor injection, answer with explicit required dependencies, final fields, and easy unit tests — then mention scopes and circular dependencies as the next maturity topics so the conversation does not stop at the annotation.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, IoC and Dependency Injection usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Put the preference hierarchy in one spoken checklist. Required collaborators: constructor parameters, final fields. Optional collaborators: optional parameters or setters with defaults. Cross-cutting infrastructure: prefer forms that keep business classes unaware. Lookups mid-method: debt. Field injection in new code: avoid. If a classmate asks for a rule of thumb, that checklist is enough to start reviewing pull requests with taste.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Circular dependencies deserve an example. OrderService needs InventoryService; InventoryService needs OrderService to reserve stock for an order id. A better model might pass a reservation request value object or raise a domain event. The container might boot with a workaround; the domain remains confused. Prefer fixing the conversation between types.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Once wiring is clear, teams still drown in configuration for HTTP servers, JSON, DataSource, and logging. Spring Boot exists to make the happy path executable with opinions and auto-configuration — Episode Seventy-Three.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+## Source attribution
 
-### What if we skip this approach?
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — IoC and Dependency Injection (Episode 72).
 
-Important concepts become memorable when we see the failure mode without them.
+Narration technique: honest wiring need → constructor injection example → vs locator/field injection → scopes → failure modes → interview woven → bridge to Boot.
 
-For example, consider this common mistake: Field injection everywhere.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Field injection everywhere.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Hidden static dependencies.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Circular dependencies as a design smell ignored.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Why constructor injection?
-
-Answer in spoken form: Required deps are explicit, final, and easy to unit test.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Spring Framework Intro**. That set up a need. **IoC and Dependency Injection** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Spring Boot Basics**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 72 / **IoC and Dependency Injection** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Constructor injection preferred.
-- IoC vs service locator.
-- Testability skyrockets.
-- Avoid field injection in new code.
-- Scopes matter.
+Teaching points preserved: constructor injection preferred; IoC vs service locator; testability; avoid field injection; scopes matter.

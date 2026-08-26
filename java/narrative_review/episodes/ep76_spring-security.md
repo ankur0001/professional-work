@@ -5,183 +5,65 @@
 | Episode | 76 |
 | Title | Spring Security |
 | Catalog handbook column | 76 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
-
-In the previous episode, we worked through **Spring Data and Persistence**. That gave us a piece of the platform. Today we need the next piece: **Spring Security**.
-
-We are continuing The Java Story, and today's challenge is Spring Security. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Security is a filter chain — AuthN vs AuthZ, never invent crypto.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, spring security is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Spring Security clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: SecurityFilterChain bean.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Authentication vs authorization.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Password encoders.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: CSRF for browsers.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Least privilege.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Your API can create orders and read users. Then someone asks, "Who is allowed to call this?" Security is not a controller `if` you remember to paste. In Spring, security is a filter chain — requests pass through filters that authenticate and authorize before your controller runs. Authentication asks who you are. Authorization asks what you can do. Never invent crypto for passwords or tokens when maintained libraries exist.
 
 ```java
 @Bean
 SecurityFilterChain filter(HttpSecurity http) throws Exception {
-  return http.authorizeHttpRequests(a -> a.anyRequest().authenticated())
-    .httpBasic(Customizer.withDefaults())
+  return http.authorizeHttpRequests(a -> a
+      .requestMatchers("/actuator/health").permitAll()
+      .anyRequest().authenticated())
     .build();
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+A `SecurityFilterChain` bean defines the rules. Permit health checks for orchestrators. Require authentication elsewhere. Password encoders hash credentials correctly — plaintext passwords are not a "temporary shortcut," they are a breach waiting for a calendar date. CSRF protection matters for browser session cookie flows; APIs using tokens have a different threat model — learn which one you are building. Least privilege means roles and authorities that match real job functions, not one `ROLE_ADMIN` for everything.
 
-Walk this like pair-programming.
+Disabling security "temporarily" forever is how staging configurations reach production. Authorize checks only on the UI is how raw API clients bypass your SPA's pretty buttons. Security must enforce on the server.
 
-Focus on what each line means.
+AuthN versus AuthZ? Authentication: who are you? Authorization: what can you do? Keep them distinct in design conversations. Then mention the filter chain so it is clear enforcement happens before controllers — not only in frontend routes.
 
-Connect to the failure mode.
+Picture a practical breach path. The SPA hides admin buttons. A curious user calls `/api/admin/refunds` with a stolen session cookie or a token. If authorization lives only in the UI, the API complies. Server-side authorization in the filter chain or method security is the real door lock.
 
-Look at `@Bean`.
+Password encoders exist because hashing is easy to get wrong. Use the framework-supported encoder factories. Never store plaintext. Never roll a custom hash "for simplicity." Rotate and migrate encodings when algorithms age.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+CSRF matters when browsers automatically attach session cookies to requests. Token-based APIs used by non-browser clients have different defaults — understand your clients before copying a Stack Overflow snippet that disables CSRF. Disabling security filters "so we can finish the demo" is how demo config becomes production config through a forgotten profile.
 
-Look at `SecurityFilterChain filter(HttpSecurity http) throws Exception {`.
+Least privilege shows up in role design. `ROLE_USER` versus `ROLE_FINANCE` versus `ROLE_ADMIN` should map to real capabilities. Broad admin for everyone is not speed; it is shared blast radius.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+AuthN versus AuthZ remains the interview staple — answer cleanly, then mention filter chains and method security as enforcement points so the answer is operational, not only definitional.
 
-Look at `return http.authorizeHttpRequests(a -> a.anyRequest().authenticated())`.
+Picture a practical breach path. The SPA hides admin buttons. A curious user calls an admin API with a stolen cookie or token. If authorization lives only in the UI, the API complies. Server-side authorization in the filter chain or method security is the real door lock.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Password encoders exist because hashing is easy to get wrong. Use framework-supported encoders. Never store plaintext. Never roll a custom hash for simplicity. Rotate encodings when algorithms age.
 
-Look at `.httpBasic(Customizer.withDefaults())`.
+CSRF matters when browsers automatically attach session cookies. Token-based APIs used by non-browser clients have different defaults — understand your clients before copying a snippet that disables CSRF. Disabling security filters so we can finish the demo is how demo config becomes production config through a forgotten profile.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Least privilege shows up in role design. Roles should map to real capabilities. Broad admin for everyone is shared blast radius. AuthN versus AuthZ remains the interview staple — answer cleanly, then mention filter chains as enforcement points.
 
-Look at `.build();`.
+Method security annotations can complement the filter chain for deeper authorization — for example, checking whether this user owns this order id. Filters decide whether you are authenticated at all; method security can decide whether this particular action on this particular resource is allowed. Use both thoughtfully. Duplicating contradictory rules in filter matchers and method annotations creates gaps.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Never invent crypto also covers tokens and cookies. Prefer maintained JWT libraries or session mechanisms your platform supports. Home-grown encryption of auth tokens is a recurring breach story. SecurityFilterChain configuration is where those choices become enforceable policy rather than wiki advice.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Build a minimal mental checklist before merge. Is authentication happening at the edge? Are authorization rules enforced on the server for every sensitive route? Are passwords encoded with a modern encoder? Is CSRF configured for the actual client type? Are Actuator and admin endpoints locked down? Did anyone disable security in a profile that could be active in production? This checklist is less glamorous than novel crypto, and it prevents novel outages.
 
-### Example 2 — make it more realistic
+SecurityFilterChain beans make the checklist visible in code review. Prefer readable matchers over clever regex. Prefer least privilege defaults — deny by default, permit explicitly — when the application's risk profile warrants it.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Spring Security usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Remember the distinction one more time in incident language. Authentication failures mean we do not know who you are — bad credentials, missing token, expired session. Authorization failures mean we know who you are and you may not do this — wrong role, wrong resource owner. Mixing those in logs and HTTP statuses confuses both users and on-call engineers. Spring Security gives you the hooks; your configuration and error mapping have to keep the meanings straight.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Also reconnect to testing: security rules without tests drift. Anonymous access tests and forbidden-role tests belong beside happy-path controller tests, which Episode Seventy-Seven will make systematic.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+You can wire secure APIs and still ship regressions if tests are slow, flaky, or missing. Episode Seventy-Seven is Spring testing — slices before full context, and realism when you need it.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+## Source attribution
 
-### What if we skip this approach?
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Spring Security (Episode 76).
 
-Important concepts become memorable when we see the failure mode without them.
+Narration technique: who can call this → filter chain thesis → SecurityFilterChain example → AuthN/AuthZ/encoders/CSRF/least privilege → misconceptions → interview woven → bridge to testing.
 
-For example, consider this common mistake: Disabling security 'temporarily' forever.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Disabling security 'temporarily' forever.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Plaintext passwords.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Authorize checks only on the UI.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: AuthN vs AuthZ?
-
-Answer in spoken form: Authentication: who are you? Authorization: what can you do?
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Spring Data and Persistence**. That set up a need. **Spring Security** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Spring Testing**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 76 / **Spring Security** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- SecurityFilterChain bean.
-- Authentication vs authorization.
-- Password encoders.
-- CSRF for browsers.
-- Least privilege.
+Teaching points preserved: SecurityFilterChain; AuthN vs AuthZ; password encoders; CSRF for browsers; least privilege.

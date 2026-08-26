@@ -5,75 +5,12 @@
 | Episode | 73 |
 | Title | Spring Boot Basics |
 | Catalog handbook column | 73 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
-
-In the previous episode, we worked through **IoC and Dependency Injection**. That gave us a piece of the platform. Today we need the next piece: **Spring Boot Basics**.
-
-We are continuing The Java Story, and today's challenge is Spring Boot Basics. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Boot makes the happy path executable — auto-config, starters, opinions.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, spring boot basics is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Spring Boot Basics clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: @SpringBootApplication.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Starters.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: application.yaml.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Actuator.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Override auto-config intentionally.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+You understand DI. You can wire a service and a repository by hand in a configuration class. Then you spend a day configuring an embedded server, JSON converters, a DataSource, logging levels, and health endpoints — for every new service. The practical pain is boilerplate and decision fatigue. Spring Boot makes the happy path executable: auto-configuration, starters, and opinions so you ship with less ceremony.
 
 ```java
 @SpringBootApplication
@@ -84,100 +21,44 @@ public class App {
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+`@SpringBootApplication` is a bundle of common setup: component scanning, auto-configuration enablement, and configuration class semantics. `SpringApplication.run` boots the context and, for web apps, the embedded server. Starters are dependency bill-of-materials flavored for jobs — web, data JPA, security — so you pull a coherent set of libraries instead of assembling versions by folklore. `application.yaml` or properties hold externalized config: ports, URLs, feature flags. Actuator exposes health, metrics, and info endpoints that operations needs. Override auto-config intentionally when the opinion does not fit — do not fight the framework blindly, and do not accept every auto-config without reading what it did.
 
-Walk this like pair-programming.
+What does Boot add? Opinionated auto-configuration so you ship with less boilerplate. That is the interview line. The humility line follows: auto-config is classpath-driven. Add a jar, and behavior may change. Blindly accepting all auto-config is how surprise DataSources and security filters appear. Giant unstructured `application.yaml` files become a second codebase — structure them, profile them, and document non-obvious keys. Shipping production apps with no Actuator story when you need health and metrics is choosing darkness.
 
-Focus on what each line means.
+Walk a first Boot service. You add `spring-boot-starter-web`, write a controller, run the main class, hit `localhost:8080`. Boot configured a server and JSON converters because the web starter was present. You add Actuator, hit `/actuator/health`, and readiness becomes visible to an orchestrator. When you need a custom DataSource bean, you define it and understand that you are overriding or supplementing auto-config on purpose.
 
-Connect to the failure mode.
+Auto-configuration is classpath-conditioned opinion. If Tomcat is present and you have not defined a conflicting bean, Boot sets up a server. If a DataSource URL is present, Boot may configure a pool. The practical habit is to read the auto-config report when something surprises you — Boot can show what kicked in and what backed off. Blind acceptance is how a test dependency on a database driver suddenly changes runtime wiring.
 
-Look at `@SpringBootApplication`.
+Starters reduce version archaeology. `spring-boot-starter-data-jpa` pulls a coherent set. You still own the choice to add it. Each starter is a capability decision, not a badge collection. Prefer a thin classpath for faster startup — Episode Sixty-Five's lesson returns inside Boot apps.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+`application.yaml` needs structure: shared defaults, profile overlays, secrets kept out of git. A giant flat file with every environment mixed together becomes an incident factory. Actuator should be locked down in production — expose health for the platform, protect more sensitive endpoints. "No Actuator" and "Actuator wide open" are both failure modes.
 
-Look at `public class App {`.
+Override intentionally with a custom `@Bean` when the default does not fit, and document why. Fighting Boot by disabling half of auto-config without understanding costs more than configuring the opinion it already offers.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+What Boot adds is speed to a secure-enough happy path. What it does not add is permission to skip understanding DI, MVC, and persistence behavior underneath.
 
-Look at `public static void main(String[] args) {`.
+Walk a misconfiguration. You add a JDBC URL in the wrong profile. Boot auto-configures a pool in prod against an empty default. Startup fails late or connects to the wrong place. Profile-specific configuration and fail-fast validation of required properties turn Boot from cozy to safe. Opinions help; validated opinions help more.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Actuator and operations connect back to JVM diagnostics. Health shows liveness. Metrics show HTTP timers. You still need JFR and dumps for deep incidents, but Actuator is how the platform notices you are sick before customers complain. Leaving it out of production apps that need it is choosing silence.
 
-Look at `SpringApplication.run(App.class, args);`.
+Override auto-config intentionally also means documenting exclusions so the next engineer does not clean them up by accident.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Boot's opinions extend to testing and packaging. The same main class that runs locally can run as a fat jar in a container. That executable bias is why Boot won teams over XML-heavy setups. Still measure startup — fat jars and component scans cost time — and still keep configuration honest across environments.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+A practical Boot day ends with: main class runs, one controller answers, config externalized, health endpoint protected appropriately, and auto-config overrides documented. If those are true, you are ready to deepen MVC rather than collect more starters.
 
-### Example 2 — make it more realistic
+Return to the thesis with a shipping story. A team needs a new internal API by Friday. Without Boot, they debate server choice, JSON library versions, and health check plumbing. With Boot, they pick web and validation starters, write controllers and services with constructor injection, externalize the database URL, and expose a health endpoint for Kubernetes. The framework opinions removed undecidable trivia so the team could spend hours on domain rules. That is what Boot adds when used with understanding rather than as a mystery box.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Spring Boot Basics usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+If auto-config ever surprises you, treat it like a failing test: reproduce, read the condition, adjust the classpath or define an overriding bean, document the decision. Mystery is optional.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+That Friday-shipping story only works if the team still understands DI underneath Boot. Otherwise the happy path becomes a maze the first time auto-config disagrees with production reality.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Boot is the executable face of Spring for most modern teams. Next we aim that executable app at HTTP: MVC, REST controllers, validation, and status codes — Episode Seventy-Four.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+## Source attribution
 
-### What if we skip this approach?
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Spring Boot Basics (Episode 73).
 
-Important concepts become memorable when we see the failure mode without them.
+Narration technique: boilerplate pain → Boot thesis → @SpringBootApplication walk → starters/yaml/actuator → override intentionally → misconceptions → interview woven → bridge to MVC/REST.
 
-For example, consider this common mistake: Blindly accepting all auto-config.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Blindly accepting all auto-config.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Giant application.yaml without structure.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** No Actuator in production apps that need it.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: What does Boot add?
-
-Answer in spoken form: Opinionated auto-configuration so you ship with less boilerplate.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **IoC and Dependency Injection**. That set up a need. **Spring Boot Basics** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Spring MVC and REST**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 73 / **Spring Boot Basics** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- @SpringBootApplication.
-- Starters.
-- application.yaml.
-- Actuator.
-- Override auto-config intentionally.
+Teaching points preserved: @SpringBootApplication; starters; application.yaml; Actuator; override auto-config intentionally.

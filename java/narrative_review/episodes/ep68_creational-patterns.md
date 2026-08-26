@@ -5,75 +5,14 @@
 | Episode | 68 |
 | Title | Creational Patterns |
 | Catalog handbook column | 68 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Episode Sixty-Seven left us with a rule: name a pattern when a problem recurs. Creation is one of those recurring problems. Objects do not only "get constructed." They need validation, defaults, shared instances, or alternate implementations. Creational patterns manage how objects come to life. In modern Java services, dependency injection containers often own lifecycle — which means some classical factory and singleton moves migrate into the container. The ideas do not vanish. Their addresses change.
 
-In the previous episode, we worked through **Design Patterns Intro**. That gave us a piece of the platform. Today we need the next piece: **Creational Patterns**.
-
-We are continuing The Java Story, and today's challenge is Creational Patterns. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Creational patterns manage how objects come to life — DI often replaces factories.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, creational patterns is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Creational Patterns clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Singleton caveats.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Factory methods.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Builder for many options.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Prototype rarely.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Containers may own lifecycle.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Start with the singleton everyone meets too early:
 
 ```java
 public final class App {
@@ -82,96 +21,47 @@ public final class App {
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+This is a simple eager singleton: one instance, private constructor, global access. It is clear. It is also a magnet for misuse. Singleton as a global mutable bag — a place to stash whatever state anyone wants — recreates global variables with better branding. Double-checked locking myths still circulate for lazy singletons; modern Java has safer idioms, enums-as-singleton, or simply letting a container manage scope. The interview trap is debating locking trivia while missing the design smell: do you need a global at all?
 
-Walk this like pair-programming.
+Factory methods appear when construction deserves a name. `Order.createFromCart(cart)` can encapsulate invariants better than a public constructor with eight parameters. Factories also hide concrete classes behind interfaces — useful when tests need fakes and production needs a real gateway. But a factory that only wraps `new` without policy is ceremony. Use factories when creation policy exists: caching, subtype selection, validation, or environment-specific wiring.
 
-Focus on what each line means.
+Builders earn their keep when telescoping constructors appear — `new Foo(a)`, `new Foo(a,b)`, `new Foo(a,b,c,d,e)` — and call sites become unreadable. A builder keeps optional fields explicit at the call site:
 
-Connect to the failure mode.
+```java
+Report report = Report.builder()
+    .title("Q4")
+    .includeCharts(true)
+    .build();
+```
 
-Look at `public final class App {`.
+That readability is the point. Builder versus telescoping constructors is not aesthetics alone; it is about whether the next teammate can see which arguments are which without counting commas. Prototype — cloning instances — shows up more rarely in Java application code; prefer clear copy constructors or factories unless you truly need clone-style duplication.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Now the modern twist. In Spring and similar containers, beans have scopes and lifecycle callbacks. The container may be your factory. Constructor injection, which we will deepen soon, makes dependencies honest instead of reaching for `App.INSTANCE`. That does not abolish creational thinking. It relocates it: you still decide what is singleton-scoped, what is request-scoped, what should be built per call, and what should be assembled by a builder before registration.
 
-Look at `public static final App INSTANCE = new App();`.
+Walk a failure mode. A team makes a "service locator" singleton that hands out dependencies anywhere. Tests become hard because anything can pull anything. Circular creation appears. Hidden static dependencies multiply. The creational pattern that would have helped was not a fancier singleton — it was explicit construction or DI with constructor injection. Creational patterns are about controlling birth so the rest of the design stays honest.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+If asked builder versus telescoping constructors, say: builder keeps call sites readable when many optional fields exist. If asked about singletons, admit caveats: global mutable state, testing pain, and the fact that containers often own the one-instance story now.
 
-Look at `private App() {}`.
+Make the builder story more tactile. An email message needs from, to, subject, optional cc, optional bcc, optional attachments, optional headers. Telescoping constructors force nulls and argument-order bugs. A builder makes the call site self-describing and can enforce invariants in `build()` — for example, requiring at least one recipient. That is creational policy, not mere sugar.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Factory methods also shine at boundary types. `Money.of(amount, currency)` can reject invalid combinations; `UserId.from(string)` can encapsulate parsing. These look small, but they concentrate rules that would otherwise scatter across constructors and static helpers. Prototype stays rare because Java cloning is awkward and most domains prefer explicit copy operations you can read.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Containers change the singleton conversation in enterprise apps. A Spring bean defaulting to singleton scope is not the same social object as a mutable `App.INSTANCE` bag. The container can still give you one instance, but dependencies remain injected and testable. Prefer that model for application services. Keep true singletons for rare infrastructure needs — and even then, ask whether an enum singleton or a holder is clearer than clever lazy locking.
 
-### Example 2 — make it more realistic
+Double-checked locking myths persist in interviews. You do not need to perform the myth; you need to say why people reached for it historically, why it was easy to get wrong before memory model clarity, and what you would do now instead. That answer shows judgment.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Creational Patterns usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Finally, connect creation to failure. If construction is dishonest — half-initialized objects, setters required after `new`, optional dependencies actually required — every creational pattern becomes makeup on a broken type. Fix the type's birth certificate first.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+One more creational seam shows up in tests. If you cannot construct a domain object with valid defaults in one or two lines, construction policy is too scattered. Builders and factories should make the valid happy path easy and the invalid path loud. When every test needs ten setters before the object is usable, the type was not born honestly — and no container will fully hide that pain.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Also separate "one instance" from "global access." A process may need a single cache manager without every class reaching into a static getter. Injection gives you the single instance without the global lookup. That distinction keeps singleton useful as a scope and dangerous as a lifestyle.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Creation sets the stage for structure: once objects exist, how do we assemble them so behavior can grow without subclass explosions? Episode Sixty-Nine is structural patterns — adapters, decorators, facades, and proxies.
 
-### What if we skip this approach?
+## Source attribution
 
-Important concepts become memorable when we see the failure mode without them.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Creational Patterns (Episode 68).
 
-For example, consider this common mistake: Double-checked locking myths.
+Narration technique: creation as recurring problem → singleton + caveats → factory methods → builder vs telescoping → prototype rarity → containers own lifecycle → failure mode → interview woven → bridge to structural.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Double-checked locking myths.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Telescoping constructors.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Singleton as global mutable bag.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Builder vs telescoping constructors?
-
-Answer in spoken form: Builder keeps call sites readable with many optional fields.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Design Patterns Intro**. That set up a need. **Creational Patterns** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Structural Patterns**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 68 / **Creational Patterns** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Singleton caveats.
-- Factory methods.
-- Builder for many options.
-- Prototype rarely.
-- Containers may own lifecycle.
+Teaching points preserved: singleton caveats; factory methods; builder; prototype rarely; containers may own lifecycle.

@@ -5,75 +5,12 @@
 | Episode | 75 |
 | Title | Spring Data and Persistence |
 | Catalog handbook column | 75 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
-
-In the previous episode, we worked through **Spring MVC and REST**. That gave us a piece of the platform. Today we need the next piece: **Spring Data and Persistence**.
-
-We are continuing The Java Story, and today's challenge is Spring Data and Persistence. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Spring Data speeds repositories — you still own SQL/N+1 reality.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, spring data and persistence is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Spring Data and Persistence clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: JpaRepository interfaces.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Query methods.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Transactions boundaries.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: N+1 and fetch strategies.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Migrations matter.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Your REST controller needs to load a user by email. You could write JDBC by hand. You could write a full EntityManager repository. Spring Data says: declare an interface, get a repository. That speed is real — and so is the bill that arrives later if you forget SQL, transactions, and fetch behavior.
 
 ```java
 interface UserRepo extends JpaRepository<User, Long> {
@@ -81,92 +18,48 @@ interface UserRepo extends JpaRepository<User, Long> {
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+`JpaRepository` gives you CRUD and paging helpers. Query methods derive queries from names — convenient until the method name becomes a novel. Custom `@Query` methods appear when derivation is not enough. Transaction boundaries matter: where does a unit of work start and end? Service-layer `@Transactional` is a common pattern so controllers stay thin and repositories do not each invent their own transaction story.
 
-Walk this like pair-programming.
+N+1 queries are the pitfall that turns demos into outages. You load a list of orders, then touch `order.getLines()` per order, and each touch fires another query. Lazy loading surprises outside a session throw `LazyInitializationException`. Fetch strategies — join fetch, entity graphs — must be chosen deliberately. God repositories that know every query in the company become dumpsters; split by aggregate or use cases when the interface grows without bound.
 
-Focus on what each line means.
+Migrations matter. Auto-ddl in production is not a strategy. Flyway or Liquibase — or your team's equivalent — version schema changes beside code. Spring Data speeds repositories; you still own SQL and schema reality.
 
-Connect to the failure mode.
+Biggest JPA pitfall? Lazy loading surprises and N+1 queries. Say it, then say how you detect it: logging SQL in staging, metrics on query counts per request, and refusing to return entities across layers that close the session.
 
-Look at `interface UserRepo extends JpaRepository<User, Long> {`.
+Query methods are wonderful until `findByAccountIdAndStatusInAndCreatedAtBetweenOrderByCreatedAtDesc` becomes unreadable. At that point a named `@Query` or a criteria/API approach can be clearer. Spring Data did not remove SQL thinking; it deferred it. Explain plans still matter. Indexes still matter.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Transaction boundaries decide consistency. A service method that updates an order and records an outbox event should succeed or fail together. Marking every repository method transactional can create chatty transactions and surprises around lazy loading. Prefer coarse enough service transactions with clear read-only flags for query paths.
 
-Look at `List<User> findByEmail(String email);`.
+N+1 detection should be part of Definition of Done for list endpoints. Enable SQL logging in a test profile, hit the endpoint, count statements. If count scales with list size, fix fetch strategy or reshape the query into a join or a dedicated read model. `LazyInitializationException` outside the session often means the view or DTO mapper touched lazy fields after the transaction closed — another reason not to spill entities into web layers.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+God repositories appear when every query in the system lands on one interface. Split by aggregate roots or by bounded read/write use cases. Migrations keep schema evolution reviewable; pair them with expand/contract practices when zero downtime matters.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Biggest pitfall remains lazy loading and N+1 — because the code looks clean while the database burns.
 
-### Example 2 — make it more realistic
+Query methods are wonderful until method names become novels. At that point a named query can be clearer. Spring Data did not remove SQL thinking; it deferred it. Explain plans still matter. Indexes still matter.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Spring Data and Persistence usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Transaction boundaries decide consistency. A service method that updates an order and records an outbox event should succeed or fail together. Marking every repository method transactional can create chatty transactions and surprises around lazy loading. Prefer service-level transactions with clear read-only flags for query paths.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+N+1 detection should be part of Definition of Done for list endpoints. Enable SQL logging in a test profile, hit the endpoint, count statements. If count scales with list size, fix fetch strategy or reshape the query. LazyInitializationException outside the session often means a mapper touched lazy fields after the transaction closed — another reason not to spill entities into web layers.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+God repositories appear when every query lands on one interface. Split by aggregate or use case. Migrations keep schema evolution reviewable; pair them with expand/contract practices when zero downtime matters.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Read-write splitting and routing datasources appear as you scale, but the first victory is simpler: know which queries your page runs. Spring Data makes it easy to accidentally hide a dozen queries behind a tidy method name. Logging and metrics bring them back into view. Persistence literacy is still database literacy — repositories are a dialect, not an escape hatch.
 
-### What if we skip this approach?
+If interviewers ask the biggest JPA pitfall, answer lazy loading and N+1, then briefly say how you would catch it in CI with SQL counting tests on critical list endpoints. That turns a trivia answer into an engineering answer.
 
-Important concepts become memorable when we see the failure mode without them.
+Connect transactions to the outbox teaser you will meet later in event-driven design. If you update a row and publish a message in two separate steps without a shared transactional story, you will lose messages or double-apply effects under failure. Spring's transaction boundaries are part of that story even before you introduce messaging libraries. Persistence is not only CRUD; it is where consistency policies become real.
 
-For example, consider this common mistake: N+1 queries.
+Migrations matter because code and schema are a pair. A repository method that assumes a new column will fail until the migration lands. Treat schema changes as reviewed artifacts. Auto-ddl in production hides drift until a catastrophic recreate fantasy meets real data.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Spring Data speeds repositories — keep saying the second half aloud — you still own SQL and N+1 reality.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Persistence without security is an open door. Episode Seventy-Six is Spring Security — filter chains, authentication versus authorization, and never inventing crypto.
 
-### Example 3 — a common misunderstanding
+## Source attribution
 
-**Misunderstanding 1:** N+1 queries.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Spring Data and Persistence (Episode 75).
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Narration technique: need load-by-email → Spring Data speed + bill → JpaRepository example → transactions → N+1/lazy → migrations → interview woven → bridge to security.
 
-**Misunderstanding 2:** LazyInitializationException outside session.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** God repositories.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Biggest JPA pitfall?
-
-Answer in spoken form: Lazy loading surprises and N+1 queries.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Spring MVC and REST**. That set up a need. **Spring Data and Persistence** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Spring Security**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 75 / **Spring Data and Persistence** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- JpaRepository interfaces.
-- Query methods.
-- Transactions boundaries.
-- N+1 and fetch strategies.
-- Migrations matter.
+Teaching points preserved: JpaRepository; query methods; transaction boundaries; N+1/fetch; migrations.

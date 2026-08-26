@@ -5,75 +5,14 @@
 | Episode | 69 |
 | Title | Structural Patterns |
 | Catalog handbook column | 69 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Creational patterns asked how objects are born. Structural patterns ask how objects are assembled so you can extend behavior without melting the type hierarchy. Composition wraps behavior. That sentence is the spine of today. Inheritance is not banned — but exploding subclasses for every combination of features is how codebases become museums of `LoggedCachedSecureX`.
 
-In the previous episode, we worked through **Creational Patterns**. That gave us a piece of the platform. Today we need the next piece: **Structural Patterns**.
-
-We are continuing The Java Story, and today's challenge is Structural Patterns. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Structural patterns assemble objects — adapters, decorators, facades, proxies.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, structural patterns is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Structural Patterns clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Composition wraps behavior.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Decorator adds without subclass explosion.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Facade simplifies subsystems.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Proxy controls access.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Spring AOP uses proxies.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Suppose you have a repository. You need logging around saves. Then metrics. Then a circuit breaker. Inheritance would tempt `LoggingRepo extends JdbcRepo`, then `MetricsLoggingRepo extends LoggingRepo`, and so on. A decorator adds behavior by wrapping the same interface:
 
 ```java
 class LoggingRepo implements Repo {
@@ -82,96 +21,40 @@ class LoggingRepo implements Repo {
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+`LoggingRepo` is still a `Repo`. Callers need not know whether they hold the raw repository or a wrapped one. Decorator versus inheritance, asked in an interview, is exactly this: add behavior via composition without exploding subclasses. Stack decorators carefully. Decorator stacks nobody understands — five wrappers with unclear order — recreate the complexity you fled.
 
-Walk this like pair-programming.
+Adapters appear when two interfaces do not match. You have a vendor SDK with a weird method shape and an internal port your domain expects. An adapter translates without forcing your domain to speak vendor dialect. Facades simplify subsystems: one entry point that orchestrates several collaborating classes so callers are not wired to every moving part. Facades fail when they hide too much — when errors are swallowed, or when the facade becomes a god object that knows the entire company. Simplifying access is not the same as erasing necessary complexity.
 
-Focus on what each line means.
+Proxies control access. They stand in for a real object and intercept calls — for lazy loading, security checks, remote access, or transactional boundaries. If you have used Spring AOP, you have lived with proxies: the bean you inject may be a proxy that wraps your class to apply transactions or security. That power has sharp edges. Proxy surprises around `equals`, `final` methods, and self-invocation (`this.method()` bypassing the proxy) confuse people who thought annotations were magic. Structural honesty helps: know you are talking to a proxy, and know what it can and cannot intercept.
 
-Connect to the failure mode.
+Walk a design conversation. "Should we facade the payment SDK?" If three services each duplicate the same five SDK calls and error translations, yes — a facade names the policy. If one call site exists, a facade may be premature. "Should we decorate the repository with caching?" Only if cache policy is clear — keys, TTL, invalidation — otherwise you are hiding a correctness problem behind a structural pattern. Patterns amplify both good and bad policy.
 
-Look at `class LoggingRepo implements Repo {`.
+Composition keeps showing up as the safe default for growing behavior. Adapter for foreign shapes. Decorator for layered policies on one interface. Facade for a curated subsystem door. Proxy for controlled access and infrastructure concerns. Spring's AOP proxies are not a different universe; they are this idea with a framework engine.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Adapters deserve a concrete vendor story. The SMS provider wants `sendSms(Phone, Text)`. Your domain port says `notify(UserId, Notification)`. The adapter loads the phone number, formats the text, translates errors into domain failures, and isolates the SDK. When the vendor changes, one class moves. Without an adapter, vendor types leak into services and tests.
 
-Look at `private final Repo delegate;`.
+Facades fail in two opposite ways. Too thin: they add a pass-through method per SDK call with no policy, so callers still need deep knowledge. Too thick: they absorb every business workflow and become an untestable blob. A good facade encodes a few use cases your system actually owns — "charge customer for invoice" — not one hundred low-level dials.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Proxy self-invocation bites Spring users weekly. A method annotated transactional calls another method on `this`. The call does not pass through the proxy, so the annotation does not apply as expected. Structural understanding prevents "Spring is broken" tickets. You restructure so the call goes through the proxy bean, or you separate the components.
 
-Look at `public void save(Entity e) { log(e); delegate.save(e); }`.
+Decorator order matters. Authentication before rate limiting before caching is a different system than caching before authentication. Document the stack. If nobody can explain the order, the stack is already too deep.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+When reviewing structural changes, ask: does this wrapper buy a policy we can name? If the name is fuzzy, you may be looking at accidental complexity rather than a pattern.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Composition wraps behavior — say it again with a metrics example. A metrics repository times save and increments counters, then delegates. Callers still see the repository interface. You can disable the metrics wrapper in tests by injecting the delegate directly. Inheritance would have forced a subclass tree tied to a concrete parent. Structural patterns buy replaceability at the seams.
 
-### Example 2 — make it more realistic
+Facades and adapters often travel together. A facade may own a use case and call an adapter for the vendor dial tone. Naming both keeps responsibilities sharp: facade for your policy, adapter for their shape. If one class does both and grows forever, split it when the vendor story and the business story stop changing for the same reasons.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Structural Patterns usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Spring AOP proxies bring this episode into everyday enterprise Java. Transactions, security, and retries often arrive as proxy advice. Understanding proxies turns annotation surprises into predictable mechanics.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Before you leave structure, notice how these patterns show up in code reviews without the names. "Can we wrap this client to add retries?" is decorator talk. "Can we hide these five SDK calls behind one service method?" is facade talk. "Can we translate this third-party DTO at the boundary?" is adapter talk. Teaching the names simply gives the team compression for conversations they are already having.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+When structural assembly is in place, the next question is how objects communicate and how algorithms vary without rewriting callers. That is behavioral patterns — Strategy, Observer, Command, and friends — in Episode Seventy.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+## Source attribution
 
-### What if we skip this approach?
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Structural Patterns (Episode 69).
 
-Important concepts become memorable when we see the failure mode without them.
+Narration technique: subclass explosion problem → decorator example → adapter/facade/proxy → Spring AOP proxy reality → design conversation → bridge to behavioral.
 
-For example, consider this common mistake: Decorator stacks nobody understands.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Decorator stacks nobody understands.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Facade hiding too much.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Proxy surprises for equals/final.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Decorator vs inheritance?
-
-Answer in spoken form: Decorator adds behavior via composition without exploding subclasses.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Creational Patterns**. That set up a need. **Structural Patterns** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Behavioral Patterns**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 69 / **Structural Patterns** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Composition wraps behavior.
-- Decorator adds without subclass explosion.
-- Facade simplifies subsystems.
-- Proxy controls access.
-- Spring AOP uses proxies.
+Teaching points preserved: composition wraps behavior; decorator; facade; proxy; Spring AOP uses proxies.

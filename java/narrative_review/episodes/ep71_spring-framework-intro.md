@@ -5,159 +5,52 @@
 | Episode | 71 |
 | Title | Spring Framework Intro |
 | Catalog handbook column | 71 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
-
-In the previous episode, we worked through **Behavioral Patterns**. That gave us a piece of the platform. Today we need the next piece: **Spring Framework Intro**.
-
-We are continuing The Java Story, and today's challenge is Spring Framework Intro. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Spring is an ecosystem centered on dependency injection and portable abstractions.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, spring framework intro is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Spring Framework Intro clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: IoC container mindset.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Beans and ApplicationContext.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Why enterprises adopt it.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Convention plus extension points.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Not magic — wiring.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+You are joining a team that ships a Java backend. On day one someone says, "We use Spring." It sounds like a product name. Then you see annotations, XML legends from older services, starters, Boot, Data, Security, Batch. Spring is not one jar. Spring is an ecosystem centered on dependency injection and portable abstractions — a way to wire applications so your code depends on interfaces and policies, while the container constructs and injects collaborators.
 
 ```java
 // Spring wires dependencies so your code depends on interfaces
 // The container constructs and injects beans
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+The practical situation that makes Spring necessary is the same pain Episode Sixty-Eight named: construction sprawl. Without a container, every service builds its dependencies by hand, or reaches into static locators, or news up concrete classes deep inside methods. Tests suffer. Swapping a real mailer for a fake one means editing production construction paths. Enterprises adopt Spring because large codebases need consistent wiring, lifecycle, and extension points — not because annotations are fashionable.
 
-Walk this like pair-programming.
+Hold the IoC container mindset lightly but firmly. IoC means inversion of control over construction: instead of your class creating its dependencies, something outside provides them. In Spring, that something is the `ApplicationContext` — the working heart of the container. Objects the container manages are beans. You describe what beans exist and how they relate; the container instantiates, injects, and manages lifecycle according to configuration and conventions.
 
-Focus on what each line means.
+Convention plus extension points is why teams stay. Defaults get you moving. Interfaces and SPI hooks let you replace parts without forking the framework. That is not magic — it is wiring. Treating Spring as magic is the first misunderstanding. Avoiding understanding DI is the second: people copy `@Autowired` until a circular dependency appears and then declare frameworks evil. Bringing every module for a hello world is the third: Spring's ecosystem is large; start with what your situation needs.
 
-Connect to the failure mode.
+What is Spring at heart? A DI-centered programming and configuration model with a large ecosystem around web, data, security, integration, and more. Say that, then connect it to why your team chose it: testability, consistent structure, and battle-tested integrations. The ecosystem matters because real applications are not only objects in memory — they talk HTTP, databases, brokers, and identity providers. Spring's portable abstractions aim to keep your code from being married to one vendor's low-level API on day one.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Walk a mental first day. You open a service class. It declares a constructor taking a repository interface. You do not see `new JdbcOrderRepository` inside the service. Somewhere else — configuration class, component scan, Boot auto-config — a bean implementing that interface is defined. At runtime the context creates the repository, creates the service, injects the repository, and hands you a ready graph. Your service's job stays business logic. Construction policy lives elsewhere.
 
-### Example 2 — make it more realistic
+Why enterprises adopt Spring becomes clearer if you picture ten teams sharing platform practices. Without a common wiring model, each team invents constructors, factories, and lifecycle differently. Onboarding costs explode. Spring's container and component model give a shared grammar: beans, injection, profiles, configuration. Ecosystem modules then cover cross-cutting needs without each team writing a one-off security filter chain from scratch — though they still must understand what they enable.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Spring Framework Intro usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Portable abstractions matter at the edges. A `DataSource`, a messaging template, a cache manager — your code can target Spring's abstractions while drivers and brokers swap underneath with configuration. That portability is incomplete — dialects leak — but it beats scattering vendor API calls through domain services.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+"Not magic — wiring" deserves a debugging ritual. When a bean is missing, read the startup failure: which definition was expected, which configuration condition failed, which classpath auto-config backed out. When two beans compete, understand `@Primary` and qualifiers. When a property is wrong, trace binding. Teams that treat Spring as magic restart until it works. Teams that treat it as wiring read the graph.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+A healthy first service uses a small slice of the ecosystem: Boot for executable shape, web for HTTP, maybe JDBC or JPA, Security when needed. Expanding module count without expanding understanding is how microservices become micro-monoliths of configuration.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Ask in interviews what Spring is at heart, and answer DI-centered model plus ecosystem. Then give one sentence on why your last team used it: consistency, testability, integrations.
 
-### What if we skip this approach?
+Beans and ApplicationContext become concrete when startup fails. Read the failure: missing bean, two candidates, or an unbound property. The container is showing you the graph it could not build. That graph mindset is the same honesty constructor injection demands inside a single class, scaled to the application.
 
-Important concepts become memorable when we see the failure mode without them.
+Convention plus extension points means you can start with component scanning and annotations, then drop to explicit bean methods when wiring needs a human-readable policy. Neither style is morally superior. Clarity in your codebase is. Teams fight annotation-versus-Java-config wars while users wait; pick a house style and optimize for reading the graph.
 
-For example, consider this common mistake: Treating Spring as magic.
+Spring's size can intimidate. You do not need every module. You need the container story, then the modules your service actually imports. Curiosity about the next module should come from a situation — we need OAuth — not from a checklist.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+One last orientation before DI deep dive: Spring did not abolish design. If your domain is a mud ball, the container will happily wire a mud ball. IoC makes dependencies explicit; it does not invent bounded contexts for you. Use the container to reveal the graph, then fix the graph. That attitude prevents "we rewrote in Spring and nothing improved" disappointments.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Curiosity should already be tugging: how exactly should we inject — constructor, setter, field — and why do tests become easier? That is not a side topic. It is the next episode: IoC and dependency injection in practice.
 
-### Example 3 — a common misunderstanding
+## Source attribution
 
-**Misunderstanding 1:** Treating Spring as magic.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Spring Framework Intro (Episode 71).
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Narration technique: day-one "we use Spring" → ecosystem thesis → construction sprawl situation → IoC/ApplicationContext/beans → convention+extension → misconceptions → interview woven → walkthrough → bridge to DI.
 
-**Misunderstanding 2:** Avoiding understanding DI.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Bringing every module for a hello world.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: What is Spring at heart?
-
-Answer in spoken form: A DI-centered programming and configuration model with a large ecosystem.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Behavioral Patterns**. That set up a need. **Spring Framework Intro** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **IoC and Dependency Injection**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 71 / **Spring Framework Intro** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- IoC container mindset.
-- Beans and ApplicationContext.
-- Why enterprises adopt it.
-- Convention plus extension points.
-- Not magic — wiring.
+Teaching points preserved: IoC mindset; beans/ApplicationContext; why enterprises adopt; convention+extension; not magic — wiring.

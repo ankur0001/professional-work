@@ -5,75 +5,14 @@
 | Episode | 77 |
 | Title | Spring Testing |
 | Catalog handbook column | 77 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+You have Boot, MVC, Data, and Security in play. A change breaks something subtle. The practical question is how to test without booting the universe for every class. Tests should be fast where possible — slices before full context — and realistic where reality is the point.
 
-In the previous episode, we worked through **Spring Security**. That gave us a piece of the platform. Today we need the next piece: **Spring Testing**.
-
-We are continuing The Java Story, and today's challenge is Spring Testing. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Tests should be fast where possible — slices before full context.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, spring testing is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Spring Testing clearly.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Unit tests without Spring.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: @WebMvcTest/@DataJpaTest slices.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: @SpringBootTest when needed.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Testcontainers for realism.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Deterministic data.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Constructor-injected services can be unit-tested with plain JUnit and fakes — no Spring required. When you need MVC wiring, `@WebMvcTest` loads a web slice:
 
 ```java
 @WebMvcTest(HelloController.class)
@@ -82,96 +21,48 @@ class HelloControllerTest {
 }
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+`MockMvc` exercises HTTP mappings without a full server. `@DataJpaTest` focuses on persistence slices. `@SpringBootTest` boots a fuller context — use it when you truly need that graph, not as a default for every class. Testcontainers bring real databases or brokers into integration tests when fakes lie. Deterministic data — fixed clocks, explicit fixtures, no order-dependent tests — keeps CI green.
 
-Walk this like pair-programming.
+Bootstrapping full context for everything is how suites become slow and flaky. Flaky time and order dependencies teach the team to rerun instead of fix. No failure assertions — only happy paths — miss the validation and security cases that matter.
 
-Focus on what each line means.
+When `@SpringBootTest`? When you truly need the full context; prefer slices for speed. Say that, then mention Testcontainers for the integration layer where contracts with real infrastructure matter.
 
-Connect to the failure mode.
+Choose the lightest test that can fail for the right reason. Domain pure logic: unit test, no Spring. Controller routing and validation: `@WebMvcTest` with MockMvc and mocked collaborators. Repository queries against a real dialect: `@DataJpaTest` plus Testcontainers when H2 lies. Security filter behavior: dedicated security tests. Full vertical slice through Boot: `@SpringBootTest` sparingly for critical paths.
 
-Look at `@WebMvcTest(HelloController.class)`.
+Flakes teach the wrong lesson. If tests depend on wall-clock time, inject a clock. If tests depend on row order without `ORDER BY`, fix the query or the assertion. If tests share mutable static state, isolate data. Deterministic tests are a production readiness skill, not a nicety.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Testcontainers cost time and buy truth. Use them where contract with infrastructure matters — JSONB queries, lock behavior, Kafka consumer offsets. Do not require a container to assert that a pure tax function rounds correctly.
 
-Look at `class HelloControllerTest {`.
+When `@SpringBootTest` is justified, keep it few and informative. When it is a habit, suites rot. Prefer slices for speed is not anti-integration; it is triage.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+This testing discipline is what lets the Spring stack evolve without fear as you move toward distributed systems next.
 
-Look at `@Autowired MockMvc mockMvc;`.
+Choose the lightest test that can fail for the right reason. Domain pure logic: unit test, no Spring. Controller routing and validation: WebMvcTest with MockMvc and mocked collaborators. Repository queries against a real dialect: DataJpaTest plus Testcontainers when H2 lies. Security filter behavior: dedicated security tests. Full vertical slice: SpringBootTest sparingly for critical paths.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Flakes teach the wrong lesson. If tests depend on wall-clock time, inject a clock. If tests depend on row order without ORDER BY, fix the query or the assertion. If tests share mutable static state, isolate data. Deterministic tests are a production readiness skill, not a nicety.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Testcontainers cost time and buy truth. Use them where contract with infrastructure matters. Do not require a container to assert that a pure tax function rounds correctly.
 
-### Example 2 — make it more realistic
+When SpringBootTest is justified, keep it few and informative. When it is a habit, suites rot. Prefer slices for speed is not anti-integration; it is triage. This testing discipline lets the Spring stack evolve without fear as you move toward distributed systems next.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Spring Testing usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Assert failures, not only successes. A security test that never tries an anonymous caller is incomplete. A validation test that never sends a blank field is incomplete. A persistence test that only saves and reloads the happy entity may miss constraint violations. Spring's test support makes the happy path easy; professionalism lives in the negative paths.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Slice tests also document architecture. If you cannot @WebMvcTest a controller without pulling the entire JPA world, the controller may be doing too much. Painful tests are often design feedback. Listen before you force a full SpringBootTest to silence the pain.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Close with a team policy you can actually run. Every service class with pure logic gets unit tests without Spring. Every controller gets a web slice test for routing, validation, and error mapping. Critical repository queries get a persistence slice against a containerized database. A small set of SpringBootTest scenarios cover security wiring and main happy paths. Failures are asserted. Time is faked. Data is isolated. That policy keeps the suite fast enough to run and realistic enough to trust — which is the only testing strategy that survives contact with microservices and production pressure ahead.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+MockMvc assertions should read like a specification. Expect status, expect JSON path, expect a header. When a test only checks that the call did not throw, it is not protecting the contract. Pair that with failure assertions for validation and security, and your web slice becomes living documentation.
 
-### What if we skip this approach?
+DataJpaTest realism improves when you flush and clear the persistence context between act and assert, ensuring you are not reading only the first-level cache. Small technique, fewer false greens. Deterministic data and honest assertions are how Spring test slices earn trust before you ever open a full SpringBootTest.
 
-Important concepts become memorable when we see the failure mode without them.
+If a suite cannot fail for the right reason, it cannot protect production. Keep that as the north star when someone proposes booting the full context for every class because it feels easier.
 
-For example, consider this common mistake: Bootstrapping full context for everything.
+This closes the Spring core arc: container, Boot, web, data, security, tests. Next we zoom out to systems of services — microservices basics — where network failure becomes a design input, not an exception. Episode Seventy-Eight.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+## Source attribution
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Spring Testing (Episode 77).
 
-### Example 3 — a common misunderstanding
+Narration technique: regression fear → fast vs realistic → unit without Spring → @WebMvcTest example → slices vs @SpringBootTest → Testcontainers/determinism → misconceptions → interview woven → bridge to microservices.
 
-**Misunderstanding 1:** Bootstrapping full context for everything.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Flaky time/order dependencies.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** No failure assertions.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: When @SpringBootTest?
-
-Answer in spoken form: When you truly need the full context; prefer slices for speed.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Spring Security**. That set up a need. **Spring Testing** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Microservices Basics**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 77 / **Spring Testing** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Unit tests without Spring.
-- @WebMvcTest/@DataJpaTest slices.
-- @SpringBootTest when needed.
-- Testcontainers for realism.
-- Deterministic data.
+Teaching points preserved: unit without Spring; @WebMvcTest/@DataJpaTest; @SpringBootTest when needed; Testcontainers; deterministic data.
