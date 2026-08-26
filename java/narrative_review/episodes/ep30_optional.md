@@ -5,162 +5,121 @@
 | Episode | 30 |
 | Title | Optional |
 | Catalog handbook column | 30 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Parallel streams closed a chapter on how we process many values. One value still causes outsized pain: the value that might not be there.
 
-In the previous episode, we worked through **Parallel Streams**. That gave us a piece of the platform. Today we need the next piece: **Optional**.
+A `findUser` method returns `null` when the id is unknown. Callers forget to check. Somewhere deeper, `user.name()` throws `NullPointerException`. The stack trace points at a symptom, not at the API that lied by using null as a silent status code. The natural question is: can absence be part of the return type?
 
-We are continuing The Java Story, and today's challenge is Optional. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Optional makes absence explicit at API boundaries — not everywhere.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, optional is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Optional clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Prefer as return type.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: map/flatMap/filter.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: orElse vs orElseGet.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Avoid Optional.of(null).
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Don't use Optional fields everywhere.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Optional makes absence explicit at API boundaries — not everywhere. Prefer it as a return type when "maybe none" is a normal outcome.
 
 ```java
 Optional<User> u = find();
 String name = u.map(User::name).orElse("unknown");
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk it. `find()` returns `Optional<User>` — either a user or empty. `map(User::name)` transforms the inner value if present, otherwise stays empty. `orElse("unknown")` unwraps to a concrete string, supplying a default when absent. Callers cannot call `.name()` on a raw null they forgot to imagine; they must confront the optional.
 
-I'll walk this like pair-programming.
+`map`, `flatMap`, and `filter` are the vocabulary for transforming absence safely.
 
-Focus on the idea each line encodes.
+```java
+Optional<String> city = findUser(id)
+    .filter(User::active)
+    .flatMap(User::address)
+    .map(Address::city);
+```
 
-Then connect to the failure mode.
+`filter` drops inactive users to empty. `flatMap` chains another optional-returning step without nesting. `map` extracts a city when the address exists. The chain reads like the business rules.
 
-Look at `Optional<User> u = find();`.
+`orElse` versus `orElseGet` matters when the default is expensive:
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+```java
+user.orElse(loadDefaultFromDisk());      // always loads, even when user present
+user.orElseGet(() -> loadDefaultFromDisk()); // loads only when empty
+```
 
-Look at `String name = u.map(User::name).orElse("unknown");`.
+`orElse` evaluates its argument immediately. `orElseGet` accepts a supplier and runs it only on absence. Use `orElse` for cheap constants. Use `orElseGet` for work you do not want to waste.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Avoid `Optional.of(null)`. It throws immediately. If the value might be null, use `Optional.ofNullable`. If you already know it is non-null, `Optional.of` documents that belief — and fails fast if you were wrong.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+```java
+Optional.of(null);            // NullPointerException
+Optional.ofNullable(maybe);   // empty when maybe is null
+```
 
-### Example 2 — make it more realistic
+Do not use Optional fields everywhere. Optional is a poor fit for fields, parameters, and collections of optionals as a general style. It shines on return types where the caller must decide what absence means. Inside a class, a nullable private field with clear invariants — or a separate empty object — is often simpler. Wrapping every field in Optional adds noise without adding boundary safety.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Optional usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+What if we skip Optional and keep returning null?
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+```java
+User find(String id) {
+    return map.get(id);   // null if missing
+}
+```
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Every caller reinvents the check. One misses. Production pays. Optional does not remove null from Java; it moves the "might be missing" declaration to a place the type system can see.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+A clean repository boundary looks like this:
 
-### What if we skip this approach?
+```java
+public Optional<User> findById(String id) {
+    return Optional.ofNullable(store.get(id));
+}
 
-Important concepts become memorable when we see the failure mode without them.
+public User requireById(String id) {
+    return findById(id)
+        .orElseThrow(() -> new NotFoundException(id));
+}
+```
 
-For example, consider this common mistake: Optional.of(null).
+`findById` admits absence. `requireById` turns absence into an exception for paths that truly need a user. Both are honest. Neither pretends a missing user is a null reference waiting to explode later.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Optional in streams appears often as a bridge:
 
-### Example 3 — a common misunderstanding
+```java
+List<String> names = ids.stream()
+    .map(this::findUser)
+    .flatMap(Optional::stream)
+    .map(User::name)
+    .toList();
+```
 
-**Misunderstanding 1:** Optional.of(null).
+Each id may or may not resolve. `Optional::stream` flattens presence into the stream and drops absence. That composition is why Optional and streams feel related without Optional being a general-purpose collection.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Resist `optional.get()` without a guard. Prefer `orElseThrow`, `ifPresent`, or explicit branching. `get` is the old null-shaped escape hatch and recreates the same blind trust Optional was meant to remove.
 
-**Misunderstanding 2:** Using get() without checks.
+At team level, agree where Optional is required: public find methods yes; private helpers maybe; fields and parameters rarely. Consistency matters more than maximal Optional usage.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
 
-**Misunderstanding 3:** Optional as fields/parameters everywhere.
+Serialization and Optional fields are another reason to keep Optional off fields: many tools handle nulls, fewer handle Optional wrappers consistently across versions. Return Optional from finders; store nullable references privately if you must store absence.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+`orElseThrow` without a supplier message is fine when the exception type is enough; with a supplier you can include the missing id. Prefer precise failures over empty-looking defaults that mask bugs in paths that should never be empty.
 
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
 
-### Interview-style checkpoint
 
-Question: Why not Optional as a field?
+If a library forces null returns, adapt at the boundary: wrap with `ofNullable` once, then speak Optional inward. Do not let nulls leak through layer after layer and then sprinkle Optional randomly in the middle. Boundaries convert; interiors stay consistent.
 
-Answer in spoken form: Noise and allocation; use it to communicate absence in returns.
+So let's reconnect the chain. Null returns hid absence. Optional made it explicit at boundaries. `map`/`flatMap`/`filter` transformed carefully. `orElse` versus `orElseGet` controlled default cost. `of` versus `ofNullable` avoided traps. Fields everywhere were rejected as style abuse.
 
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+With language features and collections under our feet, the next practical world is time itself — dates, instants, zones — where stringly-typed timestamps repeat the same class of mistake Optional tried to cure.
 
-### Connecting the thread
+Optional is documentation you cannot ignore as easily as a JavaDoc line that says "may be null." Use that power at the seams. Inside a method, local null checks can still be the simplest tool. The episode's lesson is judgment about boundaries — not fear of null in every line.
 
-We came from **Parallel Streams**. That set up a need. **Optional** is one of Java's answers to that need.
+Teams sometimes wrap collections in Optional — `Optional<List<User>>` — to mean "no list." Prefer an empty list for "no users" and Optional only for a missing singular thing. Empty collections already express absence of elements. Optional of a collection usually doubles the absence channels and confuses callers.
 
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+With Optional closing this arc of language and collections tools, you are ready for libraries that encode real-world domains — starting with time — using the same design instinct: make illegal or ambiguous states harder to represent silently.
 
-### Looking ahead
+That bridge leads to Episode Thirty-One — Java Time.
 
-Once this is solid, a new challenge appears. That challenge leads us to **java.time**.
+## Source attribution
 
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 30 (*Optional*).
 
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 30 / **Optional** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
+Narration technique: null-return NPE situation → Optional as boundary answer → map/flatMap/filter → orElse vs orElseGet → of/ofNullable → not for fields → next natural problem (time API). Continuity-checked transitions.
 
 ### Teaching points drawn from the topic bank
 

@@ -5,157 +5,114 @@
 | Episode | 25 |
 | Title | Sorting and Comparators |
 | Catalog handbook column | 25 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Queues ordered things by arrival. Users often want a different order: alphabetical names, cheapest price first, newest message on top. Sorting is comparison policy — make that policy explicit and consistent.
 
-In the previous episode, we worked through **Queues and Deques**. That gave us a piece of the platform. Today we need the next piece: **Sorting and Comparators**.
+Suppose you have a list of users. One screen sorts by name. Another sorts by age, then name. If `User` hard-codes one `compareTo`, every screen fights over the "natural" order. The natural question is: can the collection stay dumb while the sort rule stays swappable?
 
-We are continuing The Java Story, and today's challenge is Sorting and Comparators. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Sorting is comparison policy — make that policy explicit and consistent.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, sorting and comparators is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Sorting and Comparators clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Comparable = natural order.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Comparator = external strategy.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: thenComparing chains.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Consistency with equals matters for sorted sets/maps.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: TimSort is stable for objects.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Java splits that responsibility. `Comparable` means natural order — the type itself knows how it compares. `Comparator` means an external strategy — a separate rule you pass into `sort` or into sorted collections.
 
 ```java
+record User(String name, int age) {}
+
+List<User> list = new ArrayList<>();
+list.add(new User("Zoe", 30));
+list.add(new User("Ada", 36));
+list.add(new User("Ada", 20));
+
 list.sort(Comparator.comparing(User::name).thenComparingInt(User::age));
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk the policy. `comparing(User::name)` sorts by name. `thenComparingInt(User::age)` breaks ties by age. Two Adas end up with age twenty before thirty-six. The list changes in place. The `User` type did not need to implement `Comparable`. The strategy lived at the call site — exactly where the screen's requirement lived.
 
-I'll walk this like pair-programming.
+`thenComparing` chains are how real sorts grow without becoming unreadable nests of manual `compare` methods. Start with the primary key, chain the secondary, reverse when needed with `reversed()`. Keep each piece a pure comparison: given two elements, return a negative number, zero, or positive — and do not mutate the world while deciding.
 
-Focus on the idea each line encodes.
+Natural order still matters when a type truly has one obvious sequence — integers, strings, enums, timestamps.
 
-Then connect to the failure mode.
+```java
+record Ranked(String id, int score) implements Comparable<Ranked> {
+    public int compareTo(Ranked other) {
+        return Integer.compare(other.score, this.score); // higher score first
+    }
+}
+```
 
-Look at `list.sort(Comparator.comparing(User::name).thenComparingInt(User::age));`.
+Now `TreeSet` or `Collections.sort` can use that order without a separate comparator. Choose `Comparable` when the order is intrinsic. Choose `Comparator` when the order is contextual. Many types offer both: a natural order plus extra comparators for special views.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Consistency with `equals` matters for sorted sets and maps. If two elements compare as zero — "equal for sorting" — a `TreeSet` will treat them as duplicates even when `equals` says they differ. That mismatch drops data silently. When you design a comparator for sorted collections, align "compare to zero" with equality, or document carefully why you are using sorting structures only as sorted sequences and not as sets of unique domain identities.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Java's object sort uses TimSort, a stable mergesort variant. Stability means equal elements keep their relative order from before the sort. If two users share a name and you only sorted by name, their previous relative order survives. That property matters when you sort in stages or when "equal under this comparator" should not scramble an earlier arrangement.
 
-### Example 2 — make it more realistic
+What if comparison policy stays implicit?
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Sorting and Comparators usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+```java
+// scattered if/else comparing fields differently in three screens
+```
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Each screen invents a slightly different rule. One treats null names as first; another crashes. Extracting a named `Comparator` — even a static final field — makes the policy reviewable and reusable.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+```java
+static final Comparator<User> BY_NAME_THEN_AGE =
+    Comparator.comparing(User::name).thenComparingInt(User::age);
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+list.sort(BY_NAME_THEN_AGE);
+```
 
-### What if we skip this approach?
+The name documents intent. Tests can assert order against that single definition.
 
-Important concepts become memorable when we see the failure mode without them.
 
-For example, consider this common mistake: Inconsistent compare/equals.
+Null-friendly comparators are another production detail. Real data has missing names.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+```java
+Comparator<User> byName = Comparator.comparing(
+    User::name,
+    Comparator.nullsLast(String::compareToIgnoreCase));
+```
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+You declare where nulls go instead of crashing mid-sort. The policy stays explicit — the theme of this episode.
 
-### Example 3 — a common misunderstanding
+When sorting arrays, `Arrays.sort` uses the same comparator ideas. For primitives there is no comparator object; the order is numeric. For objects, TimSort's stability lets you sort by department first, then by name, in two passes, and keep department groups intact. One-pass `thenComparing` chains are clearer when you can write them; staged sorts remain a useful mental model for why stability matters.
 
-**Misunderstanding 1:** Inconsistent compare/equals.
+Never write a `compare` method that returns only -1 or 1 and uses 0 rarely if at all — or worse, subtract ints and risk overflow. Prefer `Integer.compare`, `Comparator.comparingInt`, and friends.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
 
-**Misunderstanding 2:** Sorting nulls without nullsFirst/Last.
+Reverse order is a one-liner that teams reimplement constantly:
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+```java
+list.sort(Comparator.comparing(User::age).reversed());
+```
 
-**Misunderstanding 3:** Mutating objects mid-sort.
+Chain carefully: `reversed()` reverses the whole comparator so far. For multi-key sorts, reverse the specific key with `Comparator.comparing(...).reversed().thenComparing(...)` patterns you can read aloud.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Comparators should be transitive and antisymmetric. Clever shortcuts that break the contract produce `TreeMap` corruption and infinite loops in theory, subtle mis-sorts in practice. Keep them boring.
 
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
 
-### Interview-style checkpoint
 
-Question: Comparable vs Comparator?
+Product language often hides multiple comparators behind one screen: "default sort" versus "advanced sort." Implement both as named constants and select explicitly. Hidden sort rules in random utility methods become archaeology. Sorting is policy — keep the policy where humans can find it.
 
-Answer in spoken form: Comparable defines natural order on the type; Comparator is supplied externally.
+So let's reconnect the chain. Arrival order was not enough. `Comparable` covered intrinsic order; `Comparator` covered external strategy. `thenComparing` chains expressed multi-key sorts. Consistency with `equals` protected sorted sets and maps. TimSort's stability explained why staged sorts behave calmly.
 
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+Once we can filter, transform, and sort collections, another itch appears: expressing bulk operations as a pipeline — "keep these, transform those, collect the result" — without handwriting every loop. That style has a name in modern Java.
 
-### Connecting the thread
+Named comparators belong next to the domain type or in a small `Comparators` companion. Scattering lambdas across controllers guarantees drift. When product asks "sort like the admin table," you want one definition to point to — not three similar lambdas.
 
-We came from **Queues and Deques**. That set up a need. **Sorting and Comparators** is one of Java's answers to that need.
+When sorting maps by value, extract entries to a list and sort with a comparator on `Entry.getValue()`. Maps themselves are not "sorted by value" structures; `TreeMap` sorts keys. Knowing which axis you sort prevents awkward API misuse.
 
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+```java
+entries.sort(Map.Entry.comparingByValue());
+```
 
-### Looking ahead
+Episode Twenty-Six introduces Streams.
 
-Once this is solid, a new challenge appears. That challenge leads us to **Streams Intro**.
+## Source attribution
 
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 25 (*Sorting and Comparators*).
 
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 25 / **Sorting and Comparators** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
+Narration technique: multi-screen sort conflict → Comparable vs Comparator → thenComparing walkthrough → equals consistency → TimSort stability → next natural problem (bulk pipelines / streams). Continuity-checked transitions.
 
 ### Teaching points drawn from the topic bank
 

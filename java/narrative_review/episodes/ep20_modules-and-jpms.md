@@ -17,7 +17,7 @@ So teams asked a practical question: can we declare, up front, what a library re
 Packages gave us neighborhoods. Modules give those neighborhoods a customs checkpoint: you may be public inside your module and still invisible outside it unless exported. That single rule repairs years of "but it compiled on my classpath" accidents.
 
 
-That is the Java Platform Module System — JPMS. Modules restore strong encapsulation the classpath erased. The feature landed with Java 9 and reshaped how the JDK itself is packaged — which is why even classpath applications feel module-related error messages when they touch JDK internals. Reading those messages with a module graph in mind turns confusion into a checklist.
+That is the Java Platform Module System — JPMS. Modules restore strong encapsulation the classpath erased. The feature landed with Java 9 and reshaped how the JDK itself is packaged — which is why even classpath applications feel module-related error messages when they touch JDK internals. Reading those messages with a module graph in mind turns confusion into a checklist. The checklist is usually: Am I on the module path or classpath? What does this module export? What does it open? Which `requires` is missing?
  A module is a named collection of packages with an explicit boundary. The declaration lives in `module-info.java`.
 
 ```java

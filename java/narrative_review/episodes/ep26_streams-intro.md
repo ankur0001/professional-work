@@ -5,172 +5,121 @@
 | Episode | 26 |
 | Title | Streams Intro |
 | Catalog handbook column | 26 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Sorting taught us to declare comparison policy. Many loops still look like the same story told with different field names: take a collection, keep some elements, transform what remains, produce a result. Streams let you describe bulk operations — laziness included — instead of micromanaging each iteration.
 
-In the previous episode, we worked through **Sorting and Comparators**. That gave us a piece of the platform. Today we need the next piece: **Streams Intro**.
-
-We are continuing The Java Story, and today's challenge is Streams Intro. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Streams let you describe bulk operations — laziness included.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, streams intro is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Streams Intro clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Pipelines: source, intermediate ops, terminal op.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Lazy until terminal.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Prefer purity in lambdas.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: toList() modern collectors.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Streams aren't always faster.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Suppose you have a list of words and you want the long ones uppercased. The classic loop builds a result list by hand.
 
 ```java
-list.stream()
-  .filter(s -> s.length() > 3)
-  .map(String::toUpperCase)
-  .toList();
+List<String> result = new ArrayList<>();
+for (String s : list) {
+    if (s.length() > 3) {
+        result.add(s.toUpperCase());
+    }
+}
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+It works. It also mixes three concerns — filtering, mapping, collecting — into one mutable scratchpad. The natural question is: can we name those steps as a pipeline?
 
-I'll walk this like pair-programming.
+```java
+List<String> result = list.stream()
+    .filter(s -> s.length() > 3)
+    .map(String::toUpperCase)
+    .toList();
+```
 
-Focus on the idea each line encodes.
+Walk the pipeline. `list.stream()` is the source. `filter` and `map` are intermediate operations — they describe what to do, and they are lazy. `toList()` is a terminal operation that triggers work and produces a result. Until a terminal runs, the intermediate steps wait. That laziness means you can build a pipeline and still short-circuit with `findFirst` without transforming every element.
 
-Then connect to the failure mode.
+Pipelines always have that shape: source, intermediate ops, terminal op. Forget the terminal and you have a description that never runs — a common beginner surprise when they expect `map` alone to print something.
 
-Look at `list.stream()`.
+Prefer purity in lambdas. A filter should decide, not update a database. A map should transform, not quietly mutate a shared list. Side effects inside stream lambdas make order, laziness, and later parallelism hard to reason about. If you need a side effect, an ordinary loop is often clearer.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+```java
+long count = list.stream()
+    .filter(s -> s.startsWith("A"))
+    .count();
+```
 
-Look at `.filter(s -> s.length() > 3)`.
+Here the terminal is `count`. No intermediate list required. The pipeline expresses the question: how many strings start with A?
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Modern Java's `toList()` collector (from the stream itself) returns an unmodifiable list — handy for returning results safely. Older code uses `collect(Collectors.toList())`, which is mutable. Know which one you are calling when a caller later tries to `add`.
 
-Look at `.map(String::toUpperCase)`.
+Streams are not always faster. They shine for clarity on bulk data transformations. On tiny lists, a simple loop can be easier to read and cheaper to run. On hot paths, measure. Do not rewrite every for-loop into a stream for fashion. Prefer the form that makes the intent obvious and the cost acceptable.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+What if we treat streams as magic speed buttons?
 
-Look at `.toList();`.
+```java
+// tiny list, complex parallel stream, harder stack traces — no win
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+You pay abstraction cost without gaining clarity or performance. Use streams when the pipeline reads closer to the problem than the loop does.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+A slightly richer example shows composition without nesting:
 
-### Example 2 — make it more realistic
+```java
+List<String> names = users.stream()
+    .filter(User::active)
+    .sorted(Comparator.comparing(User::name))
+    .map(User::name)
+    .toList();
+```
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Streams Intro usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Filter, sort, map, collect — each step one idea. Comparators from the previous episode drop in naturally. The result list is the answer to a sentence you could say out loud.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Laziness becomes tangible with short-circuit terminals.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+```java
+Optional<String> first = list.stream()
+    .filter(s -> s.length() > 3)
+    .map(String::toUpperCase)
+    .findFirst();
+```
 
-### What if we skip this approach?
+If the first element already qualifies, later elements need not be mapped. A handwritten loop that always uppercases everything before finding does extra work. Streams can skip that when the terminal allows it.
 
-Important concepts become memorable when we see the failure mode without them.
+Debugging tip: intermediate `peek` exists for observation, but leave it out of production pipelines. It encourages side effects. Prefer unit-testing the functions you pass to `map` and `filter` as ordinary methods.
 
-For example, consider this common mistake: Mutating external state in lambdas.
+Also remember streams are single-use. Call a terminal, and the stream is consumed. A second terminal throws. If you need two results, collect once or stream from the source twice.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Infinite streams exist — `Stream.iterate`, `Stream.generate` — and they make the terminal's role unmistakable. Without `limit` or a short-circuit terminal, they never finish. That extreme case teaches the everyday rule: intermediate ops describe; terminals decide.
 
-### Example 3 — a common misunderstanding
+```java
+Stream.iterate(0, n -> n + 1).limit(5).toList(); // 0..4
+```
 
-**Misunderstanding 1:** Mutating external state in lambdas.
+Method references keep pipelines tidy when a lambda would only call one method. When logic grows beyond a line, extract a named method and reference it — readability beats inline cleverness.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
 
-**Misunderstanding 2:** Forgetting a terminal operation.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Exception handling inside lambdas is deliberately awkward — checked exceptions do not pass through Functional interfaces cleanly. That friction pushes you to keep stream bodies simple and to handle awkward I/O outside the pipeline or with wrapping helpers. It is another quiet reminder that streams favor pure transformations.
 
-**Misunderstanding 3:** Blindly parallelizing.
+So let's reconnect the chain. Hand-built loops mixed filter, map, and collect. Streams named those steps as a lazy pipeline. Purity kept lambdas honest. `toList()` modernized collection of results. Performance humility kept us from cargo-culting.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Once pipelines feel natural, the terminal step gets more interesting: sometimes you need a `Set`, a `Map`, or groups of elements. How do you collect into richer structures?
 
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+Think of a stream as a view over a computation, not as a stored collection. The source list is still the data. The stream is the recipe. That mental model explains laziness, single-use rules, and why mutating the source while streaming is a bad idea.
 
-### Interview-style checkpoint
+Primitive streams — `IntStream`, `LongStream`, `DoubleStream` — avoid boxing when you map to numbers and sum or average. They are part of the same pipeline idea with less wrapper traffic. Reach for them when the payload is numeric end to end.
 
-Question: Are streams always faster?
+```java
+int sum = list.stream().mapToInt(String::length).sum();
+```
 
-Answer in spoken form: No — clarity first; measure before going parallel.
+When a pipeline is hard to name in one sentence, it is probably doing too much. Split it. Streams amplify clear steps; they punish kitchen-sink lambdas.
 
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+That is Episode Twenty-Seven — Stream Collectors.
 
-### Connecting the thread
+## Source attribution
 
-We came from **Sorting and Comparators**. That set up a need. **Streams Intro** is one of Java's answers to that need.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 26 (*Streams Intro*).
 
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Stream Collectors**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 26 / **Streams Intro** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
+Narration technique: loop-as-pipeline situation → stream source/intermediate/terminal → laziness → purity → toList → not always faster → next natural problem (richer collection / collectors). Continuity-checked transitions.
 
 ### Teaching points drawn from the topic bank
 

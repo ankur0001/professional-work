@@ -5,157 +5,95 @@
 | Episode | 29 |
 | Title | Parallel Streams |
 | Catalog handbook column | 29 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Sequential streams made bulk work declarative. Looking at a long CPU-heavy map, a temptation appears: add `.parallel()` and wait for a speedup. Parallel streams are a power tool — and a foot-gun on IO and tiny data.
 
-In the previous episode, we worked through **flatMap & Composition**. That gave us a piece of the platform. Today we need the next piece: **Parallel Streams**.
-
-We are continuing The Java Story, and today's challenge is Parallel Streams. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Parallel streams are a power tool — and a foot-gun on IO and tiny data.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, parallel streams is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Parallel Streams clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Uses common ForkJoinPool.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Best for CPU-heavy independent work.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Ordering and side effects get weird.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: IO-bound work wants explicit executors/virtual threads.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Measure; don't hope.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Suppose you transform a large list of in-memory records with a pure, expensive function — compress a buffer, score a document, compute a hash. The work is independent: one element's result does not depend on another's. That is the profile where parallel streams can help.
 
 ```java
-list.parallelStream().map(this::cpuHeavy).toList();
+List<Result> results = list.parallelStream()
+    .map(this::cpuHeavy)
+    .toList();
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk the claim carefully. `parallelStream()` splits the source and runs pieces concurrently. Under the hood it uses the common `ForkJoinPool`. Your lambdas must tolerate running on multiple threads. Prefer purity — no unsynchronized mutation of shared collections inside the map. Best for CPU-heavy independent work on sizable data.
 
-I'll walk this like pair-programming.
+What goes wrong when the problem is smaller or messier?
 
-Focus on the idea each line encodes.
+On tiny lists, the cost of splitting and joining dwarfs the work. You can make a sort slower by parallelizing it. Measure; don't hope. A microbenchmark or a realistic timer around the real dataset beats folklore.
 
-Then connect to the failure mode.
+Ordering and side effects get weird. Encounter order may differ. `forEach` on a parallel stream does not promise sequence. If you print inside a lambda for debugging, lines shuffle. If you mutate an external `ArrayList` from parallel threads, you corrupt it. Side-effecting lambdas that were "fine" sequentially become races.
 
-Look at `list.parallelStream().map(this::cpuHeavy).toList();`.
+```java
+List<String> unsafe = new ArrayList<>();
+list.parallelStream().forEach(unsafe::add);   // don't
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Use a proper concurrent collector or keep the pipeline pure and collect at the end.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+IO-bound work wants explicit executors or virtual threads, not the common fork-join pool. A parallel stream that blocks on network calls inside `map` can stall shared compute work for the whole JVM process — other unrelated parallel streams may wait. That surprise is why "just parallelize the stream" is dangerous in servers. Blocking queues and dedicated thread pools from later concurrency episodes are the better fit for IO pipelines.
 
-### Example 2 — make it more realistic
+```java
+// CPU-bound, pure, large enough — candidate
+list.parallelStream().map(this::score).toList();
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Parallel Streams usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+// IO-bound — prefer structured concurrency / executors / virtual threads
+// not the common ForkJoinPool via parallelStream
+```
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+A fair interview-style check: when would you refuse parallel streams? Tiny data, IO inside the pipeline, need for strict encounter order with side effects, or already saturated cores. When would you consider them? Large in-memory data, pure CPU work, associative reductions, measured improvement.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+What if we always call `parallel()` for fashion?
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+```java
+List.of("a", "b", "c").parallelStream().map(String::toUpperCase).toList();
+```
 
-### What if we skip this approach?
+Three elements. No win. Harder debugging. You taught the team the wrong default. Keep sequential as the default; go parallel when evidence says so.
 
-Important concepts become memorable when we see the failure mode without them.
 
-For example, consider this common mistake: parallelStream on HTTP calls.
+Reductions have associativity requirements under parallelism. Summing integers works. Building a string by repeatedly concatenating on the left in a non-associative way can scramble. Prefer `Collectors.joining` or concurrent collectors designed for the job.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+```java
+int sum = list.parallelStream().mapToInt(Integer::intValue).sum();
+```
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Primitive specialized streams avoid boxing and parallelize cleanly for numeric work. That is a better first parallel candidate than a stream of objects with heavy allocation inside `map`.
 
-### Example 3 — a common misunderstanding
+Also know the pool: the common ForkJoinPool size defaults around available processors. Saturating it with blocking tasks hurts unrelated parallel streams library-wide. Isolate blocking work elsewhere. That single operational fact prevents many "the app randomly stalled" incidents blamed on "Java streams."
 
-**Misunderstanding 1:** parallelStream on HTTP calls.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Thread-safety of the source matters. Parallel streams over freshly built `ArrayList`s of immutable data are the happy path. Parallel streams over concurrent collections undergoing mutation are a research project you did not mean to start. Stabilize inputs first.
 
-**Misunderstanding 2:** Shared mutable accumulators.
+Naming tip: `processInParallel(data)` as a dedicated method signals intent and localizes the parallel boundary. Inline `.parallelStream()` in the middle of business logic hides a concurrency decision where reviewers least expect it.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
 
-**Misunderstanding 3:** Assuming order is preserved without care.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Finally, remember that parallel streams do not replace architecture. Throughput problems may need better algorithms, caching, or batching — not just more cores on the same pipeline. Measure end-to-end. Local parallel wins that hurt tail latency are not wins.
 
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+Numbers first, parallel second: that ordering keeps the common pool healthy and the code honest.
 
-### Interview-style checkpoint
+So let's reconnect the chain. Independent CPU work suggested parallelism. The common ForkJoinPool powered parallel streams. Purity and sizing constraints appeared. Ordering and shared mutation failed loudly. IO-bound work pointed elsewhere. Measurement closed the argument.
 
-Question: When not to use parallelStream?
+Pipelines and collectors still have one more everyday absence problem: a lookup that might not find a user, a parse that might not yield a number. Returning null works until it doesn't. Is there a type that makes absence explicit at the boundary?
 
-Answer in spoken form: Tiny data, IO, shared mutation, or latency-critical request threads.
+A healthy team default: sequential streams in application code; parallel only behind a clearly named method with a comment pointing at a benchmark. Fashionable `.parallel()` in random service methods is how fork-join saturation becomes a production mystery.
 
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+If a parallel pipeline helps in benchmarks but complicates error handling — one element's failure should cancel others, for example — consider structured concurrency tools instead of stretching parallel streams past their design. Parallel streams are a concise parallel map/reduce, not a general workflow engine.
 
-### Connecting the thread
+A quick lab: time a CPU-heavy map over 10 elements and over 10 million. Parallelism usually only pays in the second world. Keep that lab in mind whenever a pull request sprinkles `.parallel()` without numbers.
 
-We came from **flatMap & Composition**. That set up a need. **Parallel Streams** is one of Java's answers to that need.
+Episode Thirty — Optional.
 
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+## Source attribution
 
-### Looking ahead
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 29 (*Parallel Streams*).
 
-Once this is solid, a new challenge appears. That challenge leads us to **Optional**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 29 / **Parallel Streams** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
+Narration technique: speed temptation → parallelStream/ForkJoinPool → CPU-bound fit → tiny/IO/side-effect failures → measure → next natural problem (explicit absence / Optional). Continuity-checked transitions.
 
 ### Teaching points drawn from the topic bank
 

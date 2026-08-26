@@ -5,75 +5,16 @@
 | Episode | 23 |
 | Title | Maps |
 | Catalog handbook column | 23 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Sets answered uniqueness. They do not answer the everyday business question: given this key, what value sits beside it?
 
-In the previous episode, we worked through **Sets**. That gave us a piece of the platform. Today we need the next piece: **Maps**.
+Imagine a phone book, a cache of user ids to profiles, a dictionary of sku to quantity. You can fake it with two lists — keys in one, values in the other — and pray the indexes stay aligned. Or you can search a list of pairs. Both get painful. The natural question is: where is the lookup engine?
 
-We are continuing The Java Story, and today's challenge is Maps. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Maps are the lookup engine of business logic.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, maps is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Maps clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Keys hash into buckets.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: getOrDefault/computeIfAbsent/merge are workhorses.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: null key/value rules depend on implementation.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: LinkedHashMap preserves order; TreeMap sorts.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Concurrent maps come later for shared mutation.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Maps are that engine. A map stores key-to-value associations. Keys hash into buckets in a `HashMap`. A good key's `equals` and `hashCode` decide both placement and retrieval, just as they did for sets.
 
 ```java
 Map<String, Integer> ages = new HashMap<>();
@@ -81,91 +22,90 @@ ages.put("Ada", 36);
 int v = ages.getOrDefault("Ada", 0);
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk it. `put` associates `"Ada"` with `36`. `getOrDefault` returns the value if present, otherwise the default you supply — here `0`. That single method prevents a pile of null checks when missing keys are normal. Maps are the lookup engine of business logic because so many rules are "look up X, then decide."
 
-I'll walk this like pair-programming.
+Three workhorse methods show up constantly once you live in map-shaped code: `getOrDefault`, `computeIfAbsent`, and `merge`.
 
-Focus on the idea each line encodes.
+```java
+Map<String, List<String>> index = new HashMap<>();
+index.computeIfAbsent("java", k -> new ArrayList<>()).add("ep23");
 
-Then connect to the failure mode.
+Map<String, Integer> counts = new HashMap<>();
+counts.merge("ada", 1, Integer::sum);
+counts.merge("ada", 1, Integer::sum);   // ada → 2
+```
 
-Look at `Map<String, Integer> ages = new HashMap<>();`.
+`computeIfAbsent` builds a value only when the key is missing — perfect for multimap-style indexes. `merge` combines a new contribution with an existing value through a function; counting and aggregating become one readable line instead of get-null-check-put boilerplate.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Null rules depend on the implementation. `HashMap` allows one null key and null values. `Hashtable` and `ConcurrentHashMap` do not play the same null game. `TreeMap` rejects null keys under natural ordering. Do not assume "maps allow null" as a universal law — read the implementation you chose.
 
-Look at `ages.put("Ada", 36);`.
+Order is another axis:
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+```java
+Map<String, Integer> linked = new LinkedHashMap<>(); // insertion (or access) order
+Map<String, Integer> tree = new TreeMap<>();         // sorted by key
+```
 
-Look at `int v = ages.getOrDefault("Ada", 0);`.
+`LinkedHashMap` preserves order — useful for stable iteration, LRU-style access-order caches, and predictable output. `TreeMap` sorts by key, with the same comparator-consistency caveats you met for `TreeSet`. Pick the map that matches the question you ask: fast unordered lookup, ordered iteration, or sorted keys.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+A small inventory fragment shows why maps replace parallel lists:
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+```java
+Map<String, Integer> stock = new HashMap<>();
+stock.put("SKU-1", 10);
+stock.put("SKU-2", 0);
 
-### Example 2 — make it more realistic
+int available = stock.getOrDefault("SKU-1", 0);
+stock.merge("SKU-1", -1, Integer::sum);   // sell one
+```
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Maps usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+The sku is the key. Quantity is the value. There is no second list to keep in sync. Missing skus default safely. Updates speak in merge language.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+What about concurrency? Concurrent maps come later for shared mutation. A plain `HashMap` is not safe for multi-threaded writes. If two threads resize or update together, you can corrupt the structure. For now, treat maps as single-threaded unless you reach for a concurrent variant on purpose. That warning is enough to stop a common production accident without derailing today's lesson.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+What if we skip maps and search lists?
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+```java
+for (User u : users) {
+    if (u.id().equals(id)) return u;
+}
+```
 
-### What if we skip this approach?
+Fine at dozens. Painful at hundreds of thousands. Maps exist so average lookup cost stays sensible when the key is known.
 
-Important concepts become memorable when we see the failure mode without them.
 
-For example, consider this common mistake: Using containsKey+get instead of compute patterns.
+Hashing deserves a plain-language picture. A key's `hashCode` selects a bucket. Within the bucket, `equals` finds the exact entry. Bad hash distributions — every key hashing to the same value — turn a map into a slow list. You rarely write hash functions for strings, but for custom keys you inherit the same duty you saw with sets: equal objects, equal hashes.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+```java
+Map<String, Integer> ages = new HashMap<>();
+ages.put("Ada", 36);
+ages.put("Ada", 37);   // replaces, does not duplicate
+System.out.println(ages.get("Ada")); // 37
+```
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Keys are unique. A second `put` with the same key replaces the value. That is different from a list of pairs that could hold Ada twice. If you need multi-values per key, use `computeIfAbsent` with a collection value — a multimap pattern — rather than expecting `HashMap` to keep duplicates.
 
-### Example 3 — a common misunderstanding
+When iterating, prefer `entrySet()` when you need both key and value, so you do not re-get by key on each step. Small habits like that keep map-heavy services honest under load.
 
-**Misunderstanding 1:** Using containsKey+get instead of compute patterns.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+`keySet`, `values`, and `entrySet` are views backed by the map. Remove from the key set and the map loses the entry. Clear that relationship in your mind before treating those collections as independent copies. When you need a snapshot for safe later mutation, copy deliberately.
 
-**Misunderstanding 2:** Mutable keys.
+For counting and histograms, `merge` with `Integer::sum` beats handwritten get-and-put. For indexes of lists, `computeIfAbsent` beats null checks. Learn those two deeply and a surprising fraction of map boilerplate disappears.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
 
-**Misunderstanding 3:** Assuming iteration order on HashMap.
+So let's reconnect the chain. Keyed lookup outgrew lists and sets. Maps answered with hashed associations. `getOrDefault`, `computeIfAbsent`, and `merge` removed boilerplate. Null and ordering rules depended on the implementation. Concurrent mutation was flagged for later.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Sometimes the problem is not lookup by key, but flow: work waiting to be processed, messages waiting to be handled, undo history waiting to rewind. That is a different shape — first-in-first-out, or double-ended access.
 
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+Caches, indexes, and configuration tables are map-shaped thoughts. When you catch yourself looping to find an object by id for the third time in a module, stop and build a map once. The collection choice documents the access pattern for the next reader — lookup, not scan.
 
-### Interview-style checkpoint
+That shape is Episode Twenty-Four — Queues and Deques.
 
-Question: How HashMap works at high level?
+## Source attribution
 
-Answer in spoken form: Hash to buckets, equals to resolve collisions, resize as load grows.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 23 (*Maps*).
 
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Sets**. That set up a need. **Maps** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Queues and Deques**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 23 / **Maps** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
+Narration technique: keyed-lookup need → HashMap basics → workhorse methods → null/order variants → concurrency caution → next natural problem (flow / queues). Continuity-checked transitions.
 
 ### Teaching points drawn from the topic bank
 

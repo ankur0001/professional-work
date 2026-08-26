@@ -5,167 +5,127 @@
 | Episode | 28 |
 | Title | flatMap & Composition |
 | Catalog handbook column | 28 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Collectors taught us to finish pipelines into maps and groups. Domain models still nest: a customer has orders, an order has line items, a team has members who have skills. If you `map` each customer to their orders, you get a stream of lists — a nested world. flatMap flattens nested worlds — lists of lists, optional chains, effect pipelines.
 
-In the previous episode, we worked through **Stream Collectors**. That gave us a piece of the platform. Today we need the next piece: **flatMap & Composition**.
-
-We are continuing The Java Story, and today's challenge is flatMap & Composition. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-flatMap flattens nested worlds — lists of lists, optional chains, effect pipelines.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, flatMap & Composition is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture flatMap and Composition clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: map nests; flatMap flattens.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Optional.flatMap for multi-step absence.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Domain models often nest collections.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Keep pipelines readable.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Composition beats manual nested loops when clear.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Suppose you want every order across all users.
 
 ```java
-list.stream()
-  .flatMap(user -> user.orders().stream())
-  .toList();
+List<Order> orders = users.stream()
+    .map(user -> user.orders())      // Stream<List<Order>>
+    .toList();                       // still nested: a list of lists
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+That is not a list of orders. It is a list of lists. The natural question: how do we flatten one level?
 
-I'll walk this like pair-programming.
+```java
+List<Order> orders = users.stream()
+    .flatMap(user -> user.orders().stream())
+    .toList();
+```
 
-Focus on the idea each line encodes.
+Walk the difference. `map` would wrap each user's orders as one element of type `List<Order>`. `flatMap` expects each element to produce a stream, then concatenates those streams into one. Map nests; flatMap flattens. Domain models often nest collections — flatMap is how pipelines stay honest about that shape.
 
-Then connect to the failure mode.
+Composition beats manual nested loops when the pipeline stays readable:
 
-Look at `list.stream()`.
+```java
+List<String> skus = users.stream()
+    .flatMap(user -> user.orders().stream())
+    .flatMap(order -> order.lines().stream())
+    .map(Line::sku)
+    .distinct()
+    .toList();
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Each flatMap removes one nesting level. The final map extracts skus. Distinct uniquifies. You can say the sentence out loud: "all skus from all lines from all orders from all users." When the pipeline becomes a puzzle, stop — nested loops with clear names may be kinder. Keep pipelines readable; composition is a tool, not a purity contest.
 
-Look at `.flatMap(user -> user.orders().stream())`.
+The same flattening idea appears with `Optional`. Multi-step lookups often return empty at any stage.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+```java
+Optional<String> city = findUser(id)
+    .flatMap(User::address)
+    .flatMap(Address::city);
+```
 
-Look at `.toList();`.
+`Optional.flatMap` for multi-step absence avoids nested `isPresent` pyramids. If `findUser` is empty, the chain short-circuits to empty. If address is missing, same. `map` would have produced `Optional<Optional<City>>` shaped confusion; `flatMap` keeps a single optional layer.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Compare map versus flatMap on optionals quickly:
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+```java
+Optional<Optional<String>> nested = findUser(id).map(User::nickname); // if nickname is Optional
+Optional<String> flat = findUser(id).flatMap(User::nickname);
+```
 
-### Example 2 — make it more realistic
+When a function already returns `Optional`, flatMap is the join you want.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, flatMap & Composition usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+What if we flatten with hand-rolled loops every time?
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+```java
+List<Order> orders = new ArrayList<>();
+for (User u : users) {
+    for (Order o : u.orders()) {
+        orders.add(o);
+    }
+}
+```
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Clear for two levels. At three levels with filters in between, the loop version grows braces while the stream version grows steps. Choose the form your teammates can amend safely next month.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+A practical habit: name helpers when lambdas get heavy.
 
-### What if we skip this approach?
+```java
+flatMap(this::ordersOf)  // vs a long lambda inline
+```
 
-Important concepts become memorable when we see the failure mode without them.
+Composition stays readable when each function does one transformation. FlatMap is not an excuse for a novel in a lambda.
 
-For example, consider this common mistake: Accidentally producing Stream<Stream<T>>.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Another flattening pattern: turning optional fields into zero-or-one streams.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+```java
+List<String> nicknames = users.stream()
+    .flatMap(u -> u.nickname().stream())  // Optional.stream()
+    .toList();
+```
 
-### Example 3 — a common misunderstanding
+Empty optionals contribute nothing; present ones contribute one element. That replaces filter-plus-get patterns with a single flatMap.
 
-**Misunderstanding 1:** Accidentally producing Stream<Stream<T>>.
+When composition grows, extract named methods for each nesting level — `ordersOf`, `linesOf`, `skuOf` — so the pipeline reads as business vocabulary. The goal is not fewer lines; it is fewer surprises for the next reader.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+If you find yourself flatMapping more than two or three levels with filters interleaved, consider whether a small dedicated domain method should hide the traversal. Pipelines should reveal intent, not become the place all navigation lives.
 
-**Misunderstanding 2:** Giant unreadable pipelines.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Files and lines offer a classic flatMap story: a stream of paths flatMapped to lines of each file. Nested collections in memory follow the same shape. Once you see it, you start spotting flatten opportunities — and also spotting when a nested for-loop with early continues is less magical and more maintainable.
 
-**Misunderstanding 3:** Using flatMap where map was enough.
+Avoid flatMapping into huge intermediate cardinalities without filters. Cartesian-style explosions hide in innocent looking pipelines. Estimate sizes. Keep limits close to the source when exploring.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
 
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
 
-### Interview-style checkpoint
+When teaching teammates, draw the shapes: `Stream<List<T>>` versus `Stream<T>`. The picture does more than another definition. Once the shape is visible, flatMap stops feeling like magic syntax and starts feeling like the only honest operator for that shape.
 
-Question: When flatMap over map?
+That judgment call is the real skill this episode trains — not the spelling of flatMap.
 
-Answer in spoken form: When each input maps to a stream/optional you need flattened.
+So let's reconnect the chain. Nested collections made `map` produce the wrong shape. `flatMap` flattened streams of streams. Optional flatMap handled multi-step absence. Readability set the limit on how far to push pipeline style.
 
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
+Once sequential pipelines feel comfortable, someone asks the speed question: can we run this in parallel and use more cores? Sometimes yes. Often not for the reason people hope.
 
-### Connecting the thread
+Flattening is fundamentally about shape. Each time you are unsure whether to map or flatMap, ask: does my function return an element, or a collection/optional/stream of elements? Element → map. Collection of elements → flatMap. That question alone removes most guesswork.
 
-We came from **Stream Collectors**. That set up a need. **flatMap & Composition** is one of Java's answers to that need.
+Optional and stream flatMap share a name because they share a shape problem: nested wrappers. Once you are comfortable in both places, composition across APIs feels less like trivia and more like one idea. That unity is worth practicing with small examples until the map/flatMap choice becomes automatic.
 
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
+Nested loops are not morally inferior. They are often the right tool when each level needs complex local control flow. Reach for flatMap when the story is "expand each element into zero or more contributions" and the steps stay pure. Judgment beats ideology.
 
-### Looking ahead
+That caution is Episode Twenty-Nine — Parallel Streams.
 
-Once this is solid, a new challenge appears. That challenge leads us to **Parallel Streams**.
+## Source attribution
 
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 28 (*flatMap & Composition*).
 
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 28 / **flatMap & Composition** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
+Narration technique: nested collections problem → flatMap vs map → deeper composition → Optional.flatMap → readability limit → next natural problem (parallelism). Continuity-checked transitions.
 
 ### Teaching points drawn from the topic bank
 

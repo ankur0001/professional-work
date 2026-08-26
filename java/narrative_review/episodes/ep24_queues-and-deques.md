@@ -5,75 +5,16 @@
 | Episode | 24 |
 | Title | Queues and Deques |
 | Catalog handbook column | 24 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Maps excel at lookup. They are awkward as waiting lines. A print spooler, a task buffer, a chat message pipe — these problems care about who arrived first, or who may enter and leave from both ends.
 
-In the previous episode, we worked through **Maps**. That gave us a piece of the platform. Today we need the next piece: **Queues and Deques**.
+Suppose jobs arrive faster than a worker can finish them. You need a place to hold pending work and take the oldest job next. A list can fake that with `add` at the end and `remove(0)` at the front, but the intent is muddy and the performance story for `ArrayList` removal at zero is poor. The natural question is: what collection means "waiting line"?
 
-We are continuing The Java Story, and today's challenge is Queues and Deques. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Queues shape producer/consumer flow — Deque is the modern versatile choice.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, queues and deques is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Queues and Deques clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: FIFO vs double-ended access.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: ArrayDeque is a strong general default.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: offer/poll vs add/remove exception behavior.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Legacy Stack — prefer Deque.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Blocking queues appear in concurrency.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Queues shape producer/consumer flow. A classic queue is FIFO — first in, first out. A deque (double-ended queue) allows insertion and removal at both ends. In modern Java, `Deque` is the versatile choice, and `ArrayDeque` is a strong general default for single-threaded use.
 
 ```java
 Deque<String> q = new ArrayDeque<>();
@@ -81,91 +22,95 @@ q.offerLast("a");
 String x = q.pollFirst();
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk it. `offerLast("a")` places work at the tail. `pollFirst()` takes from the head and returns `"a"`. The method names advertise ends: last and first. You can also write `offer` and `poll`, which for a deque used as a queue mean the same FIFO story. Queues shape producer/consumer flow — Deque is the modern versatile choice because the same structure can act as queue or stack.
 
-I'll walk this like pair-programming.
+Method pairs matter because exception behavior differs:
 
-Focus on the idea each line encodes.
+```java
+Deque<String> q = new ArrayDeque<>();
+q.offer("one");          // returns false if it cannot insert (bounded cases)
+String a = q.poll();     // returns null if empty
+// vs
+q.add("two");            // throws if it cannot insert
+String b = q.remove();   // throws if empty
+```
 
-Then connect to the failure mode.
+`offer`/`poll` speak in return values. `add`/`remove` speak in exceptions. Pick the style that matches whether emptiness is normal control flow or a true error. Beginners who call `remove` on an empty queue get surprised by exceptions; `poll` would have returned null and let them branch.
 
-Look at `Deque<String> q = new ArrayDeque<>();`.
+Used as a stack, a deque replaces the legacy `Stack` class:
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+```java
+Deque<String> stack = new ArrayDeque<>();
+stack.push("frame-1");
+stack.push("frame-2");
+String top = stack.pop();   // frame-2
+```
 
-Look at `q.offerLast("a");`.
+Prefer `Deque` over `java.util.Stack`. `Stack` is an old synchronized subclass of `Vector` with a design that modern code avoids. Interviewers still mention it; production code usually reaches for `ArrayDeque`.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+A tiny job-buffer story makes the FIFO intent obvious:
 
-Look at `String x = q.pollFirst();`.
+```java
+Deque<Runnable> jobs = new ArrayDeque<>();
+jobs.offerLast(() -> System.out.println("resize image"));
+jobs.offerLast(() -> System.out.println("send email"));
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+while (!jobs.isEmpty()) {
+    jobs.pollFirst().run();
+}
+```
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Producers offer last. The consumer polls first. Ordering is the feature. You are not looking up by key; you are draining a line.
 
-### Example 2 — make it more realistic
+When multiple threads produce and consume together, blocking queues appear in the concurrency chapters — structures that wait when empty or full instead of returning immediately. Today, keep the single-threaded mental model clear: `ArrayDeque` for local flow control, and a note that shared pipelines need concurrent variants later.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Queues and Deques usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+What if we skip queues and abuse lists?
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+```java
+List<String> jobs = new ArrayList<>();
+jobs.add("a");
+String next = jobs.remove(0);
+```
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+The code reads like a list accident. Every reader must infer FIFO intent. With a queue or deque, the type itself documents the flow.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
 
-### What if we skip this approach?
+Deque's double-ended nature also models undo stacks and work stealing patterns at a small scale.
 
-Important concepts become memorable when we see the failure mode without them.
+```java
+Deque<String> history = new ArrayDeque<>();
+history.push("type A");
+history.push("type B");
+String undone = history.pop(); // type B
+```
 
-For example, consider this common mistake: Using Stack legacy class.
+Same class as the FIFO queue, different end discipline. That flexibility is why modern Java steers you to `Deque` instead of separate Stack and Queue class hierarchies for local use.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Bounded queues change the `offer` story: when capacity is full, `offer` returns false while `add` throws. In a single-threaded buffer you might never bound an `ArrayDeque`. In concurrent designs you will. Learning the method pairs now means fewer surprises when blocking queues arrive.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Avoid using `LinkedList` as a queue just because it implements `Deque`. `ArrayDeque` almost always outperforms it for stack and queue workloads without needing node allocations per element.
 
-### Example 3 — a common misunderstanding
 
-**Misunderstanding 1:** Using Stack legacy class.
+In UI undo/redo, two deques — undo and redo — capture the story without a custom structure. In task scheduling, a single deque as FIFO keeps fairness obvious. When requirements say "priority," you graduate to priority queues later; do not overload a plain deque with manual sorting on each insert. Match structure to rule.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Method naming in your own APIs should mirror `offer`/`poll` if emptiness is normal, and `add`/`remove` if emptiness is exceptional. Consistency between library queues and your wrappers reduces cognitive load.
 
-**Misunderstanding 2:** Busy-waiting instead of blocking structures later.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+So let's reconnect the chain. Waiting-line problems outgrew maps and ordinary list usage. Queues gave FIFO language; deques added both ends. `ArrayDeque` became the default. `offer`/`poll` versus `add`/`remove` clarified empty and full handling. Legacy `Stack` was set aside. Blocking queues were deferred to concurrency.
 
-**Misunderstanding 3:** Ignoring capacity/backpressure needs.
+Once collections hold real domain objects, another pressure appears: humans want them sorted — by name, by price, by date — and the rule is rarely only one field. How do we declare comparison policy without baking a single order into the class forever?
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Producer and consumer language also clarifies API design: methods named `enqueue`/`dequeue` or accepting a `Queue` parameter tell teammates how to think. If your public API takes a `List` but you only ever treat it as a line, you hid the real contract. Types teach.
 
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+Drain patterns show up often: poll until empty, process, repeat. Write that loop with `poll` returning null as the stop condition, not with `size()` checks that race once you add threads later. Habits you form on single-threaded deques should survive contact with concurrency chapters.
 
-### Interview-style checkpoint
+That is Episode Twenty-Five — Sorting and Comparators.
 
-Question: Why ArrayDeque over Stack?
+## Source attribution
 
-Answer in spoken form: Clearer API and better performance than legacy Vector-based Stack.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 24 (*Queues and Deques*).
 
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Maps**. That set up a need. **Queues and Deques** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Sorting and Comparators**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 24 / **Queues and Deques** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
+Narration technique: waiting-line situation → queue/deque → ArrayDeque default → offer/poll vs add/remove → prefer Deque over Stack → blocking note → next natural problem (ordering policy / comparators). Continuity-checked transitions.
 
 ### Teaching points drawn from the topic bank
 

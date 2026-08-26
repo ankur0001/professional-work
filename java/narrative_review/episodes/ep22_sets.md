@@ -5,172 +5,115 @@
 | Episode | 22 |
 | Title | Sets |
 | Catalog handbook column | 22 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Lists proudly allow duplicates and remember order. The next product requirement often flips that pride into a bug: a user should have each role only once, a crawler should not visit the same url twice, a tag cloud should not print "java" three times.
 
-In the previous episode, we worked through **Lists**. That gave us a piece of the platform. Today we need the next piece: **Sets**.
+Suppose you store roles in a list and check membership with `contains` before every `add`. It works for tiny data and becomes awkward as rules grow — intersections of permissions, differences of feature flags. The natural question is: is there a collection whose whole point is uniqueness?
 
-We are continuing The Java Story, and today's challenge is Sets. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Set means uniqueness — and uniqueness means equals/hashCode discipline.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, sets is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Sets clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Uniqueness via equals/hashCode.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: HashSet/LinkedHashSet/TreeSet trade-offs.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Sorted order needs consistent comparators.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Don't mutate fields used in hashing while in a set.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Set algebra shows up in real domain rules.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+That collection is a `Set`. Set means uniqueness — and uniqueness means `equals`/`hashCode` discipline.
 
 ```java
 Set<String> set = new HashSet<>();
 set.add("a");
 set.add("a");
-System.out.println(set.size());
+System.out.println(set.size());   // 1
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk it. The first `add` inserts `"a"`. The second `add` sees an equal element already present and leaves the set unchanged. Size stays one. There is no "second slot" for the same value. If you needed two entries, you wanted a list.
 
-I'll walk this like pair-programming.
+Under a `HashSet`, uniqueness is decided by hashing into buckets, then confirming with `equals`. If two objects are equal, they must share a hash code. If you break that contract, a set can hold what looks like duplicates, or fail to find what you just inserted. For strings and other well-behaved library types you inherit good behavior. For your own classes, implementing `equals` and `hashCode` together is not optional decoration.
 
-Focus on the idea each line encodes.
+Different set implementations trade properties:
 
-Then connect to the failure mode.
+```java
+Set<String> hash = new HashSet<>();           // fast, no order promise
+Set<String> linked = new LinkedHashSet<>();   // keeps insertion order
+Set<String> sorted = new TreeSet<>();         // sorted order
+```
 
-Look at `Set<String> set = new HashSet<>();`.
+`HashSet` is the common default when you only care about membership. `LinkedHashSet` preserves insertion order — useful for "unique, but still stable when I iterate." `TreeSet` keeps elements sorted, which means it needs a consistent ordering — natural `Comparable` order or an explicit `Comparator`. Sorted order needs consistent comparators: if the comparator says two elements are equal for ordering purposes, the set treats them as duplicates even if `equals` would disagree. That inconsistency creates subtle bugs in sorted sets and maps.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Here is a domain-shaped example where set algebra shows up in real rules:
 
-Look at `set.add("a");`.
+```java
+Set<String> required = Set.of("READ", "WRITE");
+Set<String> granted = new HashSet<>();
+granted.add("READ");
+granted.add("WRITE");
+granted.add("EXECUTE");
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Set<String> missing = new HashSet<>(required);
+missing.removeAll(granted);   // empty → all required present
 
-Look at `set.add("a");`.
+Set<String> extra = new HashSet<>(granted);
+extra.removeAll(required);    // {"EXECUTE"}
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+`removeAll`, `retainAll`, and `addAll` express difference, intersection, and union. Permission checks, feature flag merges, and tag cleanup all sound like set talk once you stop forcing lists to pretend.
 
-Look at `System.out.println(set.size());`.
+One sharp edge: do not mutate fields used in hashing while an object sits in a set.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+```java
+Set<User> users = new HashSet<>();
+User u = new User("ada");   // equals/hashCode based on name
+users.add(u);
+u.setName("grace");         // hash bucket is now wrong
+users.contains(u);          // may fail mysteriously
+```
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+After mutation, the object may live in the wrong bucket. Membership checks become roulette. Treat elements as effectively immutable while they are set members, or remove, mutate, and re-add.
 
-### Example 2 — make it more realistic
+What if we skip sets and keep unique lists by hand?
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Sets usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+```java
+if (!roles.contains(role)) {
+    roles.add(role);
+}
+```
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Fine for one call site. Then five call sites forget the check. A set makes the rule structural instead of ceremonial.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Equality discipline deserves one more concrete walk-through with a domain type.
 
-### What if we skip this approach?
+```java
+record Role(String name) {}  // equals/hashCode from components
 
-Important concepts become memorable when we see the failure mode without them.
+Set<Role> roles = new HashSet<>();
+roles.add(new Role("ADMIN"));
+roles.add(new Role("ADMIN"));
+System.out.println(roles.size()); // 1
+```
 
-For example, consider this common mistake: Broken equals/hashCode pairs.
+Because `Role` is a record, equal names compare equal and hash alike. A hand-written class that compares names in `equals` but forgets `name` in `hashCode` would break `HashSet` membership. When a set "sometimes contains" an object you just added, inspect the contract before blaming the collection.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+`TreeSet` without a comparator requires elements to be `Comparable`. Dropping a non-comparable object in throws at runtime. If your sorted unique collection uses a comparator that ignores a field `equals` cares about, you can lose elements that were distinct by equality. Keep ordering and equality stories aligned when the structure is a set, not merely a sorted list substitute.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
 
-### Example 3 — a common misunderstanding
+Iteration order stories cause flaky tests. A `HashSet` may print elements in different orders across JDK versions or runs. If a test asserts a stringified set, prefer `LinkedHashSet`, a sorted set, or compare as sets without relying on order. Flaky tests are often unordered-iteration tests in disguise.
 
-**Misunderstanding 1:** Broken equals/hashCode pairs.
+Immutable sets from `Set.of` reject nulls and duplicates at creation — another way the platform pushes uniqueness early. Use them for fixed vocabularies of allowed values when an enum is too heavy.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
 
-**Misunderstanding 2:** Expecting HashSet to be sorted.
+So let's reconnect the chain. Lists allowed duplicates; many domains forbid them. Sets answered with uniqueness via `equals`/`hashCode`. `HashSet`, `LinkedHashSet`, and `TreeSet` traded speed, insertion order, and sorted order. Set algebra matched real permission and tag rules. Mutating hashed fields showed a classic foot-gun.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Uniqueness of elements is still not lookup by key. Often you need "given a user id, find the user" or "given a sku, find the price." Searching a list linearly gets old fast. How does Java give us keyed lookup?
 
-**Misunderstanding 3:** Mutating keys after insert.
+In reviews, a `List` used only for membership tests is a smell pointing at a set. Linear `contains` on a growing list silently becomes a performance bug. Sets make the membership intent obvious and the average cost sensible. That clarity is as valuable as the uniqueness rule itself.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Set views from map key sets are a related trap: mutating them mutates the map. When you need an independent set of keys, copy. Shared views are powerful and easy to misuse — the same lesson as list `subList`, now in set clothing.
 
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
+That is Episode Twenty-Three — Maps.
 
-### Interview-style checkpoint
+## Source attribution
 
-Question: HashSet vs TreeSet?
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 22 (*Sets*).
 
-Answer in spoken form: HashSet is unordered typical O(1); TreeSet is sorted O(log n).
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Lists**. That set up a need. **Sets** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Maps**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 22 / **Sets** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
+Narration technique: duplicate-pain situation → Set/hash contract → implementation trade-offs → set algebra → mutation foot-gun → next natural problem (keyed lookup / maps). Continuity-checked transitions.
 
 ### Teaching points drawn from the topic bank
 
