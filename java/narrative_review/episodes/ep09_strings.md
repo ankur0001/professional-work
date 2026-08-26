@@ -73,7 +73,7 @@ String again = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
 
 Always be explicit at the boundary. "The platform default charset" is not a team agreement; it is a future incident. You do not need the full I/O chapter yet. You only need the habit: text and bytes are different, and the mapping between them has a name.
 
-What if we ignore these rules? A loop that builds CSV with `+`, a login check that uses `==`, a file reader that assumes the default charset — each one works in a demo and fails under slightly wider reality. Strings look simple because the type is everywhere. The discipline exists because the type is everywhere.
+What if we ignore these rules? A loop that builds CSV with `+`, a login check that uses `==`, a file reader that assumes the default charset — each one works in a demo and fails under slightly wider reality. Strings look simple because the type is everywhere. The discipline exists because the type is everywhere — treat casual string code as production code.
 
 So reconnect the chain. Arrays handled positional values. Strings handle text with an immutability rule that reshapes how you concatenate. `StringBuilder` absorbs repeated appends. `equals` compares content; `==` compares identity. Text blocks serve multiline literals. Charset discipline protects the edges of the system.
 

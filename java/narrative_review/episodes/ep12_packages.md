@@ -77,7 +77,7 @@ public class Order {          // public seam
 }
 ```
 
-Outside `com.shop.order`, callers see `Order` and its public methods. They do not see `OrderLine`. That split is packages doing product work — the same access ideas from Episode Eleven, now with a map of neighborhoods that make those ideas enforceable.
+Outside `com.shop.order`, callers see `Order` and its public methods. They do not see `OrderLine`. That split is packages doing product work — the same access ideas from Episode Eleven, now with a map of neighborhoods that make those ideas enforceable. Geography without boundaries is just folders; boundaries without geography are hard to explain.
 
 So reconnect the chain. Access control needed neighborhoods. Packages provide namespaces, map them to directories, and give imports a way to name foreign types. Reverse-DNS conventions scale names. Directory honesty keeps tools aligned. Explicit imports keep dependencies visible. Combined with modifiers, packages become boundaries — and catch-all packages dissolve those boundaries again.
 
