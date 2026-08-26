@@ -5,167 +5,62 @@
 | Episode | 43 |
 | Title | Atomics |
 | Catalog handbook column | 43 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Concurrent maps helped when many keys were the shared story. Counters and flags are a narrower hotspot: one variable, updated constantly, where a full lock feels heavy and `volatile++` is still a race. We already learned that visibility is not atomicity. So the question becomes: how do we update one value safely without necessarily taking a monitor every time?
 
-In the previous episode, we worked through **Concurrent Collections**. That gave us a piece of the platform. Today we need the next piece: **Atomics**.
-
-We are continuing The Java Story, and today's challenge is Atomics. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Atomics give lock-free updates for focused hotspots.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, atomics is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Atomics clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: CAS loops under the hood.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: AtomicInteger/Long/Reference.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Good for counters/flags.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Contention still costs.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: VarHandles for advanced cases.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Atomics give lock-free updates for focused hotspots. Under the hood they lean on compare-and-set — CAS — loops: read the current value, compute the next, and install it only if the current value is still what you expect. If another thread won the race, you retry.
 
 ```java
 AtomicInteger n = new AtomicInteger();
-n.incrementAndGet();
+int after = n.incrementAndGet();
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk it. `incrementAndGet` atomically adds one and returns the new value. Two threads calling it will not lose increments the way they can with `count++` on a plain or even volatile `int`. `AtomicLong` and `AtomicReference` play the same role for other shapes. Good uses are counters, sequence numbers, and simple state flags where the entire invariant fits in one value.
 
-I'll walk this like pair-programming.
+CAS in interview language: compare-and-set updates only if the current value matches expectation. That single sentence explains both the power and the limitation. If your invariant spans two fields — balance and version, or head and size — one atomic variable may not be enough. You might need an atomic reference to an immutable pair, or a lock, or a specialized concurrent structure. Using atomics for complex multi-field invariants is how people invent subtle races while feeling modern.
 
-Focus on the idea each line encodes.
+Contention still costs. Lock-free does not mean free. Under extreme contention, many threads can spin retrying CAS on the same hot counter. Sometimes a lock with less wasted spinning wins. Sometimes you shard counters. Sometimes you accept approximate counts. Atomics are a tool for a hotspot, not a personality trait for every field in the class.
 
-Then connect to the failure mode.
+```java
+AtomicReference<Config> ref = new AtomicReference<>(Config.defaults());
 
-Look at `AtomicInteger n = new AtomicInteger();`.
+boolean ok = ref.compareAndSet(oldConfig, newConfig);
+```
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Here the atomic unit is a reference. Publishing a new immutable `Config` with CAS lets readers see either the old or the new complete snapshot. That pattern pairs well with the volatile publication ideas from earlier — now with an atomic swap instead of only a volatile write.
 
-Look at `n.incrementAndGet();`.
+Advanced cases reach for `VarHandle` when you need more control over memory ordering and shaped updates. You do not need to master VarHandles today. You need curiosity: atomics are the friendly face of a deeper memory and CPU toolkit the JDK exposes as you grow.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+What if we replace every `synchronized` counter with an atomic and call it a day?
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+For a lone counter, good. For "transfer from account A to account B without observing intermediate states," not enough. Atomics shrink critical sections when the section is truly one variable. They do not delete the need for protocols around compound business operations.
 
-### Example 2 — make it more realistic
+Busy CAS without backoff under extreme contention can burn CPU while making little progress. That is another reason measurement matters. If a profiler shows a hot atomic under fifty threads, ask whether the design should shard, batch, or lock.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Atomics usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Slow down on CAS so it feels mechanical, not magical. Thread A reads 41. Thread B reads 41. Both add one and try to write 42. Only one CAS succeeds; the loser rereads — now 42 — and writes 43. Progress happens without a mutual-exclusion lock, but progress can still thrash when many threads fight over one address. That is why sharding hot counters — one atomic per stripe, summed rarely — shows up in high-throughput systems.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+`AtomicInteger` methods like `getAndUpdate` and `accumulateAndGet` let you express richer single-variable transitions without writing your own CAS loop incorrectly. Prefer those helpers when they fit. Hand-rolled loops are easy to get almost right and miss a retry path.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+What if the "atomic" value is a reference to a mutable object you keep editing? Then only the reference swap was atomic. The interior mutations need their own story — immutability after publish, or locking, or another concurrent structure. Atomics are precise tools. Precision includes knowing what, exactly, is atomic.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Pair atomics with the volatile lesson explicitly. Volatile publish can announce a completed immutable snapshot. Atomic update can advance a counter all threads share. Different problems, related memory stories. If you catch yourself using an atomic boolean only as a flag with no CAS retry needs, volatile might have been enough — or a lock if the flag gates a larger invariant. Name the operation: publish, or update under contention, or protect a compound invariant. The name guides the tool.
 
-### What if we skip this approach?
+Picture a hit counter on a public API. `AtomicLong` increments on each call. A separate reporter thread samples `get` periodically. No lock ties them together; the atomic carries the updates. When product asks for "top three endpoints," you suddenly need a concurrent map of atomics or a merge strategy — and you feel the boundary where one atomic stops being the model.
 
-Important concepts become memorable when we see the failure mode without them.
+Atomics shine when the invariant is one word wide. The moment product language needs two fields to stay coherent, widen the tool — immutable pair, lock, or concurrent structure — instead of forcing two CAS operations to pretend they are one transaction.
 
-For example, consider this common mistake: Using atomics for complex multi-field invariants.
+So reconnect the chain. Volatile taught visibility. Counters needed atomicity. Atomics provided CAS-based updates for single-value hotspots. Multi-field invariants and heavy contention showed the edges. VarHandles wait as a later power tool.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Not every coordination problem is "update a value." Sometimes threads must wait for a phase to finish, wait for peers to arrive, or limit how many may enter a section. Those phase and permit problems are the world of latches, barriers, and semaphores.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Episode Forty-Four: synchronizers.
 
-### Example 3 — a common misunderstanding
+## Source attribution
 
-**Misunderstanding 1:** Using atomics for complex multi-field invariants.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 43 (*Atomics*).
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Busy CAS under extreme contention without backoff strategy.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Ignoring memory effects elsewhere.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: What is CAS?
-
-Answer in spoken form: Compare-and-set updates only if the current value matches expectation.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Concurrent Collections**. That set up a need. **Atomics** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Synchronizers**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 43 / **Atomics** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- CAS loops under the hood.
-- AtomicInteger/Long/Reference.
-- Good for counters/flags.
-- Contention still costs.
-- VarHandles for advanced cases.
+Narration technique: hot-counter situation → atomics/CAS → increment walkthrough → multi-field limit → contention → AtomicReference publish → what-if overuse → next natural problem (synchronizers).

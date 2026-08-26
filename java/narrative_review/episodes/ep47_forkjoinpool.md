@@ -5,162 +5,78 @@
 | Episode | 47 |
 | Title | ForkJoinPool |
 | Catalog handbook column | 47 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+CompletableFuture composed asynchronous stages. Another family of problems looks different: take a large CPU-bound job, split it into pieces, solve the pieces, combine the results. Sorting, compressing, scanning huge arrays — divide and conquer. You could submit every piece to a fixed thread pool by hand. You would also reinvent work stealing poorly. So the question is: what machinery is built for recursive splitting?
 
-In the previous episode, we worked through **CompletableFuture**. That gave us a piece of the platform. Today we need the next piece: **ForkJoinPool**.
-
-We are continuing The Java Story, and today's challenge is ForkJoinPool. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Fork/Join is divide-and-conquer with work stealing.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, forkjoinpool is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture ForkJoinPool clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: RecursiveTask/Action.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Common pool is shared.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Best for CPU-bound splitting.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Don't block worker threads.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Parallel streams use this machinery.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+`ForkJoinPool` is divide-and-conquer with work stealing. Idle workers steal tasks from busy workers' queues so cores stay busy even when splits are uneven. Parallel streams use this machinery under the hood — which is why blocking the common pool hurt in the last episode too.
 
 ```java
 ForkJoinPool.commonPool().invoke(new MyTask(range));
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk the idea. You define a task — typically a `RecursiveTask` that returns a value, or a `RecursiveAction` that does not. The task decides whether the range is small enough to solve directly, or should fork into subtasks and join their results. `invoke` runs the root task and waits for the answer. The pool schedules the forks across workers.
 
-I'll walk this like pair-programming.
+```java
+class SumTask extends RecursiveTask<Long> {
+    final int[] data; final int lo; final int hi;
+    SumTask(int[] data, int lo, int hi) { this.data = data; this.lo = lo; this.hi = hi; }
 
-Focus on the idea each line encodes.
+    protected Long compute() {
+        if (hi - lo <= THRESHOLD) {
+            long sum = 0;
+            for (int i = lo; i < hi; i++) sum += data[i];
+            return sum;
+        }
+        int mid = (lo + hi) >>> 1;
+        SumTask left = new SumTask(data, lo, mid);
+        SumTask right = new SumTask(data, mid, hi);
+        left.fork();
+        long rightAns = right.compute();
+        long leftAns = left.join();
+        return leftAns + rightAns;
+    }
+}
+```
 
-Then connect to the failure mode.
+Read the strategy. Small ranges add directly. Large ranges split, fork one side, compute the other, join, and add. The threshold matters: too large and you under-parallelize; too small and task overhead dominates. Unbalanced splits — always peeling one element — defeat the model. Aim for pieces that are meaningful work units.
 
-Look at `ForkJoinPool.commonPool().invoke(new MyTask(range));`.
+The common pool is shared across the JVM. Best for CPU-bound splitting. Do not block worker threads on I/O or locks held for long. A blocked worker cannot steal or run other tasks; under enough blocking, the pool's parallelism collapses. Submit blocking work to a separate executor sized for blocking. Keep Fork/Join for computation.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Work stealing in interview language: idle workers steal tasks from busy workers' queues. That sentence explains why the pool tolerates uneven task sizes better than a naive global queue of giant chunks — stealable small tasks keep thieves productive.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+What if we treat Fork/Join as a general application executor for mixed I/O?
 
-### Example 2 — make it more realistic
+You will contend with every parallel stream and many async defaults for the same workers, then block them. That is how "parallelism" becomes mysterious latency. Use the right pool for the right job. Fork/Join is specialized, not universal.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, ForkJoinPool usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Metrics matter when you tune thresholds and parallelism. Guessing is superstition. Steal counts and throughput under realistic input sizes tell you whether splitting helps.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Parallel streams made Fork/Join popular even among developers who never wrote a `RecursiveTask`. That popularity is why pool hygiene matters beyond specialist code. A library that blocks inside `parallelStream` forbids other features from using the same common pool effectively. Prefer sequential streams for I/O-bound work; reserve parallel for measured CPU gains on large enough data.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Fork/Join task sizing is an empirical craft. Start with a threshold that does meaningful work — thousands of elements, not one — and measure. The steal scheduler is clever; it is not a substitute for sane task granularity.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+What if the split tree is extremely unbalanced because input structure is skewed? Work stealing helps, but extreme skew may need a better partition strategy than "cut the range in half." Know your data. The pool runs the plan you give it.
 
-### What if we skip this approach?
+A final caution: `invoke` on a huge task from a request thread still occupies that request thread until completion. Fork/Join parallelizes the work; it does not automatically make the caller asynchronous. If the caller must remain responsive, submit the root task differently or return a future. Know which thread waits for the answer.
+Divide-and-conquer shines when subproblems are independent. Shared mutable accumulators without atomics or reduction discipline reintroduce races the pool cannot fix.
 
-Important concepts become memorable when we see the failure mode without them.
+Picture summing sensor readings across a multi-million-element array on a batch box. A recursive task splits until chunks fit in cache-friendly sizes, then adds. Wall-clock time drops until you hit cores or memory bandwidth. Blocking on a database inside those tasks would waste the win. Keep Fork/Join for the arithmetic story you actually measured.
 
-For example, consider this common mistake: Submitting blocking IO to common pool.
+Prefer the common pool for shared CPU work and a dedicated pool only when isolation is required. Either way, document the choice. Silent use of the common pool from a library is a courtesy failure to the rest of the JVM.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Hold the checklist: CPU-bound splits; sane thresholds; no blocking on workers; measure before celebrating. Meet those four and Fork/Join remains a scalpel for parallel computation rather than a default executor for everything.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+So reconnect the chain. Divide-and-conquer CPU work needed recursive tasks and stealing workers. `RecursiveTask` showed the split/fork/join pattern. The common pool's shared nature explained why blocking there is toxic. Parallel streams foreshadowed reuse of this machinery. Thresholds and pool choice kept the tool in its lane.
 
-### Example 3 — a common misunderstanding
+Sometimes the data you need is not shared through a queue or map — it is ambient per-thread context: a request id, a principal, a legacy formatter that is not thread-safe. That temptation has a name, and a leak story.
 
-**Misunderstanding 1:** Submitting blocking IO to common pool.
+Episode Forty-Eight: `ThreadLocal`.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+## Source attribution
 
-**Misunderstanding 2:** Unbalanced split strategies.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 47 (*ForkJoinPool*).
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Ignoring steal/throughput metrics.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: What is work stealing?
-
-Answer in spoken form: Idle workers steal tasks from busy workers' queues.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **CompletableFuture**. That set up a need. **ForkJoinPool** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **ThreadLocal**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 47 / **ForkJoinPool** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- RecursiveTask/Action.
-- Common pool is shared.
-- Best for CPU-bound splitting.
-- Don't block worker threads.
-- Parallel streams use this machinery.
+Narration technique: divide-and-conquer situation → ForkJoin/work stealing → RecursiveTask walkthrough → common pool caution → mistakes → next natural problem (ThreadLocal).

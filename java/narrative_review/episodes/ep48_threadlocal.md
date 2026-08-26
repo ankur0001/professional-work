@@ -5,167 +5,72 @@
 | Episode | 48 |
 | Title | ThreadLocal |
 | Catalog handbook column | 48 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Fork/Join and pools make threads into shared workers. That sharing collides with an older convenience: sometimes people stash data "on the thread" so deep call stacks need not pass it as a parameter. A request id for logging. A tenant id. A non-thread-safe formatter reused without locking. The convenience is real. So is the leak.
 
-In the previous episode, we worked through **ForkJoinPool**. That gave us a piece of the platform. Today we need the next piece: **ThreadLocal**.
-
-We are continuing The Java Story, and today's challenge is ThreadLocal. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-ThreadLocal is per-thread global state — powerful and leak-prone.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, threadlocal is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture ThreadLocal clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: withInitial helpers.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Always remove in request-scoped pool usage.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Harder reasoning than passing context.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Virtual threads multiply instances.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Prefer explicit context parameters when possible.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+`ThreadLocal` is per-thread global state — powerful and leak-prone. Prefer explicit context parameters when possible. Use `ThreadLocal` when interoperation with legacy APIs or cross-cutting instrumentation truly needs ambient state — and then treat cleanup as part of the design.
 
 ```java
 static final ThreadLocal<SimpleDateFormat> FMT =
-  ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy"));
+    ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk the intent. Each thread gets its own `SimpleDateFormat` via `withInitial`, avoiding races on a shared mutable formatter. That pattern was common before `java.time`. It still illustrates the mechanics: `get` returns this thread's value, creating it lazily if absent. The danger appears when the thread belongs to a pool and is reused for the next request.
 
-I'll walk this like pair-programming.
+Always `remove` in request-scoped pool usage.
 
-Focus on the idea each line encodes.
+```java
+try {
+    FMT.get().format(date);
+    // or store request context
+} finally {
+    FMT.remove();
+}
+```
 
-Then connect to the failure mode.
+If you forget `remove`, the value sticks to the worker thread. The next request on that thread may see the previous request's tenant, user, or formatter state. Classic `ThreadLocal` leak: values stick to reused pool threads — remove in `finally`. In long-lived pools, that is not a theoretical concern. It is a security and correctness incident waiting for the unlucky reuse.
 
-Look at `static final ThreadLocal<SimpleDateFormat> FMT =`.
+Harder reasoning than passing context is the deeper cost. A parameter is visible in the signature. A `ThreadLocal` is invisible ambient state. Callers cannot see what they must set. Tests forget to clear it. New virtual threads multiply instances when you create millions of short-lived threads — each with its own copy — which can amplify memory if values are large or if you accidentally retain them.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Virtual threads make the old "thread pool reuse leak" less universal for some styles, and introduce new pressure: do not treat `ThreadLocal` as free just because threads are cheap. Prefer structured context propagation libraries and explicit parameters for new design. Hold curiosity about structured concurrency; today's warning still stands.
 
-Look at `ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy"));`.
+What if we use `ThreadLocal` as a hidden API between layers "so signatures stay clean"?
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Signatures stay clean while behavior becomes spooky. A method that only works when someone else set a thread-local upstream is a landmine. If the ambient value is required, at least document and enforce it at a framework boundary — and still remove it on the way out.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Sharing a `ThreadLocal` value across threads somehow — for example by extracting the value and mutating it from another thread — defeats the point and reintroduces races. The isolation is per thread, not "this object is now safe forever."
 
-### Example 2 — make it more realistic
+Request context is the modern form of the problem. Frameworks sometimes offer context objects propagated automatically. That is still ambient state — hopefully with clearer lifecycle. Rolling your own `ThreadLocal` for the same purpose without framework support means you own the enter/exit hooks on every thread that might run your code, including pool workers and callbacks.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, ThreadLocal usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+SimpleDateFormat in a ThreadLocal was a pre-java.time workaround. Prefer `DateTimeFormatter`, which is immutable and thread-safe, over clever thread confinement for formatting. When a better shared immutable tool exists, take it and delete the ThreadLocal.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Memory leaks with ThreadLocals are not only about correctness of the next request. Large objects retained on idle pool threads pin memory for the life of the pool. `remove` is both a correctness and a footprint discipline.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Inheritable thread locals exist for passing values to child threads — and they surprise people when pools create workers differently than they expect. Prefer explicit propagation. The fewer ambient channels you maintain, the fewer leak hunts you schedule for next quarter.
+If you must use ThreadLocal for a request id, set it at the earliest framework filter and remove it at the same layer's exit. Symmetry of enter/exit beats scattered gets in business code.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Picture a legacy library that requires a thread-bound credentials object you cannot change. You set a ThreadLocal in a filter, call the library, and remove in finally. The library is confined; the pool stays clean. That is a justified ThreadLocal. Using the same pattern to avoid adding a parameter to your own new code is not justification — it is avoiding a signature.
 
-### What if we skip this approach?
+Prefer java.time formatters, request parameters, and framework context objects over inventing new ThreadLocals. When you must, pair every `set` or `get`-driven init with a `remove` you can point to in review.
 
-Important concepts become memorable when we see the failure mode without them.
+Hold the checklist: prefer parameters; if ThreadLocal is required, set and remove at the same boundary; avoid large retained values on pooled threads; do not hide required context in ambient state for new APIs. Meet those four and ThreadLocal stays a bridge, not a lifestyle.
 
-For example, consider this common mistake: Forgetting remove() in thread pools.
+ When in doubt, pass the context. Ambient state is for the seams you cannot change, not for the code you are writing greenfield this afternoon.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Cleanup is part of the feature, not an afterthought.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+So reconnect the chain. Ambient per-thread state solved awkward parameter plumbing and unsafe legacy helpers. `withInitial` made per-thread instances easy. Pool reuse forced `remove` in finally. Hidden APIs and virtual-thread multiplication showed why explicit context is usually healthier. Prefer parameters; use `ThreadLocal` with an exit plan.
 
-### Example 3 — a common misunderstanding
+When many locks enter a system without a global order, a different failure mode appears — not a leak, but a permanent wait cycle.
 
-**Misunderstanding 1:** Forgetting remove() in thread pools.
+Episode Forty-Nine: deadlocks.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+## Source attribution
 
-**Misunderstanding 2:** Using ThreadLocal as a hidden API.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 48 (*ThreadLocal*).
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Sharing ThreadLocal values across threads somehow.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Classic ThreadLocal leak?
-
-Answer in spoken form: Values stick to reused pool threads — remove in finally.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **ForkJoinPool**. That set up a need. **ThreadLocal** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Deadlocks**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 48 / **ThreadLocal** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- withInitial helpers.
-- Always remove in request-scoped pool usage.
-- Harder reasoning than passing context.
-- Virtual threads multiply instances.
-- Prefer explicit context parameters when possible.
+Narration technique: ambient-context situation → ThreadLocal → withInitial → remove in pools → hidden API cost → virtual threads foreshadow → next natural problem (deadlocks).

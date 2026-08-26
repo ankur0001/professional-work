@@ -5,167 +5,66 @@
 | Episode | 41 |
 | Title | Callable and Future |
 | Catalog handbook column | 41 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+ExecutorService taught us to submit work to a pool instead of inventing threads by hand. That solves concurrency budgeting. It does not yet answer a hunger that appears the moment the task computes something you need: how do I get a result back, wait with a timeout, and cancel when the caller no longer cares?
 
-In the previous episode, we worked through **ExecutorService**. That gave us a piece of the platform. Today we need the next piece: **Callable and Future**.
-
-We are continuing The Java Story, and today's challenge is Callable and Future. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Callable/Future bring return values and timeouts into concurrent work.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, callable and future is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Callable and Future clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Callable can return and throw checked.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Future.get blocks.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: Cancel is cooperative.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Always prefer timeouts.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: CompletableFuture composes better later.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+`Runnable` returns nothing and cannot throw checked exceptions. Many real tasks need both. That is why `Callable` exists — and why `Future` is the handle you hold while the pool does the work.
 
 ```java
+ExecutorService exec = Executors.newFixedThreadPool(2);
 Future<Integer> f = exec.submit(() -> compute());
 int v = f.get(1, TimeUnit.SECONDS);
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk the contract. `submit` accepts a `Callable` that returns an `Integer` — here as a lambda. The method returns a `Future` immediately; the computation may still be running. `get(1, TimeUnit.SECONDS)` blocks the caller for at most one second waiting for the result. If the task finishes in time, you receive the value. If it does not, you get a timeout exception instead of hanging forever. Always prefer timeouts on `get` in server code. A bare `get()` with no limit is how one stuck worker becomes a stuck request thread — and then a stuck thread pool.
 
-I'll walk this like pair-programming.
+Cancellation is cooperative, not magical.
 
-Focus on the idea each line encodes.
+```java
+boolean requested = f.cancel(true);
+```
 
-Then connect to the failure mode.
+`cancel(true)` asks the pool to interrupt the running task if it has already started, or to prevent it from starting if it is still queued. "Cooperative" means the task must notice the interrupt — by exiting a blocking call that throws `InterruptedException`, or by checking interrupted status in a loop. Assuming cancel instantly stops arbitrary CPU work is a common interview trap and a common production disappointment. Cancellation is a request. Well-behaved tasks honor it; stubborn tight loops ignore it.
 
-Look at `Future<Integer> f = exec.submit(() -> compute());`.
+`Callable` versus `Runnable` is the short form of today's design choice. `Callable` returns a value and may throw checked exceptions wrapped by the future machinery. `Runnable` is for fire-and-forget side effects. If you find yourself stuffing results into a shared mutable field from a `Runnable`, you are reinventing `Future` badly.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Exceptions from the task surface when you call `get`. They arrive wrapped — typically as `ExecutionException` with the original cause inside. That means your wait site is also your failure-handling site. Ignoring the cause and only logging "execution failed" throws away the forensic trail we fought to keep in the exceptions episode.
 
-Look at `int v = f.get(1, TimeUnit.SECONDS);`.
+What if we skip futures and only use callbacks or shared variables?
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+```java
+AtomicReference<Integer> box = new AtomicReference<>();
+exec.submit(() -> box.set(compute()));
+// now what — spin? sleep? guess?
+```
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+You still need a completion protocol. `Future` is that protocol with timeouts and cancellation already designed. Later, `CompletableFuture` will compose many such stages into a graph. Hold that curiosity — today's lesson is the single-result handle that makes pools useful for computations, not only for side effects.
 
-### Example 2 — make it more realistic
+A practical pattern in services is "submit, then wait with timeout, then cancel on timeout." The timeout protects the caller. The cancel attempt protects the pool from continuing useless work. Neither alone is a complete story; together they are the minimum polite concurrent call.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Callable and Future usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Let's slow down on the wait site, because that is where production teams feel futures most. A gateway thread submits three calls and needs the first answer within a budget. `get` with a timeout turns that budget into code. When the timeout fires, canceling the future is not spite — it is refusing to spend pool capacity on an answer nobody will use. If the callable ignores interrupts, cancel is a polite email the worker never reads, and you will still need interruptible I/O or explicit checks inside the task.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Composition pressure appears even with one future. You might transform the result on the calling thread after `get`, or you might wish the transformation happened asynchronously too. That wish is how teams graduate to `CompletableFuture`. For now, keep the contract crisp: submit returns a handle; the handle offers timed wait, cancel, and exception delivery. Anything else you invent with shared mutable boxes is a shadow future with worse edges.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+What if every task is fire-and-forget logging? Then `Runnable` and `execute` may be enough. Futures are for results and failure delivery. Matching the tool to the need keeps APIs honest.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+One more practical discipline: always shut down the executor in examples and in services with a defined owner. Futures do not keep a pool alive by themselves in a way that excuses leaked executors. The result handle and the worker pool are partners; lifecycle belongs to the pool's owner, while the future belongs to the caller waiting for a value.
+Prefer timeouts at every boundary where a peer can stall. That single habit prevents more outages than many elaborate concurrency frameworks.
 
-### What if we skip this approach?
+Picture a payment authorization callable that hits a slow bank link. The request thread waits with a two-second `get`. On timeout it cancels and returns "try again." On success it continues the order. On `ExecutionException` it unwraps the cause and maps it to an API error. That three-branch wait site is the everyday craft of Callable and Future — not the lambda syntax, but the policy around waiting.
 
-Important concepts become memorable when we see the failure mode without them.
+So reconnect the chain. Pools gave us workers. `Callable` gave tasks a return type and a checked-exception path. `Future` gave us timed waiting and cooperative cancel. Bare `get()` and non-interruptible tasks showed the failure modes. Composition remains a later chapter; the single future is already enough to stop treating async work as fire-and-forget by default.
 
-For example, consider this common mistake: get() without timeout.
+Once many threads share maps and queues, another question appears: can the collections themselves participate in thread safety, or must every access sit inside our own locks?
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Episode Forty-Two: concurrent collections.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+## Source attribution
 
-### Example 3 — a common misunderstanding
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 41 (*Callable and Future*).
 
-**Misunderstanding 1:** get() without timeout.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Ignoring cancellation.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Assuming cancel stops CPU immediately.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: Callable vs Runnable?
-
-Answer in spoken form: Callable returns a value and may throw checked exceptions.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **ExecutorService**. That set up a need. **Callable and Future** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Concurrent Collections**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 41 / **Callable and Future** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Callable can return and throw checked.
-- Future.get blocks.
-- Cancel is cooperative.
-- Always prefer timeouts.
-- CompletableFuture composes better later.
+Narration technique: need-a-result situation → Callable/Future → timed get → cooperative cancel → vs Runnable → exception wrapping → what-if shared box → next natural problem (concurrent collections).

@@ -5,177 +5,69 @@
 | Episode | 46 |
 | Title | CompletableFuture |
 | Catalog handbook column | 46 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+`Future` gave us one result with a timed get. Real services often need a pipeline: load something, transform it, combine it with another call, handle failure, enforce a timeout, then save. Blocking on each `get` in sequence works and throws away concurrency. Nesting callbacks by hand works and becomes unreadable. So the question becomes: how do we compose asynchronous work as a graph of stages?
 
-In the previous episode, we worked through **BlockingQueue**. That gave us a piece of the platform. Today we need the next piece: **CompletableFuture**.
-
-We are continuing The Java Story, and today's challenge is CompletableFuture. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-CompletableFuture composes async work as a graph of stages.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, completablefuture is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture CompletableFuture clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: thenApply/thenCompose/thenCombine.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: exceptionally/handle.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: supplyAsync executor choice matters.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Don't block the common pool with IO.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Timeouts and cancellation.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+`CompletableFuture` is Java's standard answer for that composition.
 
 ```java
 CompletableFuture.supplyAsync(this::load)
-  .thenApply(this::transform)
-  .orTimeout(1, TimeUnit.SECONDS)
-  .thenAccept(this::save);
+    .thenApply(this::transform)
+    .orTimeout(1, TimeUnit.SECONDS)
+    .thenAccept(this::save);
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Walk the graph. `supplyAsync` starts `load` on an async pool and yields a future of its result. `thenApply` maps the value through `transform` when load completes. `orTimeout` fails the stage if the pipeline takes too long. `thenAccept` consumes the final value in `save`. The code reads top to bottom like a happy-path story, while the machinery runs asynchronously. That readability is why the type earned its place.
 
-I'll walk this like pair-programming.
+`thenApply` versus `thenCompose` is the composition subtlety interviews love. `thenApply` maps a value to another value. `thenCompose` maps a value to another future and flattens the nesting — the async cousin of flatMap. If `transform` itself returns a `CompletableFuture`, `thenApply` gives you a future of a future; `thenCompose` keeps one layer. Choose the operator that matches the shape of the next step.
 
-Focus on the idea each line encodes.
+```java
+.thenCompose(id -> loadDetailsAsync(id))
+```
 
-Then connect to the failure mode.
+Error handling belongs in the graph. `exceptionally` recovers a value from a failure. `handle` sees success or failure together. Swallowing exceptions inside a stage without recovering or completing exceptionally is how pipelines die quietly. The same discipline from the exceptions episode applies: preserve causes, decide policy, do not erase failure.
 
-Look at `CompletableFuture.supplyAsync(this::load)`.
+Executor choice matters. `supplyAsync` without an executor uses the common Fork/Join pool. That pool is shared. Blocking on I/O inside common-pool stages can starve other async work on the JVM — including parallel streams. For blocking I/O, pass an executor sized for that workload. For CPU work, the common pool may be appropriate. The method signature makes the default easy; production makes the default consequential.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+```java
+CompletableFuture.supplyAsync(this::loadRemote, ioExecutor)
+```
 
-Look at `.thenApply(this::transform)`.
+Timeouts and cancellation remain part of the story. `orTimeout` and `completeOnTimeout` define latency policy in the graph instead of hoping callers remember to wrap `get`. Cancellation still cooperates with interruptible work underneath. Composition does not remove the need for tasks that notice they should stop.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+What if we use `thenApply` where `thenCompose` was needed, or block with `get` inside a common-pool stage to "keep it simple"?
 
-Look at `.orTimeout(1, TimeUnit.SECONDS)`.
+Nested futures appear, or the common pool stalls. Both bugs look like "async is hard" when they are really operator mismatch and pool misuse. Pick operators for the data shape. Pick executors for the blocking shape.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+`thenCombine` earns a mention once pipelines grow branches. You start two asynchronous loads, then combine their results when both complete. That is the graph thinking futures were missing: not only chains, but joins. Timeouts on the combined stage still matter; a slow sibling should not pin a request forever.
 
-Look at `.thenAccept(this::save);`.
+Debugging a composed future means reading the exception from the stage that failed and remembering which executor ran which lambda. Logging correlation ids inside stages helps. Silent `exceptionally` that returns null converts a loud failure into a null that explodes later — the same anti-pattern as swallowing checked exceptions, wearing async clothes.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+What if the team bans `get` entirely inside services? That can be a healthy rule for request threads, forcing composition to stay asynchronous until the edge. At the edge — a test, a main method, a gateway that must return a value — timed `get` or `join` with policy still appears. Rules should target accidental blocking, not honesty about waiting.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Cancellation and timeouts should be tested, not assumed. A unit test that only checks happy-path `thenApply` will miss the stage that blocks the common pool. Inject a slow dependency and assert timeout behavior. Inject a failure and assert recovery. Async graphs fail in the branches people skip in demos.
+`thenCombine` and sibling joins also need clear executor stories for each branch. Two blocking loads on the common pool are two chances to stall shared workers. Pass io executors into both supplies when the work is blocking.
 
-### Example 2 — make it more realistic
+Picture loading a user profile and a set of entitlements concurrently, then combining them into a view model with a one-second timeout on the join. `thenCombine` expresses the join; `orTimeout` expresses the budget; `exceptionally` maps failures to a safe fallback or an error type. The graph matches the product sentence. That alignment is the point of CompletableFuture.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, CompletableFuture usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Keep stages small and pure when you can: load, transform, save. Side effects in the middle of a graph make cancellation and retries harder. Composition is easiest when each stage has one job — the same method lesson from early episodes, resurfacing in async form.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Hold the checklist: operators match shapes (`thenApply` vs `thenCompose`); executors match blocking; timeouts sit on the graph; failures recover or surface with causes. Meet those four and CompletableFuture remains a clarity tool instead of a nesting maze.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+ When in doubt, sketch the stage graph on paper before coding — boxes for loads, arrows for apply/compose/combine, notes for executors and timeouts. If the sketch is messy, the code will be messier.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+So reconnect the chain. Single futures were not enough for pipelines. `CompletableFuture` composed stages with apply/compose/combine, error handlers, and timeouts. Executor choice protected the common pool. Misused operators and blocking stages showed the traps. The graph is the design.
 
-### What if we skip this approach?
+Some workloads are not async I/O graphs — they are CPU-heavy divide-and-conquer over large arrays or trees. That shape has its own pool and its own recursion style.
 
-Important concepts become memorable when we see the failure mode without them.
+Episode Forty-Seven: `ForkJoinPool`.
 
-For example, consider this common mistake: Blocking inside common-pool stages.
+## Source attribution
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 46 (*CompletableFuture*).
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Blocking inside common-pool stages.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Swallowing exceptions.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** thenApply where thenCompose was needed.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: thenApply vs thenCompose?
-
-Answer in spoken form: thenApply maps values; thenCompose flattens nested futures.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **BlockingQueue**. That set up a need. **CompletableFuture** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **ForkJoinPool**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 46 / **CompletableFuture** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- thenApply/thenCompose/thenCombine.
-- exceptionally/handle.
-- supplyAsync executor choice matters.
-- Don't block the common pool with IO.
-- Timeouts and cancellation.
+Narration technique: pipeline situation → CompletableFuture graph → thenApply vs thenCompose → errors → executor choice → timeouts → mistakes → next natural problem (ForkJoin).

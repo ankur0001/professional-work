@@ -5,75 +5,16 @@
 | Episode | 49 |
 | Title | Deadlocks |
 | Catalog handbook column | 49 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+We have locked, tried locks, queued work, and coordinated phases. Nest enough of those tools without a policy and you can freeze a process while every thread looks busy waiting. The CPU is idle. The health check fails. Nobody is making progress. That shape has a name.
 
-In the previous episode, we worked through **ThreadLocal**. That gave us a piece of the platform. Today we need the next piece: **Deadlocks**.
+Deadlocks are circular waits. Prevent them with ordering, smaller critical sections, and timeouts. Detect them with thread dumps when prevention fails.
 
-We are continuing The Java Story, and today's challenge is Deadlocks. The goal is not to memorize a definition — it is to understand a problem Java is trying to help us solve.
-
-Deadlocks are circular waits — prevent with ordering and timeouts.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, deadlocks is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Picture Deadlocks clearly before edge cases.
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: Four classic conditions.
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: Global lock order.
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: tryLock with timeout.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Detect via thread dumps.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Shrink nested locking.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+The classic story is two locks, two threads, opposite orders:
 
 ```java
 // T1: lock A then B
@@ -81,84 +22,63 @@ Let's start with the smallest example that still teaches the real idea. Read it 
 // That ordering risk is the story
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+Thread One holds A and waits for B. Thread Two holds B and waits for A. Each will wait forever. No exception is thrown. The bug is a schedule that eventually happens in production and rarely in a single-threaded test.
 
-I'll walk this like pair-programming.
+The four classic conditions for deadlock are worth knowing as a checklist: mutual exclusion, hold-and-wait, no preemption, and circular wait. Prevention usually attacks circular wait and hold-and-wait — by imposing a global lock order, by avoiding nested locks, or by using tryLock with timeouts so threads can back off instead of waiting forever.
 
-Focus on the idea each line encodes.
+```java
+if (lockA.tryLock(100, TimeUnit.MILLISECONDS)) {
+    try {
+        if (lockB.tryLock(100, TimeUnit.MILLISECONDS)) {
+            try {
+                work();
+            } finally {
+                lockB.unlock();
+            }
+        }
+    } finally {
+        lockA.unlock();
+    }
+}
+```
 
-Then connect to the failure mode.
+Timed tryLock does not magically make nested locking free of design. It gives you an exit when the order goes wrong or contention spikes. Global lock order — always acquire account locks by ascending account id, for example — removes the cycle before it starts. Shrink nested locking: if you can redesign so one lock protects the invariant, do that. Holding locks while calling alien code is how you nest locks you did not even see — the alien code acquires something else, and your order story dies offstage.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+Detection via thread dumps is the operational skill. When a system hangs, capture threads — `jcmd Thread.print`, jstack, or your platform's dump. Look for threads blocked on monitors or owning locks another thread wants. Deadlock detection messages sometimes appear directly. Learning to read that dump is as important as knowing the theory; we will deepen diagnostic tooling later, but the hunger should start now.
 
-### Example 2 — make it more realistic
+What if tests never deadlock and production does?
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, Deadlocks usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Because deadlock depends on timing. Two opposite orders can run for days until a rare interleaving appears. Testing helps when you stress nested paths; it cannot prove absence. Design prevention beats hopeful testing.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+Inconsistent lock ordering across modules is how cycles sneak in through "clean" abstractions. Document order for shared locks. Prefer confinement and concurrent collections when they remove the need to lock at all.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+Shrink the story to design rules you can enforce in review. One: document lock order for any pair that can nest. Two: never call unknown code while holding a lock. Three: prefer tryLock with timeout when nesting is unavoidable and order cannot be globally guaranteed. Four: keep critical sections small so you need fewer nests. These rules do not eliminate deadlock, but they remove the common factories that produce it.
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+Database deadlocks and distributed deadlocks follow similar circular-wait intuition with different detectors. Today stays in-process. The habit of thinking in cycles transfers.
 
-### What if we skip this approach?
+When a dump shows a deadlock, fix the order or remove a lock — do not "retry the request" as the only strategy unless you also understand you are masking a design bug that will return under load.
 
-Important concepts become memorable when we see the failure mode without them.
+Resource ordering extends beyond mutexes: lock files, connection checkouts, and remote leases can deadlock across processes. The in-process story trains your eye. When you later design distributed systems, circular wait will feel familiar — and so will the value of timeouts and ordering.
+Keep a "lock ranking" note in modules that share locks across packages. Unwritten rankings drift. Written rankings can be reviewed.
 
-For example, consider this common mistake: Inconsistent lock ordering.
+Picture transfer locks on two accounts acquired in random order under load. One night the interleaving appears; support sees a hung JVM; the dump shows the cycle. The fix is sorted lock order by account id — a one-line policy that removes the cycle. Most deadlock stories end with a boring ordering rule that should have been written first.
 
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
+Prefer ordering and confinement over cleverness. Deadlocks are not a badge of advanced concurrency — they are usually a missing policy. Write the policy early; let the dump be a last resort.
 
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
+Hold the checklist: ordered locks; no alien calls while holding; timeouts when nesting; dumps when hung. Meet those four and you will prevent most homemade deadlocks and recognize the rest quickly when an incident starts.
 
-### Example 3 — a common misunderstanding
+ When in doubt, remove a lock or sort acquisition order. Clever deadlock recovery is not a substitute for a cycle-free design. Prevention is the craft; dumps are the safety net.
 
-**Misunderstanding 1:** Inconsistent lock ordering.
+A deadlock is a design smell that became a schedule. Treat it that way in postmortems: change the design, then verify with dumps under stress — not the other way around.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+So reconnect the chain. Opposite lock orders showed circular wait. The classic conditions framed prevention. Global ordering, smaller sections, and tryLock timeouts gave practical exits. Alien code and dumps showed how deadlocks hide and how you find them. Concurrency features without an ordering policy remain incomplete.
 
-**Misunderstanding 2:** Holding locks while calling alien code.
+After platform-thread concurrency, a modern twist changes the economics of blocking: virtual threads make the thread-per-request style scalable again for blocking I/O — with new pitfalls of their own.
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Episode Fifty: virtual threads.
 
-**Misunderstanding 3:** No timeout strategy.
+## Source attribution
 
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 49 (*Deadlocks*).
 
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: How to prevent deadlocks?
-
-Answer in spoken form: Lock ordering, smaller critical sections, tryLock timeouts, avoid nested locks.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **ThreadLocal**. That set up a need. **Deadlocks** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Virtual Threads**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 49 / **Deadlocks** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- Four classic conditions.
-- Global lock order.
-- tryLock with timeout.
-- Detect via thread dumps.
-- Shrink nested locking.
+Narration technique: hang situation → circular wait example → four conditions → tryLock/order → alien code → dumps → next natural problem (virtual threads).
