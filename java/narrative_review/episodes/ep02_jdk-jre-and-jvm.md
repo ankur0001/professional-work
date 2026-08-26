@@ -5,169 +5,52 @@
 | Episode | 02 |
 | Title | JDK, JRE, and JVM |
 | Catalog handbook column | 2 |
-| Narration source script | Descriptive instructor narration (4–15 min) |
-| Spoken form | Connected explanatory prose with walked-through examples |
+| Spoken form | Continuous spoken lesson (narrative chain of thought) |
 | Runtime target | **4–15 minutes** (aim ~10–12) |
 
 ## Full narration
 
-### Opening — start with a problem
+Episode One ended on a confusion that almost every beginner hits: someone says "install Java," and three different acronyms appear — JDK, JRE, JVM — as if they were the same thing.
 
-In the previous episode, we worked through **Why Java Exists / Introduction to Java**. That gave us a piece of the platform. Today we need the next piece: **JDK, JRE, and JVM**.
+That confusion is not vocabulary trivia. It is the next problem our story created. We already know Java source becomes bytecode, and a JVM runs that bytecode. So if the JVM is the engine, what did you actually install when you typed a command and waited for a download?
 
-You just finished Episode One. Someone says 'install Java' and hands you three acronyms: JDK, JRE, JVM.
-
-Beginners install 'Java' and then drown in three acronyms. Separating JDK, JRE, and JVM is day-one production literacy.
-
-I am not going to rush through slogans. We will introduce the idea in context, explain why it exists, look at Java code, walk through that code, and only then move on.
-
-### Why this exists
-
-In simple language, jdk, jre, and jvm is a tool for a recurring design problem. If we ignore that problem, we can still write code for a while — and then the cost shows up as duplication, fragile APIs, runtime surprises, or code that only the original author understands.
-
-A helpful picture: Toolbox on top (JDK), runtime apartment (JRE idea), engine in the basement (JVM).
-
-Hold that picture lightly. We will come straight back to Java so the analogy clarifies the mechanism instead of replacing it.
-
-### Building the idea step by step
-
-#### Step 1
-
-Now consider this teaching point: JDK = developer toolkit (javac, jar, jlink, jcmd, Flight Recorder tooling).
-
-This is usually the first thing you need in your mental model. If this step is fuzzy, the later details will feel like trivia.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 2
-
-Now consider this teaching point: JRE = runtime idea: libraries + launcher to run apps (modern distros often ship a JDK).
-
-Notice how this extends the previous step. We are not collecting disconnected facts — we are assembling a mechanism.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 3
-
-Now consider this teaching point: JVM = the engine that loads bytecode and executes it (HotSpot is common).
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 4
-
-Now consider this teaching point: Flow: .java to javac (JDK) to .class bytecode to java launcher to JVM execute.
-
-Ask yourself: if we skipped this detail, what bug or design smell would become more likely?
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-#### Step 5
-
-Now consider this teaching point: Memory gotcha: heap is only one slice — metaspace, stacks, code cache, native also count in containers.
-
-This last point is often where beginners and experienced developers separate. Tutorials mention it. Production work depends on it.
-
-Say it back in your own words before we look at code. If you can explain the 'why', the syntax becomes much easier to remember.
-
-### Example 1 — the smallest useful illustration
-
-Let's start with the smallest example that still teaches the real idea. Read it slowly. Every line is doing work.
+Let's start from the moment you try to compile the HelloWorld program from Episode One.
 
 ```bash
 javac HelloWorld.java
 java HelloWorld
-# javac comes from the JDK
-# java starts a JVM process
 ```
 
-Why is this code here? Because an abstract definition is easy to nod at and hard to use. The example forces the idea into a concrete shape.
+If `javac` is missing, the first command fails. You can have a machine that runs Java applications and still be unable to compile anything. That single failure splits the world into two jobs: building programs, and running programs.
 
-I'll walk this example like we're pair-programming.
+The toolkit that contains the compiler — and the other developer tools around it — is the JDK, the Java Development Kit. `javac` lives there. So do tools such as `jar`, `jlink`, and diagnostic utilities you will meet later. When a tutorial says "install the JDK," it is saying: give yourself the toolbox needed to create Java software.
 
-Focus on the idea each line encodes — not memorizing syntax trivia.
+But compiling is only half the path. After `javac` produces `HelloWorld.class`, the second command starts a process that can load bytecode and execute it. That process is centered on the JVM, the Java Virtual Machine — commonly HotSpot. The JVM is the engine. It does not care that you wrote the source this morning. It cares that valid bytecode arrived and needs to run.
 
-Then we'll connect it to the production failure mode.
+So where does the JRE fit?
 
-Look at `javac HelloWorld.java`.
+Historically, the JRE — Java Runtime Environment — named the runtime idea: the libraries and launcher you need to run an application without necessarily shipping the full developer toolbox. In older distributions, you could install a JRE on a server that should only run apps, not compile them. In modern JDK distributions, the lines are blurrier because a JDK download usually includes what you need to run as well as compile. The useful distinction remains: development tools versus the runtime that executes bytecode.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Hold the layers in one picture, lightly: the JDK is the toolbox on the workbench, the runtime idea is the apartment where the program lives, and the JVM is the engine in the basement. The picture only helps if we keep tying it back to commands and failures.
 
-Look at `java HelloWorld`.
+Now walk the full flow again with those names attached. You write `HelloWorld.java`. The JDK's `javac` turns it into bytecode in a `.class` file. You run `java HelloWorld`. That launcher starts a JVM, the JVM loads the class, finds `main`, and executes the print. Same story as Episode One — now with clearer labels for each layer.
 
-Ask what would break if this line were missing, mistyped, or replaced with a 'simpler' shortcut. That question turns syntax into understanding.
+Once the happy path is clear, production life introduces sharper mistakes.
 
-After this example, you should be able to point to the code and explain what problem each important line is solving.
+First mistake: calling everything "the JDK," including the running process. A production container may be executing a JVM with your application. That is not "the JDK running." The JDK was involved when the code was built. The running process is a JVM executing bytecode, using the runtime libraries. When an incident happens at 2 a.m., mixing those words makes it harder to know whether you are debugging a build problem or a runtime problem.
 
-### Example 2 — make it more realistic
+Second mistake: compiling with one Java version in CI and running a different major version in production without checking compatibility. Bytecode and APIs are versioned. A build that succeeds on JDK 21 can still surprise a Java 17 runtime. The layers we just named are exactly where that mismatch lives: the developer toolkit that compiled the code versus the engine that later tries to run it.
 
-The first example isolates the concept. Real applications rarely stop there. In a practical setting, JDK, JRE, and JVM usually appears while you are trying to ship a feature under constraints: correctness, readability, and change over time.
+Third mistake: treating heap size as the entire memory story. People set `-Xmx` equal to a container's memory limit and leave no headroom. The JVM uses more than the heap — stacks, metaspace, code cache, and native memory also count. You do not need the full memory chapter yet. You only need enough curiosity to stop equating "Java memory" with one flag.
 
-So extend the idea: once the basic form works, ask what happens when the input is larger, the call sites multiply, or another teammate must maintain the code next month.
+So let's reconnect the chain. Episode One asked why Java exists and showed bytecode plus the JVM. Today we answered the install confusion: JDK for building, runtime for running, JVM as the engine inside that runtime story. The commands `javac` and `java` are no longer mysterious synonyms. They belong to different layers.
 
-A useful habit is to take the small example and place it inside a tiny scenario — a checkout flow, a student record, a background job, a service boundary — whichever fits the topic. The concept should still be visible, but now it has a reason to exist in a product.
+And yet a new frustration appears as soon as those tools work. You write a class, name a file, maybe add a package, and the compiler or launcher refuses to cooperate until the pieces agree with each other. Why does Java care so much about where `main` lives, what the filename is, and how packages map to folders?
 
-When you rewrite the example in that scenario, keep the same mechanism. Do not invent a new idea. You are proving that the same Java tool still works when the story gets closer to production.
+That structural stubbornness is not paperwork. It is how the compiler and JVM find your code — and it is exactly where Episode Three begins.
 
-### What if we skip this approach?
+## Source attribution
 
-Important concepts become memorable when we see the failure mode without them.
+Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 2 (*JDK, JRE, and JVM*).
 
-For example, consider this common mistake: Calling everything 'the JDK' including the running process.
-
-That mistake is attractive because it feels shorter or more familiar. The cost arrives later: a subtle bug, a painful refactor, or an incident that is hard to diagnose.
-
-This is the 'what if?' test. If removing the concept makes dangerous behavior easy, then the concept is earning its place in the language or the standard library.
-
-### Example 3 — a common misunderstanding
-
-**Misunderstanding 1:** Calling everything 'the JDK' including the running process.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 2:** Compiling on Java 21 in CI and running Java 17 in production without checking levels.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-**Misunderstanding 3:** Setting -Xmx equal to the container memory limit with zero headroom for non-heap.
-
-When you see this in a code review, do not only say 'that is wrong.' Explain the mechanism. Show the safer pattern. Connect it back to the reason the feature exists.
-
-If you can diagnose the misunderstanding, you are no longer memorizing — you are teaching yourself to design.
-
-### Interview-style checkpoint
-
-Question: What's the difference between JDK, JRE, and JVM?
-
-Answer in spoken form: JDK is the development kit with compiler and tools. JRE is the runtime layer. JVM is the engine that executes bytecode.
-
-Then add one sentence about a trade-off or failure mode. That extra sentence is what makes the answer sound like experience instead of a flashcard.
-
-### Connecting the thread
-
-We came from **Why Java Exists / Introduction to Java**. That set up a need. **JDK, JRE, and JVM** is one of Java's answers to that need.
-
-You should now be able to say why the idea exists, how a small Java example works, where you would use it, and what people often get wrong.
-
-### Looking ahead
-
-Once this is solid, a new challenge appears. That challenge leads us to **Java Program Structure**.
-
-We will start there the same way: with a problem, then the reason Java's approach exists, then code we can walk through together.
-
-## Source attribution (reference document)
-
-Reference document (user attachment): **`Java_JVM_Handbook_GPT55__1_.html`** — *Java & JVM Handbook — 80 Lessons*.
-
-- **Primary curriculum mapping:** Episode 02 / **JDK, JRE, and JVM** (see `../reference/EPISODE_CATALOG.md` and handbook TOC notes for any remaps).
-- **How content was used:** Handbook/curriculum provided the topic spine and teaching points. Narration was rewritten as **descriptive, example-driven instructor prose** (Introduce → Explain → Illustrate → Code → Walk Through → Question → Extend → Connect), not short disconnected definitions.
-- **Runtime note:** Aimed at a **4–15 minute** lesson (soft aim ~10–12).
-
-### Teaching points drawn from the topic bank
-
-- JDK = developer toolkit (javac, jar, jlink, jcmd, Flight Recorder tooling).
-- JRE = runtime idea: libraries + launcher to run apps (modern distros often ship a JDK).
-- JVM = the engine that loads bytecode and executes it (HotSpot is common).
-- Flow: .java to javac (JDK) to .class bytecode to java launcher to JVM execute.
-- Memory gotcha: heap is only one slice — metaspace, stacks, code cache, native also count in containers.
+Narration technique: install-confusion situation → compile vs run split → JDK/JRE/JVM as answers → command walkthrough → version/memory misunderstandings → next natural problem (program structure). Continuity-checked transitions.
