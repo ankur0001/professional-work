@@ -1,0 +1,125 @@
+1
+00:00:00,000 --> 00:00:10,160
+Operators can tell you that a score is
+high enough, that a name is non-null, that
+a counter has not reached its limit. Those
+
+2
+00:00:10,279 --> 00:00:21,960
+A program that only computes and never
+chooses is a calculator stuck on one path.
+Picture a registration desk. You can
+
+3
+00:00:22,079 --> 00:00:34,640
+You need a fork: if age is at least
+eighteen, continue; otherwise refuse. Then
+you need a loop: for each applicant in
+
+4
+00:00:34,759 --> 00:00:47,920
+So the next natural question is: how does
+Java take a boolean — or a set of cases —
+and send the program down different
+
+5
+00:00:48,039 --> 00:00:57,920
+It is also how nesting turns into vines
+nobody wants to read. Start with the
+choice you already feel after Episode
+
+6
+00:00:58,039 --> 00:01:03,920
+The condition is an expression that yields
+a boolean. One branch runs. The other does
+not.
+
+7
+00:01:04,039 --> 00:01:16,119
+When the decision has several labeled
+outcomes instead of a true/false fork,
+modern Java prefers switch expressions
+
+8
+00:01:16,239 --> 00:01:23,479
+A switch expression is not just new syntax
+for old switch statements. It encourages
+exhaustiveness and makes the result a
+
+9
+00:01:23,599 --> 00:01:35,000
+Old fall-through statement switches still
+exist, and forgetting a break is still a
+classic bug. Prefer the form that matches
+
+10
+00:01:35,119 --> 00:01:45,519
+Choosing once is not enough. Often the
+same kind of decision must happen for
+every item — every student, every retry
+
+11
+00:01:45,639 --> 00:01:58,879
+That pressure brings loops: for, while,
+and the enhanced-for when you simply walk
+each element. Look at this java for a
+
+12
+00:01:58,999 --> 00:02:10,239
+When i is even, continue skips the rest of
+that iteration. When i is odd, it prints.
+break would leave the loop entirely. while
+
+13
+00:02:10,359 --> 00:02:17,839
+Enhanced-for fits when you already have a
+collection and only need each element.
+Index for still wins when the position
+
+14
+00:02:17,959 --> 00:02:27,839
+Labeled break and continue exist for
+nested loops; use them sparingly — if you
+need a label to explain the control, the
+
+15
+00:02:27,959 --> 00:02:38,479
+Later, when you work with type hierarchies
+and general references, Java can also bind
+a narrowed type in the same instanceof
+
+16
+00:02:38,599 --> 00:02:50,799
+Hold that curiosity; the pressure for it
+arrives after objects have a clearer
+shape. Now look at the design failure that
+
+17
+00:02:50,919 --> 00:03:04,519
+Each condition feels reasonable. Together
+they bury the real work. The healthier
+move is often to extract methods — early
+
+18
+00:03:04,639 --> 00:03:17,559
+Look at this java for a moment. Now the
+nested pyramid becomes a flat checklist.
+Control flow syntax cannot save a design
+
+19
+00:03:17,679 --> 00:03:30,519
+Operators produced the booleans and
+comparisons we needed. Control flow uses
+those results to choose branches, return
+
+20
+00:03:30,639 --> 00:03:36,799
+It is keeping the path readable as the
+rules multiply. Once main can decide and
+loop, another trap appears.
+
+21
+00:03:36,919 --> 00:03:49,359
+The same decision logic — calculate a
+total, validate an order, format a line —
+gets copied into every place that needs
