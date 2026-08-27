@@ -1,0 +1,143 @@
+1
+00:00:00,000 --> 00:00:08,880
+NIO.2 gave us paths and helpers. The
+helpers are polite enough that you can
+forget an older, sharper lesson: text is
+
+2
+00:00:09,000 --> 00:00:15,000
+Imagine you open a customer export that
+contains names with accents or text
+produced on another operating system.
+
+3
+00:00:15,120 --> 00:00:27,679
+If you read it as raw bytes and casually
+turn those bytes into a String with the
+wrong encoding, characters break, equality
+
+4
+00:00:27,800 --> 00:00:40,320
+It is in the boundary between byte streams
+and character streams — a boundary Java
+models on purpose. So how does Java force
+
+5
+00:00:40,439 --> 00:00:49,239
+Input streams and output streams are byte
+streams. When you mean text, prefer
+readers and writers — or higher helpers
+
+6
+00:00:49,359 --> 00:00:55,640
+When you mean binary — images, compressed
+payloads, length-prefixed frames — stay
+with bytes.
+
+7
+00:00:55,759 --> 00:01:05,480
+Mixing the two without an intentional
+decoder is how mojibake enters a codebase
+that "only deals with files." Look at this
+
+8
+00:01:05,599 --> 00:01:16,359
+newBufferedWriter gives you a buffered
+Writer tied to a path, with UTF-8 named in
+the call. Try-with-resources closes and
+
+9
+00:01:16,479 --> 00:01:26,719
+The charset is not buried in platform
+defaults — it is part of the method call
+you can defend in review. Buffering is not
+
+10
+00:01:26,839 --> 00:01:34,759
+Unbuffered tiny writes — one character at
+a time straight to a cold OS call — can
+crush throughput on what looks like a
+
+11
+00:01:34,879 --> 00:01:44,199
+You still must understand flush: buffering
+means "not necessarily on disk yet." If
+another process must see the data before
+
+12
+00:01:44,319 --> 00:01:57,159
+Close also flushes for well-behaved
+writers, which is another reason try-with-
+resources matters. InputStreamReader is
+
+13
+00:01:57,279 --> 00:02:07,119
+Bytes arrive on inputStream.
+InputStreamReader decodes them with UTF-8.
+BufferedReader makes line-oriented reading
+
+14
+00:02:07,239 --> 00:02:17,999
+Skipping the charset argument invites the
+default-encoding bug back through a side
+door — the code looks sophisticated and
+
+15
+00:02:18,119 --> 00:02:36,199
+What if we ignore the distinction and read
+text as raw bytes "because it is simpler"?
+Look at this java for a moment. It looks
+
+16
+00:02:36,319 --> 00:02:48,199
+The rule is how text survives the trip
+between machines, containers, and
+developer laptops. Flush and close
+
+17
+00:02:48,319 --> 00:02:57,519
+Neither flush nor close, and another
+reader sees a truncated file. Flush
+obsessively after every character, and you
+
+18
+00:02:57,639 --> 00:03:09,719
+Buffer by default, flush when a checkpoint
+is required, close with try-with-
+resources. Another pressure appears in
+
+19
+00:03:09,839 --> 00:03:19,759
+The character-stream model is not only
+about encoding — it is about owning one
+writer for the lifetime of the export,
+
+20
+00:03:19,879 --> 00:03:32,919
+What if the file is binary after all — a
+compressed archive or an image? Then a
+Writer is the wrong abstraction. Match the
+
+21
+00:03:33,039 --> 00:03:41,439
+Once encoding is explicit, many "random"
+production text bugs stop looking random.
+They become missing charset arguments you
+
+22
+00:03:41,559 --> 00:03:55,319
+The same bridge shows up for network
+sockets: bytes arrive from the wire;
+characters leave into a log or CSV. Prefer
+
+23
+00:03:55,439 --> 00:04:03,799
+Defaults are convenient until they become
+an incident. Until now, our programs have
+mostly walked one path of execution from
+
+24
+00:04:03,919 --> 00:04:13,359
+Real systems often need more than one path
+at once — a background worker, a
+concurrent request, a timer — and that is
