@@ -1,0 +1,89 @@
+1
+00:00:00,000 --> 00:00:12,000
+Streams taught us to describe bulk work as
+a pipeline. The last step still has to
+answer a practical question: what
+
+2
+00:00:12,119 --> 00:00:25,479
+Often you need a set of unique ids, a map
+of name to user, or a map of department to
+employees. Collectors turn streams into
+
+3
+00:00:25,599 --> 00:00:42,200
+groupingBy builds a map keyed by the
+classifier — here the string itself. The
+downstream collector counting() tallies
+
+4
+00:00:42,320 --> 00:00:51,640
+That is a whole nested loop and map-merge
+story expressed as one terminal thought.
+The basic collectors cover everyday
+
+5
+00:00:51,759 --> 00:01:05,439
+toList, toSet, and toMap are the first
+tools to reach for. Modern stream.toList()
+overlaps the list case with an
+
+6
+00:01:05,560 --> 00:01:13,879
+toMap needs a merge function when keys can
+collide: Look at this java for a moment.
+Without a merge function, duplicate keys
+
+7
+00:01:14,000 --> 00:01:24,799
+With one, collisions become a deliberate
+policy — sum, max, first-wins, or combine
+objects. Grouping and partitioning split
+
+8
+00:01:24,920 --> 00:01:36,439
+partitioningBy is grouping on a boolean —
+two buckets, true and false. groupingBy
+takes any classifier. Downstream
+
+9
+00:01:36,560 --> 00:01:48,560
+Downstream collectors are how you avoid
+building a map of lists and then post-
+processing. You say the final shape in the
+
+10
+00:01:48,680 --> 00:01:55,920
+Immutable collection collectors matter
+when you return values from APIs: Look at
+this java for a moment. Callers cannot add
+
+11
+00:01:56,040 --> 00:02:09,200
+That failure is a feature when the
+method's contract is "here is a snapshot."
+What if we finish every stream as a list
+
+12
+00:02:09,319 --> 00:02:20,439
+Collectors let the terminal step be the
+real answer. Collectors.joining is another
+everyday terminal for readable output:
+
+13
+00:02:20,560 --> 00:02:32,680
+Collectors answered with
+toList/toSet/toMap, grouping and
+partitioning, downstream composition,
+
+14
+00:02:32,800 --> 00:02:42,760
+Sometimes the stream elements contain
+collections of their own — a user with
+orders, an order with lines. Mapping then
+
+15
+00:02:42,880 --> 00:02:48,400
+How do you flatten nested structure inside
+a pipeline? That is the pressure that
+brings flatMap.
