@@ -1,0 +1,143 @@
+1
+00:00:00,000 --> 00:00:13,599
+Sealed types closed hierarchies inside the
+language. Platforms still faced a
+different leak: on the classic classpath,
+
+2
+00:00:13,719 --> 00:00:21,399
+Reflection and deep dependency graphs made
+"please don't touch that" unenforceable.
+Accidental coupling across jars was
+
+3
+00:00:21,519 --> 00:00:31,920
+So teams asked a practical question: can
+we declare, up front, what a library
+requires and what it actually exports?
+
+4
+00:00:32,039 --> 00:00:45,159
+Modules give those neighborhoods a customs
+checkpoint: you may be public inside your
+module and still invisible outside it
+
+5
+00:00:45,280 --> 00:00:52,920
+That is the Java Platform Module System —
+JPMS. Modules restore strong encapsulation
+the classpath erased.
+
+6
+00:00:53,039 --> 00:01:05,359
+The feature landed with Java 9 and
+reshaped how the JDK itself is packaged —
+which is why even classpath applications
+
+7
+00:01:05,480 --> 00:01:25,080
+A module is a named collection of packages
+with an explicit boundary. The declaration
+lives in module-info.java. Look at this
+
+8
+00:01:25,200 --> 00:01:39,760
+requires com.shop.core states an explicit
+dependency — the module graph is not a
+pile of jars hoping their transitive types
+
+9
+00:01:39,879 --> 00:01:44,399
+Sibling packages in the same module can
+stay hidden even if their types are
+public.
+
+10
+00:01:44,519 --> 00:01:56,519
+Public no longer means "visible to the
+whole classpath world." opens appears when
+reflective frameworks need deep access to
+
+11
+00:01:56,640 --> 00:02:04,640
+Look at this java for a moment. Opening
+everything "just to make it work"
+recreates classpath porosity with module
+
+12
+00:02:04,760 --> 00:02:16,599
+Prefer exporting a stable API and opening
+only what a known tool requires, ideally
+to a named module. Migration can be
+
+13
+00:02:16,719 --> 00:02:27,680
+You can modularize libraries gradually, or
+stay on the classpath while learning the
+module graph of the platform itself. JPMS
+
+14
+00:02:27,800 --> 00:02:36,680
+What problem do modules solve in one
+sentence? Reliable configuration and
+stronger encapsulation than a flat
+
+15
+00:02:36,800 --> 00:02:50,439
+Illegal access to non-exported packages
+fails clearly instead of succeeding by
+accident. Modules alone do not equal good
+
+16
+00:02:50,560 --> 00:03:01,159
+The module system enforces boundaries you
+declare; it does not invent a clean domain
+for you. Picture two jars on an old
+
+17
+00:03:01,280 --> 00:03:12,360
+A public class named InternalHasher lived
+in com.shop.core.internal. Nothing stopped
+shop-app from calling it. A year later the
+
+18
+00:03:12,479 --> 00:03:25,639
+Packages said "internal" in the name; the
+platform did not enforce it. With modules,
+com.shop.core simply does not export
+
+19
+00:03:25,759 --> 00:03:32,879
+That failure happens at launch or compile
+time for modular apps, not as a surprise
+NoSuchMethodError after a refactor.
+
+20
+00:03:33,000 --> 00:03:45,000
+If you are maintaining a library,
+exporting fewer packages is usually kinder
+than exporting everything "for
+
+21
+00:03:45,120 --> 00:03:57,560
+Export more only when a real client need
+appears. The same advice applies to opens:
+grant reflective access specifically,
+
+22
+00:03:57,680 --> 00:04:09,560
+Modules restored explicit requires,
+exports, and careful opens. Incremental
+migration kept classpath apps in the real
+
+23
+00:04:09,680 --> 00:04:19,560
+Inside those boundaries, a different
+everyday friction returns: arrays still
+force a fixed length, while real features
+
+24
+00:04:19,680 --> 00:04:26,600
+How do we hold an ordered sequence without
+hand-rolled resizing? That pressure is
+what lists exist to answer.
