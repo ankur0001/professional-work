@@ -1,0 +1,125 @@
+1
+00:00:00,000 --> 00:00:13,679
+Packages gave our types a home. That does
+not yet solve a quieter mess that shows up
+the moment a domain has a fixed
+
+2
+00:00:13,799 --> 00:00:26,199
+The fastest way to encode that is a string
+field: "NEW", "PAID", "SHIPPED". It
+compiles. It demos well. Then someone
+
+3
+00:00:26,320 --> 00:00:32,480
+The bug arrives in production as a status
+that matches nothing — a branch never
+taken, a warehouse never notified.
+
+4
+00:00:32,600 --> 00:00:46,359
+So a natural question appears: if the set
+of legal values is known and closed, why
+are we letting arbitrary text pretend to
+
+5
+00:00:46,480 --> 00:01:00,080
+Instead of magic strings or magic ints,
+you get a vocabulary the compiler
+understands. Look at this java for a
+
+6
+00:01:00,200 --> 00:01:06,719
+The allowed values live in one place.
+Interviewers sometimes ask why enums beat
+public static final int.
+
+7
+00:01:06,840 --> 00:01:18,879
+The short answer is type safety,
+namespacing, and room for attached
+behavior — an int constant named PAID is
+
+8
+00:01:19,000 --> 00:01:29,719
+But enums in Java are not only labels.
+Once you have a named state, behavior
+often wants to hang off that state. Is
+
+9
+00:01:29,900 --> 00:01:39,540
+That pressure turns the enum into a small
+class with fields and methods. Look at
+this java for a moment. NEW, PAID, and
+
+10
+00:01:39,660 --> 00:01:49,420
+terminal() answers a domain question
+without a scattered if chain of strings.
+Call sites write order.status().terminal()
+
+11
+00:01:49,540 --> 00:01:58,980
+You can also give constants fields — a
+display label, a sort rank — as long as
+you treat that data as part of the fixed
+
+12
+00:01:59,100 --> 00:02:13,140
+Enums also shine with switch, because the
+set of cases is finite. Modern Java can
+warn or error when a switch is not
+
+13
+00:02:13,260 --> 00:02:25,580
+If someone later adds CANCELLED to the
+enum, the incomplete switch becomes a
+compile-time problem instead of a silent
+
+14
+00:02:25,700 --> 00:02:40,460
+What if we skip enums and keep stringly-
+typed status codes? Look at this java for
+a moment. It looks small. Then "Paid"
+
+15
+00:02:40,580 --> 00:02:53,540
+Mutable enum fields cause a different
+surprise: if you stash changing data on an
+enum constant, every caller shares that
+
+16
+00:02:53,660 --> 00:03:04,980
+There is one more practical detail once
+enums become common: collections
+specialized for them. EnumSet and EnumMap
+
+17
+00:03:05,100 --> 00:03:16,540
+If you need a set of flags that are
+themselves enum constants, reach for
+EnumSet before a general HashSet. Let's
+
+18
+00:03:16,660 --> 00:03:25,540
+Look at this java for a moment. The field
+is a Status, not a String. markPaid
+refuses nonsense transitions instead of
+
+19
+00:03:25,660 --> 00:03:37,820
+When you later add CANCELLED, every place
+that switches on status() becomes a
+checklist the compiler can help enforce.
+
+20
+00:03:37,940 --> 00:03:43,300
+Fields and methods let vocabulary carry
+behavior. Switch made exhaustive handling
+natural.
+
+21
+00:03:43,420 --> 00:03:58,780
+Once constants can be objects, another
+pressure appears: collections and APIs
+often want objects, while hot paths still
