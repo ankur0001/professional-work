@@ -1,0 +1,190 @@
+1
+00:00:00,000 --> 00:00:10,240
+In the previous episode, we gave a Java
+program a place to live: packages,
+classes, and main. That solves structure.
+
+2
+00:00:10,359 --> 00:00:21,879
+Before our program can work with
+information, it needs somewhere to keep
+that information. Let's say we are
+
+3
+00:00:22,000 --> 00:00:34,000
+We could simply write 25 in our program,
+but later we would have no idea what that
+number represents. Is it the student's
+
+4
+00:00:34,119 --> 00:00:46,359
+That is where a variable comes in. A
+variable allows us to give a name to a
+piece of information so that our program
+
+5
+00:00:46,479 --> 00:00:55,839
+Now the number 25 has meaning because we
+have associated it with the name age. But
+notice something else: we have also
+
+6
+00:00:56,019 --> 00:01:08,939
+Because Java needs to know what kind of
+information we are planning to store. Not
+every piece of information is a whole
+
+7
+00:01:09,060 --> 00:01:20,299
+Whether a student has passed can be true
+or false. So the question that follows
+naturally from naming a value is: what
+
+8
+00:01:20,420 --> 00:01:27,900
+Variables give us a way to name and
+remember information. Data types tell Java
+what kind of information that variable
+
+9
+00:01:28,019 --> 00:01:38,979
+Together they turn a bare number into
+something the program — and the compiler —
+can reason about. What if we tried to
+
+10
+00:01:39,099 --> 00:01:49,939
+You can print those strings. But the
+moment you try to add marks, compare ages
+numerically, or enforce a rule like "age
+
+11
+00:01:50,059 --> 00:02:00,699
+Java's type system moves those decisions
+earlier. The compiler helps catch whole
+classes of mistakes before the program
+
+12
+00:02:00,819 --> 00:02:12,379
+Once you accept that types matter, another
+distinction appears quickly. Java does not
+treat every type the same way in memory.
+
+13
+00:02:12,500 --> 00:02:27,020
+Primitives hold values directly. Familiar
+ones are int, long, double, boolean, and
+char. A primitive variable is never null.
+
+14
+00:02:27,139 --> 00:02:38,500
+A reference can be null, which means it is
+not pointing at any object right now. Look
+at this java for a moment. Walk through
+
+15
+00:02:38,619 --> 00:02:50,539
+name does not store every character inside
+the variable slot the way count stores
+ten; it stores a reference to a String
+
+16
+00:02:50,659 --> 00:03:02,659
+This raises a practical question: when we
+assign one variable to another, what
+exactly gets copied? For primitives,
+
+17
+00:03:02,779 --> 00:03:11,099
+Two reference variables can end up
+pointing at the same object. That single
+fact will matter enormously when we reach
+
+18
+00:03:11,219 --> 00:03:23,259
+You do not need those chapters yet — you
+only need to feel why the family
+difference is not academic. Let's put the
+
+19
+00:03:23,379 --> 00:03:35,139
+Look at this java for a moment. Read it as
+one thought. We remember a name as text,
+an age as a whole number, an average as a
+
+20
+00:03:35,259 --> 00:03:44,619
+The expression averageMarks >= 40.0
+produces a boolean and stores it in
+passed. When the program runs, it prints
+
+21
+00:03:44,739 --> 00:03:56,019
+The types are guiding the design: age
+should not be a String if we want numeric
+comparison; marks that need a fractional
+
+22
+00:03:56,139 --> 00:04:05,099
+Now that the happy path feels clear, we
+should look at the places this idea bites
+beginners. First, integer division: Look
+
+23
+00:04:05,219 --> 00:04:18,379
+Both operands are int, so Java performs
+integer division and discards the
+fraction. The code compiles. That is what
+
+24
+00:04:18,499 --> 00:04:32,499
+If you needed 2.5, a floating-point value
+had to participate in the computation.
+Second, null references: Look at this java
+
+25
+00:04:32,619 --> 00:04:35,859
+Asking for .length() requires an actual
+String.
+
+26
+00:04:35,979 --> 00:04:48,459
+Primitives protect you from this
+particular failure — an int cannot be null
+— but that does not make primitives
+
+27
+00:04:48,579 --> 00:05:01,099
+Modern Java also lets you write var for
+local variables when the initializer makes
+the type obvious: Look at this java for a
+
+28
+00:05:01,219 --> 00:05:13,059
+var is not a door into a dynamically typed
+Java. It is a way to reduce repetition
+once the meaning is already clear. So
+
+29
+00:05:13,179 --> 00:05:24,659
+Naming gave us variables. Different kinds
+of information gave us data types. Memory
+behavior split types into primitives and
+
+30
+00:05:24,779 --> 00:05:29,500
+Integer division and null showed the
+failure modes that make the rules worth
+respecting.
+
+31
+00:05:29,619 --> 00:05:37,099
+Once we can remember values, the next
+natural pressure appears: we need to
+combine them, compare them, and make
+
+32
+00:05:37,219 --> 00:05:51,499
+A single character — = versus ==, /
+between ints versus doubles — can change
+the meaning of a whole expression. That
