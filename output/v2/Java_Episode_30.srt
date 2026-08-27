@@ -1,0 +1,121 @@
+1
+00:00:00,000 --> 00:00:13,800
+Pipelines can run in parallel, but they
+still end in moments that may produce no
+value — an empty find, a missing key, a
+
+2
+00:00:13,919 --> 00:00:24,079
+Somewhere deeper, user.name() throws
+NullPointerException. The stack trace
+points at a symptom, not at the API that
+
+3
+00:00:24,199 --> 00:00:36,799
+The natural question is: can absence be
+part of the return type? Optional makes
+absence explicit at API boundaries — not
+
+4
+00:00:36,920 --> 00:00:50,120
+Look at this java for a moment. Walk it.
+find() returns Optional<User> — either a
+user or empty. map(User::name) transforms
+
+5
+00:00:50,240 --> 00:01:03,960
+orElse("unknown") unwraps to a concrete
+string, supplying a default when absent.
+Callers must confront the optional. map,
+
+6
+00:01:04,079 --> 00:01:15,959
+Look at this java for a moment. filter
+drops inactive users to empty. flatMap
+chains another optional-returning step
+
+7
+00:01:16,079 --> 00:01:29,079
+orElse versus orElseGet matters when the
+default is expensive: Look at this java
+for a moment. orElse evaluates its
+
+8
+00:01:29,200 --> 00:01:42,079
+Use orElse for cheap constants. Use
+orElseGet for work you do not want to
+waste. Avoid Optional.of(null). It throws
+
+9
+00:01:42,200 --> 00:01:54,359
+If you already know it is non-null,
+Optional.of documents that belief — and
+fails fast if you were wrong. Look at this
+
+10
+00:01:54,480 --> 00:02:04,520
+Optional is a poor fit for fields,
+parameters, and collections of optionals
+as a general style. It shines on return
+
+11
+00:02:04,640 --> 00:02:18,120
+Inside a class, a nullable private field
+with clear invariants is often simpler.
+What if we skip Optional and keep
+
+12
+00:02:18,240 --> 00:02:31,080
+Production pays. Optional does not remove
+null from Java; it moves the "might be
+missing" declaration to a place the type
+
+13
+00:02:31,200 --> 00:02:45,200
+findById admits absence. requireById turns
+absence into an exception for paths that
+truly need a user. Both are honest.
+
+14
+00:02:45,320 --> 00:02:59,920
+Each id may or may not resolve.
+Optional::stream flattens presence into
+the stream and drops absence. Resist
+
+15
+00:03:00,040 --> 00:03:12,800
+Teams sometimes wrap collections in
+Optional — Optional<List<User>> — to mean
+"no list." Prefer an empty list for "no
+
+16
+00:03:12,920 --> 00:03:28,480
+Empty collections already express absence
+of elements. Null returns hid absence.
+Optional made it explicit at boundaries.
+
+17
+00:03:28,600 --> 00:03:34,600
+Fields everywhere were rejected as style
+abuse. Absence is not only about missing
+objects.
+
+18
+00:03:34,720 --> 00:03:36,800
+Business rules live on calendars:
+
+19
+00:03:36,920 --> 00:03:50,800
+"expire this offer at midnight Tokyo,"
+"schedule a job in three hours," "compare
+two instants from different zones."
+
+20
+00:03:50,920 --> 00:03:52,360
+at the worst time.
+
+21
+00:03:52,480 --> 00:03:58,280
+How does Java talk about time without that
+fog? That pressure is what java.time
+exists to answer.
