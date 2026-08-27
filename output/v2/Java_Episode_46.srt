@@ -1,0 +1,131 @@
+1
+00:00:00,000 --> 00:00:11,320
+Future gave us one result with a timed
+get. Real services often need a pipeline:
+load something, transform it, combine it
+
+2
+00:00:11,439 --> 00:00:23,799
+Blocking on each get in sequence works and
+throws away concurrency. Nesting callbacks
+by hand works and becomes unreadable. How
+
+3
+00:00:23,979 --> 00:00:35,459
+CompletableFuture is Java's standard
+answer for that composition. Look at this
+java for a moment. supplyAsync starts load
+
+4
+00:00:35,579 --> 00:00:46,619
+thenApply maps the value through transform
+when load completes. orTimeout fails the
+stage if the pipeline takes too long.
+
+5
+00:00:46,739 --> 00:00:59,979
+The code reads top to bottom like a happy-
+path story, while the machinery runs
+asynchronously. thenApply versus
+
+6
+00:01:00,099 --> 00:01:06,179
+thenCompose maps a value to another future
+and flattens the nesting — the async
+cousin of flatMap.
+
+7
+00:01:06,299 --> 00:01:17,739
+If transform itself returns a
+CompletableFuture, thenApply gives you a
+future of a future; thenCompose keeps one
+
+8
+00:01:17,859 --> 00:01:29,579
+exceptionally recovers a value from a
+failure. handle sees success or failure
+together. Swallowing exceptions inside a
+
+9
+00:01:29,700 --> 00:01:41,540
+Preserve causes, decide policy, do not
+erase failure. Executor choice matters.
+supplyAsync without an executor uses the
+
+10
+00:01:41,659 --> 00:01:54,539
+Blocking on I/O inside common-pool stages
+can starve other async work on the JVM —
+including parallel streams. For blocking
+
+11
+00:01:54,659 --> 00:02:04,299
+Timeouts and cancellation remain part of
+the story. orTimeout and completeOnTimeout
+define latency policy in the graph instead
+
+12
+00:02:04,420 --> 00:02:15,460
+Cancellation still cooperates with
+interruptible work underneath. What if we
+use thenApply where thenCompose was
+
+13
+00:02:15,639 --> 00:02:28,159
+Nested futures appear, or the common pool
+stalls. Both bugs look like "async is
+hard" when they are really operator
+
+14
+00:02:28,279 --> 00:02:37,679
+You start two asynchronous loads, then
+combine their results when both complete.
+That is the graph thinking single futures
+
+15
+00:02:37,799 --> 00:02:42,919
+Timeouts on the combined stage still
+matter; a slow sibling should not pin a
+request forever.
+
+16
+00:02:43,039 --> 00:02:49,840
+Debugging a composed future means reading
+the exception from the stage that failed
+and remembering which executor ran which
+
+17
+00:02:49,959 --> 00:02:59,359
+Silent exceptionally that returns null
+converts a loud failure into a null that
+explodes later — the same anti-pattern as
+
+18
+00:02:59,479 --> 00:03:07,799
+Picture loading a user profile and a set
+of entitlements concurrently, then
+combining them into a view model with a
+
+19
+00:03:07,919 --> 00:03:18,159
+thenCombine expresses the join; orTimeout
+expresses the budget; exceptionally maps
+failures to a safe fallback or an error
+
+20
+00:03:18,279 --> 00:03:29,959
+Keep stages small and pure when you can:
+load, transform, save. Side effects in the
+middle of a graph make cancellation and
+
+21
+00:03:30,079 --> 00:03:40,719
+Hold the checklist: operators match shapes
+(thenApply vs thenCompose); executors
+match blocking; timeouts sit on the graph;
+
+22
+00:03:40,839 --> 00:03:50,439
+Some workloads are not async I/O graphs —
+they are CPU-heavy divide-and-conquer over
+large arrays or trees. That shape has its
