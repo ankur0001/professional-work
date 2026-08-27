@@ -1,0 +1,137 @@
+1
+00:00:00,000 --> 00:00:07,320
+ExecutorService taught us to submit work
+to a pool instead of inventing threads by
+hand. That solves concurrency budgeting.
+
+2
+00:00:07,440 --> 00:00:17,280
+It does not yet answer a hunger that
+appears the moment the task computes
+something you need: how do I get a result
+
+3
+00:00:17,460 --> 00:00:31,899
+Runnable returns nothing and cannot throw
+checked exceptions. Many real tasks need
+both. That is why Callable exists — and
+
+4
+00:00:32,019 --> 00:00:45,619
+submit accepts a Callable that returns an
+Integer. The method returns a Future
+immediately; the computation may still be
+
+5
+00:00:45,739 --> 00:00:56,379
+If the task finishes in time, you receive
+the value. If it does not, you get a
+timeout instead of hanging forever. Always
+
+6
+00:00:56,499 --> 00:01:08,139
+A bare get() with no limit is how one
+stuck worker becomes a stuck request
+thread — and then a stuck thread pool.
+
+7
+00:01:08,259 --> 00:01:16,659
+cancel(true) asks the pool to interrupt
+the running task if it has already
+started, or to prevent it from starting if
+
+8
+00:01:16,779 --> 00:01:25,659
+"Cooperative" means the task must notice
+the interrupt — by exiting a blocking call
+that throws InterruptedException, or by
+
+9
+00:01:25,779 --> 00:01:36,859
+Assuming cancel instantly stops arbitrary
+CPU work is a common production
+disappointment. Cancellation is a request.
+
+10
+00:01:36,979 --> 00:01:50,139
+Callable versus Runnable is the short form
+of today's design choice. Callable returns
+a value and may throw checked exceptions
+
+11
+00:01:50,259 --> 00:02:00,819
+If you find yourself stuffing results into
+a shared mutable field from a Runnable,
+you are reinventing Future badly.
+
+12
+00:02:00,939 --> 00:02:08,979
+They arrive wrapped — typically as
+ExecutionException with the original cause
+inside. Your wait site is also your
+
+13
+00:02:09,099 --> 00:02:22,259
+Ignoring the cause and only logging
+"execution failed" throws away the
+forensic trail we fought to keep in the
+
+14
+00:02:22,379 --> 00:02:28,419
+You still need a completion protocol.
+Future is that protocol with timeouts and
+cancellation already designed.
+
+15
+00:02:28,539 --> 00:02:40,859
+A practical pattern in services is
+"submit, then wait with timeout, then
+cancel on timeout." The timeout protects
+
+16
+00:02:40,979 --> 00:02:53,379
+Neither alone is a complete story;
+together they are the minimum polite
+concurrent call. Picture a payment
+
+17
+00:02:53,500 --> 00:03:03,259
+On timeout it cancels and returns "try
+again." On success it continues the order.
+On ExecutionException it unwraps the cause
+
+18
+00:03:03,379 --> 00:03:16,579
+That three-branch wait site is the
+everyday craft — not the lambda syntax,
+but the policy around waiting. Composition
+
+19
+00:03:16,699 --> 00:03:29,060
+That wish is how teams graduate to
+CompletableFuture. For now, keep the
+contract crisp: submit returns a handle;
+
+20
+00:03:29,179 --> 00:03:41,659
+What if every task is fire-and-forget
+logging? Then Runnable and execute may be
+enough. Futures are for results and
+
+21
+00:03:41,779 --> 00:03:47,499
+Always shut down the executor with a
+defined owner. Futures do not excuse
+leaked executors.
+
+22
+00:03:47,619 --> 00:04:00,619
+The result handle and the worker pool are
+partners; lifecycle belongs to the pool's
+owner, while the future belongs to the
+
+23
+00:04:00,739 --> 00:04:10,899
+Once many threads share maps and queues,
+another question appears: can the
+collections themselves participate in
