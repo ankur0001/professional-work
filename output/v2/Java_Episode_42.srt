@@ -1,0 +1,142 @@
+1
+00:00:00,000 --> 00:00:10,000
+Futures gave us results from pools. Those
+results often land in shared structures —
+caches, metrics maps, work queues —
+
+2
+00:00:10,119 --> 00:00:22,079
+Synchronizing every access to an ordinary
+HashMap works until contention makes the
+whole map a single-file line. Can the
+
+3
+00:00:22,259 --> 00:00:33,859
+Concurrent collections answer that need.
+They make shared structure access safer.
+They do not make every multi-step business
+
+4
+00:00:33,979 --> 00:00:46,379
+Start with the map you will see most: Look
+at this java for a moment. merge
+atomically associates key "a" with 1 if
+
+5
+00:00:46,500 --> 00:00:54,980
+You did not write a check-then-act
+sequence that another thread could
+interleave. Single operations on
+
+6
+00:00:55,100 --> 00:01:04,299
+The trap is pretending that two separate
+calls are one atomic story: Look at this
+java for a moment. Between containsKey and
+
+7
+00:01:04,420 --> 00:01:17,379
+Use putIfAbsent, compute, merge, and
+friends when the logic is compound. Single
+ops are safe; multi-step needs atomic APIs
+
+8
+00:01:17,500 --> 00:01:26,340
+CopyOnWriteArrayList copies the underlying
+array on each mutation, then publishes the
+new array. Readers can iterate without
+
+9
+00:01:26,459 --> 00:01:35,899
+That shines when reads dominate and writes
+are rare — listener lists are the classic
+example. It hurts when writes are
+
+10
+00:01:36,019 --> 00:01:43,659
+Blocking queues belong in the same family
+— concurrent collections specialized for
+handoffs — and they get their own deep
+
+11
+00:01:43,780 --> 00:01:54,780
+Weakly consistent iterators on many
+concurrent collections mean an iterator
+may reflect some updates and not others —
+
+12
+00:01:54,900 --> 00:02:00,140
+but it also will not freeze a perfect
+point-in-time view unless the collection
+promises one.
+
+13
+00:02:00,260 --> 00:02:11,939
+What if we wrap every ConcurrentHashMap
+call in synchronized (map) "to be extra
+safe"? Usually you add contention without
+
+14
+00:02:12,060 --> 00:02:23,659
+External synchronization can be necessary
+for multi-map invariants — but then you
+are designing a higher-level lock
+
+15
+00:02:23,780 --> 00:02:33,180
+Threads look up a computed value by key.
+If absent, they compute and insert.
+computeIfAbsent keeps that check-and-
+
+16
+00:02:33,300 --> 00:02:44,460
+If computation is expensive and must not
+run twice, that atomic API is correctness
+under load. If the value itself is mutable
+
+17
+00:02:44,580 --> 00:02:57,420
+The map's concurrency does not bless the
+object's interior. CopyOnWrite earns one
+concrete picture. A list of listeners is
+
+18
+00:02:57,540 --> 00:03:10,020
+Copy-on-write makes reads cheap at the
+cost of a copy on subscribe. Invert that
+workload — writes constantly, reads rare —
+
+19
+00:03:10,140 --> 00:03:17,780
+Picture a feature-flag map read on every
+request and updated by a rare admin call.
+ConcurrentHashMap fits.
+
+20
+00:03:17,900 --> 00:03:29,020
+An admin update that changes three related
+keys under one logical "release" may still
+need a higher-level protocol — a single
+
+21
+00:03:29,140 --> 00:03:43,100
+The collection keeps single-key operations
+honest; your product invariants may still
+need a wider story. A metrics counter map
+
+22
+00:03:43,220 --> 00:03:50,700
+Resist synchronizing around the whole map
+"just in case" unless you are composing a
+multi-key invariant the map cannot
+
+23
+00:03:50,820 --> 00:04:01,940
+Sometimes the shared state is not a map of
+many keys — it is a single counter or flag
+updated constantly. Locking may be too
+
+24
+00:04:02,060 --> 00:04:04,860
+That hotspot shape is where atomics earn
+their keep.
