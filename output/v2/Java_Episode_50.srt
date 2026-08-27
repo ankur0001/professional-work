@@ -1,0 +1,142 @@
+1
+00:00:00,000 --> 00:00:09,439
+For many episodes we treated threads as
+expensive OS-backed workers you must pool
+and bound. That model still matters. It is
+
+2
+00:00:09,559 --> 00:00:16,320
+Modern Java can run a huge number of
+lightweight virtual threads scheduled onto
+a smaller set of platform carrier threads.
+
+3
+00:00:16,439 --> 00:00:28,679
+The programming style that feels natural
+for servers — one thread per request,
+blocking I/O that reads like straight-line
+
+4
+00:00:28,799 --> 00:00:41,759
+They are cheap to create in large numbers.
+Do not pool them like platform threads.
+Watch pinning cases. They shine with
+
+5
+00:00:41,879 --> 00:00:50,799
+Look at this java for a moment. Instead of
+a fixed pool of eight platform threads,
+you create an executor that starts a new
+
+6
+00:00:50,919 --> 00:00:58,319
+Blocking inside handle parks the virtual
+thread without permanently occupying a
+carrier the way a blocked platform thread
+
+7
+00:00:58,439 --> 00:01:09,239
+Thousands of in-flight requests can wait
+on I/O without forcing you into reactive
+callback mazes — when the libraries and
+
+8
+00:01:09,420 --> 00:01:18,900
+Platform pools existed because platform
+threads were scarce. Virtual threads are
+plentiful; a pool that caps them can
+
+9
+00:01:19,019 --> 00:01:29,899
+Prefer starting one per task for blocking
+request work, and use semaphores or other
+limits when you must bound access to a
+
+10
+00:01:30,019 --> 00:01:41,340
+Pinning is the sharp edge. Certain
+operations — notably some synchronized
+blocks and native calls — can pin a
+
+11
+00:01:41,459 --> 00:01:54,459
+Hot pinning in a frequent path undermines
+the scalability story. Prefer
+ReentrantLock in some hot paths, keep
+
+12
+00:01:54,579 --> 00:02:05,179
+Virtual threads do not create more cores.
+A stampede of CPU-heavy tasks on virtual
+threads can still oversubscribe the
+
+13
+00:02:05,299 --> 00:02:18,020
+Structured concurrency — keeping related
+tasks in a clear scope with cancellation —
+pairs naturally with virtual threads.
+
+14
+00:02:18,139 --> 00:02:24,299
+What if we assume virtual threads make
+everything faster, including tight math
+loops? They will not invent cores.
+
+15
+00:02:24,419 --> 00:02:34,699
+Mis-pooling them, pinning in hot sections,
+or expecting CPU miracles are the three
+classic misunderstandings. Use them where
+
+16
+00:02:34,819 --> 00:02:46,939
+Keep the older lessons — atomics, queues,
+deadlock order, interrupt discipline —
+because correctness did not become
+
+17
+00:02:47,060 --> 00:02:58,340
+Old advice said "never block a request
+thread on slow I/O without an async
+design." Virtual threads revise that for
+
+18
+00:02:58,460 --> 00:03:11,060
+Old advice said "always use a pool."
+Virtual threads revise that for task
+threads: pool the scarce resource, not the
+
+19
+00:03:11,180 --> 00:03:24,819
+Cheap threads make races easier to
+schedule, not harder. Libraries matter as
+much as your code. A JDBC driver, logger,
+
+20
+00:03:24,939 --> 00:03:35,659
+Adoption plans should include dependency
+versions, not only a language level bump.
+Picture a server that used to maintain a
+
+21
+00:03:35,780 --> 00:03:46,620
+Switching handlers to virtual threads per
+request collapses the queueing story for
+blocking I/O waits, while a semaphore
+
+22
+00:03:46,740 --> 00:03:57,980
+Threads became plentiful; the database did
+not. Bound what is scarce. Prefer virtual
+threads for many blocking tasks; prefer
+
+23
+00:03:58,100 --> 00:04:10,780
+The combination is the modern default for
+many servers — simple code, honest limits.
+When the language story stabilizes,
+
+24
+00:04:10,960 --> 00:04:13,640
+That runtime machinery begins with class
+loading.
