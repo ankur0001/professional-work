@@ -1,0 +1,112 @@
+1
+00:00:00,000 --> 00:00:03,160
+Lists proudly allow duplicates and
+remember order.
+
+2
+00:00:03,280 --> 00:00:15,440
+The next product requirement often flips
+that pride into a bug: a user should have
+each role only once, a crawler should not
+
+3
+00:00:15,559 --> 00:00:24,559
+Suppose you store roles in a list and
+check membership with contains before
+every add. It works for tiny data and
+
+4
+00:00:24,679 --> 00:00:40,840
+The natural question is: is there a
+collection whose whole point is
+uniqueness? That collection is a Set. Set
+
+5
+00:00:40,960 --> 00:00:51,359
+The first add inserts "a". The second add
+sees an equal element already present and
+leaves the set unchanged. Size stays one.
+
+6
+00:00:51,480 --> 00:01:00,960
+Under a HashSet, uniqueness is decided by
+hashing into buckets, then confirming with
+equals. If two objects are equal, they
+
+7
+00:01:01,080 --> 00:01:12,200
+If you break that contract, a set can hold
+what looks like duplicates, or fail to
+find what you just inserted. For your own
+
+8
+00:01:12,320 --> 00:01:23,000
+Different set implementations trade
+properties: Look at this java for a
+moment. HashSet is the common default when
+
+9
+00:01:23,120 --> 00:01:30,800
+TreeSet keeps elements sorted, which means
+it needs a consistent ordering — natural
+Comparable order or an explicit
+
+10
+00:01:30,920 --> 00:01:38,159
+If the comparator says two elements are
+equal for ordering purposes, the set
+treats them as duplicates even if equals
+
+11
+00:01:38,280 --> 00:01:49,960
+Here is a domain-shaped example where set
+algebra shows up in real rules: Look at
+this java for a moment. removeAll,
+
+12
+00:01:50,079 --> 00:02:03,799
+Permission checks and feature flag merges
+sound like set talk once you stop forcing
+lists to pretend. One sharp edge: do not
+
+13
+00:02:03,920 --> 00:02:15,840
+After mutation, the object may live in the
+wrong bucket. Treat elements as
+effectively immutable while they are set
+
+14
+00:02:16,020 --> 00:02:28,660
+Fine for one call site. Then five call
+sites forget the check. A set makes the
+rule structural instead of ceremonial.
+
+15
+00:02:28,780 --> 00:02:38,860
+Because Role is a record, equal names
+compare equal and hash alike. A hand-
+written class that compares names in
+
+16
+00:02:38,979 --> 00:02:45,819
+Iteration order stories cause flaky tests.
+A HashSet may print elements in different
+orders across runs.
+
+17
+00:02:45,939 --> 00:03:01,539
+If a test asserts a stringified set,
+prefer LinkedHashSet, a sorted set, or
+compare as sets without relying on order.
+
+18
+00:03:01,659 --> 00:03:13,180
+HashSet, LinkedHashSet, and TreeSet traded
+speed, insertion order, and sorted order.
+Mutating hashed fields showed a classic
+
+19
+00:03:13,299 --> 00:03:27,619
+Often you need "given a user id, find the
+user" or "given a sku, find the price."
+Searching a list linearly gets old fast.
