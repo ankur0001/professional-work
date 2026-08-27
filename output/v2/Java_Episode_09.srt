@@ -1,0 +1,119 @@
+1
+00:00:00,000 --> 00:00:13,839
+Arrays gave us a way to hold many values
+by position. That helps for scores and
+samples. Most applications, though, spend
+
+2
+00:00:13,959 --> 00:00:24,839
+Text feels simple until you try to change
+it, compare it, or move it across a
+network boundary. Start from a small
+
+3
+00:00:24,960 --> 00:00:36,159
+Look at this java for a moment. a still
+refers to "hi". b refers to a new string
+"hi!". Nothing edited the original
+
+4
+00:00:36,280 --> 00:00:48,880
+Concatenation does not mutate; it creates
+another object. That design buys safer
+sharing and reliable behavior when strings
+
+5
+00:00:49,000 --> 00:00:59,079
+Why bake immutability into the type
+everyone uses? Because text crosses trust
+boundaries constantly — path names, cache
+
+6
+00:00:59,200 --> 00:01:11,879
+If any caller could silently change the
+characters underneath a shared reference,
+security and hashing would become
+
+7
+00:01:12,000 --> 00:01:24,519
+Immutability raises a practical question
+the first time you build a result in a
+loop: if every + can mean a new object,
+
+8
+00:01:24,640 --> 00:01:38,040
+Look at this java for a moment. The
+builder holds a mutable buffer. Each
+append changes that buffer instead of
+
+9
+00:01:38,159 --> 00:01:47,759
+A single + in ordinary code is fine —
+"Hello, " + name is readable. The rule of
+thumb is about repetition under load, not
+
+10
+00:01:47,879 --> 00:02:00,799
+Comparison is the next place strings
+surprise people — and it connects straight
+back to operators and references. Look at
+
+11
+00:02:00,919 --> 00:02:13,879
+equals asks whether the character content
+matches. Literal pooling can make == look
+correct in a tiny demo and then fail when
+
+12
+00:02:14,000 --> 00:02:23,199
+Null-safe comparison also matters:
+Objects.equals(a, b) or putting the
+literal first in "ada".equals(x) avoids
+
+13
+00:02:23,319 --> 00:02:35,400
+What about longer text — SQL, HTML
+snippets, sample payloads — where quote-
+escaped one-liners become unreadable? Text
+
+14
+00:02:35,519 --> 00:02:49,239
+Look at this java for a moment. The
+content can span lines. Indentation rules
+strip a shared indent so the string is not
+
+15
+00:02:49,359 --> 00:02:59,559
+Keep ordinary quotes for short values. One
+more boundary problem appears the moment
+strings leave Java characters and meet
+
+16
+00:02:59,679 --> 00:03:08,479
+Encoding mistakes are silent until a name
+with an accent turns into garbage. Look at
+this java for a moment. Always be explicit
+
+17
+00:03:08,599 --> 00:03:17,839
+"The platform default charset" is not a
+team agreement; it is a future incident.
+Text and bytes are different, and the
+
+18
+00:03:17,959 --> 00:03:33,279
+A loop that builds CSV with +, a login
+check that uses ==, a file reader that
+assumes the default charset — each works
+
+19
+00:03:33,399 --> 00:03:46,719
+The discipline exists because the type is
+everywhere. Once text, numbers, and
+methods are comfortable, another modeling
+
+20
+00:03:46,839 --> 00:03:58,359
+The data and the rules that protect it
+want to travel together as one idea —
+create a student, keep the id valid,
