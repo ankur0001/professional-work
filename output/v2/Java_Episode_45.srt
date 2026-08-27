@@ -1,0 +1,131 @@
+1
+00:00:00,000 --> 00:00:08,519
+Synchronizers coordinate phases.
+Producer/consumer pipelines coordinate
+flow. One side creates jobs; the other
+
+2
+00:00:08,639 --> 00:00:18,759
+If producers sprint ahead without a brake,
+memory fills with queued work until the
+process dies. If consumers spin forever
+
+3
+00:00:18,879 --> 00:00:30,679
+What structure hands off work, waits when
+empty, and pushes back when full? Blocking
+queues are the backbone of
+
+4
+00:00:30,799 --> 00:00:42,039
+offer and poll can time out or fail fast
+depending on the overload. Bounded queues
+apply backpressure so producers cannot
+
+5
+00:00:42,159 --> 00:00:55,719
+The queue holds at most one hundred jobs.
+A producer blocks in put when the queue is
+full — that block is backpressure. A
+
+6
+00:00:55,839 --> 00:01:08,679
+Producers and consumers need not know each
+other's identities; they need a shared
+queue and a shutdown protocol. Why bound
+
+7
+00:01:08,799 --> 00:01:20,479
+Bounding makes overload visible as
+blocking or rejection instead of silent
+heap growth. The wrong default feels
+
+8
+00:01:20,599 --> 00:01:34,359
+ArrayBlockingQueue is bounded and array-
+backed. LinkedBlockingQueue can be bounded
+or left unbounded if you pass no capacity
+
+9
+00:01:34,479 --> 00:01:47,479
+Choose the variant for the ordering and
+bounding story you mean. Shutdown needs a
+protocol. One common pattern is a poison
+
+10
+00:01:47,599 --> 00:01:57,159
+No shutdown protocol means threads waiting
+in take forever after the rest of the app
+wants to die: Look at this java for a
+
+11
+00:01:57,280 --> 00:02:10,879
+Often consumers are pool workers that take
+from a queue, or the executor's own
+internal queue is the handoff. Understand
+
+12
+00:02:11,000 --> 00:02:23,759
+Hidden unbounded queues are still
+unbounded. What if we busy-spin instead of
+take? Look at this java for a moment. When
+
+13
+00:02:23,879 --> 00:02:36,240
+Poll with timeout can be valid when you
+must wake periodically; pure spin is
+rarely the design you meant. Backpressure
+
+14
+00:02:36,359 --> 00:02:41,719
+Waiting producers slow the intake. That
+slowdown is information: the system is
+saturated.
+
+15
+00:02:41,839 --> 00:02:49,999
+Prefer the symptom you can operate on —
+blocked puts, rejected offers, visible
+queue depth — over the symptom that pages
+
+16
+00:02:50,119 --> 00:03:02,119
+offer and poll with timeouts give hybrid
+policies: try for a while, then reject a
+user request or shed load. Not every
+
+17
+00:03:02,239 --> 00:03:10,479
+Priority queues change fairness: urgent
+jobs jump ahead. That helps deadlines and
+hurts starvation if low priority work
+
+18
+00:03:10,599 --> 00:03:23,519
+Priority is an ordering policy inside the
+capacity story, not a replacement for
+capacity. Document the shutdown pill
+
+19
+00:03:23,639 --> 00:03:38,199
+Picture an image-processing pipeline:
+upload threads put jobs into a bounded
+queue of 200; four worker threads take and
+
+20
+00:03:38,319 --> 00:03:49,759
+That visible pressure is healthier than an
+unbounded list silently holding ten
+thousand pending images in heap. The
+
+21
+00:03:49,879 --> 00:04:01,119
+Hold the checklist: capacity chosen from
+memory and latency budgets; consumers
+blocking without spin; producers handling
+
+22
+00:04:01,239 --> 00:04:13,439
+Once handoffs and pools feel familiar, the
+next hunger is composing asynchronous
+stages — transform this result, then
