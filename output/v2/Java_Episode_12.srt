@@ -1,0 +1,131 @@
+1
+00:00:00,000 --> 00:00:11,000
+Access modifiers taught us who may touch a
+member. Package-private visibility only
+makes sense if "same package" is a real
+
+2
+00:00:11,119 --> 00:00:23,879
+As a project grows, another problem
+appears beside visibility: names collide,
+and the filesystem stops matching what the
+
+3
+00:00:24,000 --> 00:00:35,560
+Without namespaces, short names become a
+fight. Onboarding suffers too: a newcomer
+opens src and finds fifty classes in one
+
+4
+00:00:35,679 --> 00:00:45,679
+So the natural question is: how does Java
+give types an address space large enough
+for a company, honest enough for the
+
+5
+00:00:45,859 --> 00:01:01,539
+Packages are that geography — names,
+folders, and boundaries together. Java's
+common convention is reverse-DNS style
+
+6
+00:01:01,659 --> 00:01:15,259
+You own a domain, you flip it, you nest
+features underneath. order alone is a
+fight waiting to happen. com.shop.order is
+
+7
+00:01:15,379 --> 00:01:28,979
+On disk, this file should live under
+folders that mirror com/shop/order. The
+import brings User from another package
+
+8
+00:01:29,099 --> 00:01:39,099
+Packages and access modifiers combine into
+real boundaries, not just folder
+cosmetics. Episode Three already
+
+9
+00:01:39,219 --> 00:01:49,180
+Today the stakes are higher: packages are
+how a growing product stays navigable, and
+how "same package" remains a meaningful
+
+10
+00:01:49,299 --> 00:02:01,259
+If everything sits in one package,
+package-private collapses into "visible to
+the whole app," and Episode Eleven's
+
+11
+00:02:01,379 --> 00:02:15,139
+The package declaration must match the
+directory tree. If the file says
+com.shop.order but sits in com/shop/orders
+
+12
+00:02:15,259 --> 00:02:21,939
+Build tools like Maven and Gradle assume
+this layout; fighting it means fighting
+every tutorial and every teammate's muscle
+
+13
+00:02:22,060 --> 00:02:32,060
+Once packages exist, you choose how to
+name foreign types: import the short name,
+or write the fully qualified name at the
+
+14
+00:02:32,180 --> 00:02:51,140
+Fully qualified names are clear when two
+types share a simple name — java.util.Date
+versus java.sql.Date. Imports keep
+
+15
+00:02:51,260 --> 00:03:02,420
+A reader cannot see which types you
+actually use, and a new class added to
+that package can create ambiguous
+
+16
+00:03:02,540 --> 00:03:17,740
+What if the project ignores packaging
+discipline? Giant catch-all packages
+appear — com.shop.util, com.shop.misc —
+
+17
+00:03:17,860 --> 00:03:26,500
+Access modifiers stop meaning "module
+interior." Folder structure drifts from
+declarations. Onboarding becomes
+
+18
+00:03:26,620 --> 00:03:38,900
+A healthier shape groups types that change
+together and hide together: Look at this
+java for a moment. Outside com.shop.order,
+
+19
+00:03:39,020 --> 00:03:50,219
+That split is packages doing product work
+— the same access ideas from Episode
+Eleven, now with neighborhoods that make
+
+20
+00:03:50,340 --> 00:04:02,219
+Packages provide namespaces, map them to
+directories, and give imports a way to
+name foreign types. Combined with
+
+21
+00:04:02,340 --> 00:04:13,020
+Once types are organized, another modeling
+need shows up for values that are not
+free-form strings but a known set of named
+
+22
+00:04:13,140 --> 00:04:23,259
+You can fake that with magic ints and
+string literals, and then every typo
+becomes a runtime surprise the compiler
