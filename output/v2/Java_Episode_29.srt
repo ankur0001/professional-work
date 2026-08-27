@@ -1,0 +1,113 @@
+1
+00:00:00,000 --> 00:00:13,199
+Sequential streams made bulk work
+declarative. Looking at a long CPU-heavy
+map, a temptation appears: add .parallel()
+
+2
+00:00:13,319 --> 00:00:27,239
+Suppose you transform a large list of in-
+memory records with a pure, expensive
+function — compress a buffer, score a
+
+3
+00:00:27,359 --> 00:00:37,439
+That is the profile where parallel streams
+can help. Look at this java for a moment.
+Walk the claim carefully. parallelStream()
+
+4
+00:00:37,560 --> 00:00:50,400
+Under the hood it uses the common
+ForkJoinPool. Your lambdas must tolerate
+running on multiple threads. Prefer purity
+
+5
+00:00:50,520 --> 00:01:01,600
+Best for CPU-heavy independent work on
+sizable data. What goes wrong when the
+problem is smaller or messier? On tiny
+
+6
+00:01:01,719 --> 00:01:12,599
+You can make a sort slower by
+parallelizing it. Measure; don't hope.
+Ordering and side effects get weird.
+
+7
+00:01:12,719 --> 00:01:25,120
+If you mutate an external ArrayList from
+parallel threads, you corrupt it. Look at
+this java for a moment. Use a proper
+
+8
+00:01:25,239 --> 00:01:31,039
+IO-bound work wants explicit executors or
+virtual threads, not the common fork-join
+pool.
+
+9
+00:01:31,159 --> 00:01:44,199
+A parallel stream that blocks on network
+calls inside map can stall shared compute
+work for the whole JVM process — other
+
+10
+00:01:44,319 --> 00:01:56,239
+A fair check: when would you refuse
+parallel streams? Tiny data, IO inside the
+pipeline, need for strict encounter order
+
+11
+00:01:56,419 --> 00:02:11,659
+Large in-memory data, pure CPU work,
+associative reductions, measured
+improvement. What if we always call
+
+12
+00:02:11,779 --> 00:02:21,019
+Keep sequential as the default; go
+parallel when evidence says so. Reductions
+have associativity requirements under
+
+13
+00:02:21,139 --> 00:02:34,739
+Prefer Collectors.joining or concurrent
+collectors designed for the job. Look at
+this java for a moment. Primitive
+
+14
+00:02:34,859 --> 00:02:47,779
+Also know the pool: the common
+ForkJoinPool size defaults around
+available processors. Saturating it with
+
+15
+00:02:47,899 --> 00:03:02,779
+Parallel streams over freshly built
+ArrayLists of immutable data are the happy
+path. Stabilize inputs first. Naming tip:
+
+16
+00:03:02,899 --> 00:03:17,099
+Independent CPU work suggested
+parallelism. The common ForkJoinPool
+powered parallel streams. Purity and
+
+17
+00:03:17,219 --> 00:03:25,459
+Measurement closed the argument. One
+leftover from every pipeline — parallel or
+not — still bites at the edges: a stage
+
+18
+00:03:25,579 --> 00:03:36,739
+findFirst on an empty stream, a lookup
+inside a map operation, a parse that
+fails. Returning null from those moments
+
+19
+00:03:36,859 --> 00:03:43,819
+How do we make "maybe none" part of the
+type at the boundary? That pressure is
+what Optional exists to answer.
