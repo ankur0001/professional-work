@@ -1,0 +1,101 @@
+1
+00:00:00,000 --> 00:00:12,839
+Enums gave us type-safe vocabulary as
+objects. Now the language runs into a
+different friction: Java's collections and
+
+2
+00:00:12,959 --> 00:00:24,039
+Imagine a shopping cart that stores item
+quantities. You reach for a list and try
+to think in int values. Conceptually and
+
+3
+00:00:24,159 --> 00:00:36,399
+So the question becomes unavoidable: how
+does a primitive participate in an object
+world? The answer is wrapper types.
+
+4
+00:00:36,519 --> 00:00:45,519
+Each wrapper is a reference type that
+holds a primitive value and can sit in a
+collection, return from a generic method,
+
+5
+00:00:45,639 --> 00:00:57,519
+Java then softens the ceremony with
+autoboxing and unboxing. You can write
+code that looks like it mixes primitives
+
+6
+00:00:57,639 --> 00:01:11,599
+Walk the lines like a slow debugger. 10 is
+an int literal; assigning it to Integer a
+boxes it into an object. Reading a into
+
+7
+00:01:11,719 --> 00:01:19,799
+The convenience is real. The danger is
+that the conversions become invisible, so
+allocation costs and null failures become
+
+8
+00:01:19,920 --> 00:01:30,519
+Here is the failure that every Java
+developer meets eventually: Look at this
+java for a moment. Unboxing needs a real
+
+9
+00:01:30,640 --> 00:01:41,359
+Prefer primitives when absence is not part
+of the meaning. If absence matters, keep
+the wrapper — and check it before you
+
+10
+00:01:41,480 --> 00:01:57,600
+Small Integer values are cached: Look at
+this java for a moment. == on wrappers
+compares references, not numeric value.
+
+11
+00:01:57,719 --> 00:02:10,240
+Use equals — or better, compare primitives
+— when you mean numeric equality. The
+cache is an optimization, not a contract
+
+12
+00:02:10,359 --> 00:02:22,119
+In a tight numeric loop, prefer
+primitives. Repeated boxing creates
+objects and pressure on the allocator.
+
+13
+00:02:22,239 --> 00:02:34,999
+They are the wrong default inside a hot
+sum of a million numbers. Look at this
+java for a moment. Let's place the bridge
+
+14
+00:02:35,119 --> 00:02:46,799
+The list cannot store bare int values;
+Integer is the ticket in. For a handful of
+line items this is fine. For a million
+
+15
+00:02:46,919 --> 00:03:00,879
+Collections needed objects; wrappers
+answered. Autoboxing made the bridge
+quiet. Null unboxing and == on cached
+
+16
+00:03:01,000 --> 00:03:10,719
+And yet once lists of Integer feel
+natural, another problem shows up: a raw
+list that can hold anything forces casts
+
+17
+00:03:10,840 --> 00:03:20,120
+How do we tell a collection "these are
+strings" or "these are orders" and have
+the compiler enforce it? That is the
