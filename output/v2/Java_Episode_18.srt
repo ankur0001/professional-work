@@ -1,0 +1,111 @@
+1
+00:00:00,000 --> 00:00:13,080
+Reflection showed how frameworks dig into
+types. A lot of those types are not rich
+behavior engines. They are data carriers:
+
+2
+00:00:13,199 --> 00:00:30,399
+For years Java made us write the same
+ceremony for each one. Suppose we need an
+immutable point. The classic class grows a
+
+3
+00:00:30,519 --> 00:00:43,840
+Two points with equal coordinates fail as
+map keys because equals was forgotten. The
+natural question is: if the class is only
+
+4
+00:00:43,960 --> 00:00:57,600
+A record is a compact declaration of
+immutable state. The compiler supplies the
+canonical constructor, accessors, equals,
+
+5
+00:00:57,719 --> 00:01:09,680
+Walk this carefully. record Point(int x,
+int y) declares the state up front. The
+body shows a compact constructor: no
+
+6
+00:01:09,799 --> 00:01:19,640
+Accessors are x() and y(), not getX() by
+default. Two points with the same
+coordinates compare equal because equals
+
+7
+00:01:19,759 --> 00:01:31,359
+Canonical and compact constructors matter
+once validation appears. The canonical
+constructor takes every component. The
+
+8
+00:01:31,479 --> 00:01:41,639
+If construction needs a multi-step
+workflow, you may want a factory or a
+fuller class. Records keep construction
+
+9
+00:01:41,759 --> 00:01:50,839
+What records are not: a replacement for
+every class. Records model transparent
+immutable data; classes model richer
+
+10
+00:01:50,959 --> 00:02:01,399
+Entities with identity, mutable lifecycle,
+or complex encapsulation still want
+ordinary classes. Record fields are final;
+
+11
+00:02:01,519 --> 00:02:06,119
+A record can hold a mutable list
+reference, and the list can still change.
+
+12
+00:02:06,239 --> 00:02:19,560
+Forgetting that causes subtle bugs when
+people assume "record means deep freeze."
+Prefer records at boundaries where
+
+13
+00:02:19,680 --> 00:02:32,040
+What if we skip records and keep writing
+boilerplate carriers? Look at this java
+for a moment. It works. It also drifts.
+
+14
+00:02:32,159 --> 00:02:42,879
+The record makes the data-carrier intent
+explicit and keeps the mechanical contract
+in sync with the state declaration. Place
+
+15
+00:02:43,000 --> 00:02:51,240
+Look at this java for a moment. Money
+validates in a compact constructor.
+PriceQuote nests records without inventing
+
+16
+00:02:51,360 --> 00:03:03,520
+If Money later needs rounding policies and
+mutable ledgers, promote it to a class —
+records are not a ban on classes, they are
+
+17
+00:03:03,640 --> 00:03:14,000
+Records answered with auto equals /
+hashCode / toString / accessors. Compact
+constructors handled validation. Ordinary
+
+18
+00:03:14,120 --> 00:03:25,960
+Once data carriers are easy, another
+design question sharpens: sometimes a type
+should have only a known set of subtypes —
+
+19
+00:03:26,140 --> 00:03:28,860
+That is the pressure that brings sealed
+classes.
