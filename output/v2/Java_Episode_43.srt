@@ -1,0 +1,149 @@
+1
+00:00:00,000 --> 00:00:12,960
+Concurrent maps helped when many keys were
+the shared story. Counters and flags are a
+narrower hotspot: one variable, updated
+
+2
+00:00:13,080 --> 00:00:25,320
+We already learned that visibility is not
+atomicity. So how do we update one value
+safely without necessarily taking a
+
+3
+00:00:25,439 --> 00:00:37,439
+Under the hood they lean on compare-and-
+set — CAS — loops: read the current value,
+compute the next, and install it only if
+
+4
+00:00:37,559 --> 00:00:50,239
+Look at this java for a moment.
+incrementAndGet atomically adds one and
+returns the new value. Two threads calling
+
+5
+00:00:50,359 --> 00:01:00,239
+AtomicLong and AtomicReference play the
+same role for other shapes. Good uses are
+counters, sequence numbers, and simple
+
+6
+00:01:00,359 --> 00:01:09,679
+CAS in interview language: compare-and-set
+updates only if the current value matches
+expectation. That single sentence explains
+
+7
+00:01:09,799 --> 00:01:16,959
+If your invariant spans two fields —
+balance and version, or head and size —
+one atomic variable may not be enough.
+
+8
+00:01:17,079 --> 00:01:26,920
+You might need an atomic reference to an
+immutable pair, or a lock, or a
+specialized concurrent structure.
+
+9
+00:01:27,039 --> 00:01:37,079
+Under extreme contention, many threads can
+spin retrying CAS on the same hot counter.
+Sometimes a lock with less wasted spinning
+
+10
+00:01:37,199 --> 00:01:47,479
+Atomics are a tool for a hotspot, not a
+personality trait for every field in the
+class. Look at this java for a moment.
+
+11
+00:01:47,599 --> 00:01:53,119
+Publishing a new immutable Config with CAS
+lets readers see either the old or the new
+complete snapshot.
+
+12
+00:01:53,239 --> 00:02:07,959
+That pattern pairs well with the volatile
+publication ideas from earlier — now with
+an atomic swap instead of only a volatile
+
+13
+00:02:08,079 --> 00:02:16,439
+Both add one and try to write 42. Only one
+CAS succeeds; the loser rereads — now 42 —
+and writes 43.
+
+14
+00:02:16,559 --> 00:02:22,599
+Progress happens without a mutual-
+exclusion lock, but progress can still
+thrash when many threads fight over one
+
+15
+00:02:22,719 --> 00:02:28,879
+That is why sharding hot counters — one
+atomic per stripe, summed rarely — shows
+up in high-throughput systems.
+
+16
+00:02:28,999 --> 00:02:38,719
+getAndUpdate and accumulateAndGet let you
+express richer single-variable transitions
+without writing your own CAS loop
+
+17
+00:02:38,839 --> 00:02:51,839
+What if the "atomic" value is a reference
+to a mutable object you keep editing? Then
+only the reference swap was atomic. The
+
+18
+00:02:51,959 --> 00:03:03,799
+Atomics are precise tools. Precision
+includes knowing what, exactly, is atomic.
+Pair atomics with the volatile lesson.
+
+19
+00:03:03,919 --> 00:03:09,959
+Atomic update can advance a counter all
+threads share. Different problems, related
+memory stories.
+
+20
+00:03:10,079 --> 00:03:23,199
+If you catch yourself using an atomic
+boolean only as a flag with no CAS retry
+needs, volatile might have been enough —
+
+21
+00:03:23,319 --> 00:03:32,719
+AtomicLong increments on each call. A
+separate reporter thread samples get
+periodically. No lock ties them together;
+
+22
+00:03:32,840 --> 00:03:45,360
+When product asks for "top three
+endpoints," you suddenly need a concurrent
+map of atomics — and you feel the boundary
+
+23
+00:03:45,479 --> 00:03:59,039
+The moment product language needs two
+fields to stay coherent, widen the tool —
+immutable pair, lock, or concurrent
+
+24
+00:03:59,159 --> 00:04:09,479
+Not every coordination problem is "update
+a value." Sometimes threads must wait for
+a phase to finish, wait for peers to
+
+25
+00:04:09,599 --> 00:04:14,560
+Those phase and permit problems are the
+world of latches, barriers, and
+semaphores.
