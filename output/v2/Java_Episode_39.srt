@@ -1,0 +1,136 @@
+1
+00:00:00,000 --> 00:00:10,160
+synchronized covers a huge amount of real
+Java. Then you meet a situation it cannot
+express cleanly, and the keyword starts to
+
+2
+00:00:10,279 --> 00:00:18,079
+Suppose a worker must acquire a lock, but
+only if it can do so within a short
+timeout — otherwise it should abandon the
+
+3
+00:00:18,199 --> 00:00:30,479
+Or suppose one lock protects a buffer, and
+you need two different wait conditions:
+"not empty" and "not full," signaled
+
+4
+00:00:30,599 --> 00:00:42,679
+When do we need a lock we control as an
+object, with methods we can call?
+ReentrantLock answers that need. It adds
+
+5
+00:00:42,799 --> 00:00:58,239
+Prefer synchronized unless you need those
+features. Explicit locks are power tools,
+not a stylish replacement for the keyword.
+
+6
+00:00:58,359 --> 00:01:11,319
+You unlock in finally so that exceptions
+still release ownership. Forgetting unlock
+is the classic failure mode: one path
+
+7
+00:01:11,439 --> 00:01:24,079
+The finally is the ownership contract.
+Reentrancy means the same thread can
+acquire the same lock again without
+
+8
+00:01:24,200 --> 00:01:33,879
+tryLock avoids dead waiting when waiting
+forever is the wrong policy: Look at this
+java for a moment. Now the thread can fail
+
+9
+00:01:34,000 --> 00:01:45,200
+Timeouts turn "maybe stuck" into
+"definably abandoned." Combined with
+consistent lock ordering, try-lock-with-
+
+10
+00:01:45,319 --> 00:01:48,919
+Multiple conditions matter for monitors
+with more than one reason to wait.
+
+11
+00:01:49,039 --> 00:02:01,279
+With ReentrantLock, you can create
+separate Condition objects — for example,
+notFull and notEmpty — and await or signal
+
+12
+00:02:01,399 --> 00:02:12,840
+Walk the difference from a single
+Object.wait. Here the consumer waits on
+notEmpty only. A producer that filled the
+
+13
+00:02:12,959 --> 00:02:25,759
+Intrinsic wait/notify can emulate this
+with care and complexity; explicit
+conditions make the intent readable when
+
+14
+00:02:25,879 --> 00:02:38,639
+A fair lock tends to grant acquisition in
+roughly arrival order. That can reduce
+some starvation scenarios and usually
+
+15
+00:02:38,759 --> 00:02:48,639
+Enable it when measurement and
+requirements say you need that scheduling
+behavior. Ownership clarity matters as
+
+16
+00:02:48,759 --> 00:02:59,879
+Do not lock in one abstraction and unlock
+in another without a hard protocol. Do not
+hold an explicit lock while calling alien
+
+17
+00:02:59,999 --> 00:03:07,959
+Compare the mental model to synchronized
+once more. With the keyword, acquisition
+and release are tied to a block boundary
+
+18
+00:03:08,079 --> 00:03:18,839
+With ReentrantLock, you own the timeline —
+which means you can express try-lock and
+timed lock, and also means you can forget
+
+19
+00:03:18,959 --> 00:03:29,159
+Reach for the explicit lock when the
+keyword cannot say what you mean. Stay
+with the keyword when it can. What if you
+
+20
+00:03:29,339 --> 00:03:37,259
+lockInterruptibly() exists for that. It is
+another reason explicit locks show up in
+frameworks and servers that care about
+
+21
+00:03:37,379 --> 00:03:44,619
+When an interviewer asks when to prefer
+ReentrantLock, answer with features —
+tryLock, timeouts, multiple conditions,
+
+22
+00:03:44,739 --> 00:03:52,419
+fairness — not with "because it is newer."
+Prefer tests that assert timeout behavior
+and unlock-on-exception behavior
+
+23
+00:03:52,539 --> 00:04:04,899
+Once locking techniques are in hand,
+another production pressure dominates:
+creating a raw Thread for every task does
