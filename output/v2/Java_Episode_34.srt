@@ -1,0 +1,136 @@
+1
+00:00:00,000 --> 00:00:07,480
+Try-with-resources made opening and
+closing honest. The next question is what
+we open when the thing we care about is a
+
+2
+00:00:07,600 --> 00:00:20,800
+Suppose a batch job must write a short
+status file after each run and read
+yesterday's status at startup. Older Java
+
+3
+00:00:20,919 --> 00:00:35,479
+It is also noisy, easy to get charset-
+wrong, and awkward for walking a tree or
+moving a file into place atomically. What
+
+4
+00:00:35,599 --> 00:00:50,159
+Prefer them for new code. File is legacy
+you will still meet in maintenance; it is
+not the model you should reach for first.
+
+5
+00:00:50,279 --> 00:01:04,159
+Creating parent directories makes the
+write robust when the folder structure is
+part of the job. Files.writeString and
+
+6
+00:01:04,280 --> 00:01:14,319
+Combined with try-with-resources for
+streams when you need finer control, this
+is the everyday filesystem vocabulary.
+
+7
+00:01:14,439 --> 00:01:26,679
+Text is not "just bytes with letters on
+them." Assume the default charset, and a
+machine in another locale — or a container
+
+8
+00:01:26,799 --> 00:01:34,479
+When you drop to stream APIs, carry the
+same discipline: pick an intentional
+charset instead of hoping defaults match
+
+9
+00:01:34,599 --> 00:01:44,159
+Walking appears as soon as "one file"
+becomes "a directory of inputs": Look at
+this java for a moment. Files.walk gives
+
+10
+00:01:44,280 --> 00:01:57,760
+Close the stream — try-with-resources
+again — because walking can hold directory
+resources. Express filesystem intent
+
+11
+00:01:57,879 --> 00:02:05,519
+Write to a temporary sibling, then move
+into the final name so readers never see a
+half-written file: Look at this java for a
+
+12
+00:02:05,640 --> 00:02:11,599
+On some filesystems, "atomic move" has
+constraints — especially across storage
+volumes.
+
+13
+00:02:11,719 --> 00:02:22,919
+Treat atomic rename as a tool with
+documented limits, not as a spell that
+always works the way your laptop's disk
+
+14
+00:02:23,039 --> 00:02:36,280
+If any part of a path comes from user
+input, ../../etc/passwd is not a cute edge
+case — it is an attack. Resolve and
+
+15
+00:02:36,399 --> 00:02:48,479
+NIO.2 makes path math clearer; it does not
+make untrusted input safe by itself.
+Common mistakes line up with those
+
+16
+00:02:48,599 --> 00:02:58,879
+Not handling NoSuchFileException turns a
+missing input into an opaque crash at the
+wrong layer. Blindly concatenating user
+
+17
+00:02:58,999 --> 00:03:05,639
+What if we keep using new File("data.txt")
+and manual streams for every new feature?
+You can ship.
+
+18
+00:03:05,759 --> 00:03:16,959
+You will also keep re-solving charset,
+recursive listing, and move semantics with
+one-off utilities that disagree with each
+
+19
+00:03:17,079 --> 00:03:29,319
+Existence checks, size, and copy read as
+ordinary operations — and that readability
+is part of correctness, because reviewers
+
+20
+00:03:29,439 --> 00:03:40,239
+Prefer NIO.2 for new code even when a
+teammate reaches for File out of habit.
+Translation layers between Path and File
+
+21
+00:03:40,359 --> 00:03:50,119
+One more habit: Files.deleteIfExists is
+intentionally forgiving; Files.delete is
+not. Choosing between them is a product
+
+22
+00:03:50,239 --> 00:04:02,919
+NIO.2 gives you the verbs — your domain
+decides which verb matches the invariant.
+And yet reading and writing "strings"
+
+23
+00:04:03,039 --> 00:04:07,559
+Bridging those worlds — and doing it
+efficiently — is the next pressure.
