@@ -1,0 +1,130 @@
+1
+00:00:00,000 --> 00:00:12,279
+Synchronization taught us that locks give
+both exclusion and visibility. That is a
+strong tool. It is also heavier than some
+
+2
+00:00:12,399 --> 00:00:25,719
+Here is a classic setup. One thread
+prepares a packet of data — fills several
+fields on a result object — then sets a
+
+3
+00:00:25,839 --> 00:00:35,919
+Without a careful memory protocol, the
+reader can see ready == true and still
+observe stale fields. Or it can spin
+
+4
+00:00:36,039 --> 00:00:46,799
+How do we publish "I am done writing" so
+another thread reliably sees both the flag
+and the data that came before it? volatile
+
+5
+00:00:46,919 --> 00:00:57,479
+It is not a magic atomic wand for every
+compound action. Look at this java for a
+moment. The writer fills the data fields
+
+6
+00:00:57,599 --> 00:01:09,479
+The reader waits until it sees ready ==
+true, then reads the data. The volatile
+write and later volatile read create a
+
+7
+00:01:09,599 --> 00:01:21,560
+Reverse the order — set ready first, then
+write the fields — and you reopen the
+window for a reader to see ready without
+
+8
+00:01:21,679 --> 00:01:30,599
+You do not need to recite the entire Java
+Memory Model in one sitting. You need the
+habit of asking: which write is ordered
+
+9
+00:01:30,779 --> 00:01:42,099
+Lock release happens-before a later
+acquire of the same lock. A volatile write
+happens-before a later read that sees that
+
+10
+00:01:42,219 --> 00:01:55,219
+join completes after the dying thread's
+actions. These edges are why concurrency
+is more than "take turns on a CPU." What
+
+11
+00:01:55,339 --> 00:02:03,219
+count++ is still read-modify-write. Two
+threads can both read 10, both write 11,
+and lose an increment.
+
+12
+00:02:03,339 --> 00:02:10,379
+Volatility may make each individual read
+or write more visible; it does not merge
+three steps into one atomic update.
+
+13
+00:02:10,500 --> 00:02:22,259
+For counters, prefer atomics — which we
+will treat properly soon — or locking when
+the invariant spans more than one
+
+14
+00:02:22,379 --> 00:02:34,419
+The writer builds a complete immutable
+snapshot, then assigns it to a volatile
+field in one write. Readers read the
+
+15
+00:02:34,539 --> 00:02:42,659
+This pattern fails if the object is
+mutable and still being changed after
+publication — because then you are back to
+
+16
+00:02:42,780 --> 00:02:55,819
+Using volatile on every field "for safety"
+adds cost and still fails to protect
+multi-step invariants like "transfer money
+
+17
+00:02:55,939 --> 00:03:00,780
+Does volatile make ++ atomic? No. Use
+atomics or locks for that.
+
+18
+00:03:00,900 --> 00:03:13,340
+Use volatile when the need is visibility
+and ordered publication — not when the
+need is "update this counter safely under
+
+19
+00:03:13,460 --> 00:03:25,500
+It does not freeze an entire object graph.
+If you publish a volatile reference to a
+mutable object and then keep mutating that
+
+20
+00:03:25,620 --> 00:03:31,300
+Immutability after publication — or
+locking for ongoing mutation — remains
+part of the design.
+
+21
+00:03:31,420 --> 00:03:41,060
+Sometimes synchronized is almost enough,
+but you need try-lock, timed waits,
+multiple wait-sets, or fairness knobs the
+
+22
+00:03:41,180 --> 00:03:49,620
+That is when explicit locks enter — not as
+a replacement for thinking, but as a
+richer toolbox for ownership you must
