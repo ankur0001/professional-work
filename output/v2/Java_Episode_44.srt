@@ -1,0 +1,130 @@
+1
+00:00:00,000 --> 00:00:11,720
+Atomics help when the problem is updating
+a value. Many concurrent designs are not
+about a value at all — they are about
+
+2
+00:00:11,839 --> 00:00:24,359
+A parallel algorithm must wait until every
+thread reaches the end of a phase before
+any starts the next. At most five database
+
+3
+00:00:24,479 --> 00:00:39,519
+Reinventing them with bare wait and notify
+is possible and usually unwise. Latches,
+barriers, and semaphores are the standard
+
+4
+00:00:39,639 --> 00:00:53,879
+CountDownLatch is a one-shot gate. You set
+a count. Workers call countDown when they
+finish a step. Waiters call await until
+
+5
+00:00:53,999 --> 00:01:03,599
+Each counts down once when ready. The
+coordinator blocks in await until all
+three have counted down. Then it opens the
+
+6
+00:01:03,719 --> 00:01:16,599
+That one-shot nature is a feature when
+startup or a single rendezvous is the
+point. Forgetting to countDown on an error
+
+7
+00:01:16,719 --> 00:01:26,480
+Use try/finally so the count moves even
+when work fails — or fail the whole
+startup explicitly instead of stalling.
+
+8
+00:01:26,599 --> 00:01:39,799
+Parties arrive, wait until all are
+present, then the barrier releases and can
+be reused for the next round: Look at this
+
+9
+00:01:39,919 --> 00:01:52,599
+Latch versus barrier is the practical
+contrast: one-shot event set versus
+reusable multi-phase rendezvous. Semaphore
+
+10
+00:01:52,719 --> 00:02:02,479
+A semaphore of five is a clean way to
+limit concurrent access to a scarce
+resource without hand-rolling a counter
+
+11
+00:02:02,599 --> 00:02:13,799
+Leaking permits — acquiring and forgetting
+to release on exceptions — slowly starves
+the system. The finally release is the
+
+12
+00:02:13,919 --> 00:02:24,079
+What if we skip these utilities and write
+our own wait/notify protocol for every
+gate? You can, and you will relearn missed
+
+13
+00:02:24,199 --> 00:02:32,519
+Prefer the named tool whose contract
+matches the story you are telling in the
+code review. A teaching contrast locks the
+
+14
+00:02:32,639 --> 00:02:41,599
+Use a latch when the story is "wait until
+N one-time events happen." Use a barrier
+when the story is "N parties meet at the
+
+15
+00:02:41,719 --> 00:02:54,840
+then repeat." Use a semaphore when the
+story is "at most N may enter." If you
+catch yourself explaining a custom
+
+16
+00:02:54,960 --> 00:03:03,680
+Error paths deserve one more beat. A
+worker that fails before countDown is
+indistinguishable from a worker that never
+
+17
+00:03:03,800 --> 00:03:15,080
+Decide whether failure counts down and
+records an error, or whether failure
+aborts the latch by other means. Silence
+
+18
+00:03:15,200 --> 00:03:24,960
+Picture three initializer threads warming
+cache, connecting to a broker, and loading
+feature flags. A latch of three gates the
+
+19
+00:03:25,080 --> 00:03:36,200
+If flag loading fails, count down anyway
+and set a failed state the acceptor checks
+— or refuse to open the gate and crash the
+
+20
+00:03:36,320 --> 00:03:41,440
+Name the synchronizer after the phase:
+startupLatch, phaseBarrier, dbPermits.
+
+21
+00:03:41,560 --> 00:03:51,560
+Clear names prevent the next developer
+from using a latch where a barrier
+belonged simply because both "wait for
+
+22
+00:03:51,680 --> 00:03:57,640
+another coordination structure dominates:
+a queue that blocks, bounds memory, and
+carries jobs between stages.
