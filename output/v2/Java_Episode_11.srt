@@ -1,0 +1,118 @@
+1
+00:00:00,000 --> 00:00:08,960
+Episode Ten put data and behavior inside
+classes and drew a boundary with
+encapsulation. That boundary only works if
+
+2
+00:00:09,080 --> 00:00:18,519
+Otherwise private is a comment, and every
+teammate can reach into the wiring "just
+for now." Imagine you finish a BankAccount
+
+3
+00:00:18,640 --> 00:00:32,280
+A colleague adds account.balance -= 50
+from a UI class because the field was left
+public. Your invariant — never go below
+
+4
+00:00:32,399 --> 00:00:45,479
+So the natural question is: what
+vocabulary does Java give us for "allowed
+to touch"? Access modifiers answer that.
+
+5
+00:00:45,599 --> 00:00:55,479
+Java's everyday ladder has four rungs:
+private, package-private (no modifier),
+protected, and public. Memorizing the
+
+6
+00:00:55,599 --> 00:01:06,359
+Choosing a rung under product pressure is
+the real skill — every widen is a promise,
+every narrow is freedom to change. Look at
+
+7
+00:01:06,479 --> 00:01:14,879
+secret is private: only code inside Api
+should see it. pack has no modifier:
+package-private, visible to other classes
+
+8
+00:01:14,999 --> 00:01:28,119
+hook is protected: same package, plus
+subclasses — including subclasses in other
+packages. open is public: part of the
+
+9
+00:01:28,239 --> 00:01:41,159
+Everything you mark public becomes a
+promise. Rename it later and you break
+callers you do not control. That is why
+
+10
+00:01:41,279 --> 00:01:52,599
+Encapsulation is a boundary, not a
+checkbox. Marking a field private and then
+returning the mutable list inside it from
+
+11
+00:01:52,719 --> 00:02:05,079
+A safer return might be an unmodifiable
+view or a defensive copy. The modifier on
+the field did its job. The method
+
+12
+00:02:05,199 --> 00:02:17,439
+protected deserves an extra beat because
+it is the most misunderstood middle
+ground. Look at this java for a moment.
+
+13
+00:02:17,559 --> 00:02:30,679
+It is also easy to overuse. If everything
+interesting is protected, you have built
+an inheritance API whether you meant to or
+
+14
+00:02:30,799 --> 00:02:40,239
+Modern Java adds another tightening layer:
+modules. The module system can hide
+packages from code outside the module even
+
+15
+00:02:40,359 --> 00:02:53,559
+Think of modifiers as the first wall and
+modules as a second wall for larger
+codebases. "Public" does not always mean
+
+16
+00:02:53,739 --> 00:03:07,499
+The cost arrives when internals become de
+facto API. Callers depend on fields you
+wanted to rename. Refactors turn into
+
+17
+00:03:07,619 --> 00:03:12,739
+OOP introduced insides and outsides.
+Access modifiers name who may cross.
+
+18
+00:03:12,859 --> 00:03:25,779
+Private for implementation, package-
+private for collaborating types in one
+package, protected for deliberate subclass
+
+19
+00:03:25,899 --> 00:03:34,219
+Once visibility rules exist, another
+organizational pressure grows with the
+codebase itself. Class names collide.
+
+20
+00:03:34,339 --> 00:03:44,099
+Collaborating types need a shared
+neighborhood so package-private access
+means something real. The project needs
