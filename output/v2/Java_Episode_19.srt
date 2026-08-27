@@ -1,0 +1,112 @@
+1
+00:00:00,000 --> 00:00:12,240
+Records made transparent data cheap to
+declare. As soon as those data shapes form
+a family — circle or rectangle, success or
+
+2
+00:00:12,359 --> 00:00:26,079
+Suppose we model shapes with an interface
+and let anyone implement it. Drawing code
+switches on runtime type, or uses
+
+3
+00:00:26,199 --> 00:00:35,879
+The switch still compiles. The new shape
+falls into a default that returns zero
+area. The bug is quiet until a designer
+
+4
+00:00:36,000 --> 00:00:50,320
+So the question becomes: can a hierarchy
+say, honestly, "these are the only
+subtypes that exist"? Enums already closed
+
+5
+00:00:50,439 --> 00:01:02,039
+That is the leap: from a flat vocabulary
+to a closed family of shapes. Sealed
+classes and interfaces answer that.
+
+6
+00:01:02,159 --> 00:01:10,759
+The permits clause lists the allowed
+subtypes. Look at this java for a moment.
+Read it as a contract. Shape is sealed.
+
+7
+00:01:10,879 --> 00:01:18,399
+Only Circle and Rect may implement it —
+within the same-module and package rules
+Java requires for permitted types.
+
+8
+00:01:18,519 --> 00:01:29,719
+Each permitted type is a record here,
+which pairs cleanly with sealing: the
+variants are data, the parent is the
+
+9
+00:01:29,839 --> 00:01:40,239
+Exhaustive switch checking becomes
+possible because the compiler knows the
+full set. Look at this java for a moment.
+
+10
+00:01:40,359 --> 00:01:52,039
+Pattern matching binds c or r so you can
+read components without a cast. Add
+Triangle to permits later, and the
+
+11
+00:01:52,219 --> 00:02:05,459
+Then do not seal it. Open hierarchies stay
+unsealed on purpose — plugin types, SPI
+implementations, frameworks that expect
+
+12
+00:02:05,579 --> 00:02:08,659
+Using it on an extension point fights the
+product.
+
+13
+00:02:08,779 --> 00:02:19,739
+Sealed types and records together
+encourage a style of domain modeling that
+feels like algebraic data types: a small
+
+14
+00:02:19,859 --> 00:02:30,779
+A common misunderstanding is to seal a
+type and then keep writing default
+branches that swallow new cases. That
+
+15
+00:02:30,899 --> 00:02:44,339
+The same sealing idea shows up in results,
+not only shapes. Look at this java for a
+moment. Payment outcomes are a closed
+
+16
+00:02:44,459 --> 00:02:56,099
+Sealing says that out loud. Exhaustive
+switch makes forgetting Pending a compile
+error. Think of sealing as the sibling of
+
+17
+00:02:56,219 --> 00:03:04,139
+Sealed types close a set of subtypes that
+may themselves carry data. Both exist so
+the compiler can help you stay honest when
+
+18
+00:03:04,259 --> 00:03:16,499
+Once types and packages multiply across a
+large codebase, another boundary question
+appears above the package level: which
+
+19
+00:03:16,679 --> 00:03:22,999
+Packages alone proved too weak for that.
+That larger encapsulation story is modules
+and JPMS.
