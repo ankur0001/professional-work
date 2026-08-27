@@ -1,0 +1,117 @@
+1
+00:00:00,000 --> 00:00:12,679
+ThreadLocal taught us ambient state can
+leak across borrowed threads. Locks create
+a different freeze: nest them without a
+
+2
+00:00:12,799 --> 00:00:25,719
+The health check fails. Nobody is making
+progress. That shape has a name. Deadlocks
+are circular waits. Prevent them with
+
+3
+00:00:25,839 --> 00:00:40,199
+Detect them with thread dumps when
+prevention fails. The classic story is two
+locks, two threads, opposite orders: Look
+
+4
+00:00:40,319 --> 00:00:48,959
+Each will wait forever. No exception is
+thrown. The bug is a schedule that
+eventually happens in production and
+
+5
+00:00:49,079 --> 00:00:58,199
+The four classic conditions for deadlock
+are worth knowing as a checklist: mutual
+exclusion, hold-and-wait, no preemption,
+
+6
+00:00:58,319 --> 00:01:12,319
+Prevention usually attacks circular wait
+and hold-and-wait — by imposing a global
+lock order, by avoiding nested locks, or
+
+7
+00:01:12,439 --> 00:01:14,480
+Look at this java for a moment.
+
+8
+00:01:14,599 --> 00:01:22,799
+Timed tryLock does not magically make
+nested locking free of design. It gives
+you an exit when the order goes wrong or
+
+9
+00:01:22,919 --> 00:01:35,239
+Global lock order — always acquire account
+locks by ascending account id, for example
+— removes the cycle before it starts.
+
+10
+00:01:35,359 --> 00:01:48,119
+Holding locks while calling alien code is
+how you nest locks you did not even see —
+the alien code acquires something else,
+
+11
+00:01:48,239 --> 00:01:59,359
+When a system hangs, capture threads —
+jcmd Thread.print, jstack, or your
+platform's dump. Look for threads blocked
+
+12
+00:01:59,479 --> 00:02:08,159
+Learning to read that dump is as important
+as knowing the theory. What if tests never
+deadlock and production does? Because
+
+13
+00:02:08,279 --> 00:02:20,319
+Two opposite orders can run for days until
+a rare interleaving appears. Testing helps
+when you stress nested paths; it cannot
+
+14
+00:02:20,439 --> 00:02:30,519
+Shrink the story to design rules you can
+enforce in review. One: document lock
+order for any pair that can nest. Two:
+
+15
+00:02:30,639 --> 00:02:40,879
+Three: prefer tryLock with timeout when
+nesting is unavoidable and order cannot be
+globally guaranteed. Four: keep critical
+
+16
+00:02:40,999 --> 00:02:52,599
+When a dump shows a deadlock, fix the
+order or remove a lock — do not "retry the
+request" as the only strategy unless you
+
+17
+00:02:52,719 --> 00:03:03,439
+Picture transfer locks on two accounts
+acquired in random order under load. One
+night the interleaving appears; support
+
+18
+00:03:03,559 --> 00:03:13,639
+The fix is sorted lock order by account id
+— a one-line policy that removes the
+cycle. Most deadlock stories end with a
+
+19
+00:03:13,759 --> 00:03:25,719
+Prefer ordering and confinement over
+cleverness. Deadlocks are not a badge of
+advanced concurrency — they are usually a
+
+20
+00:03:25,839 --> 00:03:37,879
+After platform-thread concurrency, a
+modern twist changes the economics of
+blocking: virtual threads make the thread-
