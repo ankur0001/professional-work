@@ -1,0 +1,131 @@
+1
+00:00:00,000 --> 00:00:17,160
+Episode One ended on a confusion almost
+every beginner hits: someone says "install
+Java," and three acronyms appear — JDK,
+
+2
+00:00:17,280 --> 00:00:27,760
+We already know source becomes bytecode,
+and a JVM runs that bytecode. So if the
+JVM is the engine, what did you actually
+
+3
+00:00:27,940 --> 00:00:35,939
+Start from the moment you try to compile
+HelloWorld. Look at this bash for a
+moment. If javac is missing, the first
+
+4
+00:00:36,060 --> 00:00:46,020
+You can have a machine that runs Java
+applications and still be unable to
+compile anything. That failure splits the
+
+5
+00:00:46,140 --> 00:01:01,460
+The toolkit that contains the compiler —
+and the other developer tools around it —
+is the JDK, the Java Development Kit.
+
+6
+00:01:01,579 --> 00:01:11,739
+When a tutorial says "install the JDK," it
+means: give yourself the toolbox needed to
+create Java software. Compiling is only
+
+7
+00:01:11,859 --> 00:01:27,219
+After javac produces HelloWorld.class, the
+second command starts a process that can
+load bytecode and execute it. That process
+
+8
+00:01:27,340 --> 00:01:35,540
+It does not care that you wrote the source
+this morning. It cares that valid bytecode
+arrived and needs to run. So where does
+
+9
+00:01:35,719 --> 00:01:45,920
+Historically, the JRE — Java Runtime
+Environment — named the runtime idea: the
+libraries and launcher you need to run an
+
+10
+00:01:46,039 --> 00:01:51,719
+In older distributions, you could install
+a JRE on a server that should only run
+apps, not compile them.
+
+11
+00:01:51,839 --> 00:01:59,399
+In modern JDK distributions the lines are
+blurrier, because a JDK download usually
+includes what you need to run as well as
+
+12
+00:01:59,519 --> 00:02:13,559
+The useful distinction remains:
+development tools versus the runtime that
+executes bytecode. Hold the layers
+
+13
+00:02:13,679 --> 00:02:27,519
+You write HelloWorld.java. The JDK's javac
+turns it into bytecode. You run java
+HelloWorld. That launcher starts a JVM,
+
+14
+00:02:27,639 --> 00:02:39,839
+Same story as Episode One — now with
+clearer labels. Once the happy path is
+clear, production life introduces sharper
+
+15
+00:02:39,959 --> 00:02:54,199
+A production container may be executing a
+JVM with your application. That is not
+"the JDK running." The JDK was involved
+
+16
+00:02:54,319 --> 00:03:01,039
+Mixing those words at 2 a.m. makes it
+harder to know whether you are debugging a
+build problem or a runtime problem.
+
+17
+00:03:01,159 --> 00:03:15,280
+Second: compiling with one Java version in
+CI and running a different major version
+in production without checking
+
+18
+00:03:15,400 --> 00:03:27,680
+The mismatch lives exactly where we just
+named the layers: the toolkit that
+compiled versus the engine that later
+
+19
+00:03:27,800 --> 00:03:39,920
+Today we answered the install confusion:
+JDK for building, runtime for running, JVM
+as the engine. The commands javac and java
+
+20
+00:03:40,040 --> 00:03:51,320
+And yet a new frustration appears as soon
+as those tools work. You write a class,
+name a file, maybe add a package, and the
+
+21
+00:03:51,440 --> 00:03:58,400
+Why does Java care so much about where
+main lives, what the filename is, and how
+packages map to folders?
+
+22
+00:03:58,580 --> 00:04:09,939
+That structural stubbornness is how the
+compiler and JVM find your code — which is
+why the next natural question is: why do
