@@ -1,0 +1,113 @@
+1
+00:00:00,000 --> 00:00:11,839
+Platform boundaries can now be declared.
+That does not shrink the data inside a
+feature. Arrays still give us fixed
+
+2
+00:00:11,959 --> 00:00:23,280
+Suppose you are collecting tags a user
+adds to a post. They might add three, then
+delete one, then add five more. With an
+
+3
+00:00:23,399 --> 00:00:37,239
+The natural question becomes: is there a
+resizable, ordered collection that still
+lets me talk about "the first item" and
+
+4
+00:00:37,359 --> 00:00:44,840
+Position matters. The same value can
+appear twice and mean two entries. Look at
+this java for a moment. Walk the lines.
+
+5
+00:00:44,960 --> 00:01:00,039
+We program to the List interface and
+construct an ArrayList — the default
+workhorse for most application code.
+
+6
+00:01:00,159 --> 00:01:07,439
+get(0) reads by index and prints b. The
+list now holds [b, a]. Why ArrayList by
+default?
+
+7
+00:01:07,619 --> 00:01:17,379
+Under the hood it uses a resizable array:
+fast random access by index, fast append
+at the end amortized, slower inserts at
+
+8
+00:01:17,499 --> 00:01:31,139
+That profile matches how most business
+code actually uses lists. What about
+LinkedList? It is a doubly linked
+
+9
+00:01:31,259 --> 00:01:39,379
+In practice, LinkedList rarely wins for
+typical access patterns. Prefer the boring
+default until a profiler argues otherwise.
+
+10
+00:01:39,499 --> 00:01:51,339
+Programming to the List interface matters:
+callers depend on list behavior, not on a
+concrete class. Look at this java for a
+
+11
+00:01:51,459 --> 00:02:02,419
+It cares that iteration and order behave
+like a list. Now the failure mode that
+bites during iteration: structural
+
+12
+00:02:02,539 --> 00:02:10,419
+The enhanced for-loop uses an iterator.
+Removing directly from the list during
+that iteration can throw
+
+13
+00:02:10,539 --> 00:02:22,339
+The safe habits are: use the iterator's
+own remove, collect removals and apply
+them after, or use removeIf. What if we
+
+14
+00:02:22,519 --> 00:02:34,119
+It works until the copy logic drifts, or
+someone forgets to update a length
+variable. Lists exist so resizable ordered
+
+15
+00:02:34,239 --> 00:02:50,799
+A small product-shaped fragment ties it
+together: Look at this java for a moment.
+The cart is ordered. Duplicate cables are
+
+16
+00:02:50,919 --> 00:02:59,359
+Also watch aliasing: subList views share
+structure with the backing list. When you
+need a true independent snapshot, copy
+
+17
+00:02:59,479 --> 00:03:13,479
+Prefer List.of and List.copyOf when the
+collection should not grow — fixed lists
+fail fast on add, which is better than a
+
+18
+00:03:13,599 --> 00:03:25,919
+List answered with ordered, duplicate-
+friendly collections. ArrayList became the
+default workhorse. Programming to List
+
+19
+00:03:26,039 --> 00:03:40,279
+But sometimes duplicates are exactly what
+you do not want. A set of roles, a set of
+visited ids, a set of tags where "java"
