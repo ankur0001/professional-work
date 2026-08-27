@@ -1,0 +1,143 @@
+1
+00:00:00,000 --> 00:00:12,279
+In the previous episode we learned how to
+remember values with types. A student can
+have an age, a name, a percentage, a pass
+
+2
+00:00:12,399 --> 00:00:20,919
+Suppose the gradebook already holds marks
+and passingScore. We need to know whether
+the student passed, compute a weighted
+
+3
+00:00:21,039 --> 00:00:34,600
+We are no longer asking "what is this
+value?" We are asking "what do we do with
+these values together?" That is where
+
+4
+00:00:34,719 --> 00:00:44,200
+The danger is not that operators are hard
+to spell. The danger is that a single
+character can change the meaning of a
+
+5
+00:00:44,320 --> 00:00:53,079
+Before lists of symbols, learn the rules
+that actually decide outcomes: precedence
+and associativity. Precedence answers
+
+6
+00:00:53,200 --> 00:00:58,200
+Associativity answers how equal-precedence
+operators group when they sit side by
+side.
+
+7
+00:00:58,320 --> 00:01:08,280
+Memorizing every trivia table is less
+useful than knowing when to add
+parentheses because the default reading is
+
+8
+00:01:08,400 --> 00:01:24,840
+10 + 2 * 5 is twenty because
+multiplication binds tighter than
+addition. If you wanted sixty, you needed
+
+9
+00:01:24,960 --> 00:01:36,600
+Parentheses are how you document intent
+for the next reader, including future you.
+Assignment versus equality is another one-
+
+10
+00:01:36,720 --> 00:01:45,440
+Mixing them in a condition is rarer in
+modern Java than in C — but the mental
+mix-up still shows up when people read
+
+11
+00:01:45,560 --> 00:01:57,800
+Once arithmetic and comparison feel
+familiar, side effects show up —
+especially ++ and --. Look at this java
+
+12
+00:01:57,920 --> 00:02:14,600
+++x increments first, then yields the new
+value. Starting at five, the left side
+contributes five and leaves x at six; the
+
+13
+00:02:14,720 --> 00:02:28,520
+It is also a terrible place to hide
+business logic. Prefer clarity over clever
+increments. Another operator trap looks
+
+14
+00:02:28,640 --> 00:02:42,120
+If the left side is false, the right side
+never runs. & on booleans evaluates both
+sides. That difference matters when the
+
+15
+00:02:42,240 --> 00:02:51,560
+With &, both sides run, so name.length()
+executes even when name is null. With &&,
+the null check protects the second call.
+
+16
+00:02:51,680 --> 00:02:58,040
+The same short-circuit idea applies to ||:
+if the left side is already true, the
+right side is skipped.
+
+17
+00:02:58,159 --> 00:03:10,280
+Then comes the comparison question that
+follows from Episode Four's primitive-
+versus-reference split: when you write ==,
+
+18
+00:03:10,400 --> 00:03:20,240
+For objects, == compares identity —
+whether two references point at the same
+object. Content equality usually means
+
+19
+00:03:20,360 --> 00:03:31,000
+If you accidentally use == for string
+content, you may get true in a demo
+because of interning, then false in
+
+20
+00:03:31,120 --> 00:03:44,080
+Save == for identity, null checks, and
+enums where identity is the point. You can
+recite an operator table and still ship a
+
+21
+00:03:44,200 --> 00:03:56,200
+The durable skill is slower: read an
+expression the way the compiler does, then
+rewrite it until a human can too. (Bitwise
+
+22
+00:03:56,320 --> 00:04:08,800
+You will meet them when a problem actually
+needs bits. Today, do not confuse them
+with boolean && and ||.) Variables gave us
+
+23
+00:04:08,920 --> 00:04:21,960
+But once you can produce a boolean, a new
+pressure appears. Knowing that passed is
+true is not enough. The program must take
+
+24
+00:04:22,080 --> 00:04:27,800
+Computation alone does not choose a route.
+That pressure is what control flow exists
+to answer.
