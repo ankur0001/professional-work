@@ -1,0 +1,106 @@
+1
+00:00:00,000 --> 00:00:13,800
+Optional made absence explicit at API
+boundaries. Time is the next place older
+Java APIs hid too much — and punished you
+
+2
+00:00:13,919 --> 00:00:26,119
+Older tutorials still reach for
+java.util.Date or Calendar. They compile.
+Then a teammate in another city sees a
+
+3
+00:00:26,239 --> 00:00:29,879
+The arithmetic looked fine. The type was
+lying about what it meant.
+
+4
+00:00:30,000 --> 00:00:44,399
+So the question is not "how do I add
+seven?" It is: what types keep "a calendar
+day," "a local date-time," and "a moment
+
+5
+00:00:44,519 --> 00:00:55,599
+Date and Calendar are legacy. Modern Java
+splits the meanings that used to collide.
+Start with a calendar date that does not
+
+6
+00:00:55,719 --> 00:01:11,439
+LocalDate is year, month, day — no time-
+of-day, no zone. Adding seven days is
+calendar arithmetic. Notice also: plusDays
+
+7
+00:01:11,560 --> 00:01:18,240
+Shared date values stop surprising you
+because some other method called setMonth
+on an object you thought you still owned.
+
+8
+00:01:18,359 --> 00:01:30,400
+Sometimes you need "two-thirty this
+afternoon" without claiming which city
+that afternoon belongs to — that is
+
+9
+00:01:30,519 --> 00:01:41,959
+When you need a true point on the timeline
+— audit logs, cross-system records — use
+Instant: Look at this java for a moment.
+
+10
+00:01:42,079 --> 00:01:55,319
+A forty-eight-hour Duration moves along
+that timeline. LocalDateTime has no zone;
+treat it as a wall-clock reading without a
+
+11
+00:01:55,439 --> 00:02:05,759
+Zones are where production bugs live.
+ZonedDateTime attaches a zone — and zones
+change with politics and daylight saving:
+
+12
+00:02:05,879 --> 00:02:16,439
+The same instant prints as different local
+clock times in New York and Tokyo.
+Hardcoding a zone because "the server is
+
+13
+00:02:16,560 --> 00:02:25,479
+Store an Instant for moments; convert with
+a zone only for display. Formatting closes
+the loop for humans and files: Look at
+
+14
+00:02:25,599 --> 00:02:38,039
+Prefer explicit formatters over hoping
+toString stays stable across versions and
+locales. Put it together the way a booking
+
+15
+00:02:38,159 --> 00:02:47,400
+Confirmation time is an Instant in the
+database. Email formats those local dates
+for the guest and converts the
+
+16
+00:02:47,519 --> 00:03:00,879
+Each type earns its keep by refusing to
+pretend it is the others. Collapse that
+into one Date field "for simplicity," and
+
+17
+00:03:01,059 --> 00:03:06,819
+The next developer will guess — and
+guessing is how daylight-saving bugs and
+off-by-one checkouts are born.
+
+18
+00:03:06,939 --> 00:03:20,539
+Once we can represent time cleanly,
+another pressure appears: what happens
+when an operation cannot finish
