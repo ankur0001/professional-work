@@ -1,0 +1,160 @@
+1
+00:00:00,000 --> 00:00:11,320
+By now we can store information, compute
+with it, and choose different paths
+through a program. That is enough to make
+
+2
+00:00:11,439 --> 00:00:22,839
+Suppose our application needs to calculate
+the total price of an order. We could
+place the whole calculation directly
+
+3
+00:00:22,960 --> 00:00:32,480
+Then checkout needs the same math. The
+invoice preview needs it. A refund path
+needs it too. Suddenly the same formula
+
+4
+00:00:32,600 --> 00:00:44,760
+So a natural question appears: if the
+behavior is the same, why are we rewriting
+it by hand? Instead of copying the logic,
+
+5
+00:00:44,880 --> 00:00:55,160
+A method is a named piece of behavior. You
+give it inputs, it does work, and it can
+return a result. Variables remember nouns.
+
+6
+00:00:55,280 --> 00:01:05,960
+Here is the smallest version that still
+teaches the idea: Look at this java for a
+moment. Why show this now? Because an
+
+7
+00:01:06,079 --> 00:01:21,359
+This example turns an unnamed expression
+into a reusable idea. calculateTotal is
+the name of the behavior. price and tax
+
+8
+00:01:21,479 --> 00:01:32,559
+It does not talk to a database. It answers
+one question: given a price and a tax
+amount, what is the total? But a method
+
+9
+00:01:32,679 --> 00:01:45,759
+That raises the next question: how does
+the program actually use this named
+behavior? Look at this java for a moment.
+
+10
+00:01:45,879 --> 00:01:56,759
+Java binds 100.0 to price and 18.0 to tax,
+runs the body, and returns 118.0. That
+returned value is stored in total and then
+
+11
+00:01:56,879 --> 00:02:04,439
+The payoff is already visible: if the tax
+rule changes, we edit one method instead
+of hunting through every copy of the
+
+12
+00:02:04,560 --> 00:02:18,400
+Once calling feels clear, learners usually
+ask a deeper question — sometimes out
+loud, sometimes only as confusion later:
+
+13
+00:02:18,520 --> 00:02:34,920
+The method receives a copy of the value.
+Look at this java for a moment. x remains
+1, because n was only a copy. For object
+
+14
+00:02:35,040 --> 00:02:42,600
+So a method can mutate the same object the
+caller sees, yet it cannot make the
+caller's variable point somewhere else by
+
+15
+00:02:42,720 --> 00:02:53,240
+If an interview asks whether Java is pass-
+by-reference, the precise answer is: no.
+Pass-by-value. For objects, the copied
+
+16
+00:02:53,360 --> 00:03:03,200
+Now that the mechanism is honest, let's
+evolve the example toward something closer
+to a shop. Look at this java for a moment.
+
+17
+00:03:03,320 --> 00:03:16,120
+calculateTotal now accepts a tax rate
+instead of a precomputed tax amount, and
+it refuses invalid input. printReceipt
+
+18
+00:03:16,240 --> 00:03:29,760
+That separation is not style for its own
+sake — it is how testing and reuse stay
+possible as requirements grow. What if we
+
+19
+00:03:29,879 --> 00:03:44,759
+Then discounts appear. Receipt formatting
+changes. Refunds need the same math. The
+formula gets copied, then copied with a
+
+20
+00:03:44,879 --> 00:03:55,359
+It is how behavior stays coherent as the
+program grows. There is one more pressure
+that appears once methods become natural:
+
+21
+00:03:55,479 --> 00:04:06,679
+Java allows overloading — multiple methods
+with the same name and different parameter
+lists. Look at this java for a moment. The
+
+22
+00:04:06,799 --> 00:04:16,159
+Overloading helps when the operations are
+truly the same idea. It becomes noise when
+the overloads secretly do unrelated
+
+23
+00:04:16,279 --> 00:04:28,519
+We started with duplicated order math and
+asked why we were rewriting the same
+behavior. Methods gave that behavior a
+
+24
+00:04:28,639 --> 00:04:38,039
+Pass-by-value explained what "inputs"
+really mean. A more practical checkout
+fragment showed responsibilities splitting
+
+25
+00:04:38,159 --> 00:04:42,079
+Overloading showed how related forms of
+the same verb can coexist.
+
+26
+00:04:42,199 --> 00:04:53,639
+Once we can name behavior, another need
+becomes obvious: we often need many values
+under one name, accessible by position — a
+
+27
+00:04:53,759 --> 00:05:06,240
+Copying price1, price2, price3 into
+separate variables is the same kind of
+trap we just escaped with methods. That is
