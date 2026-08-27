@@ -1,0 +1,105 @@
+1
+00:00:00,000 --> 00:00:15,199
+Sets answered uniqueness. They do not
+answer the everyday business question:
+given this key, what value sits beside it?
+
+2
+00:00:15,319 --> 00:00:29,320
+You can fake it with two lists — keys in
+one, values in the other — and pray the
+indexes stay aligned. Or you can search a
+
+3
+00:00:29,500 --> 00:00:42,899
+Maps are that engine. A map stores key-to-
+value associations. Keys hash into buckets
+in a HashMap. A good key's equals and
+
+4
+00:00:43,019 --> 00:00:53,979
+Look at this java for a moment. Walk it.
+put associates "Ada" with 36. getOrDefault
+returns the value if present, otherwise
+
+5
+00:00:54,099 --> 00:01:07,060
+That single method prevents a pile of null
+checks when missing keys are normal. Three
+workhorse methods show up constantly:
+
+6
+00:01:07,179 --> 00:01:13,219
+computeIfAbsent builds a value only when
+the key is missing — perfect for multimap-
+style indexes.
+
+7
+00:01:13,339 --> 00:01:25,859
+merge combines a new contribution with an
+existing value through a function;
+counting and aggregating become one
+
+8
+00:01:25,979 --> 00:01:38,339
+HashMap allows one null key and null
+values. ConcurrentHashMap does not.
+TreeMap rejects null keys under natural
+
+9
+00:01:38,459 --> 00:01:50,699
+Order is another axis: Look at this java
+for a moment. LinkedHashMap preserves
+order — useful for stable iteration and
+
+10
+00:01:50,819 --> 00:02:04,419
+Pick the map that matches the question you
+ask: fast unordered lookup, ordered
+iteration, or sorted keys. A small
+
+11
+00:02:04,539 --> 00:02:15,739
+The sku is the key. Quantity is the value.
+There is no second list to keep in sync.
+Missing skus default safely. A plain
+
+12
+00:02:15,859 --> 00:02:29,059
+If two threads resize or update together,
+you can corrupt the structure. Treat maps
+as single-threaded unless you reach for a
+
+13
+00:02:29,239 --> 00:02:40,199
+Look at this java for a moment. Fine at
+dozens. Painful at hundreds of thousands.
+Maps exist so average lookup cost stays
+
+14
+00:02:40,319 --> 00:02:54,919
+A second put with the same key replaces
+the value. If you need multi-values per
+key, use computeIfAbsent with a collection
+
+15
+00:02:55,039 --> 00:03:09,919
+keySet, values, and entrySet are views
+backed by the map — remove from the key
+set and the map loses the entry. Keyed
+
+16
+00:03:10,039 --> 00:03:17,919
+getOrDefault, computeIfAbsent, and merge
+removed boilerplate. Null and ordering
+rules depended on the implementation.
+
+17
+00:03:18,039 --> 00:03:32,799
+Sometimes the problem is not lookup by
+key, but flow: work waiting to be
+processed, messages waiting to be handled,
+
+18
+00:03:32,919 --> 00:03:35,479
+That shape is queues and deques.
