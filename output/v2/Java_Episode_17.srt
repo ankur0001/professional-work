@@ -1,0 +1,128 @@
+1
+00:00:00,000 --> 00:00:12,480
+Annotations gave us metadata. Frameworks
+still need a way to discover that metadata
+— and the shapes of classes — while the
+
+2
+00:00:12,599 --> 00:00:22,119
+Frameworks do. The temptation for
+beginners is to treat reflection as
+cleverness: look up a method by name, call
+
+3
+00:00:22,239 --> 00:00:32,320
+The cost shows up months later when
+renames break production and nobody's IDE
+could see the string. Learn the mechanism
+
+4
+00:00:32,439 --> 00:00:45,000
+Imagine you are writing a tiny serializer.
+You do not want a handwritten method for
+every domain type. You want to ask an
+
+5
+00:00:45,179 --> 00:00:57,019
+That question is reflection: inspect
+classes, methods, and fields at runtime,
+then optionally invoke or read them. Look
+
+6
+00:00:57,140 --> 00:01:11,540
+String.class is a Class object — a runtime
+handle on the type. getMethod("length")
+looks up a public method by name and
+
+7
+00:01:11,659 --> 00:01:23,739
+Nothing in this snippet names length as a
+normal Java call. The call path is data-
+driven. That is exactly how many
+
+8
+00:01:23,859 --> 00:01:37,980
+So when is reflection justified?
+Frameworks, tools, serializers, debuggers
+— places where the set of types is not
+
+9
+00:01:38,099 --> 00:01:53,139
+Reflection is slower and more brittle than
+"hi".length(). Names become strings.
+Refactors break silently until runtime.
+
+10
+00:01:53,259 --> 00:02:00,019
+Modules tighten the story further. The
+module system can restrict deep reflective
+access to internal packages.
+
+11
+00:02:00,139 --> 00:02:06,339
+Code that once called setAccessible(true)
+on private fields may now fail unless the
+module opens that package.
+
+12
+00:02:06,459 --> 00:02:18,339
+When a library breaks on a newer JDK with
+illegal reflective access errors, you are
+meeting this episode in production.
+
+13
+00:02:18,459 --> 00:02:30,019
+If you control both sides, a clear
+interface beats scanning private fields.
+If you need speed at scale, annotation
+
+14
+00:02:30,139 --> 00:02:41,699
+When reflection is unavoidable, cache the
+Method and Field handles — looking them up
+on every request pays the search cost
+
+15
+00:02:41,879 --> 00:02:55,519
+Look at this java for a moment. It works
+until the method is renamed, overloaded,
+or moved. The compiler cannot protect you.
+
+16
+00:02:55,639 --> 00:03:07,639
+Keep reflection at the edges — frameworks
+and tools — and keep domain code boring
+and direct. Stretch the idea one step
+
+17
+00:03:07,759 --> 00:03:18,799
+Look at this java for a moment. Here
+reflection and annotations cooperate. The
+controller methods stay ordinary Java. The
+
+18
+00:03:18,919 --> 00:03:29,159
+Discovery at the edge; direct calls in the
+domain. If you remember only one design
+rule from this episode, make it this:
+
+19
+00:03:29,279 --> 00:03:41,279
+If you already know the type, call it
+directly. If you need many types to share
+a behavior, give them an interface. If you
+
+20
+00:03:41,399 --> 00:03:55,239
+After living in that reflective,
+framework-heavy world, another fatigue
+appears: so many classes exist only to
+
+21
+00:03:55,359 --> 00:03:57,399
+and toString by hand.
+
+22
+00:03:57,519 --> 00:04:01,919
+Is there a tighter way to model plain
+data? That pressure opens records.
