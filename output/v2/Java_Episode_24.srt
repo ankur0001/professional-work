@@ -1,0 +1,101 @@
+1
+00:00:00,000 --> 00:00:13,439
+Maps excel at lookup. They are awkward as
+waiting lines. A print spooler, a task
+buffer, a chat message pipe — these
+
+2
+00:00:13,559 --> 00:00:20,399
+Suppose jobs arrive faster than a worker
+can finish them. You need a place to hold
+pending work and take the oldest job next.
+
+3
+00:00:20,519 --> 00:00:34,280
+A list can fake that with add at the end
+and remove(0) at the front, but the intent
+is muddy and the performance story for
+
+4
+00:00:34,460 --> 00:00:45,820
+Queues shape producer/consumer flow. A
+classic queue is FIFO — first in, first
+out. A deque (double-ended queue) allows
+
+5
+00:00:45,939 --> 00:00:59,939
+In modern Java, Deque is the versatile
+choice, and ArrayDeque is a strong general
+default for single-threaded use. Look at
+
+6
+00:01:00,059 --> 00:01:06,899
+pollFirst() takes from the head and
+returns "a". The method names advertise
+ends: last and first.
+
+7
+00:01:07,019 --> 00:01:20,739
+Queues shape producer/consumer flow —
+Deque is the modern versatile choice
+because the same structure can act as
+
+8
+00:01:20,859 --> 00:01:30,980
+offer/poll speak in return values.
+add/remove speak in exceptions. Pick the
+style that matches whether emptiness is
+
+9
+00:01:31,099 --> 00:01:45,500
+Used as a stack, a deque replaces the
+legacy Stack class: Look at this java for
+a moment. Prefer Deque over
+
+10
+00:01:45,619 --> 00:01:59,139
+A tiny job-buffer story makes the FIFO
+intent obvious: Look at this java for a
+moment. Producers offer last. The consumer
+
+11
+00:01:59,259 --> 00:02:08,939
+When multiple threads produce and consume
+together, blocking queues appear in the
+concurrency chapters — structures that
+
+12
+00:02:09,060 --> 00:02:21,620
+Today, keep the single-threaded mental
+model clear: ArrayDeque for local flow
+control. What if we skip queues and abuse
+
+13
+00:02:21,740 --> 00:02:35,260
+Every reader must infer FIFO intent. With
+a queue or deque, the type itself
+documents the flow. Deque's double-ended
+
+14
+00:02:35,379 --> 00:02:47,500
+Avoid using LinkedList as a queue just
+because it implements Deque — ArrayDeque
+almost always outperforms it for stack and
+
+15
+00:02:47,620 --> 00:02:59,020
+Queues gave FIFO language; deques added
+both ends. ArrayDeque became the default.
+offer/poll versus add/remove clarified
+
+16
+00:02:59,140 --> 00:03:09,780
+Once collections hold real domain objects,
+another pressure appears: humans want them
+sorted — by name, by price, by date — and
+
+17
+00:03:09,900 --> 00:03:17,580
+How do we declare comparison policy
+without baking a single order into the
+class forever? That is the pressure that
