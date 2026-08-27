@@ -1,0 +1,119 @@
+1
+00:00:00,000 --> 00:00:11,599
+Last time we treated exceptions as part of
+an API. That conversation almost always
+collides with another duty: if your code
+
+2
+00:00:11,719 --> 00:00:20,679
+You open an input stream, read bytes, and
+return them. On the happy path you
+remember to close. On the exception path
+
+3
+00:00:20,799 --> 00:00:31,719
+Or you close in finally, but close()
+itself throws, and the original read
+failure disappears behind the close
+
+4
+00:00:31,839 --> 00:00:42,399
+They are dramatic after a week of open
+file handles, when the process can no
+longer open anything new. So can closing
+
+5
+00:00:42,519 --> 00:00:53,199
+If a resource implements AutoCloseable,
+you declare it in the try header, and Java
+closes it when the block exits — whether
+
+6
+00:00:53,319 --> 00:01:06,239
+Files.newInputStream(path) opens the
+stream. The variable in is scoped to the
+try — it is not floating around the method
+
+7
+00:01:06,359 --> 00:01:18,919
+You did not write a finally. The structure
+encodes the rule: if it opens here, it
+closes here. Multiple resources belong in
+
+8
+00:01:19,039 --> 00:01:31,399
+They close in reverse order of declaration
+— the way you would unwind a stack. Prefer
+this over manual finally chains that close
+
+9
+00:01:31,519 --> 00:01:41,039
+Suppressed exceptions make the feature
+trustworthy. Suppose the body throws
+exception A because the read failed
+
+10
+00:01:41,159 --> 00:01:50,799
+Older manual patterns often lost A or B
+depending on how you wrote finally. Try-
+with-resources keeps A as the primary
+
+11
+00:01:50,920 --> 00:02:00,599
+Ignoring suppressed exceptions means you
+only ever see half the story when close
+fails during an already-failing operation.
+
+12
+00:02:00,780 --> 00:02:12,099
+Because the hand-written version is easy
+to almost get right. Null checks,
+ordering, secondary failures, and early
+
+13
+00:02:12,219 --> 00:02:20,740
+Try-with-resources removes those degrees
+of freedom for the common case. Boring is
+the goal. Custom resources should follow
+
+14
+00:02:20,859 --> 00:02:34,219
+If your class owns a socket, a lock file,
+or an external session, implement
+AutoCloseable and let callers use try-
+
+15
+00:02:34,339 --> 00:02:47,459
+Once you see resources as values with
+lifetimes, try-with-resources stops
+feeling like syntax sugar and starts
+
+16
+00:02:47,639 --> 00:02:55,239
+Closing only on success. Catching close
+failures empty-handed. Ignoring suppressed
+exceptions during incident review.
+
+17
+00:02:55,359 --> 00:03:06,399
+Forgetting resources in tests — tests pass
+while production leaks, because the test
+process exits before OS pressure appears.
+
+18
+00:03:06,519 --> 00:03:11,359
+The primary exception remains the one from
+your business operation when both body and
+close fail.
+
+19
+00:03:11,479 --> 00:03:23,079
+That preserves the failure mode operators
+should chase first, while suppressed
+exceptions keep the cleanup failure from
+
+20
+00:03:23,199 --> 00:03:36,039
+Once closing files is reliable, the next
+hunger is richer: we want to talk to the
+filesystem with modern path APIs — create,
