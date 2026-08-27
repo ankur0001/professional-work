@@ -10,9 +10,7 @@
 
 ## Full narration
 
-Parallel streams closed a chapter on how we process many values. One value still causes outsized pain: the value that might not be there.
-
-A `findUser` method returns `null` when the id is unknown. Callers forget to check. Somewhere deeper, `user.name()` throws `NullPointerException`. The stack trace points at a symptom, not at the API that lied by using null as a silent status code. The natural question is: can absence be part of the return type?
+Pipelines can run in parallel, but they still end in moments that may produce no value — an empty find, a missing key, a failed parse. Returning `null` from those moments recreates silent absence. Callers forget to check. Somewhere deeper, `user.name()` throws `NullPointerException`. The stack trace points at a symptom, not at the API that lied by using null as a silent status code. The natural question is: can absence be part of the return type?
 
 Optional makes absence explicit at API boundaries — not everywhere. Prefer it as a return type when "maybe none" is a normal outcome.
 
@@ -93,9 +91,9 @@ Teams sometimes wrap collections in Optional — `Optional<List<User>>` — to m
 
 Null returns hid absence. Optional made it explicit at boundaries. `map`/`flatMap`/`filter` transformed carefully. `orElse` versus `orElseGet` controlled default cost. Fields everywhere were rejected as style abuse.
 
-With language features and collections under our feet, the next practical world is time itself — dates, instants, zones — where stringly-typed timestamps repeat the same class of mistake Optional tried to cure.
+Absence is not only about missing objects. Business rules live on calendars: "expire this offer at midnight Tokyo," "schedule a job in three hours," "compare two instants from different zones." Stringly-typed timestamps recreate the same silent-mistake pattern — until parsing and zone rules fail at the worst time. How does Java talk about time without that fog?
 
-That bridge leads to java.time.
+That pressure is what `java.time` exists to answer.
 
 ## Source attribution
 

@@ -81,7 +81,7 @@ void welcome(Notifier notifier) {
 
 Two words collide for beginners: overriding and overloading. Overloading is same name, different parameter lists, resolved at compile time. Overriding is a subclass replacing a superclass method with the same signature, resolved at runtime for instance methods. If you "override" with a different parameter list, you actually overloaded — and the parent method still runs when callers use the parent type.
 
-Finally, once objects live in sets and maps, identity and equality stop being philosophy. `equals` and `hashCode` are part of the object contract. If two objects are equal, their hash codes must match. Break that pair and collections misbehave in ways that look like ghost bugs. Treat equality as part of the type's meaning, not an afterthought.
+Finally, once objects live in sets and maps, identity and equality stop being philosophy. Suppose two `UserId` objects both wrap `"u-42"`, but `equals` was never overridden. A `HashSet` may hold both. Lookups fail in ways that look like ghost bugs. If you fix `equals` and forget `hashCode`, the set still misbehaves — equal objects must share a hash code. Treat that pair as part of the type's meaning, not an afterthought.
 
 Public fields everywhere, god classes that know every feature, inheritance used as a junk drawer — the program still runs until change arrives. Then every feature touches everything, and invariants live only in tribal memory. OOP did not fail. Design refused to use the tools for their purpose.
 

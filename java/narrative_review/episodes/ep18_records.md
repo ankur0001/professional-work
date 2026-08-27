@@ -33,8 +33,6 @@ Walk this carefully. `record Point(int x, int y)` declares the state up front. T
 
 Canonical and compact constructors matter once validation appears. The canonical constructor takes every component. The compact form lets you validate or normalize without relisting assignments. If construction needs a multi-step workflow, you may want a factory or a fuller class. Records keep construction honest; they are not a dumping ground for every rule in the domain.
 
-Records also pair naturally with sealed types and pattern matching. A closed set of record subtypes makes a switch over shapes feel like reading a specification.
-
 What records are not: a replacement for every class. Records model transparent immutable data; classes model richer encapsulated behavior. Entities with identity, mutable lifecycle, or complex encapsulation still want ordinary classes. Record fields are final; the immutability is shallow. A record can hold a mutable list reference, and the list can still change. Forgetting that causes subtle bugs when people assume "record means deep freeze."
 
 Prefer records at boundaries where transparent data is the point: DTOs, value objects, coordinates, and message payloads.
@@ -69,8 +67,6 @@ record PriceQuote(String sku, Money amount) {}
 `Money` validates in a compact constructor. `PriceQuote` nests records without inventing getter ceremony. If `Money` later needs rounding policies and mutable ledgers, promote it to a class — records are not a ban on classes, they are a better default for pure carriers.
 
 Boilerplate carriers created fatigue. Records answered with auto `equals` / `hashCode` / `toString` / accessors. Compact constructors handled validation. Ordinary classes remained for richer behavior.
-
-Prefer opportunistic adoption: new carriers start as records; old classes convert when you touch them for a real reason. The goal is clearer models, not a rewrite festival.
 
 Once data carriers are easy, another design question sharpens: sometimes a type should have only a known set of subtypes — not an open inheritance free-for-all. How do we say that in the language?
 

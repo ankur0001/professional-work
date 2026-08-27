@@ -52,15 +52,7 @@ for (int i = 0; i < n; i++) {
 
 This loop visits indexes from zero up to, but not including, `n`. When `i` is even, `continue` skips the rest of that iteration. When `i` is odd, it prints. `break` would leave the loop entirely. `while` fits when you do not know the trip count in advance. Enhanced-for fits when you already have a collection and only need each element. Index `for` still wins when the position itself matters. Labeled `break` and `continue` exist for nested loops; use them sparingly — if you need a label to explain the control, the structure may be asking for a method instead.
 
-As programs grow, another control-flow pain appears: you receive an `Object` or a general type, check what it really is, cast, then use it. Pattern matching reduces those casts by binding the narrowed type in the same test.
-
-```java
-if (value instanceof String s) {
-    System.out.println(s.toUpperCase());
-}
-```
-
-If `value` is a `String`, `s` is already that string inside the block. Older code would write a separate cast that can drift out of sync with the check. Pattern matching collapses them on purpose.
+Later, when you work with type hierarchies and general references, Java can also bind a narrowed type in the same `instanceof` test — pattern matching — so the cast does not drift away from the check. Hold that curiosity; the pressure for it arrives after objects have a clearer shape.
 
 Now look at the design failure that control flow tempts: the giant nested if pyramid.
 
@@ -88,7 +80,7 @@ boolean canCheckout(User user, Order order) {
 
 Now the nested pyramid becomes a flat checklist. Control flow syntax cannot save a design that refuses to name its decisions — but naming the decision often shrinks the syntax you need.
 
-Operators produced the booleans and comparisons we needed. Control flow uses those results to choose branches, return values from switches, repeat with loops, and narrow types with pattern matching. The skill is not collecting keywords. It is keeping the path readable as the rules multiply.
+Operators produced the booleans and comparisons we needed. Control flow uses those results to choose branches, return values from switches, and repeat with loops. The skill is not collecting keywords. It is keeping the path readable as the rules multiply.
 
 Once `main` can decide and loop, another trap appears. The same decision logic — calculate a total, validate an order, format a line — gets copied into every place that needs it. Behavior wants a name.
 
@@ -98,4 +90,4 @@ That need is what methods exist to answer.
 
 Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 6 (*Control Flow*).
 
-Narration technique: computed-values-need-routes situation → if/else and switch expressions → loops → break/continue → pattern matching → nesting failure → extract methods → next natural problem (named behavior). Continuity-checked transitions.
+Narration technique: computed-values-need-routes situation → if/else and switch expressions → loops → break/continue → nesting failure → extract methods → pattern matching deferred → next natural problem (named behavior). Continuity-checked transitions.

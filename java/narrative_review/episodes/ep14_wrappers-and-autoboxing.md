@@ -74,9 +74,7 @@ The list cannot store bare `int` values; `Integer` is the ticket in. For a handf
 
 Collections needed objects; wrappers answered. Autoboxing made the bridge quiet. Null unboxing and `==` on cached Integers showed the traps. Hot loops reminded us to prefer primitives where wrappers add no meaning.
 
-And yet once lists of `Integer` feel natural, another problem shows up: a list that can hold anything forces casts and hides bugs until runtime. How do we tell a collection "these are strings" or "these are orders" and have the compiler enforce it?
-
-One practical habit: when an API returns `Integer` because the database column is nullable, do not silently assign it to `int` at the boundary. Decide what absence means — zero, a default, an error — and express that decision before arithmetic begins.
+And yet once lists of `Integer` feel natural, another problem shows up: a raw list that can hold anything forces casts and hides bugs until runtime. How do we tell a collection "these are strings" or "these are orders" and have the compiler enforce it?
 
 That is the pressure that brings generics.
 

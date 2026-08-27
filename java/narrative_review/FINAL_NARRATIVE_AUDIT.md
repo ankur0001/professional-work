@@ -167,4 +167,22 @@ Only episodes with **Overall = MINOR ISSUE** or **MAJOR ISSUE** (none major over
 
 **Rationale:** Methodology, compression, and natural bridges are in good shape. No episode has **Overall MAJOR ISSUE**. Twelve episodes have **Overall MINOR ISSUE**, concentrated in (a) soft unit boundaries, (b) a few underspecified side concepts, and (c) the EP29→EP30 Optional handoff. Frozen golds EP01 / EP04 / EP07 pass.
 
-**Recommended next step (not done in this audit):** fix only the twelve flagged episodes — especially EP29’s bridge and the EP20/EP21 collections pivot — then freeze. Do **not** run another wholesale rewrite.
+## Follow-up (surgical fixes)
+
+Targeted fixes applied for the twelve Overall-MINOR episodes without a wholesale rewrite:
+
+| Episode | Fix |
+| ------- | --- |
+| EP05 | Deferred bitwise deep-dive; keep recognition only when needed |
+| EP06 | Deferred pattern-matching code; create curiosity instead |
+| EP10 | Concrete equals/hashCode failure sketch for HashSet |
+| EP14 | Removed late nullable-Integer tip that blurred generics bridge |
+| EP18 | Removed sealed foreshadow + opportunistic-adoption meta |
+| EP20/21 | Problem-driven collections pivot (fixed-size arrays → lists) |
+| EP29/30 | Optional handoff from pipeline absence; time bridge from calendars |
+| EP39 | Condition await/signal walkthrough |
+| EP44 | CyclicBarrier code example; removed end checklist filler |
+| EP49 | Opening continuity from ThreadLocal; removed end checklist filler |
+
+Golds EP01 / EP04 / EP07 remain unmodified.
+

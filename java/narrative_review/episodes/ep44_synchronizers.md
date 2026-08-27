@@ -26,7 +26,15 @@ latch.await();
 
 Three workers start. Each counts down once when ready. The coordinator blocks in `await` until all three have counted down. Then it opens the gate and continues. The latch does not reset. That one-shot nature is a feature when startup or a single rendezvous is the point. Forgetting to `countDown` on an error path is the classic hang: one worker throws, never counts down, and `await` waits forever. Use `try`/`finally` so the count moves even when work fails — or fail the whole startup explicitly instead of stalling.
 
-`CyclicBarrier` is for recurring phases. Parties arrive, wait until all are present, then the barrier releases and can be reused for the next round. Latch versus barrier is a favorite interview contrast: one-shot versus reusable multi-phase rendezvous.
+`CyclicBarrier` is for recurring phases. Parties arrive, wait until all are present, then the barrier releases and can be reused for the next round:
+
+```java
+CyclicBarrier barrier = new CyclicBarrier(4);
+// each worker, each phase:
+barrier.await();   // wait for all four, then continue together
+```
+
+Four workers finish phase one, meet at `await`, then start phase two together. Latch versus barrier is the practical contrast: one-shot event set versus reusable multi-phase rendezvous.
 
 `Semaphore` manages permits. Acquire a permit to enter; release when done. A semaphore of five is a clean way to limit concurrent access to a scarce resource without hand-rolling a counter and condition pair:
 
@@ -51,8 +59,6 @@ Error paths deserve one more beat. A worker that fails before `countDown` is ind
 Picture three initializer threads warming cache, connecting to a broker, and loading feature flags. A latch of three gates the HTTP acceptor. If flag loading fails, count down anyway and set a failed state the acceptor checks — or refuse to open the gate and crash the process loudly. Either policy beats a silent hang.
 
 Name the synchronizer after the phase: `startupLatch`, `phaseBarrier`, `dbPermits`. Clear names prevent the next developer from using a latch where a barrier belonged simply because both "wait for others."
-
-Hold the checklist: one-shot event set → latch; repeating peer meetup → barrier; limited concurrent entry → semaphore. If none fit, maybe you need a queue or a lock — not a custom wait/notify clone of a semaphore.
 
 Once producers create work faster than consumers can take it, another coordination structure dominates: a queue that blocks, bounds memory, and carries jobs between stages.
 

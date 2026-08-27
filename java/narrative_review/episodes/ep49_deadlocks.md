@@ -10,7 +10,7 @@
 
 ## Full narration
 
-We have locked, tried locks, queued work, and coordinated phases. Nest enough of those tools without a policy and you can freeze a process while every thread looks busy waiting. The CPU is idle. The health check fails. Nobody is making progress. That shape has a name.
+ThreadLocal taught us ambient state can leak across borrowed threads. Locks create a different freeze: nest them without a global order and the process can wait forever while every thread looks busy. The CPU is idle. The health check fails. Nobody is making progress. That shape has a name.
 
 Deadlocks are circular waits. Prevent them with ordering, smaller critical sections, and timeouts. Detect them with thread dumps when prevention fails.
 
@@ -54,8 +54,6 @@ When a dump shows a deadlock, fix the order or remove a lock — do not "retry t
 Picture transfer locks on two accounts acquired in random order under load. One night the interleaving appears; support sees a hung JVM; the dump shows the cycle. The fix is sorted lock order by account id — a one-line policy that removes the cycle. Most deadlock stories end with a boring ordering rule that should have been written first.
 
 Prefer ordering and confinement over cleverness. Deadlocks are not a badge of advanced concurrency — they are usually a missing policy. Write the policy early; let the dump be a last resort.
-
-Hold the checklist: ordered locks; no alien calls while holding; timeouts when nesting; dumps when hung. A deadlock is a design smell that became a schedule. Treat it that way in postmortems: change the design, then verify with dumps under stress.
 
 After platform-thread concurrency, a modern twist changes the economics of blocking: virtual threads make the thread-per-request style scalable again for blocking I/O — with new pitfalls of their own.
 

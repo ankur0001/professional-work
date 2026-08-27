@@ -52,9 +52,21 @@ Multiple conditions matter for monitors with more than one reason to wait. With 
 ```java
 private final Condition notEmpty = lock.newCondition();
 private final Condition notFull = lock.newCondition();
+
+lock.lock();
+try {
+    while (buffer.isEmpty()) {
+        notEmpty.await();          // wait only for "has items"
+    }
+    Item item = buffer.remove();
+    notFull.signal();              // wake a producer waiting for space
+    return item;
+} finally {
+    lock.unlock();
+}
 ```
 
-Intrinsic `wait`/`notify` can emulate this with care and complexity; explicit conditions make the intent readable when the state machine has more than one waiting reason.
+Walk the difference from a single `Object.wait`. Here the consumer waits on `notEmpty` only. A producer that filled the buffer signals that condition — not every waiter on the lock. Intrinsic `wait`/`notify` can emulate this with care and complexity; explicit conditions make the intent readable when the state machine has more than one waiting reason.
 
 Fairness is a knob, not a virtue by default. A fair lock tends to grant acquisition in roughly arrival order. That can reduce some starvation scenarios and usually costs throughput under contention. Do not enable fairness because it sounds nicer in a design doc. Enable it when measurement and requirements say you need that scheduling behavior.
 
@@ -64,7 +76,7 @@ Compare the mental model to `synchronized` once more. With the keyword, acquisit
 
 What if you need interruptible lock acquisition so shutdown can break a thread waiting forever on `lock()`? `lockInterruptibly()` exists for that. It is another reason explicit locks show up in frameworks and servers that care about clean stop behavior.
 
-When an interviewer asks when to prefer `ReentrantLock`, answer with features — tryLock, timeouts, multiple conditions, fairness — not with "because it is newer." Prefer tests that assert timeout behavior and unlock-on-exception behavior explicitly. Explicit locks make those policies visible in code — take advantage of that visibility in tests, not only in production firefighting.
+When an interviewer asks when to prefer `ReentrantLock`, answer with features — tryLock, timeouts, multiple conditions, fairness — not with "because it is newer." Prefer tests that assert timeout behavior and unlock-on-exception behavior explicitly.
 
 Once locking techniques are in hand, another production pressure dominates: creating a raw `Thread` for every task does not scale. We need bounded workers, queues, shutdown rules, and rejection policies.
 

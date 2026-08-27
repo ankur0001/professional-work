@@ -53,9 +53,9 @@ If you are maintaining a library, exporting fewer packages is usually kinder tha
 
 The classpath erased strong encapsulation. Modules restored explicit `requires`, `exports`, and careful `opens`. Incremental migration kept classpath apps in the real world.
 
-With the language and platform boundaries clearer, everyday programs still need to hold sequences of values — shopping carts, timelines, search results. Arrays were fixed-size. The next natural tool is a resizable, ordered collection you will use constantly.
+Encapsulation at the jar boundary is settled enough to build with. Inside those boundaries, a different everyday friction returns: arrays still force a fixed length, while real features — carts, timelines, search hits — grow and shrink. How do we hold an ordered sequence without hand-rolled resizing?
 
-That tool is a list.
+That pressure is what lists exist to answer.
 
 ## Source attribution
 

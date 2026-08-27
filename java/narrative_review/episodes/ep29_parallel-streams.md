@@ -67,9 +67,9 @@ Thread-safety of the source matters. Parallel streams over freshly built `ArrayL
 
 Independent CPU work suggested parallelism. The common ForkJoinPool powered parallel streams. Purity and sizing constraints appeared. Ordering and shared mutation failed loudly. IO-bound work pointed elsewhere. Measurement closed the argument.
 
-Pipelines and collectors still have one more everyday absence problem: a lookup that might not find a user, a parse that might not yield a number. Returning null works until it doesn't. Is there a type that makes absence explicit at the boundary?
+One leftover from every pipeline — parallel or not — still bites at the edges: a stage that might produce no value. `findFirst` on an empty stream, a lookup inside a map operation, a parse that fails. Returning `null` from those moments recreates the same silent absence problem collections already taught us to hate. How do we make "maybe none" part of the type at the boundary?
 
-That type is Optional.
+That pressure is what Optional exists to answer.
 
 ## Source attribution
 

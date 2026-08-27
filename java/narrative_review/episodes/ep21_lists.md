@@ -10,7 +10,7 @@
 
 ## Full narration
 
-Modules drew stronger boundaries around packages. Inside those boundaries, everyday programs still need a workhorse for sequences: shopping carts, search hits, timeline events, lines of a file. Arrays gave us fixed length. Real features rarely promise a fixed length.
+Platform boundaries can now be declared. That does not shrink the data inside a feature. Arrays still give us fixed length; real carts, search hits, and timelines rarely promise one.
 
 Suppose you are collecting tags a user adds to a post. They might add three, then delete one, then add five more. With an array you allocate, copy, allocate again. The natural question becomes: is there a resizable, ordered collection that still lets me talk about "the first item" and "insert here"?
 

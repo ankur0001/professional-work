@@ -61,9 +61,9 @@ System.out.println(a.equals(b));   // true  — same characters
 
 If you accidentally use `==` for string content, you may get true in a demo because of interning, then false in production when the strings were built differently. Prefer `equals` when you mean content. Save `==` for identity, null checks, and enums where identity is the point.
 
-One more family shows up in flags and low-level code: bitwise operators. They work on bits inside integers — masks, permissions, packed options. `|` combines flag bits and `&` tests one. That is a different job from boolean `||` and `&&`. You do not need to become a bit-twiddling specialist today. You only need to recognize the family so you do not mix it with boolean logic by accident.
-
 You can recite an operator table and still ship a bug the first time precedence, short-circuiting, and `==` collide in one condition. The durable skill is slower: read an expression the way the compiler does, then rewrite it until a human can too.
+
+(Bitwise operators — masks and packed flags — exist for another job entirely. You will meet them when a problem actually needs bits. Today, do not confuse them with boolean `&&` and `||`.)
 
 Variables gave us named values. Operators let us compute and decide with those values. But once you can produce a boolean, a new pressure appears. Knowing that `passed` is true is not enough. The program must take different paths — print a pass message, retry a download, loop through every student. Computation alone does not choose a route.
 
@@ -73,4 +73,4 @@ That pressure is what control flow exists to answer.
 
 Reference: `Java_JVM_Handbook_GPT55__1_.html` — Lesson 5 (*Operators*).
 
-Narration technique: stored-values-need-work situation → operators as answer → precedence → increment side effects → short-circuit → == vs equals → bitwise recognition → next natural problem (choosing paths). Continuity-checked transitions.
+Narration technique: stored-values-need-work situation → operators as answer → precedence → increment side effects → short-circuit → == vs equals → bitwise deferred → next natural problem (choosing paths). Continuity-checked transitions.
