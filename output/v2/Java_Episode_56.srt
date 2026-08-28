@@ -1,0 +1,165 @@
+1
+00:00:00,000 --> 00:00:13,880
+Episode Fifty-Five left us with a warmed-
+up JVM: hot methods become native code,
+and allocation keeps happening while that
+
+2
+00:00:14,000 --> 00:00:24,320
+The question is no longer "does Java have
+GC?" — it is which collector should we
+run, and what are we trading when we
+
+3
+00:00:24,439 --> 00:00:32,959
+Requests allocate short-lived objects —
+DTOs, temporary lists, buffers — while
+some data lives longer: sessions, caches,
+
+4
+00:00:33,079 --> 00:00:44,159
+Your product owner does not ask for "GC."
+They ask for p99 latency under two hundred
+milliseconds, or for a nightly batch that
+
+5
+00:00:44,280 --> 00:00:56,039
+Collectors answer different goals with
+different algorithms. Treat collector
+choice as fashion — "what is everyone
+
+6
+00:00:56,219 --> 00:01:06,340
+Speak the trade space plainly. Throughput
+is useful work over time. Latency is how
+long requests wait when the collector
+
+7
+00:01:06,459 --> 00:01:19,979
+Footprint is how much memory and processor
+time the collector itself consumes. You
+rarely maximize all three. Tiny pauses
+
+8
+00:01:20,099 --> 00:01:33,419
+Pick for service-level objectives, then
+measure. Goals first, flags second —
+otherwise tuning is superstition. On
+
+9
+00:01:33,539 --> 00:01:42,579
+It is region-based: the heap is divided
+into regions, and G1 collects sets of
+regions rather than treating the whole
+
+10
+00:01:42,699 --> 00:01:50,379
+That helps mixed workloads — lots of
+short-lived garbage plus some longer-lived
+data — without exotic configuration on day
+
+11
+00:01:50,499 --> 00:02:02,019
+Starting with G1 and learning to read its
+logs is more honest than hunting for a
+"best" collector the night before launch.
+
+12
+00:02:02,139 --> 00:02:14,219
+ZGC and Shenandoah chase short pauses by
+doing more work concurrently with the
+application. They are not free lunches —
+
+13
+00:02:14,339 --> 00:02:26,019
+CPU-bound batch jobs on tight machines may
+lose: you paid for concurrency you did not
+need and slowed wall-clock completion.
+
+14
+00:02:26,139 --> 00:02:39,619
+Batch jobs and offline pipelines often
+care more about finishing than about a
+pretty user-facing p99. A collector that
+
+15
+00:02:39,739 --> 00:02:46,979
+"Lower pause" is not automatically better.
+Fit the tool to the SLO. Region-based
+design is the mental model upgrade.
+
+16
+00:02:47,099 --> 00:02:53,419
+The JVM tries to reclaim where garbage
+actually is instead of treating every
+collection as a full-heap emergency.
+
+17
+00:02:53,539 --> 00:03:07,939
+Once you see regions, mixed collections
+and evacuation read as "work on the messy
+parts" rather than "boil the ocean." Make
+
+18
+00:03:08,060 --> 00:03:20,099
+UseG1GC selects the collector. -Xlog:gc*
+writes behavior you can inspect after a
+load test or incident. Without the log,
+
+19
+00:03:20,219 --> 00:03:30,500
+With it, you see pause times, occupancy
+after collections, and whether young or
+mixed collections dominate — validated
+
+20
+00:03:30,620 --> 00:03:39,259
+People fall down when they copy blog flags
+for a different heap and allocation
+pattern, chase zero pauses for a nightly
+
+21
+00:03:39,379 --> 00:03:43,139
+or switch collectors while an unbounded
+cache grows the live set forever.
+
+22
+00:03:43,259 --> 00:03:50,819
+The collector performs on the stage set by
+allocation rate and live set size.
+Changing the orchestra does not fix a
+
+23
+00:03:50,939 --> 00:04:00,699
+If an interview asks how you choose a
+collector, answer under constraints: match
+pause and throughput goals to the
+
+24
+00:04:00,819 --> 00:04:12,019
+G1 for a solid server default; ZGC or
+Shenandoah when latency SLOs demand it and
+you can afford the cost; a throughput
+
+25
+00:04:12,139 --> 00:04:18,539
+Say what you will look at in the GC log —
+and what you will refuse to change until
+allocation behavior is understood.
+
+26
+00:04:18,659 --> 00:04:28,859
+Today we moved from "GC exists" to "GC is
+a product decision with algorithms behind
+it." The next pain usually arrives after
+
+27
+00:04:28,979 --> 00:04:31,659
+objects that should have died are still
+reachable.
+
+28
+00:04:31,779 --> 00:04:39,059
+That is not a collector bug. That is a
+reference leak — and the next skill is
+finding those chains with dumps and
