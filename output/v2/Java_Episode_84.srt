@@ -1,0 +1,123 @@
+1
+00:00:00,000 --> 00:00:12,800
+You have APIs, caches, events, and GC
+knowledge. Someone says the system is
+"slow." Performance is a loop: measure,
+
+2
+00:00:12,919 --> 00:00:26,359
+Without a baseline, tuning is superstition
+— the same lesson as JVM flags, now
+applied across the stack. Define SLOs and
+
+3
+00:00:26,539 --> 00:00:38,140
+p50 pride means nothing if p99 burns the
+error budget. Capture baseline percentiles
+under a load test that resembles
+
+4
+00:00:38,259 --> 00:00:47,539
+Include dependency percentiles, GC pause
+percentiles, allocation rate, and pool
+saturation. A single number called
+
+5
+00:00:47,659 --> 00:00:58,219
+Label graphs with life stage: cold start
+versus steady state after JIT warmup —
+Episode Sixty-Five's distinction returns
+
+6
+00:00:58,339 --> 00:01:09,739
+JFR and profilers show where CPU and
+allocation go — under the load that
+violates the SLO, not at idle. Allocation
+
+7
+00:01:09,859 --> 00:01:20,180
+High allocation rates drive GC pressure;
+hot locks show up in JFR contention events
+and thread dumps. Fix algorithms and
+
+8
+00:01:20,299 --> 00:01:28,179
+Avoid premature micro-opts on cold paths —
+escape analysis and JIT may already help,
+and readability still matters.
+
+9
+00:01:28,299 --> 00:01:44,060
+Hypothesize in mechanism language: "I
+think the lock on inventory reservation is
+contended under this SKU skew," not "I
+
+10
+00:01:44,179 --> 00:01:57,619
+Hypothesis: inventory HTTP calls dominate.
+Tracing shows 700ms in the inventory
+client. Change: cache inventory
+
+11
+00:01:57,739 --> 00:02:09,539
+Remeasure: p99 drops to 350ms, hit rate
+92%, staleness acceptable per product
+rules. Jumping straight to rewriting JSON
+
+12
+00:02:09,659 --> 00:02:23,219
+Change one variable — collector flag,
+cache TTL, query, pool size — so results
+are attributable. Remeasure against the
+
+13
+00:02:23,340 --> 00:02:37,819
+Load tests must resemble reality: cache
+warmth, data shape, authentication, and
+dependency latency. Include failure
+
+14
+00:02:37,939 --> 00:02:49,740
+A test against empty tables with auth
+disabled will green-light fantasies. Close
+with a refusal list. Refuse to tune
+
+15
+00:02:49,859 --> 00:02:55,099
+Refuse load tests that skip auth and
+caches. Refuse multi-variable changes.
+
+16
+00:02:55,219 --> 00:03:06,259
+A developer wants to switch collectors
+because a blog promised lower pauses — ask
+which percentile fails under what load,
+
+17
+00:03:06,379 --> 00:03:09,379
+and refuse if pauses are not on the
+critical path.
+
+18
+00:03:09,500 --> 00:03:21,219
+The playbook protects the system from
+fashionable fixes. First performance
+question? Which percentile or error budget
+
+19
+00:03:21,340 --> 00:03:32,020
+When allocation dominates, ask whether the
+design creates too many temporary objects,
+whether caching helps, or whether a
+
+20
+00:03:32,140 --> 00:03:47,500
+When locks dominate, ask whether shardable
+state from the concurrency arc applies.
+Measure, hypothesize, change one thing,
+
+21
+00:03:47,620 --> 00:03:56,939
+Production readiness also means ownership,
+rollback, and runbooks — the socio-
+technical layer that decides whether a
