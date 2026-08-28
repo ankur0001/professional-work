@@ -1,0 +1,124 @@
+1
+00:00:00,000 --> 00:00:12,439
+Your REST controller needs to load a user
+by email. You could write JDBC by hand.
+You could write a full EntityManager
+
+2
+00:00:12,559 --> 00:00:25,679
+That speed is real — and so is the bill
+that arrives later if you forget SQL,
+transactions, and fetch behavior. Look at
+
+3
+00:00:25,799 --> 00:00:40,159
+Query methods derive queries from names —
+convenient until findByAccountIdAndStatusI
+nAndCreatedAtBetweenOrderByCreatedAtDesc
+
+4
+00:00:40,279 --> 00:00:50,519
+Spring Data did not remove SQL thinking;
+it deferred it. Explain plans still
+matter. Indexes still matter. Transaction
+
+5
+00:00:50,639 --> 00:00:55,839
+A service method that updates an order and
+records an outbox event should succeed or
+fail together.
+
+6
+00:00:55,959 --> 00:01:04,159
+Service-layer @Transactional is a common
+pattern so controllers stay thin and
+repositories do not each invent their own
+
+7
+00:01:04,279 --> 00:01:16,439
+Marking every repository method
+transactional can create chatty
+transactions and lazy-loading surprises.
+
+8
+00:01:16,559 --> 00:01:26,119
+Connect this to the outbox teaser you will
+meet in event-driven design: update a row
+and publish a message in two separate
+
+9
+00:01:26,239 --> 00:01:29,839
+and you will lose messages or double-apply
+effects under failure.
+
+10
+00:01:29,959 --> 00:01:40,839
+N+1 queries are the pitfall that turns
+demos into outages. You load a list of
+orders, then touch order.getLines() per
+
+11
+00:01:40,959 --> 00:01:54,519
+Lazy loading outside a session throws
+LazyInitializationException. Make N+1
+detection part of Definition of Done for
+
+12
+00:01:54,639 --> 00:02:09,719
+If count scales with list size, fix fetch
+strategy — join fetch, entity graphs — or
+reshape into a join or dedicated read
+
+13
+00:02:09,839 --> 00:02:16,639
+A mapper that touches lazy fields after
+the transaction closed is another reason
+Episode Seventy-Four refused to return
+
+14
+00:02:16,759 --> 00:02:28,879
+God repositories that know every query in
+the company become dumpsters; split by
+aggregate or use case when the interface
+
+15
+00:02:28,999 --> 00:02:42,359
+Flyway or Liquibase — or your team's
+equivalent — version schema changes beside
+code. A repository method that assumes a
+
+16
+00:02:42,479 --> 00:02:53,359
+Pair with expand/contract practices when
+zero downtime matters. Read-write
+splitting appears as you scale, but the
+
+17
+00:02:53,479 --> 00:03:01,439
+Spring Data makes it easy to hide a dozen
+queries behind a tidy method name. Logging
+and metrics bring them back into view.
+
+18
+00:03:01,559 --> 00:03:12,359
+Persistence literacy is still database
+literacy — repositories are a dialect, not
+an escape hatch. Biggest JPA pitfall? Lazy
+
+19
+00:03:12,479 --> 00:03:25,239
+Say it, then say how you detect it: SQL
+logging in staging, metrics on query
+counts per request, and SQL-counting tests
+
+20
+00:03:25,359 --> 00:03:36,039
+Spring Data speeds repositories — keep
+saying the second half aloud — you still
+own SQL and N+1 reality. Persistence
+
+21
+00:03:36,159 --> 00:03:44,319
+The next question is how Spring Security
+draws that door — filter chains,
+authentication versus authorization, and
