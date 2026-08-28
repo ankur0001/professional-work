@@ -1,0 +1,131 @@
+1
+00:00:00,000 --> 00:00:13,199
+Class loading finds and prepares types.
+Once a class is in, the JVM does not
+execute your Java source. It executes
+
+2
+00:00:13,319 --> 00:00:24,239
+For a long time that statement stays
+abstract. Then a performance surprise or a
+language-sugar question appears, and
+
+3
+00:00:24,359 --> 00:00:34,479
+javap turns mystery into mechanism. Look
+at this bash for a moment. javap -c
+disassembles methods. -p includes private
+
+4
+00:00:34,599 --> 00:00:44,639
+You will see an operand stack and local
+variables as the abstract machine model:
+instructions push and pop values on a
+
+5
+00:00:44,759 --> 00:00:57,559
+A constant pool stores symbolic references
+— class names, method names, string
+literals — that instructions refer to by
+
+6
+00:00:57,679 --> 00:01:10,839
+Look at this java for a moment. Mentally,
+that becomes loads, a comparison,
+branches, negation, returns. One Java line
+
+7
+00:01:10,959 --> 00:01:27,039
+Assuming a one-to-one map is how people
+"optimize" the wrong thing. Source lines
+are for humans. Bytecode is what the
+
+8
+00:01:27,159 --> 00:01:38,000
+Hot methods get compiled to native code.
+Looking only at source when diagnosing a
+hot path is sometimes enough — and
+
+9
+00:01:38,119 --> 00:01:45,599
+Enhanced for-loops, try-with-resources,
+string concatenation, and enums all leave
+distinctive instruction patterns.
+
+10
+00:01:45,719 --> 00:01:59,559
+When someone asks "is this allocation
+free?" or "does this capture create an
+object?", javap is a faster truth than
+
+11
+00:01:59,679 --> 00:02:15,599
+You do not need to memorize every opcode.
+Learn to recognize invokevirtual,
+invokestatic, getfield, ifeq, new,
+
+12
+00:02:15,719 --> 00:02:28,479
+What if we optimize without looking at
+bytecode or understanding JIT? We
+rearrange source for aesthetics and call
+
+13
+00:02:28,599 --> 00:02:41,599
+Bytecode literacy is not about writing
+bytecode by hand. It is about seeing the
+program the JVM sees. Try a tiny
+
+14
+00:02:41,719 --> 00:02:51,839
+Run javap -c on both. See how modern javac
+often emits similar efficient patterns for
+simple cases — and how older intuitions
+
+15
+00:02:51,959 --> 00:03:02,639
+The point is verifying claims against
+bytecode instead of tribal memory. Opcodes
+for allocation (new, newarray) and boxing
+
+16
+00:03:02,759 --> 00:03:17,679
+If a hot method's bytecode shows repeated
+boxing, you have a lead before you open a
+profiler. Bytecode is a map; profilers are
+
+17
+00:03:17,859 --> 00:03:28,139
+Disassemble. Captures and boxing often
+disagree. Picture an argument about
+whether a lambda allocates. Disassemble
+
+18
+00:03:28,259 --> 00:03:36,979
+Sometimes you see a singleton in a static
+field; sometimes you see a new instance
+capturing locals. The bytecode settles it
+
+19
+00:03:37,099 --> 00:03:45,259
+Then remember JIT may still inline and
+elide further — another reason steady-
+state measurement sits above static
+
+20
+00:03:45,379 --> 00:04:01,780
+Hold a practical checklist: use javap when
+sugar or allocation claims disagree;
+recognize invoke/getfield/branch/new
+
+21
+00:04:01,900 --> 00:04:09,620
+Prefer evidence over lore: when a
+performance claim sounds absolute, spend
+two minutes with javap before spending two
+
+22
+00:04:09,740 --> 00:04:15,939
+The next natural split is where values
+live while those instructions run — stack
+frames versus heap objects.
