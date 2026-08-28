@@ -1,0 +1,137 @@
+1
+00:00:00,000 --> 00:00:09,240
+Your API can create orders and read users.
+Then someone asks, "Who is allowed to call
+this?" Security is not a controller if you
+
+2
+00:00:09,359 --> 00:00:22,759
+In Spring, security is a filter chain —
+requests pass through filters that
+authenticate and authorize before your
+
+3
+00:00:22,879 --> 00:00:36,239
+Never invent crypto for passwords or
+tokens when maintained libraries exist.
+Look at this java for a moment. A
+
+4
+00:00:36,359 --> 00:00:49,079
+Require authentication elsewhere. Prefer
+readable matchers over clever regex.
+Prefer least privilege defaults — deny by
+
+5
+00:00:49,200 --> 00:01:04,320
+Picture a practical breach path. The SPA
+hides admin buttons. A curious user calls
+/api/admin/refunds with a stolen session
+
+6
+00:01:04,439 --> 00:01:14,519
+Server-side authorization in the filter
+chain or method security is the real door
+lock. Disabling security "temporarily"
+
+7
+00:01:14,640 --> 00:01:20,599
+Authorize checks only on the UI is how raw
+API clients bypass your SPA's pretty
+buttons.
+
+8
+00:01:20,719 --> 00:01:32,000
+Password encoders hash credentials
+correctly — plaintext passwords are not a
+"temporary shortcut," they are a breach
+
+9
+00:01:32,120 --> 00:01:38,120
+Never roll a custom hash "for simplicity."
+Rotate and migrate encodings when
+algorithms age.
+
+10
+00:01:38,240 --> 00:01:46,400
+Never invent crypto also covers tokens and
+cookies — prefer maintained JWT libraries
+or session mechanisms your platform
+
+11
+00:01:46,520 --> 00:01:57,240
+CSRF protection matters for browser
+session cookie flows; APIs using tokens
+have a different threat model. Understand
+
+12
+00:01:57,360 --> 00:02:07,400
+Disabling security filters "so we can
+finish the demo" is how demo config
+becomes production config through a
+
+13
+00:02:07,520 --> 00:02:18,280
+ROLE_USER versus ROLE_FINANCE versus
+ROLE_ADMIN should map to real
+capabilities. Broad admin for everyone is
+
+14
+00:02:18,400 --> 00:02:25,039
+Method security annotations can complement
+the filter chain for deeper checks —
+whether this user owns this order id.
+
+15
+00:02:25,159 --> 00:02:32,479
+Filters decide whether you are
+authenticated at all; method security can
+decide whether this particular action on
+
+16
+00:02:32,599 --> 00:02:45,199
+Duplicating contradictory rules in filter
+matchers and method annotations creates
+gaps. AuthN versus AuthZ remains the
+
+17
+00:02:45,379 --> 00:02:52,139
+Keep them distinct — then mention filter
+chains and method security as enforcement
+points so the answer is operational.
+
+18
+00:02:52,259 --> 00:03:00,699
+In incident language: authentication
+failures mean we do not know who you are;
+authorization failures mean we know who
+
+19
+00:03:00,819 --> 00:03:10,859
+Mixing those in logs and HTTP statuses
+confuses users and on-call engineers.
+Build a minimal checklist before merge. Is
+
+20
+00:03:11,039 --> 00:03:24,280
+Are authorization rules enforced on the
+server for every sensitive route? Are
+passwords encoded with a modern encoder?
+
+21
+00:03:24,459 --> 00:03:32,939
+Did anyone disable security in a profile
+that could be active in production? Also
+reconnect to testing: security rules
+
+22
+00:03:33,059 --> 00:03:44,579
+Anonymous access tests and forbidden-role
+tests belong beside happy-path controller
+tests. You can wire secure APIs and still
+
+23
+00:03:44,699 --> 00:03:49,739
+The next pressure is Spring testing —
+slices before full context, and realism
+when you need it.
