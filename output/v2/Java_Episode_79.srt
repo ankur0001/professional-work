@@ -1,0 +1,124 @@
+1
+00:00:00,000 --> 00:00:10,480
+Episode Seventy-Eight admitted the network
+is unreliable. That admission is useless
+without two capabilities: you must see
+
+2
+00:00:10,599 --> 00:00:22,839
+If you cannot see it and cannot survive
+dependency failure, you are not
+production-ready — you are hosted.
+
+3
+00:00:22,960 --> 00:00:28,480
+Metrics tell aggregate truths — rates,
+saturations, latencies, error percentages.
+
+4
+00:00:28,600 --> 00:00:40,840
+Traces show a request's path across
+services so "slow checkout" becomes
+"inventory took 800ms." Emit metrics for
+
+5
+00:00:40,960 --> 00:00:51,120
+Without correlation, you have three
+museums instead of one investigation.
+Cardinality discipline matters: a metric
+
+6
+00:00:51,240 --> 00:01:01,400
+Structured logs with correlation ids beat
+novel-length unstructured dumps.
+Resilience begins with a blunt rule: set
+
+7
+00:01:01,520 --> 00:01:13,480
+An HTTP client with absurdly long waits
+piles up threads under dependency slowness
+until your own health check fails — even
+
+8
+00:01:13,600 --> 00:01:18,680
+including DNS and connection
+establishment, turn an unbounded risk into
+a bounded error.
+
+9
+00:01:18,800 --> 00:01:31,040
+Timeouts everywhere includes message
+consumers and database calls; one
+unbounded call undoes the rest. Look at
+
+10
+00:01:31,160 --> 00:01:41,520
+Blind retries amplify an outage into a
+retry storm. One hundred pods retrying ten
+times with no jitter can stampede a
+
+11
+00:01:41,640 --> 00:01:49,640
+Exponential backoff with jitter turns a
+stampede into a trickle. Retries without
+idempotency double-charge cards and
+
+12
+00:01:49,760 --> 00:02:00,600
+Circuit breakers stop calling a sick
+dependency for a cool-down so your service
+can fail fast. They need clear fallbacks:
+
+13
+00:02:00,720 --> 00:02:11,960
+Open on error rates and latency, half-open
+carefully, alert when circuits stay open.
+SLOs drive alerts. Alerting on raw CPU
+
+14
+00:02:12,080 --> 00:02:21,960
+Alert on error budget burn and latency
+percentiles that users feel. Copy-pasted
+"three nines" without traffic math creates
+
+15
+00:02:22,080 --> 00:02:36,400
+Dashboards should answer questions: is
+user success healthy, which dependency
+hurts, are we near a limit? Walk an
+
+16
+00:02:36,520 --> 00:02:46,960
+A trace confirms time in the inventory
+client. Inventory's metrics show DB pool
+exhaustion. Inventory's thread dump shows
+
+17
+00:02:47,080 --> 00:02:56,600
+Timeout on the checkout-to-inventory call
+saved checkout from total collapse, but
+the circuit breaker should have opened
+
+18
+00:02:56,719 --> 00:03:04,879
+Traces get you to the guilty service;
+thread dumps and JFR from Episode Fifty-
+Eight finish the diagnosis inside that
+
+19
+00:03:05,000 --> 00:03:18,039
+Resilience without observability is flying
+blind; observability without resilience is
+watching the crash in high definition.
+
+20
+00:03:18,159 --> 00:03:30,840
+Then mention retries with jitter plus
+idempotency, circuit breakers, and SLO-
+based alerts so the answer sounds like a
+
+21
+00:03:30,960 --> 00:03:37,520
+Next we wrap architecture talk for
+interviews: trade-offs under constraints,
+with JVM awareness in the story.
