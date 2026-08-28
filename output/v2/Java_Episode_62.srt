@@ -1,0 +1,129 @@
+1
+00:00:00,000 --> 00:00:05,200
+By now you know collectors, leaks, dumps,
+escape analysis, and memory beyond the
+heap.
+
+2
+00:00:05,320 --> 00:00:19,480
+So someone pastes a twenty-flag command
+line into your deployment manifest and
+says "this is how we tune Java." That
+
+3
+00:00:19,600 --> 00:00:32,280
+Nobody knows which ones still matter on
+the current JDK. Treat flags as
+experiments: change one variable, measure
+
+4
+00:00:32,399 --> 00:00:47,280
+Begin with intention, not folklore. Set
+the heap on purpose. A stable sizing story
+— often -Xms equal to -Xmx for server
+
+5
+00:00:47,399 --> 00:00:58,359
+Pair it with a collector you chose for
+reasons from Episode Fifty-Six, and turn
+on GC logging: Look at this bash for a
+
+6
+00:00:58,479 --> 00:01:06,079
+Without logs and metrics under realistic
+load, the rest of the flag list is costume
+jewelry. Prefer evidence over folklore.
+
+7
+00:01:06,200 --> 00:01:22,200
+If p99 fails under load, read GC pauses,
+allocation rate, heap occupancy, CPU
+steal, and queue depth. Form a hypothesis
+
+8
+00:01:22,320 --> 00:01:35,360
+Copying a blog's ZGC flags because the
+title said "ultimate performance" is
+cosplay. Make the experiment loop tactile.
+
+9
+00:01:35,480 --> 00:01:51,400
+GC log shows mixed collections with 40ms
+pauses. Hypothesis: heap too small for the
+live set plus allocation burst. Change:
+
+10
+00:01:51,520 --> 00:02:03,880
+If p99 drops and pauses calm, you learned
+something. If nothing changes, revert and
+form a new hypothesis — maybe latency is
+
+11
+00:02:04,000 --> 00:02:17,000
+Changing five flags at once teaches
+nothing either way. Document why a flag
+exists. Future you will not remember that
+
+12
+00:02:17,120 --> 00:02:27,400
+A comment in the manifest, a runbook line,
+a pull-request note — anything that ties
+flag to symptom and proof. Remove flags
+
+13
+00:02:27,520 --> 00:02:38,080
+Debug flags, ultra-verbose logging, or
+experimental options left on forever
+create overhead, noise, and false
+
+14
+00:02:38,200 --> 00:02:50,360
+GC logging and JFR configuration often
+stay because they make the next incident
+cheaper. Random micro-tuning flags must
+
+15
+00:02:50,480 --> 00:03:01,760
+A flag that helped a four-gigabyte heap
+may hurt a five-hundred-megabyte
+container. A flag that helped Java 11 may
+
+16
+00:03:01,880 --> 00:03:06,840
+A flag that reduced pauses may increase
+CPU until autoscaling costs explode.
+
+17
+00:03:06,960 --> 00:03:22,800
+Folklore has favorite spells:
+-XX:+AggressiveOpts from an ancient blog,
+huge thread stacks from a desktop recipe,
+
+18
+00:03:22,920 --> 00:03:36,840
+Each fails the documentation test: no
+symptom, no measurement, no revert plan.
+Prefer a short, owned flag list to a long,
+
+19
+00:03:36,960 --> 00:03:46,360
+The catalog is large and version-
+dependent. What transfers is discipline:
+intentional heap, visible GC behavior,
+
+20
+00:03:46,480 --> 00:03:58,160
+When someone suggests a flag, ask "what
+symptom?", "what measurement changed?",
+and "how do we know to revert?" Missing
+
+21
+00:03:58,280 --> 00:04:01,480
+We turned flags from magic words into a
+scientific habit.
+
+22
+00:04:01,600 --> 00:04:15,200
+Zoom in further: sometimes the "memory
+problem" is not GC policy but the shape of
+objects themselves — headers, padding,
