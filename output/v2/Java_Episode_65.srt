@@ -1,0 +1,153 @@
+1
+00:00:00,000 --> 00:00:07,000
+Steady-state performance has dominated our
+recent episodes: GC, JIT warmup,
+safepoints, heap shape.
+
+2
+00:00:07,120 --> 00:00:19,600
+Then you deploy to a scale-to-zero
+environment, or you restart pods on every
+deploy, or you run short-lived CLI tools
+
+3
+00:00:19,719 --> 00:00:25,960
+The question is how long from process
+start until the app can do useful work.
+Startup is a feature.
+
+4
+00:00:26,079 --> 00:00:37,359
+Teams that only optimize the warmed steady
+state discover that truth the first time
+readiness probes fail in a rolling deploy.
+
+5
+00:00:37,479 --> 00:00:46,559
+Behind it, the JVM loads classes, verifies
+bytecode, initializes classes, runs static
+initializers, and begins with a cold JIT.
+
+6
+00:00:46,679 --> 00:00:59,719
+Your framework likely scans the classpath,
+wires beans, opens connection pools, and
+warms caches you did not ask to warm at
+
+7
+00:00:59,839 --> 00:01:10,439
+A fat classpath makes that worse — every
+jar is more work before business logic
+matters. Ignoring classpath bloat while
+
+8
+00:01:10,559 --> 00:01:14,479
+Heavy work in static initializers is a
+classic self-inflicted wound.
+
+9
+00:01:14,599 --> 00:01:27,639
+A class loads because something touched
+it, its static initializer hits a database
+or builds a giant cache, and first-request
+
+10
+00:01:27,759 --> 00:01:41,679
+Lazy means "not at class init time," not
+"no concurrency story." Initialize on
+first use with clear thread safety, or on
+
+11
+00:01:41,799 --> 00:01:49,199
+Wall time to process start is not wall
+time to readiness, which is not wall time
+to stable p99 after JIT warmup.
+
+12
+00:01:49,319 --> 00:01:54,999
+A service can pass a shallow readiness
+probe while still loading classes lazily
+on the first real traffic wave.
+
+13
+00:01:55,119 --> 00:02:04,799
+Another can be "slow to start" because
+static initializers do work that should be
+a deliberate warm step with metrics.
+
+14
+00:02:04,919 --> 00:02:16,399
+The platform offers acceleration once you
+understand the cost drivers. CDS and
+AppCDS archive class metadata so
+
+15
+00:02:16,519 --> 00:02:27,759
+Ahead-of-time compilation and Graal native
+image trade some dynamic JIT flexibility
+and reflection freedom for a native binary
+
+16
+00:02:27,879 --> 00:02:40,560
+CRaC — Coordinated Restore at Checkpoint —
+aims at snapshotted restarts: warm a
+process, checkpoint, restore later into a
+
+17
+00:02:40,680 --> 00:02:51,480
+Native image constraints surprise teams
+that relied on runtime reflection
+everywhere. Checkpoint restore needs
+
+18
+00:02:51,599 --> 00:02:58,120
+Someone adds a starter for one annotation
+processor, transitive jars multiply, boot
+scanning grows.
+
+19
+00:02:58,239 --> 00:03:06,519
+Native image later looks attractive
+because startup hurt — but the cheaper
+first move may be deleting unused
+
+20
+00:03:06,639 --> 00:03:11,599
+AOT and CRaC are powerful; they are not
+substitutes for a lean boot path.
+
+21
+00:03:11,719 --> 00:03:22,159
+For serverless-style or scale-to-zero
+Java, startup becomes part of product
+latency — then CDS, native image, or
+
+22
+00:03:22,280 --> 00:03:32,840
+For a long-lived monolith that restarts
+monthly, spend energy on steady-state SLOs
+first. Fit the tool to the deployment
+
+23
+00:03:32,960 --> 00:03:44,280
+Ways to improve startup, said as an
+engineer: reduce classpath and
+initialization work first, use CDS or
+
+24
+00:03:44,400 --> 00:03:50,080
+and consider native image or
+checkpoint/restore when the deployment
+model demands fast bring-up.
+
+25
+00:03:50,200 --> 00:03:58,000
+Doing heavy work in static initializers
+and shipping enormous classpaths are the
+mistakes that make exotic tools look
+
+26
+00:03:58,120 --> 00:04:09,759
+We closed the JVM's life cycle from cold
+start through steady-state pauses. The
+remaining gap is telling that arc as one
