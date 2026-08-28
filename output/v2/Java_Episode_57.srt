@@ -1,0 +1,160 @@
+1
+00:00:00,000 --> 00:00:12,720
+In the last episode we chose collectors
+and stared at GC logs. Sometimes those
+logs look healthy — short pauses, steady
+
+2
+00:00:12,839 --> 00:00:22,759
+People say "GC is broken." More often, GC
+is doing exactly what it should: it cannot
+reclaim objects that are still reachable.
+
+3
+00:00:22,879 --> 00:00:34,359
+A classic C-style leak is "I forgot to
+free." A classic Java leak is "something
+still points at this." The object graph
+
+4
+00:00:34,479 --> 00:00:42,599
+Profilers and heap dumps exist to find
+that path. Until you see it, every theory
+about "maybe we need ZGC" is a
+
+5
+00:00:42,719 --> 00:00:56,560
+Picture an orders service that caches
+product details in a static map "for
+speed." Every SKU ever requested lands
+
+6
+00:00:56,679 --> 00:01:10,680
+GC finds the map from a static field — a
+GC root — and leaves everything alone.
+From the outside it looks like a memory
+
+7
+00:01:10,799 --> 00:01:23,239
+The fix is bounds or eviction, not a new
+collector flag. Listeners tell the same
+story differently. A domain event bus
+
+8
+00:01:23,359 --> 00:01:31,359
+The listener closes over a service that
+closes over a repository. The bus lives
+for the life of the process, so does
+
+9
+00:01:31,480 --> 00:01:38,520
+ThreadLocal misuse on pools is another
+classic: request-scoped state stays on a
+worker thread until something clears it.
+
+10
+00:01:38,640 --> 00:01:48,560
+The next request may see stale data; the
+heap may retain graphs that should have
+died with the request. Pooled threads are
+
+11
+00:01:48,680 --> 00:02:02,760
+When the heap is climbing, guessing which
+pattern is guilty wastes hours. Capture
+evidence under load — while the problem is
+
+12
+00:02:02,880 --> 00:02:15,120
+Open it in a profiler and resist staring
+only at total bytes. Look for dominator
+trees. A dominator owns a large retained
+
+13
+00:02:15,240 --> 00:02:26,240
+The tree answers what is keeping this
+memory alive. Often the answer is a static
+collection, a cache, a registry, a
+
+14
+00:02:26,360 --> 00:02:37,960
+Paths to GC roots turn a vague "memory
+leak" into a sentence you can paste into a
+ticket. Walk one concrete example. The
+
+15
+00:02:38,080 --> 00:02:54,160
+Expand it: ProductCache.CACHE, string
+keys, fat DTOs. Now you know the
+mechanism. The fix is a size limit, a TTL,
+
+16
+00:02:54,280 --> 00:03:06,120
+Profiling without a willingness to change
+retention policy is sightseeing. Before
+you open the dump, notice what metrics
+
+17
+00:03:06,240 --> 00:03:18,200
+Allocation rate may look normal; pause
+times may look fine. That combination is
+retention, not a collector that forgot how
+
+18
+00:03:18,320 --> 00:03:28,360
+Watch live set size and heap after
+collection. Another habit: compare two
+dumps — early climb and near danger.
+
+19
+00:03:28,480 --> 00:03:39,000
+A cache that was always large is a design
+choice; one that grew tenfold since
+morning is an incident. Classloader leaks
+
+20
+00:03:39,120 --> 00:03:50,640
+If something in an old loader is still
+referenced from a longer-lived loader, the
+entire loader — classes and static fields
+
+21
+00:03:50,759 --> 00:03:53,519
+The real bug is a reference from the wrong
+lifetime.
+
+22
+00:03:53,639 --> 00:04:00,639
+War-room misunderstandings: guessing
+instead of dumping; fixating on GC
+settings when the leak is the reference
+
+23
+00:04:00,759 --> 00:04:07,599
+taking one dump after restart when the
+live set has already collapsed — you
+needed the dump under load, at the ugly
+
+24
+00:04:07,719 --> 00:04:18,120
+If someone asks what a classic Java leak
+looks like, answer with mechanisms:
+unbounded caches, static collections,
+
+25
+00:04:18,240 --> 00:04:28,920
+Then add how you would prove it — heap
+dump under load, dominator tree, retained
+size, path to GC roots. That second half
+
+26
+00:04:29,040 --> 00:04:41,400
+We started from a climbing heap that GC
+could not save and arrived at reachability
+as the real subject. But production pain
+
+27
+00:04:41,520 --> 00:04:50,120
+Then you need one incident playbook —
+jcmd, JFR, thread dumps, and profilers —
+before anyone reaches for restart
