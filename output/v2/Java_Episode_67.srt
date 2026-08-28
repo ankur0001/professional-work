@@ -1,0 +1,147 @@
+1
+00:00:00,000 --> 00:00:07,679
+The JVM arc taught you what happens under
+a running program. Now shift the camera.
+Two teammates argue about a redesign.
+
+2
+00:00:07,799 --> 00:00:19,679
+One says, "We need a Strategy here." The
+other says, "That is just an interface." A
+third says, "Patterns are outdated — use
+
+3
+00:00:19,800 --> 00:00:31,520
+Design patterns are shared vocabulary for
+recurring design problems — context,
+forces, and trade-offs — not stamps you
+
+4
+00:00:31,640 --> 00:00:45,079
+A pattern is useful when the problem
+actually recurs — when naming it saves
+meeting time. If the problem appears once,
+
+5
+00:00:45,200 --> 00:00:55,280
+Start from a situation. You are building
+pricing rules. Today there is one rule.
+Tomorrow marketing wants seasonal,
+
+6
+00:00:55,400 --> 00:01:01,400
+Someone proposes a Strategy hierarchy;
+someone else a switch; someone else a
+rules engine.
+
+7
+00:01:01,520 --> 00:01:08,240
+The conversation is not "which buzzword?"
+It is "what problem are we solving, what
+trade-offs do we accept,
+
+8
+00:01:08,359 --> 00:01:16,920
+and will the next person recognize this
+shape?" Context plus problem plus trade-
+offs — that is how catalogs like Gang of
+
+9
+00:01:17,039 --> 00:01:27,239
+Named experience, not holy scripture. Hold
+a second situation beside pricing. You
+inherit a payment integration duplicated
+
+10
+00:01:27,359 --> 00:01:36,959
+Someone says "Adapter." Someone says
+"Facade." Someone says "just copy the best
+one into a util." Vocabulary helps only if
+
+11
+00:01:37,079 --> 00:01:45,239
+we need one curated door over a messy
+subsystem — facade energy — or we need to
+translate a foreign interface into our
+
+12
+00:01:45,359 --> 00:01:56,479
+Without the problem statement, pattern
+names become team theater. Language
+features can replace some classical
+
+13
+00:01:56,599 --> 00:02:08,279
+Lambdas shrink some Strategy boilerplate.
+Records shrink tiny data carriers. Modules
+and DI containers change how factories
+
+14
+00:02:08,399 --> 00:02:22,639
+Catalogs evolve; naming recurring
+structures still helps. Before lambdas,
+Strategy often meant a named class per
+
+15
+00:02:22,759 --> 00:02:30,759
+"Patterns are outdated" is too blunt;
+"always use the GoF book literally" is too
+blunt the other way. Read patterns as
+
+16
+00:02:30,879 --> 00:02:45,960
+You reach for a wrench when a bolt needs
+turning — not empty the drawer onto every
+repair. Factory methods help when creation
+
+17
+00:02:46,079 --> 00:02:57,959
+Observers help when many listeners react
+to an event. Force a pattern where a
+straightforward class would do and you pay
+
+18
+00:02:58,079 --> 00:03:05,479
+Someone labels every interface a Strategy.
+Someone introduces an AbstractFactory for
+two concrete types that will never
+
+19
+00:03:05,599 --> 00:03:18,680
+The cure is the same discipline we used
+for JVM flags: name the symptom, name the
+trade-off, then choose the tool. Teach a
+
+20
+00:03:18,859 --> 00:03:29,619
+What simpler language feature did we
+consider first? If those answers are thin,
+keep the clear code and drop the pattern
+
+21
+00:03:29,739 --> 00:03:39,619
+"This is a facade over the payment SDK"
+communicates intent faster than a five-
+minute tour — if everyone shares the
+
+22
+00:03:39,739 --> 00:03:49,419
+In interviews, when asked whether patterns
+still matter, answer with team compression
+and evolving catalogs: one example where a
+
+23
+00:03:49,539 --> 00:03:53,699
+and one where naming Strategy or Decorator
+still clarifies a review.
+
+24
+00:03:53,819 --> 00:03:57,579
+Today we demystified patterns as
+vocabulary under constraints.
+
+25
+00:03:57,699 --> 00:04:09,539
+Next we get concrete with creational
+patterns — how objects come to life, where
+singletons go wrong, when builders beat
