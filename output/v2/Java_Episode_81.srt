@@ -1,0 +1,111 @@
+1
+00:00:00,000 --> 00:00:15,439
+A product page is hot. The database is
+not. Someone says "add a cache." Caches
+buy latency with correctness risk — and
+
+2
+00:00:15,559 --> 00:00:27,679
+Local caches live in-process — fast,
+simple, per instance. Distributed caches
+shared across instances avoid each node
+
+3
+00:00:27,799 --> 00:00:36,919
+A local Caffeine cache may be enough for
+read-mostly data with short TTL on each
+pod. A Redis-style cache may be needed
+
+4
+00:00:37,039 --> 00:00:48,199
+Local caches go stale independently after
+a write to another instance unless you
+broadcast invalidations — acceptable for
+
+5
+00:00:48,319 --> 00:00:58,719
+Distributed caches add a dependency that
+can be down; your resilience story must
+include cache-miss fallback without
+
+6
+00:00:58,839 --> 00:01:10,279
+Size bounds and TTL or TTI eviction keep
+the cache from becoming Episode Fifty-
+Seven's unbounded map. Soft references
+
+7
+00:01:10,399 --> 00:01:24,599
+Cache-aside means the app checks the
+cache, loads on miss, then populates.
+Read-through means the cache library loads
+
+8
+00:01:24,719 --> 00:01:34,559
+Invalidation is the boss fight because
+freshness and hit rate pull opposite
+directions. Short TTL increases misses;
+
+9
+00:01:34,679 --> 00:01:42,959
+Delete-on-write keeps freshness for that
+key but needs every write path to
+cooperate — including admin tools and
+
+10
+00:01:43,079 --> 00:01:59,279
+Before shipping, write the invalidation
+sentence in the PR: "On product update, we
+delete key product:{id}; TTL is five
+
+11
+00:01:59,399 --> 00:02:01,119
+the cache is not designed yet.
+
+12
+00:02:01,239 --> 00:02:15,799
+Stampede control matters when a popular
+key expires and a hundred requests miss
+together. Single-flight loading — like
+
+13
+00:02:15,919 --> 00:02:21,359
+Measure hit rate and staleness together. A
+high hit rate serving wrong data is not a
+win.
+
+14
+00:02:21,479 --> 00:02:31,319
+If hit rate is high and origin load is
+still high, dig into miss traces before
+growing the cache cluster — you may be
+
+15
+00:02:31,439 --> 00:02:41,599
+Caching non-idempotent results blindly is
+how duplicates appear. Caching a POST
+response that creates a seat reservation
+
+16
+00:02:41,719 --> 00:02:54,199
+Separate read models you cache from write
+side effects you do not. Cache keys should
+follow resource identifiers clients
+
+17
+00:02:54,319 --> 00:03:04,079
+Personalized responses demand extra care
+for privacy and correctness. Hardest cache
+problem? Invalidation and stampede under
+
+18
+00:03:04,199 --> 00:03:16,319
+Say that, then mention bounds, TTL, and
+explicit delete-on-write as the ordinary
+tools that prevent heroic outages. Caches
+
+19
+00:03:16,439 --> 00:03:27,280
+APIs that sit in front of caches and
+databases need long-term contracts —
+idempotency, errors, and compatibility —
