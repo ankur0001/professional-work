@@ -1,0 +1,141 @@
+1
+00:00:00,000 --> 00:00:09,279
+Architecture interviews do not reward
+buzzword bingo. They reward trade-off
+stories under constraints. Someone asks
+
+2
+00:00:09,399 --> 00:00:15,279
+A weak answer sprays Kafka, Kubernetes,
+CQRS, and mesh until the whiteboard fills.
+
+3
+00:00:15,399 --> 00:00:28,599
+A strong answer clarifies requirements and
+SLOs first — write throughput, read
+latency, consistency needs, team size,
+
+4
+00:00:28,719 --> 00:00:38,759
+Look at this text for a moment. Walk that
+scaffold as speech. Requirements and SLOs:
+what must never be lost, what may be
+
+5
+00:00:38,879 --> 00:00:49,359
+Ask questions — interviewers reward
+candidates who surface constraints instead
+of inventing infinity. API and data:
+
+6
+00:00:49,479 --> 00:01:03,159
+Runtime as a Java engineer: JVM heap
+sizing, GC pause budgets, thread models,
+cold start if scale-to-zero. Failure
+
+7
+00:01:03,279 --> 00:01:13,399
+Observability: metrics, traces, alerts on
+SLOs. Evolve complexity: start modular,
+extract a service when a boundary earns
+
+8
+00:01:13,519 --> 00:01:25,879
+Stage deliberately — single region before
+multi-region, monolith modules before
+services, cache before CQRS — and name the
+
+9
+00:01:26,000 --> 00:01:39,319
+"Design a URL shortener" clarifies
+read/write ratio, redirect latency SLO,
+consistency on create, and analytics
+
+10
+00:01:39,439 --> 00:01:53,920
+Maybe writes append events for analytics.
+JVM notes: heap for cache, GC pause budget
+versus redirect SLO, connection pools to
+
+11
+00:01:54,039 --> 00:02:06,039
+Observability: redirect latency histogram,
+error rate, dependency health. That answer
+is coherent without naming twelve
+
+12
+00:02:06,159 --> 00:02:18,439
+"Clients hit an API gateway; the orders
+service owns the orders database;
+inventory is a separate service reached
+
+13
+00:02:18,560 --> 00:02:24,680
+gateway timeout policy, reservation
+idempotency, event outbox, read-your-
+writes needs.
+
+14
+00:02:24,800 --> 00:02:33,040
+Each pressure-test adds a box or arrow you
+missed. Architecture is iterative speech,
+not a single perfect diagram.
+
+15
+00:02:33,160 --> 00:02:46,200
+Bring JVM awareness as a differentiator:
+you know that "just add instances" still
+meets GC, metaspace, and thread limits per
+
+16
+00:02:46,320 --> 00:02:57,800
+If you propose events, mention at-least-
+once and idempotency. Ignoring ops — how
+it deploys, migrates, rolls back, and
+
+17
+00:02:57,920 --> 00:03:07,720
+A design that needs a two-hour migration
+with no expand/contract plan is not a
+senior design. Tie this wrap to the JVM
+
+18
+00:03:07,840 --> 00:03:13,879
+Same scaffold spirit: define, mechanism,
+failure mode, diagnose — now scaled to
+systems.
+
+19
+00:03:14,000 --> 00:03:22,479
+For "why not microservices here?" define
+the trade-off, explain network failure
+modes, name the small-team failure mode of
+
+20
+00:03:22,599 --> 00:03:26,560
+and say how you would revisit with metrics
+on deploy friction and scaling pain.
+
+21
+00:03:26,680 --> 00:03:37,640
+Buzzword bingo fails because follow-ups
+expose missing mechanisms. Trade-off
+stories survive follow-ups because they
+
+22
+00:03:37,819 --> 00:03:47,739
+Requirements, design, JVM and runtime
+concerns, failure modes, observability —
+practice until the order is muscle memory,
+
+23
+00:03:47,859 --> 00:03:56,939
+Admit trade-offs: microservices versus
+modular monolith, consistency versus
+availability, freshness versus cache hit
+
+24
+00:03:57,059 --> 00:04:10,899
+This wrap sets you up for deeper
+production topics that still show up in
+senior conversations: caching, API
