@@ -1,0 +1,146 @@
+1
+00:00:00,000 --> 00:00:09,240
+GC logs talk about pauses. Product
+dashboards talk about latency spikes.
+Sometimes those align cleanly with a
+
+2
+00:00:09,359 --> 00:00:16,519
+Sometimes the pause reason is broader: the
+JVM needed a global rendezvous, and
+threads took a while to arrive.
+
+3
+00:00:16,640 --> 00:00:24,120
+That rendezvous is a safepoint — a state
+where the JVM can consistently inspect or
+mutate thread state for VM operations.
+
+4
+00:00:24,240 --> 00:00:32,719
+If you only ever say "GC pause," you will
+mis-attribute nights when the collector
+was waiting on threads as much as threads
+
+5
+00:00:32,840 --> 00:00:37,040
+Think of a meeting that cannot start until
+every required person is in the room.
+
+6
+00:00:37,160 --> 00:00:46,480
+Certain GC phases and other VM operations
+need threads in a known state — not
+halfway through a mutation the runtime
+
+7
+00:00:46,600 --> 00:00:59,160
+Threads reach safepoints at well-defined
+opportunities the JIT and interpreter
+cooperate with. The operation runs.
+
+8
+00:00:59,280 --> 00:01:10,719
+When time-to-safepoint is long, request
+latency stretches in ways that feel
+mysterious if your only model is "the GC
+
+9
+00:01:10,840 --> 00:01:17,560
+Historically, tight loops could delay
+safepoint polling — counted loops that
+rarely checked whether the JVM wanted to
+
+10
+00:01:17,680 --> 00:01:27,480
+Modern HotSpot has improved many of those
+cases, but the conceptual risk remains:
+code that never reaches a safepoint check
+
+11
+00:01:27,600 --> 00:01:39,240
+Exotic spin loops without checks are not
+just CPU hogs; they can interfere with VM
+operations. Spinning forever without
+
+12
+00:01:39,360 --> 00:01:51,520
+Connect this to collector choices from
+Episode Fifty-Six. Low-pause collectors
+try to reduce stop-the-world work, but
+
+13
+00:01:51,640 --> 00:02:05,040
+If your latency budget assumes "ZGC means
+no pauses ever," you will be surprised by
+the pauses that remain and by non-GC
+
+14
+00:02:05,160 --> 00:02:12,120
+JFR and related diagnostics can show pause
+reasons and safepoint-related events. That
+matters for latency budgets.
+
+15
+00:02:12,240 --> 00:02:22,120
+If your SLO is "p99 under fifty
+milliseconds," you must account for
+safepoint pauses and time-to-safepoint,
+
+16
+00:02:22,240 --> 00:02:39,040
+A practical diagnostic fork: latency
+spike, GC pause metric flat, CPU not
+saturated. JFR shows prolonged time-to-
+
+17
+00:02:39,160 --> 00:02:50,680
+Without the safepoint concept, that
+incident gets filed under "random GC" and
+never solved. The diagnostic tools from
+
+18
+00:02:50,800 --> 00:02:57,680
+They are how the VM keeps a consistent
+world while relocating objects or
+performing operations that cannot tolerate
+
+19
+00:02:57,800 --> 00:03:07,680
+The engineering job is to keep time-to-
+safepoint short enough for your SLOs and
+to measure when it is not. Do not panic-
+
+20
+00:03:07,800 --> 00:03:20,640
+Do treat unexplained latency with a
+broader lens than "GC bad." If asked what
+a safepoint is, say: a state where the JVM
+
+21
+00:03:20,760 --> 00:03:29,440
+Mention that time-to-safepoint matters for
+latency and that not every pause story is
+"the collector was slow at reclaiming."
+
+22
+00:03:29,560 --> 00:03:34,840
+a thread that rarely polls can stretch the
+rendezvous and look like a GC incident
+from the outside.
+
+23
+00:03:34,960 --> 00:03:46,960
+Low latency means budgeting for
+coordination, choosing collectors and heap
+sizes that keep stop-the-world work small,
+
+24
+00:03:47,080 --> 00:03:49,440
+not the absence of safepoints.
+
+25
+00:03:49,560 --> 00:04:02,360
+We added the coordination layer behind
+many pauses. Next we go to the beginning
+of a process's life: what happens between
