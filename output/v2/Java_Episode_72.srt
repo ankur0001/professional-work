@@ -1,0 +1,107 @@
+1
+00:00:00,000 --> 00:00:12,839
+Episode Seventy-One said Spring wires
+beans so your code can depend on
+interfaces. Today we make that wiring
+
+2
+00:00:12,959 --> 00:00:26,159
+Dependency injection is how the inverted
+control delivers those collaborators. The
+style you choose changes testability,
+
+3
+00:00:26,279 --> 00:00:35,719
+Constructor injection preferred. Required
+dependencies are explicit, final, and
+impossible to forget if you construct the
+
+4
+00:00:35,839 --> 00:00:44,559
+new OrderService(fakeRepo) is a complete
+story — no Spring container required. That
+is why testability skyrockets when
+
+5
+00:00:44,679 --> 00:00:58,079
+Field injection quietly destroys that
+path: you need reflection or a container
+to populate private fields. The annotation
+
+6
+00:00:58,199 --> 00:01:08,919
+Setters can work for optional
+dependencies; required ones belong in the
+constructor. Compare three constructors
+
+7
+00:01:09,039 --> 00:01:17,839
+Field injection: the object looks ready in
+source but is not constructible in tests.
+Constructor with required deps: the object
+
+8
+00:01:17,959 --> 00:01:31,359
+Frameworks that encourage unfinished
+objects make illegal states representable;
+constructor injection fights that. IoC
+
+9
+00:01:31,479 --> 00:01:42,399
+IoC with injection pushes dependencies
+inward from the outside. Service locator
+pulls them from a deep hole mid-method.
+
+10
+00:01:42,519 --> 00:01:52,879
+In legacy migrations you may find getBean
+calls mid-method — treat them as debt and
+replace with injection at the boundary
+
+11
+00:01:52,999 --> 00:02:05,639
+A singleton-scoped bean is one shared
+instance — fine for stateless services,
+dangerous if you stash request state in
+
+12
+00:02:05,759 --> 00:02:20,639
+Prefer stateless services; pass request
+data as method arguments. Mixing scopes
+carelessly — injecting a narrower-scoped
+
+13
+00:02:20,759 --> 00:02:30,799
+OrderService needs InventoryService;
+InventoryService needs OrderService to
+reserve stock. Frameworks may inject
+
+14
+00:02:30,919 --> 00:02:43,039
+Sometimes the fix is a third type that
+owns the interaction, sometimes an event,
+sometimes splitting a god service. Treat
+
+15
+00:02:43,159 --> 00:02:57,560
+Required collaborators: constructor
+parameters, final fields. Optional
+collaborators: optional parameters or
+
+16
+00:02:57,740 --> 00:03:05,980
+Required dependencies are explicit, final,
+and easy to unit test — then mention
+scopes and circular dependencies as the
+
+17
+00:03:06,100 --> 00:03:12,180
+Once wiring is clear, teams still drown in
+configuration for HTTP servers, JSON,
+DataSource, and logging.
+
+18
+00:03:12,300 --> 00:03:21,939
+Spring Boot exists to make the happy path
+executable with opinions and auto-
+configuration — but what does that
