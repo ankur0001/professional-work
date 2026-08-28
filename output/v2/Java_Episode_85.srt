@@ -1,0 +1,140 @@
+1
+00:00:00,000 --> 00:00:14,400
+We began with why Java exists and how a
+hello world runs on a JVM. We walked
+language, APIs, concurrency, the JVM's
+
+2
+00:00:14,519 --> 00:00:26,600
+The last question is not another feature.
+It is whether you would sleep the night
+after shipping. Production-ready means
+
+3
+00:00:26,719 --> 00:00:28,559
+Look at this text for a moment.
+
+4
+00:00:28,679 --> 00:00:39,439
+Observable means you can explain a bad
+minute with metrics, traces, and logs —
+and that the JVM toolkit from earlier
+
+5
+00:00:39,560 --> 00:00:45,880
+Recoverable means timeouts, retries done
+safely, circuit breakers, and a rollback
+you have rehearsed.
+
+6
+00:00:46,000 --> 00:00:55,519
+Capacity-tested means load tests that look
+like production and SLOs you actually
+measure — you know the RPS at which p99
+
+7
+00:00:55,640 --> 00:01:10,239
+Owned means names on runbooks and pages,
+not a distribution list nobody reads. A
+perfect dashboard with no human who can
+
+8
+00:01:10,359 --> 00:01:22,879
+SLOs and alerts come first. What does
+healthy mean in user terms, and who gets
+paged when error budgets burn? Write
+
+9
+00:01:23,000 --> 00:01:35,159
+Review noisy alerts like flaky tests — fix
+or delete. Dashboards that answer
+questions beat vanity charts: is success
+
+10
+00:01:35,340 --> 00:01:45,700
+Three panels may be enough for a small
+service; more panels can wait until a
+question appears that they answer.
+
+11
+00:01:45,879 --> 00:01:55,280
+Include database migrations —
+expand/contract so rollback does not
+require reverse mythology. Feature flags
+
+12
+00:01:55,399 --> 00:02:08,399
+Shipping without rollback turns every
+deploy into a one-way door. Prefer doors
+with handles on both sides. Dependency
+
+13
+00:02:08,519 --> 00:02:17,759
+Every added client is an added way to die.
+Those limits are part of the API of a good
+citizen service, not optional polish. Walk
+
+14
+00:02:17,879 --> 00:02:31,560
+Before traffic: SLO written, dashboard
+live, alert routed, runbook linked,
+rollback tested in staging, load test
+
+15
+00:02:31,680 --> 00:02:47,200
+After traffic: watch error budgets for the
+first hours, keep a human near the
+rollback button, compare JVM and HTTP
+
+16
+00:02:47,319 --> 00:02:57,519
+is a management defect as much as an
+engineering one. Rotate ownership,
+compensate it, train it. Production
+
+17
+00:02:57,639 --> 00:03:03,639
+The series taught mechanisms; this
+capstone insists on people and practice
+around those mechanisms.
+
+18
+00:03:03,759 --> 00:03:15,039
+When a shiny new platform claims to make
+you production-ready automatically, ask it
+those four questions — observable,
+
+19
+00:03:15,159 --> 00:03:27,759
+This series does not end because Java
+ends. It ends because you now have a chain
+of thought: situation, problem, mechanism,
+
+20
+00:03:27,879 --> 00:03:38,759
+We started from situations — portability
+pain, leaking references, cargo-cult
+flags, double charges on retry — and let
+
+21
+00:03:38,879 --> 00:03:50,439
+Carry that method into frameworks we never
+named and into systems you will invent.
+The final test remains: if you remove the
+
+22
+00:03:50,620 --> 00:03:58,180
+If yes, you learned the real curriculum.
+There is no Episode Eighty-Six bridge.
+Your bridge is the next production system
+
+23
+00:03:58,300 --> 00:04:08,900
+Take the chain of thought with you —
+situation, problem, question, mechanism,
+evidence, trade-off — and the Java Story
+
+24
+00:04:09,020 --> 00:04:12,300
+Welcome to building and operating Java
+systems with eyes open.
