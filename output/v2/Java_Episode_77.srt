@@ -1,0 +1,119 @@
+1
+00:00:00,000 --> 00:00:10,359
+You have Boot, MVC, Data, and Security in
+play. A change breaks something subtle.
+The practical question is how to test
+
+2
+00:00:10,479 --> 00:00:23,919
+Tests should be fast where possible —
+slices before full context — and realistic
+where reality is the point. Constructor-
+
+3
+00:00:24,039 --> 00:00:35,000
+When you need MVC wiring, @WebMvcTest
+loads a web slice: Look at this java for a
+moment. MockMvc exercises HTTP mappings
+
+4
+00:00:35,119 --> 00:00:45,399
+Assertions should read like a
+specification: expect status, expect JSON
+path, expect a header. A test that only
+
+5
+00:00:45,519 --> 00:00:55,559
+@DataJpaTest focuses on persistence slices
+— flush and clear the persistence context
+between act and assert so you are not
+
+6
+00:00:55,679 --> 00:01:09,479
+@SpringBootTest boots a fuller context —
+use it when you truly need that graph, not
+as a default for every class. Choose the
+
+7
+00:01:09,599 --> 00:01:22,119
+Controller routing and validation:
+@WebMvcTest with MockMvc and mocked
+collaborators. Repository queries against
+
+8
+00:01:22,239 --> 00:01:34,719
+Security filter behavior: dedicated
+security tests — anonymous access and
+forbidden-role cases beside happy paths.
+
+9
+00:01:34,839 --> 00:01:44,599
+When @SpringBootTest is a habit, suites
+rot. Prefer slices for speed is not anti-
+integration; it is triage. Testcontainers
+
+10
+00:01:44,719 --> 00:01:58,239
+Use them where contract with
+infrastructure matters — JSONB queries,
+lock behavior, Kafka consumer offsets. Do
+
+11
+00:01:58,359 --> 00:02:09,639
+If tests depend on wall-clock time, inject
+a clock. If tests depend on row order
+without ORDER BY, fix the query or the
+
+12
+00:02:09,759 --> 00:02:24,120
+Deterministic data — fixed clocks,
+explicit fixtures, no order-dependent
+tests — keeps CI green. Assert failures,
+
+13
+00:02:24,239 --> 00:02:32,239
+Spring's test support makes the happy path
+easy; professionalism lives in the
+negative paths. Slice tests also document
+
+14
+00:02:32,359 --> 00:02:44,000
+If you cannot @WebMvcTest a controller
+without pulling the entire JPA world, the
+controller may be doing too much. Painful
+
+15
+00:02:44,119 --> 00:02:56,679
+Listen before you force a full
+@SpringBootTest to silence the pain. Close
+with a team policy you can actually run.
+
+16
+00:02:56,799 --> 00:03:06,599
+Every controller gets a web slice test for
+routing, validation, and error mapping.
+Critical repository queries get a
+
+17
+00:03:06,719 --> 00:03:23,439
+A small set of @SpringBootTest scenarios
+cover security wiring and main happy
+paths. Failures are asserted. Time is
+
+18
+00:03:23,559 --> 00:03:35,639
+When @SpringBootTest? When you truly need
+the full context; prefer slices for speed.
+Then mention Testcontainers for the
+
+19
+00:03:35,759 --> 00:03:47,519
+If a suite cannot fail for the right
+reason, it cannot protect production. This
+closes the Spring core arc: container,
+
+20
+00:03:47,639 --> 00:03:54,119
+Next we zoom out to systems of services —
+where network failure becomes a design
+input, not an exception.
