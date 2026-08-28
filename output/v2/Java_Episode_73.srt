@@ -1,0 +1,136 @@
+1
+00:00:00,000 --> 00:00:05,759
+You understand DI. You can wire a service
+and a repository by hand in a
+configuration class.
+
+2
+00:00:05,879 --> 00:00:17,480
+Then you spend a day configuring an
+embedded server, JSON converters, a
+DataSource, logging levels, and health
+
+3
+00:00:17,599 --> 00:00:27,039
+Spring Boot makes the happy path
+executable: auto-configuration, starters,
+and opinions so you ship with less
+
+4
+00:00:27,159 --> 00:00:39,640
+@SpringBootApplication bundles common
+setup: component scanning, auto-
+configuration enablement, and
+
+5
+00:00:39,759 --> 00:00:50,479
+Starters are dependency bill-of-materials
+flavored for jobs — web, data JPA,
+security — so you pull a coherent set of
+
+6
+00:00:50,599 --> 00:01:03,279
+Each starter is a capability decision, not
+a badge collection. Prefer a thin
+classpath for faster startup — Episode
+
+7
+00:01:03,399 --> 00:01:16,039
+You add spring-boot-starter-web, write a
+controller, run the main class, hit
+localhost:8080. Boot configured a server
+
+8
+00:01:16,159 --> 00:01:28,920
+You add Actuator, hit /actuator/health,
+and readiness becomes visible to an
+orchestrator. When you need a custom
+
+9
+00:01:29,039 --> 00:01:41,359
+Auto-configuration is classpath-
+conditioned opinion. If Tomcat is present
+and you have not defined a conflicting
+
+10
+00:01:41,479 --> 00:01:52,799
+Read the auto-config report when something
+surprises you — what kicked in and what
+backed off. Blind acceptance is how a test
+
+11
+00:01:52,919 --> 00:02:02,599
+Override intentionally with a custom @Bean
+when the default does not fit, and
+document why — including exclusions so the
+
+12
+00:02:02,719 --> 00:02:15,239
+application.yaml needs structure: shared
+defaults, profile overlays, secrets kept
+out of git. A giant flat file with every
+
+13
+00:02:15,359 --> 00:02:23,159
+Walk a misconfiguration: JDBC URL in the
+wrong profile, Boot auto-configures a pool
+in prod against an empty default.
+
+14
+00:02:23,279 --> 00:02:34,599
+Profile-specific configuration and fail-
+fast validation of required properties
+turn Boot from cozy to safe. Actuator
+
+15
+00:02:34,719 --> 00:02:50,639
+Lock it down in production — expose health
+for the platform, protect more sensitive
+endpoints. "No Actuator" and "Actuator
+
+16
+00:02:50,759 --> 00:03:04,999
+You still need JFR and dumps for deep
+incidents, but Actuator is how the
+platform notices you are sick before
+
+17
+00:03:05,119 --> 00:03:16,919
+The humility line follows: auto-config is
+classpath-driven; add a jar and behavior
+may change. What it does not add is
+
+18
+00:03:17,039 --> 00:03:27,479
+A team needing an internal API by Friday
+picks web and validation starters, writes
+controllers with constructor injection,
+
+19
+00:03:27,599 --> 00:03:33,999
+and exposes a health endpoint — opinions
+removed undecidable trivia so hours go to
+domain rules.
+
+20
+00:03:34,119 --> 00:03:37,719
+That Friday story only works if the team
+still understands DI underneath.
+
+21
+00:03:37,839 --> 00:03:49,039
+A practical Boot day ends with: main class
+runs, one controller answers, config
+externalized, health endpoint protected
+
+22
+00:03:49,159 --> 00:03:57,199
+Then you are ready to deepen MVC rather
+than collect more starters. Boot is the
+executable face of Spring for most modern
+
+23
+00:03:57,319 --> 00:04:10,359
+Next we aim that executable app at HTTP:
+MVC, REST controllers, validation, and
+status codes — where the wrong return type
