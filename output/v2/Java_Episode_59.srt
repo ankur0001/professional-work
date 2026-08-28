@@ -1,0 +1,164 @@
+1
+00:00:00,000 --> 00:00:09,560
+We have been talking about heaps,
+collectors, and dumps as if every new in
+source becomes a heap object GC must
+
+2
+00:00:09,679 --> 00:00:22,240
+After the JIT warms up, the runtime may
+prove that some objects never escape the
+method that created them. If nothing
+
+3
+00:00:22,359 --> 00:00:35,719
+That is escape analysis — one reason
+microbenchmarks lie, and why "I allocated
+less in source" does not always match
+
+4
+00:00:35,839 --> 00:00:38,479
+In source, you clearly constructed a
+Point.
+
+5
+00:00:38,599 --> 00:00:50,959
+In a hot method, after inlining and escape
+analysis, the JIT may scalar-replace it:
+keep 1 and 2 in registers or stack slots,
+
+6
+00:00:51,079 --> 00:01:04,119
+From the programmer's view there was an
+object. From the machine's view there may
+only have been values. If an allocation
+
+7
+00:01:04,239 --> 00:01:05,799
+What does "escape" mean?
+
+8
+00:01:05,979 --> 00:01:17,339
+If the object is returned to an unknown
+caller, stored in a field, placed into a
+collection that outlives the method,
+
+9
+00:01:17,459 --> 00:01:27,219
+If it stays local and the JIT can see all
+uses, it may not. Non-escaping objects
+enable scalar replacement — breaking an
+
+10
+00:01:27,339 --> 00:01:41,259
+Sometimes more: if you synchronize on an
+object the JIT proves is thread-local and
+never escapes, lock elision becomes
+
+11
+00:01:41,379 --> 00:01:52,899
+That is not a license to sprinkle
+synchronized blocks randomly. It explains
+why some synchronized local objects do not
+
+12
+00:01:53,019 --> 00:02:04,739
+Local carrier that never leaves the method
+— scalar replacement may apply. Store p
+into a list that outlives the method — it
+
+13
+00:02:04,859 --> 00:02:11,460
+Pass p into a method the JIT cannot inline
+or analyze fully — escape may be assumed
+conservatively.
+
+14
+00:02:11,580 --> 00:02:21,580
+The keyword is not "never allocate." It is
+"allocate when the object must be visible
+as an object." This is exciting in
+
+15
+00:02:21,700 --> 00:02:34,060
+Do not rewrite clear code into contortions
+because you imagine every new is
+expensive. Readability still wins off the
+
+16
+00:02:34,180 --> 00:02:43,060
+Do not trust a tiny microbenchmark without
+JMH and a warmup story that matches
+production. Escape analysis depends on
+
+17
+00:02:43,180 --> 00:02:52,580
+A cold microbench can miss the
+optimization or panic about allocations
+that disappear in the real service.
+
+18
+00:02:52,700 --> 00:03:02,460
+A developer deletes a temporary object in
+a hot loop and declares victory. Sometimes
+profiles improve. Sometimes nothing
+
+19
+00:03:02,580 --> 00:03:13,180
+Sometimes things get worse because the
+"optimization" blocked inlining. Escape
+analysis does not forbid caring about
+
+20
+00:03:13,300 --> 00:03:27,860
+Lock elision deserves one grounded
+picture. You synchronize on a freshly
+created local lock object "to be safe." No
+
+21
+00:03:27,980 --> 00:03:37,940
+The review should still ask why the lock
+exists for readers — but the performance
+conversation should not assume contention
+
+22
+00:03:38,120 --> 00:03:47,120
+When allocation profiles under real load
+show pressure. When synchronized blocks on
+obviously local objects make you wonder
+
+23
+00:03:47,240 --> 00:03:54,120
+When someone claims "Java always allocates
+this" as a reason to rewrite an API into
+primitive soup before measuring.
+
+24
+00:03:54,240 --> 00:04:01,879
+Measure with real workloads: JFR
+allocation samples and async-profiler show
+what survived into the heap, not what your
+
+25
+00:04:02,000 --> 00:04:14,280
+If asked what escape analysis is, say: the
+JIT analyzes whether an object escapes a
+method or thread; if it does not,
+
+26
+00:04:14,400 --> 00:04:21,199
+Then add humility: do not micro-optimize
+assuming every new escapes, and do not
+rewrite clear code for imaginary
+
+27
+00:04:21,319 --> 00:04:30,000
+Today's lesson connects the JIT back to
+the heap: not every object you construct
+becomes collector work. Next we leave the
+
+28
+00:04:30,120 --> 00:04:39,280
+Processes die with free heap space when
+native memory, metaspace, or container
+limits are the real budget — and that
