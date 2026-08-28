@@ -1,0 +1,154 @@
+1
+00:00:00,000 --> 00:00:05,200
+Episode Fifty-Seven taught us to dump the
+heap when memory climbs for the wrong
+reason.
+
+2
+00:00:05,320 --> 00:00:19,280
+Another kind of hurt is the process that
+is "up" but not answering — threads stuck,
+latency spiking, CPU hot with no obvious
+
+3
+00:00:19,399 --> 00:00:26,079
+Sometimes a restart "works." It also
+erases the crime scene. The team feels
+productive and learns nothing.
+
+4
+00:00:26,199 --> 00:00:36,159
+So today's question is practical: when
+production hurts, what do you capture, and
+in what order, so tools beat folklore?
+
+5
+00:00:36,280 --> 00:00:46,840
+Before you kill the process, ask whether
+threads are blocked, waiting on locks, or
+parked on I/O: Look at this bash for a
+
+6
+00:00:46,960 --> 00:00:56,719
+Look for many threads BLOCKED or waiting
+on the same monitor. Look for a deadlock
+section. Look for application code versus
+
+7
+00:00:56,840 --> 00:01:08,560
+That single dump often turns "the app is
+hung" into "checkout threads wait on the
+inventory lock held by thread forty-two" —
+
+8
+00:01:08,680 --> 00:01:21,640
+Java Flight Recorder is the continuous
+story instead of a snapshot. A recording
+during the incident captures CPU samples,
+
+9
+00:01:21,760 --> 00:01:26,359
+Taking dumps after the problem vanishes
+collects empty files and strong opinions.
+
+10
+00:01:26,480 --> 00:01:36,079
+The most expensive sentence in ops is "it
+recovered before we could capture
+anything." Heap dumps still belong when
+
+11
+00:01:36,200 --> 00:01:48,000
+Dumps are different lenses, not rivals:
+thread dump for concurrency shape, heap
+dump for retention, JFR for a timed
+
+12
+00:01:48,120 --> 00:01:59,240
+Using every lens without a question is how
+you drown in files. When the question is
+"where is CPU going?" or "who is
+
+13
+00:01:59,359 --> 00:02:10,840
+It samples CPU or allocation and produces
+flame graphs that make hot methods
+obvious. Pair it with metrics you already
+
+14
+00:02:10,960 --> 00:02:23,159
+Metrics tell you when; dumps and profiles
+tell you why. A CPU spike lined up with an
+endpoint in JFR is a diagnosis. A spike
+
+15
+00:02:23,280 --> 00:02:35,120
+Build a capture kit into the platform
+before you need it. Can jcmd reach the
+process in the container? Are JDK tools in
+
+16
+00:02:35,300 --> 00:02:46,660
+Practice before the outage includes
+checking that the tools exist where the
+process runs, not only that you know their
+
+17
+00:02:46,780 --> 00:02:57,259
+Restart after you have a dump, a
+recording, or a clear reason that
+continuing is unsafe. Resist the opposite
+
+18
+00:02:57,379 --> 00:03:09,180
+A short playbook beats arguing about
+dashboards while customers wait. Practice
+a simple sequence. Stuck app: thread dump,
+
+19
+00:03:09,299 --> 00:03:19,739
+Climbing heap: metrics confirm growth,
+heap dump under load, dominators. Hot CPU:
+async-profiler or JFR CPU view under the
+
+20
+00:03:19,859 --> 00:03:34,739
+Practice in staging or on a game day so
+muscle memory is not invented at 3 a.m.
+Put that playbook next to a concrete
+
+21
+00:03:34,859 --> 00:03:49,859
+A thread dump shows most request threads
+waiting on a database socket. JFR confirms
+time in socket reads. Metrics show the
+
+22
+00:03:49,979 --> 00:03:57,579
+Folklore would have bounced the pod and
+filed "transient issue." If an interview
+asks what you reach for first when an app
+
+23
+00:03:57,699 --> 00:04:05,500
+say thread dump and/or JFR to see blockers
+— and that restart without capture
+guarantees a repeat incident with less
+
+24
+00:04:05,619 --> 00:04:13,899
+Offer the correlation habit: metrics for
+timing, dumps for mechanism. We now have
+collectors, leak hunting, and an incident
+
+25
+00:04:14,019 --> 00:04:21,620
+Step back from the war room: the JIT and
+the allocator still decide whether short-
+lived objects ever become real heap
+
+26
+00:04:21,740 --> 00:04:28,579
+Escape analysis explains why some
+allocations you "see" in source never show
+up the way you expect in profiles.
