@@ -1,0 +1,154 @@
+1
+00:00:00,000 --> 00:00:06,919
+Ordinary Java references are strong. If a
+GC root can reach an object through strong
+references, that object stays.
+
+2
+00:00:07,040 --> 00:00:18,960
+Episode Fifty-Seven's leaks were mostly
+strong-reference accidents: maps,
+listeners, ThreadLocals that never let go.
+
+3
+00:00:19,079 --> 00:00:31,079
+You want cleanup when an object becomes
+unreachable. You want to cooperate with GC
+instead of fighting it with forever-strong
+
+4
+00:00:31,199 --> 00:00:44,679
+Start from a practical itch — a byte array
+expensive to rebuild and nice to keep, but
+not mandatory for correctness: Look at
+
+5
+00:00:44,799 --> 00:00:55,199
+get() may return null later even though
+you never assigned null yourself. Soft
+refs are the traditional "keep until you
+
+6
+00:00:55,319 --> 00:01:06,239
+Assuming they never clear is how caches
+surprise you in production after a quiet
+staging environment with a huge heap. Put
+
+7
+00:01:06,359 --> 00:01:13,439
+Someone "fixes" the static map by wrapping
+values in SoftReference and ships. Under
+mild load the cache grows.
+
+8
+00:01:13,559 --> 00:01:27,999
+Under pressure it clears abruptly, then
+every request rebuilds, allocates hard,
+and pressure returns — a soft-reference
+
+9
+00:01:28,119 --> 00:01:37,599
+Size bounds, TTL, and single-flight
+loading still belong in the design. Weak
+references are cleared more eagerly once
+
+10
+00:01:37,719 --> 00:01:45,079
+That makes them useful for canonical
+mappings and certain observer-style
+structures where you do not want the map
+
+11
+00:01:45,199 --> 00:01:57,079
+WeakHashMap uses weak keys: entries can
+disappear when keys are otherwise unused.
+The caveat matters — values can strongly
+
+12
+00:01:57,199 --> 00:02:09,399
+You store metadata with the object as a
+weak key, but the value holds a strong
+reference back to the key: the entry
+
+13
+00:02:09,519 --> 00:02:18,759
+WeakHashMap is a specialized map with
+weak-key semantics, not a substitute for a
+bounded cache with eviction, metrics, and
+
+14
+00:02:18,879 --> 00:02:25,280
+Phantom references are about cleanup
+signaling more than retrieving the object.
+You do not use them to revive data.
+
+15
+00:02:25,400 --> 00:02:39,759
+You use them with a reference queue to
+learn that an object has become phantom-
+reachable so post-mortem cleanup can run —
+
+16
+00:02:39,879 --> 00:02:47,439
+Relying on finalize is a historical
+mistake: unpredictable timing,
+resurrection risks, and painful
+
+17
+00:02:47,560 --> 00:02:58,640
+Cleaner and reference queues give a
+clearer lifecycle for "run this cleanup
+when the object is gone." Notice the
+
+18
+00:02:58,759 --> 00:03:05,599
+A soft-reference cache without size or TTL
+can still grow until pressure is extreme,
+then clear in awkward bursts.
+
+19
+00:03:05,719 --> 00:03:17,079
+Using weak or soft caches as the only
+control knob is how teams rediscover
+Episode Fifty-Seven with fancier types and
+
+20
+00:03:17,199 --> 00:03:25,359
+When the GC clears a reference, it can
+enqueue that reference so your code can
+remove bookkeeping entries, release native
+
+21
+00:03:25,479 --> 00:03:38,479
+Without the queue, you only discover
+clearance when get() returns null — fine
+for some caches, insufficient for native
+
+22
+00:03:38,599 --> 00:03:41,879
+It is a ladder of how tightly you insist
+the object remain.
+
+23
+00:03:42,000 --> 00:03:50,159
+If an interview asks weak versus soft,
+answer with reachability policy: weak
+references clear when the object is only
+
+24
+00:03:50,280 --> 00:03:55,280
+soft references are retained longer and
+cleared under memory pressure according to
+the collector's policy.
+
+25
+00:03:55,400 --> 00:04:05,040
+Neither replaces an explicit eviction
+policy for a serious cache, and finalize
+is not your cleanup plan. We learned that
+
+26
+00:04:05,159 --> 00:04:14,199
+Next the conversation turns operational
+again: which JVM flags you set, how you
+change them without cargo-culting, and how
