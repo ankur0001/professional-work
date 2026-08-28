@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """Render The Java Story v2 videos from coherent narrative markdown.
 
+Animated visual cut: flows, stacks, pipelines, lanes, diagrams — not
+text-wall slides. Narration audio stays Chatterbox TTS (unchanged text).
+
 Output layout (common across episode PRs):
   java/output/v2/Java_Episode_XX_<Slug>.mp4
   java/output/v2/Java_Episode_XX_<Slug>_CAPTIONED.mp4
   java/output/v2/Java_Episode_XX.srt
-  java/output/v2/SOURCE.md   (pointer to narrative used)
+  java/output/v2/SOURCE.md
 
 Usage:
   python3 java/video_build/render_v2_from_narrative.py --ep 1
-  python3 java/video_build/render_v2_from_narrative.py --ep 1-5
+  python3 java/video_build/render_v2_from_narrative.py --ep 1-5 --reuse-audio
   python3 java/video_build/render_v2_from_narrative.py --all
 """
 from __future__ import annotations
@@ -35,20 +38,14 @@ OUT = ROOT / "java" / "output" / "v2"
 SYS_PATH_TTS = BUILD
 
 W, H = 1920, 1080
-BG = (13, 17, 23)
-SURFACE = (22, 27, 34)
-ORANGE = (248, 152, 32)
-BLUE = (74, 158, 255)
-WHITE = (255, 255, 255)
-MUTED = (139, 148, 158)
-ACCENT = (248, 152, 32)
+FPS = 8.0
 
 FONT_BOLD = "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf"
 FONT_REG = "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf"
-FONT_MONO = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
 
 sys.path.insert(0, str(SYS_PATH_TTS))
 from chatterbox_tts import SAMPLE_RATE, synth_beat  # noqa: E402
+from visual_engine import render_beat_frames  # noqa: E402
 
 
 def font(path: str, size: int) -> ImageFont.FreeTypeFont:
@@ -150,32 +147,9 @@ def wrap_text(draw: ImageDraw.ImageDraw, text: str, fnt, max_width: int) -> list
 
 
 def make_slide(ep: int, title: str, beat: str, idx: int, total: int) -> Image.Image:
-    img = Image.new("RGB", (W, H), BG)
-    draw = ImageDraw.Draw(img)
-    # top bar
-    draw.rectangle([0, 0, W, 8], fill=ORANGE)
-    draw.rectangle([0, H - 8, W, H], fill=SURFACE)
-    # brand
-    fb = font(FONT_BOLD, 36)
-    fr = font(FONT_REG, 28)
-    draw.text((80, 48), "The Java Story", font=fb, fill=ORANGE)
-    draw.text((80, 100), f"Episode {ep:02d}  ·  {title}", font=fr, fill=MUTED)
-    # progress
-    prog = (idx + 1) / max(total, 1)
-    draw.rectangle([80, 150, W - 80, 158], fill=SURFACE)
-    draw.rectangle([80, 150, 80 + int((W - 160) * prog), 158], fill=BLUE)
-    # body card
-    draw.rounded_rectangle([80, 200, W - 80, H - 120], radius=24, fill=SURFACE)
-    body_font = font(FONT_REG, 44)
-    lines = wrap_text(draw, beat, body_font, W - 220)
-    y = 260
-    for line in lines:
-        draw.text((120, y), line, font=body_font, fill=WHITE)
-        y += 64
-    # footer
-    draw.text((80, H - 70), f"{idx + 1} / {total}", font=font(FONT_REG, 24), fill=MUTED)
-    draw.text((W - 320, H - 70), "v2 narrative cut", font=font(FONT_REG, 24), fill=MUTED)
-    return img
+    """Legacy single-frame preview (first frame of animated beat)."""
+    frames = render_beat_frames(ep, title, beat, idx, total, duration=1.0, fps=1.0)
+    return frames[0]
 
 
 def probe(path: Path) -> float:
@@ -186,6 +160,50 @@ def probe(path: Path) -> float:
         check=True,
     )
     return float(r.stdout.strip())
+
+
+def parse_srt(path: Path) -> list[tuple[float, float, str]]:
+    text = path.read_text(errors="replace")
+    blocks = re.split(r"\n\s*\n", text.strip())
+    cues: list[tuple[float, float, str]] = []
+
+    def parse_ts(ts: str) -> float:
+        h, m, rest = ts.split(":")
+        s, ms = rest.replace(",", ".").split(".")
+        return int(h) * 3600 + int(m) * 60 + int(s) + int(ms) / 1000.0
+
+    for block in blocks:
+        lines = [ln for ln in block.splitlines() if ln.strip()]
+        if len(lines) < 2:
+            continue
+        # skip index line if present
+        if "-->" not in lines[0] and len(lines) >= 2 and "-->" in lines[1]:
+            lines = lines[1:]
+        if "-->" not in lines[0]:
+            continue
+        a, b = [p.strip() for p in lines[0].split("-->")]
+        body = " ".join(lines[1:]).replace("\n", " ").strip()
+        cues.append((parse_ts(a), parse_ts(b), body))
+    return cues
+
+
+def find_existing_mp4(ep: int) -> Path | None:
+    matches = sorted(OUT.glob(f"Java_Episode_{ep:02d}_*_CAPTIONED.mp4"))
+    if matches:
+        return matches[0]
+    matches = sorted(OUT.glob(f"Java_Episode_{ep:02d}_*.mp4"))
+    matches = [p for p in matches if "CAPTIONED" not in p.name]
+    return matches[0] if matches else None
+
+
+def extract_audio_from_mp4(mp4: Path, out_mp3: Path) -> Path:
+    out_mp3.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(mp4), "-vn", "-c:a", "libmp3lame", "-q:a", "2", str(out_mp3)],
+        check=True,
+        capture_output=True,
+    )
+    return out_mp3
 
 
 def synth_episode_audio(beats: list[str], audio_dir: Path) -> tuple[Path, list[tuple[float, float, str]]]:
@@ -238,37 +256,45 @@ def write_srt(cues: list[tuple[float, float, str]], path: Path) -> None:
     path.write_text("\n".join(lines))
 
 
+def encode_clip_from_frames(frames: list[Image.Image], clip: Path, duration: float, fps: float = FPS) -> None:
+    frames_dir = clip.with_suffix("").parent / f"_frames_{clip.stem}"
+    if frames_dir.exists():
+        shutil.rmtree(frames_dir)
+    frames_dir.mkdir(parents=True)
+    for i, fr in enumerate(frames):
+        fr.save(frames_dir / f"f{i:04d}.jpg", quality=88)
+    # Hold last frame to fill full beat duration if frame count is capped.
+    subprocess.run(
+        [
+            "ffmpeg", "-y",
+            "-framerate", str(fps),
+            "-i", str(frames_dir / "f%04d.jpg"),
+            "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=48000",
+            "-vf", "tpad=stop_mode=clone:stop=-1",
+            "-t", f"{duration:.3f}",
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "veryfast", "-crf", "20",
+            "-c:a", "aac", "-shortest",
+            str(clip),
+        ],
+        check=True,
+        capture_output=True,
+    )
+    shutil.rmtree(frames_dir, ignore_errors=True)
+
+
 def build_video(ep: int, title: str, beats: list[str], cues, narration: Path, work: Path, out_mp4: Path) -> None:
-    slides = work / "slides"
     clips = work / "clips"
-    if slides.exists():
-        shutil.rmtree(slides)
     if clips.exists():
         shutil.rmtree(clips)
-    slides.mkdir(parents=True)
     clips.mkdir(parents=True)
 
-    # map each beat duration from cues
     for i, beat in enumerate(beats):
         start, end, _ = cues[i]
         dur = max(end - start, 0.8)
-        img = make_slide(ep, title, beat, i, len(beats))
-        jpg = slides / f"s{i:04d}.jpg"
-        img.save(jpg, quality=90)
+        print(f"    VISUAL {i+1}/{len(beats)} ({dur:.1f}s)")
+        frames = render_beat_frames(ep, title, beat, i, len(beats), duration=dur, fps=FPS)
         clip = clips / f"c{i:04d}.mp4"
-        subprocess.run(
-            [
-                "ffmpeg", "-y",
-                "-loop", "1", "-i", str(jpg),
-                "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=48000",
-                "-t", f"{dur:.3f}",
-                "-c:v", "libx264", "-tune", "stillimage", "-pix_fmt", "yuv420p",
-                "-c:a", "aac", "-shortest",
-                str(clip),
-            ],
-            check=True,
-            capture_output=True,
-        )
+        encode_clip_from_frames(frames, clip, duration=dur, fps=FPS)
 
     clist = work / "clips.txt"
     with open(clist, "w") as f:
@@ -280,7 +306,6 @@ def build_video(ep: int, title: str, beats: list[str], cues, narration: Path, wo
         check=True,
         capture_output=True,
     )
-    # mux narration
     out_mp4.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
         [
@@ -299,12 +324,11 @@ def build_video(ep: int, title: str, beats: list[str], cues, narration: Path, wo
 
 
 def burn_captions(mp4: Path, srt: Path, out: Path) -> None:
-    # ffmpeg subtitles filter needs escaped path
     srt_esc = str(srt).replace(":", "\\:").replace("'", "\\'")
     subprocess.run(
         [
             "ffmpeg", "-y", "-i", str(mp4),
-            "-vf", f"subtitles={srt_esc}:force_style='FontSize=22,PrimaryColour=&H00FFFFFF&,OutlineColour=&H00000000&,BorderStyle=3,Outline=1,Shadow=0,MarginV=40'",
+            "-vf", f"subtitles={srt_esc}:force_style='FontSize=20,PrimaryColour=&H00FFFFFF&,OutlineColour=&H00000000&,BorderStyle=3,Outline=1,Shadow=0,MarginV=36'",
             "-c:a", "copy",
             str(out),
         ],
@@ -313,45 +337,84 @@ def burn_captions(mp4: Path, srt: Path, out: Path) -> None:
     )
 
 
-def render_one(path: Path) -> dict:
+def render_one(path: Path, reuse_audio: bool = False, max_beats: int | None = None) -> dict:
     ep, title, spoken = parse_narrative(path)
     beats = split_beats(spoken)
+    if max_beats is not None:
+        beats = beats[:max_beats]
     print(f"==> EP{ep:02d} {title}: {len(beats)} beats, ~{len(spoken.split())} words")
     work = WORK / f"ep{ep:02d}"
-    if work.exists():
-        shutil.rmtree(work)
-    work.mkdir(parents=True)
+    # keep audio dir if reusing
     audio_dir = work / "audio"
-    narration, cues = synth_episode_audio(beats, audio_dir)
-    # cues currently include gaps incorrectly for video; rebuild cues aligned to beats only
-    # Re-probe each beat wav for accurate durations
-    t = 0.0
-    cues2: list[tuple[float, float, str]] = []
-    for i, beat in enumerate(beats):
-        wav = audio_dir / f"b{i:04d}.wav"
-        dur = probe(wav)
-        gap = 0.18 if beat.endswith("?") else 0.12
-        if i == len(beats) - 1:
-            gap = 0.0
-        cues2.append((t, t + dur, beat))
-        t += dur + gap
+    if work.exists() and not reuse_audio:
+        shutil.rmtree(work)
+        work.mkdir(parents=True)
+    elif not work.exists():
+        work.mkdir(parents=True)
+
+    srt = OUT / f"Java_Episode_{ep:02d}.srt"
+    narration = audio_dir / "narration.mp3"
+    cues2: list[tuple[float, float, str]]
+
+    if reuse_audio and srt.exists() and (narration.exists() or find_existing_mp4(ep)):
+        print("    reusing existing audio + SRT timings")
+        if not narration.exists():
+            mp4_src = find_existing_mp4(ep)
+            assert mp4_src is not None
+            extract_audio_from_mp4(mp4_src, narration)
+        cues2 = parse_srt(srt)
+        if max_beats is not None:
+            cues2 = cues2[:max_beats]
+        # align beat count: if mismatch, prefer SRT texts as beats for visuals
+        if len(cues2) != len(beats):
+            print(f"    note: beats {len(beats)} vs srt {len(cues2)} — using SRT texts for visuals")
+            beats = [c[2] for c in cues2]
+        # trim narration to preview end if max_beats
+        if max_beats is not None and cues2:
+            end_t = cues2[-1][1] + 0.15
+            trimmed = audio_dir / "narration_trim.mp3"
+            subprocess.run(
+                ["ffmpeg", "-y", "-i", str(narration), "-t", f"{end_t:.3f}", "-c:a", "libmp3lame", "-q:a", "2", str(trimmed)],
+                check=True,
+                capture_output=True,
+            )
+            narration = trimmed
+    else:
+        if audio_dir.exists():
+            shutil.rmtree(audio_dir)
+        narration, cues = synth_episode_audio(beats, audio_dir)
+        t = 0.0
+        cues2 = []
+        for i, beat in enumerate(beats):
+            wav = audio_dir / f"b{i:04d}.wav"
+            dur = probe(wav)
+            gap = 0.18 if beat.endswith("?") else 0.12
+            if i == len(beats) - 1:
+                gap = 0.0
+            cues2.append((t, t + dur, beat))
+            t += dur + gap
+        if max_beats is None:
+            write_srt(cues2, srt)
 
     slug = slugify(title)
     OUT.mkdir(parents=True, exist_ok=True)
     base = f"Java_Episode_{ep:02d}_{slug}"
+    if max_beats is not None:
+        base = f"{base}_PREVIEW"
     mp4 = OUT / f"{base}.mp4"
     cap = OUT / f"{base}_CAPTIONED.mp4"
-    srt = OUT / f"Java_Episode_{ep:02d}.srt"
-    write_srt(cues2, srt)
     build_video(ep, title, beats, cues2, narration, work, mp4)
-    burn_captions(mp4, srt, cap)
-    # per-episode source pointer
+    preview_srt = work / "preview.srt" if max_beats is not None else srt
+    if max_beats is not None:
+        write_srt(cues2, preview_srt)
+    burn_captions(mp4, preview_srt if max_beats is not None else srt, cap)
     src = OUT / f"Java_Episode_{ep:02d}_SOURCE.md"
     src.write_text(
         f"# v2 source\n\nEpisode {ep:02d}: {title}\n\n"
         f"Narration: `java/narrative_review/episodes/{path.name}`\n"
         f"Renderer: `java/video_build/render_v2_from_narrative.py`\n"
-        f"TTS: local Chatterbox Turbo\n"
+        f"Visuals: animated scenes via `java/video_build/visual_engine.py`\n"
+        f"TTS: local Chatterbox Turbo (narration text unchanged)\n"
     )
     dur = probe(mp4)
     print(f"    wrote {mp4.name} ({dur/60:.1f} min)")
@@ -379,6 +442,12 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ep", default="", help="e.g. 1 or 1-5 or 1,4,7 or all")
     ap.add_argument("--all", action="store_true")
+    ap.add_argument(
+        "--reuse-audio",
+        action="store_true",
+        help="Rebuild visuals only; keep existing narration audio + SRT timings",
+    )
+    ap.add_argument("--max-beats", type=int, default=None, help="Smoke/preview: only first N beats")
     args = ap.parse_args()
     spec = "all" if args.all or args.ep in {"", "all"} and args.all else (args.ep or "")
     if args.all:
@@ -387,7 +456,7 @@ def main() -> None:
         ap.error("pass --ep N or --all")
     results = []
     for path in episode_files(spec):
-        results.append(render_one(path))
+        results.append(render_one(path, reuse_audio=args.reuse_audio, max_beats=args.max_beats))
     (OUT / "v2_manifest.json").write_text(json.dumps(results, indent=2))
     print("DONE", len(results), "episodes ->", OUT)
 

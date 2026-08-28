@@ -1,14 +1,21 @@
-# The Java Story — v2 narrative video cuts
+# The Java Story — v2 video output
 
-Rendered from coherent spoken narrations in `java/narrative_review/episodes/`
-using local Chatterbox Turbo TTS + slide assembly.
+Animated narrative cut (not text-wall slides):
 
-Per episode deliverables (copied into each episode PR under this same folder):
+- **Audio:** Chatterbox Turbo TTS from coherent episode narrations
+- **Visuals:** `visual_engine.py` scene types — title, flow, stack, pipeline,
+  lanes, code window, nodes, rings, compare, callout, question
+- **Motion:** per-beat frame animation (draw-in, arrows, task motion) + lower-thirds
 
-- `Java_Episode_XX_*.mp4` — clean cut
-- `Java_Episode_XX_*_CAPTIONED.mp4` — burned captions
-- `Java_Episode_XX.srt` — subtitles
-- `Java_Episode_XX_SOURCE.md` / `narration.md` — source pointer
+## Rebuild visuals only (keep existing narration)
 
-Renderer: `java/video_build/render_v2_from_narrative.py`
-Distributor: `java/video_build/distribute_v2_to_episode_prs.py`
+```bash
+python3 java/video_build/render_v2_from_narrative.py --ep 1-5 --reuse-audio
+python3 java/video_build/distribute_v2_to_episode_prs.py --ep 1-5
+```
+
+## Full render (TTS + visuals)
+
+```bash
+python3 java/video_build/render_v2_from_narrative.py --ep 85
+```
