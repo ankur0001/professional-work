@@ -1,0 +1,119 @@
+1
+00:00:00,000 --> 00:00:11,320
+Caches and services only help if clients
+can depend on your HTTP contract for
+years. APIs are long-term contracts —
+
+2
+00:00:11,439 --> 00:00:17,800
+A beautiful endpoint that double-charges
+on retry is not beautiful. Resource
+modeling comes first.
+
+3
+00:00:17,920 --> 00:00:38,960
+Prefer nouns and HTTP verbs that match:
+POST /orders creates, GET /orders/{id}
+reads, POST /orders/{id}/cancel may be
+
+4
+00:00:39,079 --> 00:00:45,640
+An endpoint named /doCreateOrder that
+always returns 200 is a remote procedure
+call wearing a thin disguise.
+
+5
+00:00:45,759 --> 00:01:00,079
+Breaking changes casually — renaming
+fields, changing meaning, removing
+properties without versioning — punish
+
+6
+00:01:00,199 --> 00:01:13,159
+Deprecate before removal. Look at this
+java for a moment. Validation at the edge
+keeps the domain cleaner. Consistent error
+
+7
+00:01:13,280 --> 00:01:25,640
+Clients branch on code; humans read
+message; support uses traceId. Changing
+that shape later is itself a breaking
+
+8
+00:01:25,760 --> 00:01:39,520
+Recycling an error code to mean something
+new is a silent break. Pagination and
+filtering prevent "return the entire
+
+9
+00:01:39,640 --> 00:01:51,239
+State max page size server-side; clients
+asking for a million rows should fail
+loudly. Filter parameters should be
+
+10
+00:01:51,359 --> 00:02:03,719
+Idempotency keys on POSTs that matter mean
+a client can retry safely after a timeout
+without creating two orders. Why
+
+11
+00:02:03,840 --> 00:02:17,439
+Walk a payment POST: client sends
+Idempotency-Key; server charges once and
+stores the response; network drops; client
+
+12
+00:02:17,560 --> 00:02:33,120
+Without TTL, the idempotency table grows
+forever. Without uniqueness scoped
+correctly, different users collide. Money,
+
+13
+00:02:33,240 --> 00:02:39,600
+Document keys in public API docs with
+examples — server support without client
+education is half a solution.
+
+14
+00:02:39,719 --> 00:02:49,719
+Leaky entities as DTOs couple clients to
+persistence and leak lazy-loading problems
+from Episode Seventy-Five into public
+
+15
+00:02:49,840 --> 00:03:04,719
+Public API docs should show happy paths
+and failure paths side by side — an
+OpenAPI file that only lists 200 responses
+
+16
+00:03:04,840 --> 00:03:15,199
+Mature POST behavior: validate, apply
+once, return consistent bodies on replay,
+and never return 500 with a half-applied
+
+17
+00:03:15,319 --> 00:03:26,319
+Status codes are part of the contract: 201
+or 200 on success, 409 when a key reuses
+different bodies, 400 when validation
+
+18
+00:03:26,439 --> 00:03:38,560
+Breaking changes casually — renaming
+amount fields from cents to dollars
+without versioning — cause real financial
+
+19
+00:03:38,680 --> 00:03:46,520
+Interview answers should stress contracts,
+idempotency, and error consistency — not
+only annotation trivia.
+
+20
+00:03:46,640 --> 00:03:56,400
+When APIs need to fan work out
+asynchronously, events enter — and with
+them a new failure mode: at-least-once
