@@ -1,0 +1,130 @@
+1
+00:00:00,000 --> 00:00:09,679
+Boot gave you an executable web app. Now a
+product manager asks for an HTTP API:
+create orders, fetch orders, return
+
+2
+00:00:09,799 --> 00:00:23,280
+The practical situation is mapping HTTP
+into method calls without turning
+controllers into dumping grounds. Spring
+
+3
+00:00:23,399 --> 00:00:32,599
+Look at this java for a moment.
+@RestController combines controller
+semantics with response-body conversion.
+
+4
+00:00:32,719 --> 00:00:42,920
+Behind the scenes, DispatcherServlet is
+the front controller: it receives the
+request, finds a handler, invokes it, and
+
+5
+00:00:43,039 --> 00:00:58,039
+Request arrives; handler mapping selects a
+method; argument resolvers bind path
+variables, query params, and bodies; your
+
+6
+00:00:58,159 --> 00:01:09,640
+When a response looks wrong, ask which
+stage failed — binding, handler logic,
+conversion, or exception translation —
+
+7
+00:01:09,759 --> 00:01:23,159
+Annotate request bodies with constraints
+and trigger validation deliberately —
+@Valid / @Validated at the right parameter
+
+8
+00:01:23,279 --> 00:01:34,719
+Pick an error structure: code, message,
+fields, correlation id — and reuse it.
+Centralize with controller advice so every
+
+9
+00:01:34,839 --> 00:01:46,719
+When validation fails, do not leak stack
+traces. When authorization fails, do not
+reveal whether a resource exists if that
+
+10
+00:01:46,839 --> 00:01:59,239
+ResponseEntity lets you control status
+codes and headers when a bare return type
+is too blunt. Be boring and correct: 201
+
+11
+00:01:59,359 --> 00:02:12,239
+Controllers that always return 200 with an
+error flag reinvent HTTP poorly. Bare
+strings are fine for hello world;
+
+12
+00:02:12,359 --> 00:02:25,439
+Returning JPA entities with lazy fields is
+a classic footgun: serialization triggers
+lazy loads, or LazyInitializationException
+
+13
+00:02:25,559 --> 00:02:41,199
+Request DTOs validate input; response DTOs
+shape output; domain entities stay inward.
+Controllers that accept entities invite
+
+14
+00:02:41,319 --> 00:02:53,239
+Validate the request DTO. Call the
+service. Return 201 with a Location header
+and a response DTO. On domain conflict,
+
+15
+00:02:53,359 --> 00:03:04,839
+Walk one failure from production: a list
+endpoint returns entities; under load the
+session closes, Jackson serializes, a lazy
+
+16
+00:03:04,959 --> 00:03:14,679
+The fix is not "open session in view
+forever" without debate — it is a DTO
+query or an explicit fetch tailored to the
+
+17
+00:03:14,799 --> 00:03:26,359
+MVC and JPA meet at this seam; Episode
+Seventy-Five deepens persistence, but the
+controller already should have refused to
+
+18
+00:03:26,479 --> 00:03:40,119
+Resource modeling matters: nouns for
+resources, verbs as HTTP methods, status
+codes as outcomes. An endpoint named
+
+19
+00:03:40,239 --> 00:03:45,599
+Prefer /orders with POST and a 201.
+Controller return types in an interview?
+
+20
+00:03:45,779 --> 00:03:56,219
+Body for simple success, ResponseEntity
+when status and headers matter, reactive
+types when you are on a reactive stack —
+
+21
+00:03:56,339 --> 00:04:04,139
+Mention deliberate status and error
+handling, not only "we return the object
+and Spring Jacksonifies it." APIs need
+
+22
+00:04:04,259 --> 00:04:12,939
+Spring Data speeds repositories, but you
+still own SQL reality, transactions, and
+N+1 — and that ownership gap is the next
