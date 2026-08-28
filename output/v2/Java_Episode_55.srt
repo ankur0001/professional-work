@@ -1,0 +1,153 @@
+1
+00:00:00,000 --> 00:00:11,720
+Garbage collection explained how the heap
+stays livable. Another reason Java can
+feel "slow then fast" sits on the CPU side
+
+2
+00:00:11,839 --> 00:00:25,039
+As a method gets hot, the Just-In-Time
+compiler turns it into optimized native
+code. Warmup is not folklore. It is the
+
+3
+00:00:25,159 --> 00:00:37,359
+First requests can be slow because of
+loading, interpretation, and compilation.
+Steady-state matters for servers — and for
+
+4
+00:00:37,479 --> 00:00:47,280
+Profiling decides it is hot. Compilers —
+often talked about as C1 and C2 tiers —
+produce native code with increasing
+
+5
+00:00:47,399 --> 00:01:01,119
+C1 tends to be quicker, lighter
+compilation; C2 invests more for heavier
+optimization on truly hot code. Exact tier
+
+6
+00:01:01,239 --> 00:01:14,159
+Deoptimization happens when speculative
+optimizations assume something that later
+proves false — a class hierarchy that
+
+7
+00:01:14,280 --> 00:01:28,159
+The JVM can fall back and recompile. That
+flexibility is why the JIT can optimize
+aggressively. It is also why
+
+8
+00:01:28,280 --> 00:01:34,640
+Timing a method once at startup measures
+class loading, interpretation, and compile
+overhead as much as the algorithm.
+
+9
+00:01:34,760 --> 00:01:46,640
+Servers care about steady-state latency
+after warmup — and also about warmup
+itself when autoscaling brings cold
+
+10
+00:01:46,760 --> 00:01:57,280
+Use JMH for microbenchmarks when you need
+micro-truth. JMH handles warmup
+iterations, forks, and measurement modes
+
+11
+00:01:57,400 --> 00:02:09,520
+Optimizing cold code you saw in a single
+local run is a classic waste: you
+rearrange something the JIT would have
+
+12
+00:02:09,640 --> 00:02:19,360
+What if we assume the JIT always makes
+everything fastest immediately? Then we
+are surprised by cold starts, and we
+
+13
+00:02:19,480 --> 00:02:33,440
+What if we micro-optimize a getter the
+profiler barely sees? Then we ignore
+allocation and algorithm costs that
+
+14
+00:02:33,560 --> 00:02:45,640
+Why is the first request slow? Loading +
+interpretation + JIT warmup — plus
+whatever I/O your application does. That
+
+15
+00:02:45,760 --> 00:02:54,280
+The deeper craft is knowing when to care
+about warmup, when to care about steady
+state, and when to care about allocation
+
+16
+00:02:54,400 --> 00:03:08,640
+Tiered compilation exists so the JVM does
+not pay C2's compile cost for methods that
+run twice. Short-lived CLI tools may
+
+17
+00:03:08,759 --> 00:03:20,079
+Feature flags that flip a rarely used path
+into a hot path can also cause compile
+waves mid-day. JIT is adaptive to the
+
+18
+00:03:20,199 --> 00:03:32,000
+Deoptimization is not failure; it is
+honesty. When a speculative inline stops
+being valid, continuing would be
+
+19
+00:03:32,119 --> 00:03:45,159
+If you see weird warm-path spikes after a
+class load or megamorphic call site
+change, keep deopt in the differential
+
+20
+00:03:45,279 --> 00:03:58,079
+The first minutes show higher latency
+while classes load and hot methods
+compile. A warmup policy — synthetic
+
+21
+00:03:58,199 --> 00:04:11,119
+Ignoring warmup and blaming "Java is slow"
+misunderstands the runtime you chose.
+Picture a microbenchmark that "proves" a
+
+22
+00:04:11,239 --> 00:04:14,879
+Believe the methodology that matches how
+servers actually run.
+
+23
+00:04:14,999 --> 00:04:27,639
+Hold a practical checklist: interpret then
+compile hot paths; respect warmup in
+benchmarks and in capacity planning;
+
+24
+00:04:27,759 --> 00:04:30,879
+optimize what profiles show after steady
+state.
+
+25
+00:04:30,999 --> 00:04:46,359
+Across this JVM mini-arc — loaders,
+bytecode, stack/heap, GC, JIT — each
+episode answered a question the previous
+
+26
+00:04:46,479 --> 00:04:54,759
+The heap fills. Something has to reclaim
+unreachable objects — but which collector
+should we run, and what are we trading
