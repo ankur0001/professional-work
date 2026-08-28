@@ -1,0 +1,2102 @@
+{
+  "2": {
+    "why": "Beginners install 'Java' and then drown in three acronyms. Separating JDK, JRE, and JVM is day-one production literacy.",
+    "points": [
+      "JDK = developer toolkit (javac, jar, jlink, jcmd, Flight Recorder tooling).",
+      "JRE = runtime idea: libraries + launcher to run apps (modern distros often ship a JDK).",
+      "JVM = the engine that loads bytecode and executes it (HotSpot is common).",
+      "Flow: .java to javac (JDK) to .class bytecode to java launcher to JVM execute.",
+      "Memory gotcha: heap is only one slice \u2014 metaspace, stacks, code cache, native also count in containers."
+    ],
+    "code": "javac HelloWorld.java\njava HelloWorld\n# javac comes from the JDK\n# java starts a JVM process",
+    "code_lang": "bash",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes \u2014 not memorizing syntax trivia.",
+      "Then we'll connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Calling everything 'the JDK' including the running process.",
+      "Compiling on Java 21 in CI and running Java 17 in production without checking levels.",
+      "Setting -Xmx equal to the container memory limit with zero headroom for non-heap."
+    ],
+    "interview_q": "What's the difference between JDK, JRE, and JVM?",
+    "interview_a": "JDK is the development kit with compiler and tools. JRE is the runtime layer. JVM is the engine that executes bytecode.",
+    "analogy": "Toolbox on top (JDK), runtime apartment (JRE idea), engine in the basement (JVM)."
+  },
+  "3": {
+    "why": "If you don't know where main lives or why public classes match filenames, every later lesson feels cursed.",
+    "points": [
+      "A .java file is a compilation unit; one public top-level class must match the filename.",
+      "Packages are namespaces that map to directories.",
+      "main(String[] args) is the classic launcher entry point.",
+      "Imports bring types into scope; classpath/module path finds classes.",
+      "Structure is not paperwork \u2014 it is how the compiler and JVM find your code."
+    ],
+    "code": "package com.example.demo;\n\npublic class App {\n    public static void main(String[] args) {\n        System.out.println(\"args length = \" + args.length);\n    }\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes \u2014 not memorizing syntax trivia.",
+      "Then we'll connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Public class name does not match filename.",
+      "Package declaration does not match folders.",
+      "Assuming the working directory alone finds classes without classpath."
+    ],
+    "interview_q": "What must be true about a public top-level class and its file?",
+    "interview_a": "Filename must match the public class name exactly (case-sensitive) and end with .java.",
+    "analogy": "Treat Java Program Structure as a tool: learn the grip before swinging hard."
+  },
+  "4": {
+    "why": "Types catch whole classes of bugs before runtime. Primitives vs references is the fork in the road.",
+    "points": [
+      "Primitives hold values; references point at heap objects (or null).",
+      "Local variables need definite assignment.",
+      "var is local type inference \u2014 still static typing.",
+      "Int division truncates; know your conversions.",
+      "Null is a reference concept, not a primitive."
+    ],
+    "code": "int count = 10;\ndouble price = 19.99;\nboolean ready = true;\nString name = \"Ada\";\nvar total = count * price;",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes \u2014 not memorizing syntax trivia.",
+      "Then we'll connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Using == for String content.",
+      "Ignoring int division truncation.",
+      "Treating null like a primitive value."
+    ],
+    "interview_q": "Primitive vs reference type?",
+    "interview_a": "Primitives store values directly; references store a pointer to an object or null.",
+    "analogy": "Treat Variables and Data Types as a tool: learn the grip before swinging hard."
+  },
+  "5": {
+    "why": "Operators look easy until precedence and side effects show up in an interview whiteboard.",
+    "points": [
+      "Precedence and associativity beat memorizing trivia lists.",
+      "++/-- side effects confuse people.",
+      "&& short-circuits; & does not.",
+      "== vs equals for objects.",
+      "Bitwise ops appear in flags and low-level code."
+    ],
+    "code": "int x = 5;\nint y = x++ + ++x;\nboolean ok = (x > 0) && (y / x > 1);",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes \u2014 not memorizing syntax trivia.",
+      "Then we'll connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Writing clever increment expressions.",
+      "Using & when you meant &&.",
+      "Comparing objects with == by accident."
+    ],
+    "interview_q": "Explain x++ + ++x carefully.",
+    "interview_a": "Evaluate left to right with side effects; prefer clarity over clever increments.",
+    "analogy": "Treat Operators as a tool: learn the grip before swinging hard."
+  },
+  "6": {
+    "why": "Control flow is how programs make decisions \u2014 and how nesting turns into unreadable vines.",
+    "points": [
+      "if/else and modern switch expressions.",
+      "for/while/enhanced-for.",
+      "break/continue \u2014 labeled forms sparingly.",
+      "Pattern matching reduces casts.",
+      "Extract methods instead of deep nesting."
+    ],
+    "code": "for (int i = 0; i < n; i++) {\n  if (i % 2 == 0) continue;\n  System.out.println(i);\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes \u2014 not memorizing syntax trivia.",
+      "Then we'll connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Giant nested if pyramids.",
+      "Fall-through switch bugs.",
+      "Using continue/break to hide real structure."
+    ],
+    "interview_q": "Switch expression vs statement?",
+    "interview_a": "Expressions return values and encourage exhaustiveness; statements perform actions.",
+    "analogy": "Treat Control Flow as a tool: learn the grip before swinging hard."
+  },
+  "7": {
+    "why": "Methods are named verbs \u2014 the unit of reuse, testing, and API design.",
+    "points": [
+      "Signature is name plus parameter types (overloading).",
+      "Java is pass-by-value (including copied references).",
+      "Varargs and overloads need care.",
+      "Return types communicate contracts.",
+      "Small methods tell a story."
+    ],
+    "code": "public static int add(int a, int b) {\n  return a + b;\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes \u2014 not memorizing syntax trivia.",
+      "Then we'll connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Thinking Java is pass-by-reference.",
+      "Huge methods that do five jobs.",
+      "Overloading by confusing parameter orders."
+    ],
+    "interview_q": "Is Java pass-by-reference?",
+    "interview_a": "No \u2014 pass-by-value. Object references are copied; you can mutate the object but not rebind the caller's variable.",
+    "analogy": "Treat Methods as a tool: learn the grip before swinging hard."
+  },
+  "8": {
+    "why": "Arrays are the fixed-length backbone under many collections.",
+    "points": [
+      "Length fixed after creation.",
+      "Indexes from zero.",
+      "Arrays of arrays for multi-dimensional.",
+      "Use Arrays helper methods.",
+      "Prefer List when size changes."
+    ],
+    "code": "int[] nums = {3, 1, 4};\nSystem.out.println(nums.length);\njava.util.Arrays.sort(nums);",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes \u2014 not memorizing syntax trivia.",
+      "Then we'll connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Off-by-one index bugs.",
+      "Assuming arrays grow.",
+      "Printing an array with println and getting a type@hash."
+    ],
+    "interview_q": "array.length vs List.size()?",
+    "interview_a": "Arrays use a length field; collections use size().",
+    "analogy": "Treat Arrays as a tool: learn the grip before swinging hard."
+  },
+  "9": {
+    "why": "Strings are everywhere \u2014 and immutability changes how you write loops.",
+    "points": [
+      "String is immutable; concatenation creates new objects.",
+      "StringBuilder for repeated appends.",
+      "equals for content; == for identity.",
+      "Text blocks for multiline.",
+      "Beware silent charset issues at boundaries."
+    ],
+    "code": "String a = \"hi\";\nString b = a + \"!\";\nStringBuilder sb = new StringBuilder();\nfor (int i = 0; i < 100; i++) sb.append(i);",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes \u2014 not memorizing syntax trivia.",
+      "Then we'll connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Building strings with + inside tight loops.",
+      "Using == for String content.",
+      "Ignoring encoding when crossing bytes/text."
+    ],
+    "interview_q": "Why is String immutable?",
+    "interview_a": "Security, safe sharing, reliable hashing, and simpler reasoning about aliases.",
+    "analogy": "Treat Strings as a tool: learn the grip before swinging hard."
+  },
+  "10": {
+    "why": "OOP is a modeling tool \u2014 not a religion. Encapsulation first.",
+    "points": [
+      "Encapsulation protects invariants.",
+      "Inheritance is coupling; composition is often healthier.",
+      "Polymorphism lets callers depend on abstractions.",
+      "Overriding vs overloading.",
+      "equals/hashCode are part of the object contract."
+    ],
+    "code": "class User {\n  private final String id;\n  User(String id) { this.id = id; }\n  String id() { return id; }\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes \u2014 not memorizing syntax trivia.",
+      "Then we'll connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Deep inheritance trees.",
+      "Public fields everywhere.",
+      "God classes that know everything."
+    ],
+    "interview_q": "Inheritance vs composition?",
+    "interview_a": "Inheritance is is-a coupling; composition reuses via has-a and usually evolves more safely.",
+    "analogy": "Treat Object-Oriented Programming as a tool: learn the grip before swinging hard."
+  },
+  "11": {
+    "why": "Access modifiers are API design \u2014 who is allowed to touch what.",
+    "points": [
+      "private, package-private, protected, public.",
+      "Encapsulation is a boundary, not a checkbox.",
+      "Protected includes subclass rules across packages.",
+      "Modules tighten access further.",
+      "Default to the tightest access that works."
+    ],
+    "code": "public class Api {\n  private int secret;\n  protected void hook() {}\n  void pack() {}\n  public void open() {}\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then we connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Making everything public 'for now'.",
+      "Confusing protected with package-private.",
+      "Leaking mutable internals from public methods."
+    ],
+    "interview_q": "protected vs package-private?",
+    "interview_a": "Package-private: same package only. Protected: same package plus subclasses (with cross-package rules).",
+    "analogy": "Keep a simple picture of Access Modifiers."
+  },
+  "12": {
+    "why": "Packages give your codebase a geography \u2014 names, folders, and boundaries.",
+    "points": [
+      "Reverse-DNS naming conventions.",
+      "Directory tree must match package declarations.",
+      "import vs fully qualified names.",
+      "Star imports hide dependencies.",
+      "Combine packages with access modifiers for real boundaries."
+    ],
+    "code": "package com.shop.order;\nimport com.shop.user.User;\n\npublic class OrderService {\n  private final User user;\n  public OrderService(User user) { this.user = user; }\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then we connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Package/folder mismatch.",
+      "Giant catch-all packages.",
+      "Relying on star imports in public APIs."
+    ],
+    "interview_q": "Why packages?",
+    "interview_a": "Namespaces, organization, and access boundaries in large codebases.",
+    "analogy": "Keep a simple picture of Packages."
+  },
+  "13": {
+    "why": "Enums replace magic strings/ints with type-safe domain vocabulary.",
+    "points": [
+      "Type-safe constants.",
+      "Enums can have fields and methods.",
+      "Great with switch.",
+      "EnumSet/EnumMap are specialized and fast.",
+      "Model states explicitly."
+    ],
+    "code": "enum Status {\n  NEW, PAID, SHIPPED;\n  boolean terminal() { return this == SHIPPED; }\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then we connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Stringly-typed status codes.",
+      "Giant switch without exhaustiveness thinking.",
+      "Mutable enum fields causing surprises."
+    ],
+    "interview_q": "Why enums over public static final int?",
+    "interview_a": "Type safety, namespacing, and attached behavior.",
+    "analogy": "Keep a simple picture of Enums."
+  },
+  "14": {
+    "why": "Wrappers let primitives participate in collections \u2014 with costs and NPE traps.",
+    "points": [
+      "Integer/Boolean/etc. wrap primitives.",
+      "Autoboxing/unboxing is convenient and sneaky.",
+      "Cached small Integer values.",
+      "Prefer primitives in hot loops.",
+      "Null wrappers unbox into NPEs."
+    ],
+    "code": "Integer a = 10;\nint b = a;\nList<Integer> list = new ArrayList<>();\nlist.add(b);",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then we connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Unboxing null.",
+      "Using wrappers in tight numeric loops without measuring.",
+      "Identity comparisons on Integers."
+    ],
+    "interview_q": "When does unboxing throw NPE?",
+    "interview_a": "When the wrapper reference is null and a primitive is required.",
+    "analogy": "Keep a simple picture of Wrappers and Autoboxing."
+  },
+  "15": {
+    "why": "Generics move class cast failures to compile time \u2014 if you learn wildcards.",
+    "points": [
+      "Type parameters erase at runtime.",
+      "PECS: producer extends, consumer super.",
+      "Generic methods.",
+      "No primitive type arguments.",
+      "Unchecked warnings are clues, not noise."
+    ],
+    "code": "List<String> names = new ArrayList<>();\nnames.add(\"Ada\");\nString s = names.get(0);",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then we connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Ignoring unchecked warnings.",
+      "Using raw types.",
+      "Wrong wildcard bounds causing add/get confusion."
+    ],
+    "interview_q": "What is type erasure?",
+    "interview_a": "Generic type arguments are removed at compile time; the runtime sees raw types with inserted checks.",
+    "analogy": "Keep a simple picture of Generics."
+  },
+  "16": {
+    "why": "Annotations are structured metadata \u2014 compilers and frameworks listen to them.",
+    "points": [
+      "@Override catches signature mistakes.",
+      "Retention: SOURCE/CLASS/RUNTIME.",
+      "Frameworks use runtime annotations heavily.",
+      "Custom annotations need processors or reflection.",
+      "Annotations don't replace good API design."
+    ],
+    "code": "@Override\npublic String toString() {\n  return \"ok\";\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then we connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Typos in method names without @Override.",
+      "Assuming all annotations exist at runtime.",
+      "Over-annotating instead of simplifying design."
+    ],
+    "interview_q": "What does @Override buy you?",
+    "interview_a": "Compile-time proof you actually overrode a superclass/interface method.",
+    "analogy": "Keep a simple picture of Annotations."
+  },
+  "17": {
+    "why": "Reflection powers frameworks \u2014 and can wreck application code if used casually.",
+    "points": [
+      "Inspect classes/methods/fields at runtime.",
+      "Slow and brittle compared to direct calls.",
+      "Modules restrict deep reflective access.",
+      "Prefer interfaces or codegen when possible.",
+      "Security managers and agents change the rules."
+    ],
+    "code": "Class<?> c = String.class;\nvar m = c.getMethod(\"length\");\nint n = (int) m.invoke(\"hi\");",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then we connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Using reflection for ordinary business logic.",
+      "Ignoring setAccessible/module failures.",
+      "Caching nothing and paying lookup costs repeatedly."
+    ],
+    "interview_q": "When is reflection justified?",
+    "interview_a": "Frameworks, tools, serializers \u2014 rarely in day-to-day domain code.",
+    "analogy": "Keep a simple picture of Reflection."
+  },
+  "18": {
+    "why": "Records are for immutable data carriers \u2014 less boilerplate, clearer models.",
+    "points": [
+      "Auto equals/hashCode/toString/accessors.",
+      "Canonical and compact constructors.",
+      "Great with sealed types and pattern matching.",
+      "Not a replacement for every class.",
+      "Implications for serialization and frameworks."
+    ],
+    "code": "record Point(int x, int y) {\n  public Point {\n    if (x < 0 || y < 0) throw new IllegalArgumentException();\n  }\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then we connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Using records for mutable entities casually.",
+      "Huge validation logic stuffed awkwardly.",
+      "Forgetting they are final/shallow-immutable by default."
+    ],
+    "interview_q": "Record vs class?",
+    "interview_a": "Records model transparent immutable data; classes model richer encapsulated behavior.",
+    "analogy": "Keep a simple picture of Records."
+  },
+  "19": {
+    "why": "Sealing closes a hierarchy so switches and readers can be exhaustive.",
+    "points": [
+      "permits lists allowed subtypes.",
+      "Enables exhaustive switch checking.",
+      "Pairs well with records.",
+      "Models closed domains honestly.",
+      "Open hierarchies stay unsealed on purpose."
+    ],
+    "code": "sealed interface Shape permits Circle, Rect {}\nrecord Circle(double r) implements Shape {}\nrecord Rect(double w, double h) implements Shape {}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then we connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Sealing everything by fashion.",
+      "Forgetting to update permits when adding types.",
+      "Using sealing where plugins must extend freely."
+    ],
+    "interview_q": "Why seal a hierarchy?",
+    "interview_a": "So compilers and humans know the full set of subtypes \u2014 safer refactors.",
+    "analogy": "Keep a simple picture of Sealed Classes."
+  },
+  "20": {
+    "why": "Modules restore strong encapsulation the classpath erased.",
+    "points": [
+      "module-info requires/exports/opens.",
+      "Explicit dependencies.",
+      "Stronger encapsulation than packages alone.",
+      "Migration can be incremental.",
+      "Classpath apps still exist \u2014 know both worlds."
+    ],
+    "code": "module com.shop.app {\n  requires com.shop.core;\n  exports com.shop.app.api;\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this example like we're pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then we connect it to the production failure mode."
+    ],
+    "mistakes": [
+      "Opening everything 'just to make it work'.",
+      "Circular module dependencies.",
+      "Assuming modules alone equal good architecture."
+    ],
+    "interview_q": "What problem do modules solve?",
+    "interview_a": "Reliable configuration and stronger encapsulation than a flat classpath.",
+    "analogy": "Keep a simple picture of Modules and JPMS."
+  },
+  "21": {
+    "why": "List is the everyday ordered collection \u2014 pick the implementation on purpose.",
+    "points": [
+      "List is ordered and allows duplicates.",
+      "ArrayList is the default workhorse.",
+      "LinkedList rarely wins for typical access.",
+      "Program to the List interface.",
+      "Watch ConcurrentModification during iteration."
+    ],
+    "code": "List<String> list = new ArrayList<>();\nlist.add(\"a\");\nlist.add(0, \"b\");\nSystem.out.println(list.get(0));",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Using LinkedList by habit.",
+      "Exposing raw ArrayList in public APIs.",
+      "Modifying a list while foreach-iterating."
+    ],
+    "interview_q": "Default List choice?",
+    "interview_a": "ArrayList for most cases unless you measured otherwise.",
+    "analogy": "Picture Lists clearly before edge cases."
+  },
+  "22": {
+    "why": "Set means uniqueness \u2014 and uniqueness means equals/hashCode discipline.",
+    "points": [
+      "Uniqueness via equals/hashCode.",
+      "HashSet/LinkedHashSet/TreeSet trade-offs.",
+      "Sorted order needs consistent comparators.",
+      "Don't mutate fields used in hashing while in a set.",
+      "Set algebra shows up in real domain rules."
+    ],
+    "code": "Set<String> set = new HashSet<>();\nset.add(\"a\");\nset.add(\"a\");\nSystem.out.println(set.size());",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Broken equals/hashCode pairs.",
+      "Expecting HashSet to be sorted.",
+      "Mutating keys after insert."
+    ],
+    "interview_q": "HashSet vs TreeSet?",
+    "interview_a": "HashSet is unordered typical O(1); TreeSet is sorted O(log n).",
+    "analogy": "Picture Sets clearly before edge cases."
+  },
+  "23": {
+    "why": "Maps are the lookup engine of business logic.",
+    "points": [
+      "Keys hash into buckets.",
+      "getOrDefault/computeIfAbsent/merge are workhorses.",
+      "null key/value rules depend on implementation.",
+      "LinkedHashMap preserves order; TreeMap sorts.",
+      "Concurrent maps come later for shared mutation."
+    ],
+    "code": "Map<String, Integer> ages = new HashMap<>();\nages.put(\"Ada\", 36);\nint v = ages.getOrDefault(\"Ada\", 0);",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Using containsKey+get instead of compute patterns.",
+      "Mutable keys.",
+      "Assuming iteration order on HashMap."
+    ],
+    "interview_q": "How HashMap works at high level?",
+    "interview_a": "Hash to buckets, equals to resolve collisions, resize as load grows.",
+    "analogy": "Picture Maps clearly before edge cases."
+  },
+  "24": {
+    "why": "Queues shape producer/consumer flow \u2014 Deque is the modern versatile choice.",
+    "points": [
+      "FIFO vs double-ended access.",
+      "ArrayDeque is a strong general default.",
+      "offer/poll vs add/remove exception behavior.",
+      "Legacy Stack \u2014 prefer Deque.",
+      "Blocking queues appear in concurrency."
+    ],
+    "code": "Deque<String> q = new ArrayDeque<>();\nq.offerLast(\"a\");\nString x = q.pollFirst();",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Using Stack legacy class.",
+      "Busy-waiting instead of blocking structures later.",
+      "Ignoring capacity/backpressure needs."
+    ],
+    "interview_q": "Why ArrayDeque over Stack?",
+    "interview_a": "Clearer API and better performance than legacy Vector-based Stack.",
+    "analogy": "Picture Queues and Deques clearly before edge cases."
+  },
+  "25": {
+    "why": "Sorting is comparison policy \u2014 make that policy explicit and consistent.",
+    "points": [
+      "Comparable = natural order.",
+      "Comparator = external strategy.",
+      "thenComparing chains.",
+      "Consistency with equals matters for sorted sets/maps.",
+      "TimSort is stable for objects."
+    ],
+    "code": "list.sort(Comparator.comparing(User::name).thenComparingInt(User::age));",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Inconsistent compare/equals.",
+      "Sorting nulls without nullsFirst/Last.",
+      "Mutating objects mid-sort."
+    ],
+    "interview_q": "Comparable vs Comparator?",
+    "interview_a": "Comparable defines natural order on the type; Comparator is supplied externally.",
+    "analogy": "Picture Sorting and Comparators clearly before edge cases."
+  },
+  "26": {
+    "why": "Streams let you describe bulk operations \u2014 laziness included.",
+    "points": [
+      "Pipelines: source, intermediate ops, terminal op.",
+      "Lazy until terminal.",
+      "Prefer purity in lambdas.",
+      "toList() modern collectors.",
+      "Streams aren't always faster."
+    ],
+    "code": "list.stream()\n  .filter(s -> s.length() > 3)\n  .map(String::toUpperCase)\n  .toList();",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Mutating external state in lambdas.",
+      "Forgetting a terminal operation.",
+      "Blindly parallelizing."
+    ],
+    "interview_q": "Are streams always faster?",
+    "interview_a": "No \u2014 clarity first; measure before going parallel.",
+    "analogy": "Picture Streams Intro clearly before edge cases."
+  },
+  "27": {
+    "why": "Collectors turn streams into the structures you actually return.",
+    "points": [
+      "toList/toSet/toMap.",
+      "groupingBy and partitioningBy.",
+      "Downstream collectors.",
+      "toMap merge functions for collisions.",
+      "Immutable collection collectors."
+    ],
+    "code": "Map<String, Long> counts = list.stream()\n  .collect(Collectors.groupingBy(s -> s, Collectors.counting()));",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "toMap crashes on duplicate keys without merge.",
+      "Huge groupingBy without memory thought.",
+      "Collecting twice unnecessarily."
+    ],
+    "interview_q": "groupingBy use case?",
+    "interview_a": "Bucket elements by a classifier into a map of aggregates.",
+    "analogy": "Picture Stream Collectors clearly before edge cases."
+  },
+  "28": {
+    "why": "flatMap flattens nested worlds \u2014 lists of lists, optional chains, effect pipelines.",
+    "points": [
+      "map nests; flatMap flattens.",
+      "Optional.flatMap for multi-step absence.",
+      "Domain models often nest collections.",
+      "Keep pipelines readable.",
+      "Composition beats manual nested loops when clear."
+    ],
+    "code": "list.stream()\n  .flatMap(user -> user.orders().stream())\n  .toList();",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Accidentally producing Stream<Stream<T>>.",
+      "Giant unreadable pipelines.",
+      "Using flatMap where map was enough."
+    ],
+    "interview_q": "When flatMap over map?",
+    "interview_a": "When each input maps to a stream/optional you need flattened.",
+    "analogy": "Picture flatMap and Composition clearly before edge cases."
+  },
+  "29": {
+    "why": "Parallel streams are a power tool \u2014 and a foot-gun on IO and tiny data.",
+    "points": [
+      "Uses common ForkJoinPool.",
+      "Best for CPU-heavy independent work.",
+      "Ordering and side effects get weird.",
+      "IO-bound work wants explicit executors/virtual threads.",
+      "Measure; don't hope."
+    ],
+    "code": "list.parallelStream().map(this::cpuHeavy).toList();",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "parallelStream on HTTP calls.",
+      "Shared mutable accumulators.",
+      "Assuming order is preserved without care."
+    ],
+    "interview_q": "When not to use parallelStream?",
+    "interview_a": "Tiny data, IO, shared mutation, or latency-critical request threads.",
+    "analogy": "Picture Parallel Streams clearly before edge cases."
+  },
+  "30": {
+    "why": "Optional makes absence explicit at API boundaries \u2014 not everywhere.",
+    "points": [
+      "Prefer as return type.",
+      "map/flatMap/filter.",
+      "orElse vs orElseGet.",
+      "Avoid Optional.of(null).",
+      "Don't use Optional fields everywhere."
+    ],
+    "code": "Optional<User> u = find();\nString name = u.map(User::name).orElse(\"unknown\");",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Optional.of(null).",
+      "Using get() without checks.",
+      "Optional as fields/parameters everywhere."
+    ],
+    "interview_q": "Why not Optional as a field?",
+    "interview_a": "Noise and allocation; use it to communicate absence in returns.",
+    "analogy": "Picture Optional clearly before edge cases."
+  },
+  "31": {
+    "why": "Date/Calendar are legacy \u2014 java.time is the modern contract with time.",
+    "points": [
+      "LocalDate/LocalDateTime/Instant/ZonedDateTime.",
+      "Immutable API.",
+      "Zones are where bugs live.",
+      "Prefer Instant for timestamps.",
+      "Formatting/parsing with DateTimeFormatter."
+    ],
+    "code": "LocalDate today = LocalDate.now();\nLocalDate due = today.plusDays(7);\nInstant ts = Instant.now();",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Storing LocalDateTime as if it were a moment.",
+      "Mixing Date and java.time carelessly.",
+      "Hardcoding zones."
+    ],
+    "interview_q": "Instant vs LocalDateTime?",
+    "interview_a": "Instant is a timeline timestamp; LocalDateTime has no zone.",
+    "analogy": "Picture java.time clearly before edge cases."
+  },
+  "32": {
+    "why": "Exceptions are control flow for failure \u2014 design them like an API.",
+    "points": [
+      "Checked vs unchecked trade-offs.",
+      "Don't swallow exceptions.",
+      "Wrap with context.",
+      "finally vs try-with-resources.",
+      "Create meaningful exception types."
+    ],
+    "code": "try {\n  read();\n} catch (IOException e) {\n  throw new UncheckedIOException(e);\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Empty catch blocks.",
+      "Using exceptions for ordinary control flow.",
+      "Losing the cause chain."
+    ],
+    "interview_q": "Checked vs unchecked?",
+    "interview_a": "Checked must be declared/handled; unchecked need not \u2014 choose intentionally.",
+    "analogy": "Picture Exceptions clearly before edge cases."
+  },
+  "33": {
+    "why": "If it opens, it must close \u2014 try-with-resources makes that boring and correct.",
+    "points": [
+      "AutoCloseable resources.",
+      "Suppressed exceptions.",
+      "Multiple resources in one try.",
+      "Prefer over manual finally close.",
+      "Custom resources should be AutoCloseable."
+    ],
+    "code": "try (var in = Files.newInputStream(path)) {\n  return in.readAllBytes();\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Closing in finally incorrectly.",
+      "Ignoring suppressed exceptions.",
+      "Forgetting resources in tests."
+    ],
+    "interview_q": "Why try-with-resources?",
+    "interview_a": "Guaranteed close with correct suppression semantics.",
+    "analogy": "Picture try-with-resources clearly before edge cases."
+  },
+  "34": {
+    "why": "NIO.2 Path/Files is how modern Java talks to the filesystem.",
+    "points": [
+      "Path.of and Files helpers.",
+      "Always think about charset.",
+      "Walk/glob utilities.",
+      "Atomic move caveats.",
+      "Prefer NIO.2 over legacy File for new code."
+    ],
+    "code": "Path p = Path.of(\"data.txt\");\nFiles.writeString(p, \"hello\");\nString s = Files.readString(p);",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Assuming default charset.",
+      "Not handling NoSuchFileException.",
+      "Path traversal in user inputs."
+    ],
+    "interview_q": "Path vs File?",
+    "interview_a": "Path/NIO.2 is modern; File is legacy.",
+    "analogy": "Picture Files and NIO.2 clearly before edge cases."
+  },
+  "35": {
+    "why": "Text is not bytes \u2014 Readers/Writers force you to confront encoding.",
+    "points": [
+      "Character streams vs byte streams.",
+      "Buffering is not optional for performance.",
+      "Specify Charset.",
+      "InputStreamReader bridges bytes to chars.",
+      "Flush/close semantics matter."
+    ],
+    "code": "try (var w = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {\n  w.write(\"line\\n\");\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Reading text as raw bytes.",
+      "Ignoring charset.",
+      "Unbuffered tiny writes in a loop."
+    ],
+    "interview_q": "Reader vs InputStream?",
+    "interview_a": "Text vs binary.",
+    "analogy": "Picture Readers and Writers clearly before edge cases."
+  },
+  "36": {
+    "why": "A thread is an independent path of execution \u2014 shared memory makes it interesting.",
+    "points": [
+      "Thread vs Runnable.",
+      "start schedules; run does not.",
+      "join and interrupt basics.",
+      "Shared mutation needs coordination.",
+      "Unbounded thread creation hurts."
+    ],
+    "code": "Thread t = new Thread(() -> doWork());\nt.start();\nt.join();",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Calling run() instead of start().",
+      "Ignoring interrupt status.",
+      "Sharing mutable state with no protocol."
+    ],
+    "interview_q": "start() vs run()?",
+    "interview_a": "start schedules a new thread; run executes on the current thread.",
+    "analogy": "Picture Threads Intro clearly before edge cases."
+  },
+  "37": {
+    "why": "synchronized buys mutual exclusion and visibility \u2014 keep sections small.",
+    "points": [
+      "Intrinsic locks.",
+      "Happens-before via sync.",
+      "Lock on shared state, not on random objects.",
+      "Deadlocks from multiple locks.",
+      "Prefer higher-level concurrency utils when possible."
+    ],
+    "code": "synchronized void incr() { count++; }",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Synchronizing on this for public APIs carelessly.",
+      "Huge synchronized methods.",
+      "Nested locks without ordering."
+    ],
+    "interview_q": "What does synchronized guarantee?",
+    "interview_a": "Mutual exclusion and memory visibility among threads using the same lock.",
+    "analogy": "Picture Synchronization clearly before edge cases."
+  },
+  "38": {
+    "why": "volatile is visibility tooling \u2014 not a magic atomic wand.",
+    "points": [
+      "Ensures visibility of writes.",
+      "Does not make compound actions atomic.",
+      "Happens-before edges matter.",
+      "Use atomics for counters.",
+      "Publication patterns use volatile carefully."
+    ],
+    "code": "volatile boolean ready;\n// writer publishes data then sets ready = true",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Expecting volatile++ to be safe.",
+      "Using volatile instead of locking complex invariants.",
+      "Overusing volatile for everything."
+    ],
+    "interview_q": "Does volatile make ++ atomic?",
+    "interview_a": "No \u2014 ++ remains a race without atomics or locks.",
+    "analogy": "Picture volatile and Happens-Before clearly before edge cases."
+  },
+  "39": {
+    "why": "ReentrantLock adds tryLock, conditions, and fairness when synchronized is not enough.",
+    "points": [
+      "Always unlock in finally.",
+      "tryLock avoids dead waiting.",
+      "Multiple conditions.",
+      "Fairness costs throughput.",
+      "Prefer synchronized unless you need features."
+    ],
+    "code": "lock.lock();\ntry {\n  work();\n} finally {\n  lock.unlock();\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Forgetting unlock.",
+      "Locking without clear ownership.",
+      "Fair locks by default without need."
+    ],
+    "interview_q": "When ReentrantLock over synchronized?",
+    "interview_a": "When you need tryLock, timeouts, multiple conditions, or fairness.",
+    "analogy": "Picture Explicit Locks clearly before edge cases."
+  },
+  "40": {
+    "why": "Thread pools bound concurrency \u2014 unbounded thread creation is not a strategy.",
+    "points": [
+      "Fixed/cached/scheduled pools.",
+      "shutdown vs shutdownNow.",
+      "Bounded queues and rejection policies.",
+      "Always have a failure story.",
+      "Virtual threads change some defaults later."
+    ],
+    "code": "try (var exec = Executors.newFixedThreadPool(4)) {\n  exec.submit(() -> task());\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Cached pools for unbounded bursty IO without limits.",
+      "Not shutting down pools.",
+      "Ignoring RejectedExecutionException."
+    ],
+    "interview_q": "Why pools?",
+    "interview_a": "Reuse threads, bound concurrency, control rejection.",
+    "analogy": "Picture ExecutorService clearly before edge cases."
+  },
+  "41": {
+    "why": "Callable/Future bring return values and timeouts into concurrent work.",
+    "points": [
+      "Callable can return and throw checked.",
+      "Future.get blocks.",
+      "Cancel is cooperative.",
+      "Always prefer timeouts.",
+      "CompletableFuture composes better later."
+    ],
+    "code": "Future<Integer> f = exec.submit(() -> compute());\nint v = f.get(1, TimeUnit.SECONDS);",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "get() without timeout.",
+      "Ignoring cancellation.",
+      "Assuming cancel stops CPU immediately."
+    ],
+    "interview_q": "Callable vs Runnable?",
+    "interview_a": "Callable returns a value and may throw checked exceptions.",
+    "analogy": "Picture Callable and Future clearly before edge cases."
+  },
+  "42": {
+    "why": "Concurrent collections make shared structure access safer \u2014 not all multi-step logic automatic.",
+    "points": [
+      "ConcurrentHashMap compute/merge.",
+      "CopyOnWrite for rare writes.",
+      "Blocking queues for handoffs.",
+      "Weakly consistent iterators.",
+      "Compound actions need atomic APIs."
+    ],
+    "code": "ConcurrentHashMap<String, Integer> map = new ConcurrentHashMap<>();\nmap.merge(\"a\", 1, Integer::sum);",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "check-then-act on CHM without atomic methods.",
+      "Using COW lists for write-heavy workloads.",
+      "Synchronizing around CHM unnecessarily."
+    ],
+    "interview_q": "Is CHM enough for multi-step logic?",
+    "interview_a": "Single ops are safe; multi-step needs compute/merge or other coordination.",
+    "analogy": "Picture Concurrent Collections clearly before edge cases."
+  },
+  "43": {
+    "why": "Atomics give lock-free updates for focused hotspots.",
+    "points": [
+      "CAS loops under the hood.",
+      "AtomicInteger/Long/Reference.",
+      "Good for counters/flags.",
+      "Contention still costs.",
+      "VarHandles for advanced cases."
+    ],
+    "code": "AtomicInteger n = new AtomicInteger();\nn.incrementAndGet();",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Using atomics for complex multi-field invariants.",
+      "Busy CAS under extreme contention without backoff strategy.",
+      "Ignoring memory effects elsewhere."
+    ],
+    "interview_q": "What is CAS?",
+    "interview_a": "Compare-and-set updates only if the current value matches expectation.",
+    "analogy": "Picture Atomics clearly before edge cases."
+  },
+  "44": {
+    "why": "Latches, barriers, and semaphores coordinate phases of work.",
+    "points": [
+      "CountDownLatch one-shot gates.",
+      "CyclicBarrier multi-phase.",
+      "Semaphore permits.",
+      "Don't reinvent with wait/notify casually.",
+      "Pick the simplest tool."
+    ],
+    "code": "CountDownLatch latch = new CountDownLatch(3);\nlatch.countDown();\nlatch.await();",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Using latch when a barrier was needed.",
+      "Forgetting to countDown on error paths.",
+      "Semaphore permits leaked."
+    ],
+    "interview_q": "Latch vs CyclicBarrier?",
+    "interview_a": "Latch is one-shot; barrier resets for recurring phases.",
+    "analogy": "Picture Synchronizers clearly before edge cases."
+  },
+  "45": {
+    "why": "Blocking queues are the backbone of producer/consumer designs.",
+    "points": [
+      "put/take block; offer/poll time out.",
+      "Bounded queues apply backpressure.",
+      "Poison pills for shutdown.",
+      "Choose array/linked/priority variants.",
+      "Pair with executors thoughtfully."
+    ],
+    "code": "BlockingQueue<Job> q = new ArrayBlockingQueue<>(100);\nq.put(job);\nJob j = q.take();",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Unbounded queues that OOM.",
+      "Busy spin instead of take.",
+      "No shutdown protocol."
+    ],
+    "interview_q": "Why bound the queue?",
+    "interview_a": "Backpressure so producers cannot crash the process.",
+    "analogy": "Picture BlockingQueue clearly before edge cases."
+  },
+  "46": {
+    "why": "CompletableFuture composes async work as a graph of stages.",
+    "points": [
+      "thenApply/thenCompose/thenCombine.",
+      "exceptionally/handle.",
+      "supplyAsync executor choice matters.",
+      "Don't block the common pool with IO.",
+      "Timeouts and cancellation."
+    ],
+    "code": "CompletableFuture.supplyAsync(this::load)\n  .thenApply(this::transform)\n  .orTimeout(1, TimeUnit.SECONDS)\n  .thenAccept(this::save);",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Blocking inside common-pool stages.",
+      "Swallowing exceptions.",
+      "thenApply where thenCompose was needed."
+    ],
+    "interview_q": "thenApply vs thenCompose?",
+    "interview_a": "thenApply maps values; thenCompose flattens nested futures.",
+    "analogy": "Picture CompletableFuture clearly before edge cases."
+  },
+  "47": {
+    "why": "Fork/Join is divide-and-conquer with work stealing.",
+    "points": [
+      "RecursiveTask/Action.",
+      "Common pool is shared.",
+      "Best for CPU-bound splitting.",
+      "Don't block worker threads.",
+      "Parallel streams use this machinery."
+    ],
+    "code": "ForkJoinPool.commonPool().invoke(new MyTask(range));",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Submitting blocking IO to common pool.",
+      "Unbalanced split strategies.",
+      "Ignoring steal/throughput metrics."
+    ],
+    "interview_q": "What is work stealing?",
+    "interview_a": "Idle workers steal tasks from busy workers' queues.",
+    "analogy": "Picture ForkJoinPool clearly before edge cases."
+  },
+  "48": {
+    "why": "ThreadLocal is per-thread global state \u2014 powerful and leak-prone.",
+    "points": [
+      "withInitial helpers.",
+      "Always remove in request-scoped pool usage.",
+      "Harder reasoning than passing context.",
+      "Virtual threads multiply instances.",
+      "Prefer explicit context parameters when possible."
+    ],
+    "code": "static final ThreadLocal<SimpleDateFormat> FMT =\n  ThreadLocal.withInitial(() -> new SimpleDateFormat(\"yyyy\"));",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Forgetting remove() in thread pools.",
+      "Using ThreadLocal as a hidden API.",
+      "Sharing ThreadLocal values across threads somehow."
+    ],
+    "interview_q": "Classic ThreadLocal leak?",
+    "interview_a": "Values stick to reused pool threads \u2014 remove in finally.",
+    "analogy": "Picture ThreadLocal clearly before edge cases."
+  },
+  "49": {
+    "why": "Deadlocks are circular waits \u2014 prevent with ordering and timeouts.",
+    "points": [
+      "Four classic conditions.",
+      "Global lock order.",
+      "tryLock with timeout.",
+      "Detect via thread dumps.",
+      "Shrink nested locking."
+    ],
+    "code": "// T1: lock A then B\n// T2: lock B then A\n// That ordering risk is the story",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Inconsistent lock ordering.",
+      "Holding locks while calling alien code.",
+      "No timeout strategy."
+    ],
+    "interview_q": "How to prevent deadlocks?",
+    "interview_a": "Lock ordering, smaller critical sections, tryLock timeouts, avoid nested locks.",
+    "analogy": "Picture Deadlocks clearly before edge cases."
+  },
+  "50": {
+    "why": "Virtual threads make the thread-per-request style scalable again for blocking IO.",
+    "points": [
+      "Cheap to create many.",
+      "Don't pool them like platform threads.",
+      "Watch pinning cases.",
+      "Great with Blocking IO + structured concurrency.",
+      "CPU-bound work still needs bounding."
+    ],
+    "code": "try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {\n  exec.submit(() -> handle(req));\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "I'll walk this like pair-programming.",
+      "Focus on the idea each line encodes.",
+      "Then connect to the failure mode."
+    ],
+    "mistakes": [
+      "Pooling virtual threads unnecessarily.",
+      "Pinning in hot synchronized/native sections without care.",
+      "Assuming they speed up CPU-bound math."
+    ],
+    "interview_q": "Virtual vs platform thread?",
+    "interview_a": "Virtual threads are scheduled onto fewer carriers \u2014 cheap for lots of blocking tasks.",
+    "analogy": "Picture Virtual Threads clearly before edge cases."
+  },
+  "51": {
+    "why": "Classes appear lazily \u2014 understanding loaders explains NoClassDefFoundError mysteries.",
+    "points": [
+      "Bootstrap/platform/application loaders.",
+      "Parent delegation.",
+      "Linking, verification, initialization.",
+      "Metaspace holds class metadata.",
+      "Dynamic loading has costs and risks."
+    ],
+    "code": "Class<?> c = Class.forName(\"com.ex.App\");\nSystem.out.println(c.getClassLoader());",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Classpath order surprises.",
+      "Forcing eager init everywhere.",
+      "Ignoring linkage errors until production."
+    ],
+    "interview_q": "What is parent delegation?",
+    "interview_a": "Ask the parent loader first before loading a class yourself.",
+    "analogy": "Picture Class Loading clearly."
+  },
+  "52": {
+    "why": "Bytecode is the JVM's language \u2014 javap turns mystery into mechanism.",
+    "points": [
+      "Operand stack + local variables.",
+      "Constant pool.",
+      "javac emits; JIT optimizes later.",
+      "Reading bytecode explains language sugar.",
+      "Don't confuse source lines with native instructions."
+    ],
+    "code": "# javap -c -p App\n# look for invokevirtual / getfield / ifeq",
+    "code_lang": "bash",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Assuming one Java line equals one machine instruction.",
+      "Optimizing without looking at bytecode/JIT.",
+      "Fear of javap."
+    ],
+    "interview_q": "Why read bytecode?",
+    "interview_a": "To understand sugar, performance surprises, and what the JIT sees.",
+    "analogy": "Picture Bytecode Basics clearly."
+  },
+  "53": {
+    "why": "Stack is per-call bookkeeping; heap is where objects live.",
+    "points": [
+      "Frames hold locals and return info.",
+      "Objects live on the heap (generally).",
+      "Escape analysis may elide allocations.",
+      "StackOverflow vs OutOfMemory.",
+      "GC cares about heap reachability."
+    ],
+    "code": "void f() {\n  int x = 1;          // stack local\n  User u = new User(); // object on heap\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Confusing heap dumps with stack traces.",
+      "Assuming every new always hits heap forever.",
+      "Ignoring native/stack limits."
+    ],
+    "interview_q": "Where do objects live?",
+    "interview_a": "On the heap generally; references may live in stack frames.",
+    "analogy": "Picture Heap and Stack clearly."
+  },
+  "54": {
+    "why": "GC reclaims unreachable objects \u2014 your allocation rate sets the pace.",
+    "points": [
+      "Reachability from GC roots.",
+      "Generational hypothesis.",
+      "Pauses vs concurrent work.",
+      "Allocation rate drives pressure.",
+      "Tuning without metrics is superstition."
+    ],
+    "code": "// Object becomes collectible when nothing reachable can touch it\nList<byte[]> tmp = new ArrayList<>();\ntmp = null; // if no other refs, GC may reclaim",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Caching forever.",
+      "Allocating insanely in tight loops.",
+      "Treating GC as an enemy instead of a partner."
+    ],
+    "interview_q": "When is an object collectible?",
+    "interview_a": "When no GC root can reach it.",
+    "analogy": "Picture Garbage Collection clearly."
+  },
+  "55": {
+    "why": "The JIT turns hot interpreted code into optimized native code after warmup.",
+    "points": [
+      "Interpreter first, compile hot methods.",
+      "C1/C2 tiers.",
+      "Deoptimization happens.",
+      "Warmup affects benchmarks.",
+      "Use JMH for microbenchmarks."
+    ],
+    "code": "// first calls may be slow (warmup)\n// steady-state matters for servers",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Benchmarking during warmup.",
+      "Micro-optimizing cold code.",
+      "Assuming JIT always makes it fastest immediately."
+    ],
+    "interview_q": "Why is the first request slow?",
+    "interview_a": "Loading + interpretation + JIT warmup.",
+    "analogy": "Picture JIT Compilation clearly."
+  },
+  "56": {
+    "why": "Collectors trade throughput, latency, and footprint \u2014 pick for SLOs.",
+    "points": [
+      "G1 is a common server default.",
+      "ZGC/Shenandoah chase low pauses.",
+      "Parallel/throughput collectors still exist for batch.",
+      "Region-based designs.",
+      "Validate with production-like load."
+    ],
+    "code": "java -XX:+UseG1GC -Xlog:gc*:file=gc.log -jar app.jar",
+    "code_lang": "bash",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Copying flags from a blog blindly.",
+      "Chasing zero pauses without need.",
+      "Ignoring allocation patterns."
+    ],
+    "interview_q": "How to choose a collector?",
+    "interview_a": "Match pause/throughput goals and heap size; measure.",
+    "analogy": "Picture GC Collectors clearly."
+  },
+  "57": {
+    "why": "Java leaks are usually reference leaks \u2014 profilers find the chain.",
+    "points": [
+      "Dominator trees.",
+      "Unbounded caches.",
+      "Listener leaks.",
+      "ThreadLocal pool leaks.",
+      "Heap dumps under load."
+    ],
+    "code": "// capture heap dump, then inspect dominators\n// jcmd <pid> GC.heap_dump /tmp/app.hprof",
+    "code_lang": "bash",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Guessing instead of dumping.",
+      "Fixating on GC when the leak is a reference graph.",
+      "Ignoring classloader leaks in hot reload."
+    ],
+    "interview_q": "Classic Java leak?",
+    "interview_a": "Unbounded caches, static collections, ThreadLocal misuse, forgotten listeners.",
+    "analogy": "Picture Memory Leaks and Profiling clearly."
+  },
+  "58": {
+    "why": "When production hurts, tools beat folklore.",
+    "points": [
+      "jcmd, JFR, thread dumps, heap dumps.",
+      "async-profiler for CPU/alloc.",
+      "Capture during the incident.",
+      "Correlate metrics with dumps.",
+      "Practice before the outage."
+    ],
+    "code": "jcmd <pid> Thread.print\njcmd <pid> JFR.start name=app settings=profile",
+    "code_lang": "bash",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Restarting as first step every time.",
+      "Taking dumps after the problem vanishes.",
+      "Too many tools, no playbook."
+    ],
+    "interview_q": "First tool for a stuck app?",
+    "interview_a": "Thread dump / JFR to see blockers.",
+    "analogy": "Picture Diagnostic Tools clearly."
+  },
+  "59": {
+    "why": "The JIT may prove an object never escapes \u2014 then scalar-replace it.",
+    "points": [
+      "Escape analysis enables stack allocation/scalar replacement.",
+      "Lock elision possible.",
+      "Don't micro-opt assuming every new escapes.",
+      "Readability still wins.",
+      "Measure with real workloads."
+    ],
+    "code": "Point p = new Point(1, 2);\nreturn p.x() + p.y(); // may not need a real heap object",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Rewriting clear code for imaginary allocations.",
+      "Trusting microbenchmarks without JMH.",
+      "Ignoring when objects truly escape."
+    ],
+    "interview_q": "What is escape analysis?",
+    "interview_a": "Analysis of whether an object escapes a method/thread, enabling optimizations.",
+    "analogy": "Picture Escape Analysis clearly."
+  },
+  "60": {
+    "why": "-Xmx is not your process size \u2014 native and metaspace count.",
+    "points": [
+      "Metaspace for class metadata.",
+      "Direct buffers, thread stacks, JNI, GC native.",
+      "Container limits need headroom.",
+      "Native memory tracking helps.",
+      "Classloader leaks show in metaspace."
+    ],
+    "code": "java -Xmx512m -XX:MaxMetaspaceSize=256m -jar app.jar\n# still leave room for threads/native/direct buffers",
+    "code_lang": "bash",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Setting -Xmx equal to container limit.",
+      "Ignoring direct memory.",
+      "Unlimited metaspace with rogue loaders."
+    ],
+    "interview_q": "Why die with free heap?",
+    "interview_a": "Native/metaspace/stacks/container limits beyond -Xmx.",
+    "analogy": "Picture Metaspace and Native Memory clearly."
+  },
+  "61": {
+    "why": "Soft/weak/phantom references let you cooperate with GC for caches and cleanup.",
+    "points": [
+      "Strong/soft/weak/phantom.",
+      "WeakHashMap caveats.",
+      "Cleaner vs finalize.",
+      "Caches need bounds anyway.",
+      "Reference queues for cleanup."
+    ],
+    "code": "SoftReference<byte[]> soft = new SoftReference<>(data);\nbyte[] again = soft.get(); // may be null after GC pressure",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Using weak/soft caches without size/TTL policy.",
+      "Relying on finalize.",
+      "Assuming soft refs never clear."
+    ],
+    "interview_q": "Weak vs soft?",
+    "interview_a": "Weak cleared when only weakly reachable; soft retained until memory pressure.",
+    "analogy": "Picture Reference Types clearly."
+  },
+  "62": {
+    "why": "Flags are experiments \u2014 change one variable, measure against SLOs.",
+    "points": [
+      "Set heap intentionally.",
+      "Enable GC logging.",
+      "Prefer evidence over folklore.",
+      "Document why a flag exists.",
+      "Remove flags that no longer earn their keep."
+    ],
+    "code": "java -Xms512m -Xmx512m -XX:+UseG1GC -Xlog:gc*:file=gc.log -jar app.jar",
+    "code_lang": "bash",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Cargo-cult flag lists.",
+      "Tuning without load tests.",
+      "Leaving debug flags on forever."
+    ],
+    "interview_q": "First tuning step?",
+    "interview_a": "Metrics + GC logs under realistic load.",
+    "analogy": "Picture JVM Flags and Tuning clearly."
+  },
+  "63": {
+    "why": "Objects cost more than their fields \u2014 headers, padding, pointers.",
+    "points": [
+      "Object header.",
+      "Alignment/padding.",
+      "Compressed oops.",
+      "Array headers + length.",
+      "Field order can matter for packing."
+    ],
+    "code": "// a 'tiny' object still pays for header + padding\nclass Tiny { byte b; }",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Estimating memory by field sizes only.",
+      "Ignoring reference costs.",
+      "Obsessing over layout before algorithms."
+    ],
+    "interview_q": "Why is a tiny object bigger than expected?",
+    "interview_a": "Headers, alignment, and references add overhead.",
+    "analogy": "Picture Object Layout clearly."
+  },
+  "64": {
+    "why": "Safepoints are rendezvous points where the JVM can pause threads safely.",
+    "points": [
+      "Needed for GC and some VM ops.",
+      "Time-to-safepoint matters.",
+      "Tight loops can delay (historically).",
+      "JFR can show pause reasons.",
+      "Coordinate with latency goals."
+    ],
+    "code": "// when GC needs a global safepoint, threads must arrive\n// long time-to-safepoint shows up as mysterious latency",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Ignoring safepoint pauses in latency budgets.",
+      "Spinning forever without checks in exotic cases.",
+      "Blaming GC exclusively."
+    ],
+    "interview_q": "What is a safepoint?",
+    "interview_a": "A state where the JVM can consistently pause threads for VM operations.",
+    "analogy": "Picture Safepoints clearly."
+  },
+  "65": {
+    "why": "Startup is a feature \u2014 classloading and init dominate cold starts.",
+    "points": [
+      "Classloading + verification + init.",
+      "CDS/AppCDS.",
+      "AOT / Graal native image trade-offs.",
+      "CRaC for snapshotted restarts.",
+      "Lazy init carefully."
+    ],
+    "code": "java -jar app.jar\n# measure cold start separately from steady-state",
+    "code_lang": "bash",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Doing heavy work in static initializers.",
+      "Ignoring class path bloat.",
+      "Optimizing startup without measuring."
+    ],
+    "interview_q": "Ways to improve startup?",
+    "interview_a": "Reduce classpath work, CDS, lazy init, native image where it fits.",
+    "analogy": "Picture JVM Startup clearly."
+  },
+  "66": {
+    "why": "Interviews reward coherent stories \u2014 load to steady-state to diagnosis.",
+    "points": [
+      "Tell the pipeline story.",
+      "Tie symptoms to tools.",
+      "Admit trade-offs.",
+      "Use incident language.",
+      "Practice aloud."
+    ],
+    "code": "// Answer scaffold:\n// 1) define  2) mechanism  3) failure mode  4) how you'd diagnose",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Buzzwords without mechanisms.",
+      "Flags without symptoms.",
+      "No tooling story."
+    ],
+    "interview_q": "How to structure a JVM answer?",
+    "interview_a": "Define, mechanism, failure mode, diagnostic tools.",
+    "analogy": "Picture JVM Interview Wrap clearly."
+  },
+  "67": {
+    "why": "Patterns are shared vocabulary \u2014 not stamps to force on every class.",
+    "points": [
+      "Context + problem + trade-offs.",
+      "Language features can replace some patterns.",
+      "Prefer clarity.",
+      "Don't pattern-paint simple code.",
+      "Read them as tools."
+    ],
+    "code": "// Pattern = named solution to a recurring design problem\n// Use when the problem actually recurs",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Forcing patterns everywhere.",
+      "Using patterns to sound smart.",
+      "Ignoring simpler language features."
+    ],
+    "interview_q": "Are patterns outdated?",
+    "interview_a": "Catalogs evolve; naming recurring structures still helps teams.",
+    "analogy": "Picture Design Patterns Intro clearly."
+  },
+  "68": {
+    "why": "Creational patterns manage how objects come to life \u2014 DI often replaces factories.",
+    "points": [
+      "Singleton caveats.",
+      "Factory methods.",
+      "Builder for many options.",
+      "Prototype rarely.",
+      "Containers may own lifecycle."
+    ],
+    "code": "public final class App {\n  public static final App INSTANCE = new App();\n  private App() {}\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Double-checked locking myths.",
+      "Telescoping constructors.",
+      "Singleton as global mutable bag."
+    ],
+    "interview_q": "Builder vs telescoping constructors?",
+    "interview_a": "Builder keeps call sites readable with many optional fields.",
+    "analogy": "Picture Creational Patterns clearly."
+  },
+  "69": {
+    "why": "Structural patterns assemble objects \u2014 adapters, decorators, facades, proxies.",
+    "points": [
+      "Composition wraps behavior.",
+      "Decorator adds without subclass explosion.",
+      "Facade simplifies subsystems.",
+      "Proxy controls access.",
+      "Spring AOP uses proxies."
+    ],
+    "code": "class LoggingRepo implements Repo {\n  private final Repo delegate;\n  public void save(Entity e) { log(e); delegate.save(e); }\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Decorator stacks nobody understands.",
+      "Facade hiding too much.",
+      "Proxy surprises for equals/final."
+    ],
+    "interview_q": "Decorator vs inheritance?",
+    "interview_a": "Decorator adds behavior via composition without exploding subclasses.",
+    "analogy": "Picture Structural Patterns clearly."
+  },
+  "70": {
+    "why": "Behavioral patterns organize algorithms and communication \u2014 Strategy/Observer/Command.",
+    "points": [
+      "Replace deep conditionals with Strategy.",
+      "Observer for events.",
+      "Template method vs composition.",
+      "Command for undo/queues.",
+      "Don't over-abstract one-off code."
+    ],
+    "code": "interface Pay { void pay(int n); }\nrecord CardPay() implements Pay { public void pay(int n) { /*...*/ } }",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Strategy interfaces with one implementation forever.",
+      "Observer leaks.",
+      "Command explosion without need."
+    ],
+    "interview_q": "Strategy essence?",
+    "interview_a": "Swap algorithms behind a common interface without rewriting callers.",
+    "analogy": "Picture Behavioral Patterns clearly."
+  },
+  "71": {
+    "why": "Spring is an ecosystem centered on dependency injection and portable abstractions.",
+    "points": [
+      "IoC container mindset.",
+      "Beans and ApplicationContext.",
+      "Why enterprises adopt it.",
+      "Convention plus extension points.",
+      "Not magic \u2014 wiring."
+    ],
+    "code": "// Spring wires dependencies so your code depends on interfaces\n// The container constructs and injects beans",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Treating Spring as magic.",
+      "Avoiding understanding DI.",
+      "Bringing every module for a hello world."
+    ],
+    "interview_q": "What is Spring at heart?",
+    "interview_a": "A DI-centered programming and configuration model with a large ecosystem.",
+    "analogy": "Picture Spring Framework Intro clearly."
+  },
+  "72": {
+    "why": "IoC inverts construction \u2014 constructor injection makes dependencies honest.",
+    "points": [
+      "Constructor injection preferred.",
+      "IoC vs service locator.",
+      "Testability skyrockets.",
+      "Avoid field injection in new code.",
+      "Scopes matter."
+    ],
+    "code": "@Service\nclass OrderService {\n  private final OrderRepo repo;\n  OrderService(OrderRepo repo) { this.repo = repo; }\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Field injection everywhere.",
+      "Hidden static dependencies.",
+      "Circular dependencies as a design smell ignored."
+    ],
+    "interview_q": "Why constructor injection?",
+    "interview_a": "Required deps are explicit, final, and easy to unit test.",
+    "analogy": "Picture IoC and Dependency Injection clearly."
+  },
+  "73": {
+    "why": "Boot makes the happy path executable \u2014 auto-config, starters, opinions.",
+    "points": [
+      "@SpringBootApplication.",
+      "Starters.",
+      "application.yaml.",
+      "Actuator.",
+      "Override auto-config intentionally."
+    ],
+    "code": "@SpringBootApplication\npublic class App {\n  public static void main(String[] args) {\n    SpringApplication.run(App.class, args);\n  }\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Blindly accepting all auto-config.",
+      "Giant application.yaml without structure.",
+      "No Actuator in production apps that need it."
+    ],
+    "interview_q": "What does Boot add?",
+    "interview_a": "Opinionated auto-configuration so you ship with less boilerplate.",
+    "analogy": "Picture Spring Boot Basics clearly."
+  },
+  "74": {
+    "why": "MVC maps HTTP to methods \u2014 be intentional about DTOs and errors.",
+    "points": [
+      "DispatcherServlet flow.",
+      "@RestController mappings.",
+      "Validation.",
+      "ResponseEntity and status codes.",
+      "Don't expose entities blindly."
+    ],
+    "code": "@RestController\nclass HelloController {\n  @GetMapping(\"/hello\")\n  String hello() { return \"hi\"; }\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Returning entities with lazy fields.",
+      "Ignoring validation.",
+      "Inconsistent error shapes."
+    ],
+    "interview_q": "Controller return types?",
+    "interview_a": "Body, ResponseEntity, or reactive types \u2014 choose status and errors deliberately.",
+    "analogy": "Picture Spring MVC and REST clearly."
+  },
+  "75": {
+    "why": "Spring Data speeds repositories \u2014 you still own SQL/N+1 reality.",
+    "points": [
+      "JpaRepository interfaces.",
+      "Query methods.",
+      "Transactions boundaries.",
+      "N+1 and fetch strategies.",
+      "Migrations matter."
+    ],
+    "code": "interface UserRepo extends JpaRepository<User, Long> {\n  List<User> findByEmail(String email);\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "N+1 queries.",
+      "LazyInitializationException outside session.",
+      "God repositories."
+    ],
+    "interview_q": "Biggest JPA pitfall?",
+    "interview_a": "Lazy loading surprises and N+1 queries.",
+    "analogy": "Picture Spring Data and Persistence clearly."
+  },
+  "76": {
+    "why": "Security is a filter chain \u2014 AuthN vs AuthZ, never invent crypto.",
+    "points": [
+      "SecurityFilterChain bean.",
+      "Authentication vs authorization.",
+      "Password encoders.",
+      "CSRF for browsers.",
+      "Least privilege."
+    ],
+    "code": "@Bean\nSecurityFilterChain filter(HttpSecurity http) throws Exception {\n  return http.authorizeHttpRequests(a -> a.anyRequest().authenticated())\n    .httpBasic(Customizer.withDefaults())\n    .build();\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Disabling security 'temporarily' forever.",
+      "Plaintext passwords.",
+      "Authorize checks only on the UI."
+    ],
+    "interview_q": "AuthN vs AuthZ?",
+    "interview_a": "Authentication: who are you? Authorization: what can you do?",
+    "analogy": "Picture Spring Security clearly."
+  },
+  "77": {
+    "why": "Tests should be fast where possible \u2014 slices before full context.",
+    "points": [
+      "Unit tests without Spring.",
+      "@WebMvcTest/@DataJpaTest slices.",
+      "@SpringBootTest when needed.",
+      "Testcontainers for realism.",
+      "Deterministic data."
+    ],
+    "code": "@WebMvcTest(HelloController.class)\nclass HelloControllerTest {\n  @Autowired MockMvc mockMvc;\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Bootstrapping full context for everything.",
+      "Flaky time/order dependencies.",
+      "No failure assertions."
+    ],
+    "interview_q": "When @SpringBootTest?",
+    "interview_a": "When you truly need the full context; prefer slices for speed.",
+    "analogy": "Picture Spring Testing clearly."
+  },
+  "78": {
+    "why": "Microservices are a scalability/org choice \u2014 distributed failure is the price.",
+    "points": [
+      "Boundaries by business capability.",
+      "Independent deployability.",
+      "Network is unreliable.",
+      "Data ownership.",
+      "Modular monolith first often."
+    ],
+    "code": "// Service A owns orders; Service B owns inventory\n// Communicate via API/events \u2014 not shared DB tables",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Splitting by technical layers only.",
+      "Distributed monolith.",
+      "Ignoring observability."
+    ],
+    "interview_q": "When not microservices?",
+    "interview_a": "Small team/simple domain \u2014 modular monolith may win.",
+    "analogy": "Picture Microservices Basics clearly."
+  },
+  "79": {
+    "why": "If you can't see it and can't survive dependency failure, you're not production-ready.",
+    "points": [
+      "Logs, metrics, traces.",
+      "Timeouts everywhere.",
+      "Retries with jitter + idempotency.",
+      "Circuit breakers.",
+      "SLOs drive alerts."
+    ],
+    "code": "// pseudo: call dependency with timeout + retry + circuit breaker\n// emit metrics for latency/errors; propagate trace ids",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Retry storms.",
+      "No timeouts.",
+      "Alerts on raw CPU instead of SLOs."
+    ],
+    "interview_q": "First resilience rule?",
+    "interview_a": "Set timeouts; unbounded waits become outages.",
+    "analogy": "Picture Observability and Resilience clearly."
+  },
+  "80": {
+    "why": "Architecture answers are trade-off stories under constraints.",
+    "points": [
+      "Clarify requirements/SLOs.",
+      "Draw boundaries and data flow.",
+      "Failure modes.",
+      "Evolve complexity.",
+      "Bring JVM awareness as a Java engineer."
+    ],
+    "code": "// Scaffold: requirements -> API/data -> runtime -> failures -> observability",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Buzzword bingo.",
+      "Ignoring ops.",
+      "Perfect design with no evolution path."
+    ],
+    "interview_q": "How to answer as a Java engineer?",
+    "interview_a": "Requirements, design, JVM/runtime concerns, failure modes, observability.",
+    "analogy": "Picture Architecture Interview Wrap clearly."
+  },
+  "81": {
+    "why": "Caches buy latency with correctness risk \u2014 invalidation is the boss fight.",
+    "points": [
+      "Local vs distributed.",
+      "TTL/TTI/size eviction.",
+      "Cache-aside vs read-through.",
+      "Stampede control.",
+      "Measure hit rate and staleness."
+    ],
+    "code": "LoadingCache<String, User> cache = Caffeine.newBuilder()\n  .maximumSize(10_000)\n  .expireAfterWrite(Duration.ofMinutes(5))\n  .build(this::loadUser);",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Unbounded caches.",
+      "No invalidation story.",
+      "Caching non-idempotent results blindly."
+    ],
+    "interview_q": "Hardest cache problem?",
+    "interview_a": "Invalidation and stampede under concurrent misses.",
+    "analogy": "Picture Caching Strategies clearly."
+  },
+  "82": {
+    "why": "APIs are long-term contracts \u2014 idempotency and errors matter as much as happy paths.",
+    "points": [
+      "Resource modeling.",
+      "Idempotency keys.",
+      "Consistent error shape.",
+      "Versioning/compatibility.",
+      "Pagination and filtering."
+    ],
+    "code": "@PostMapping(\"/orders\")\nResponseEntity<OrderResponse> create(@Valid @RequestBody OrderRequest req) {\n  return ResponseEntity.created(uri).body(service.create(req));\n}",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Breaking changes casually.",
+      "No idempotency for POSTs that matter.",
+      "Leaky entities as DTOs."
+    ],
+    "interview_q": "Why idempotency?",
+    "interview_a": "Clients retry; servers must not double-apply side effects.",
+    "analogy": "Picture API Design Deep Dive clearly."
+  },
+  "83": {
+    "why": "Events are facts \u2014 consumers must tolerate at-least-once delivery.",
+    "points": [
+      "Facts vs commands.",
+      "Idempotent consumers.",
+      "Outbox pattern.",
+      "Ordering is partial.",
+      "Schema evolution."
+    ],
+    "code": "// transactionally write Order + OutboxEvent\n// publisher relays outbox to the bus\n// consumers handle OrderCreated idempotently",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Dual writes without outbox.",
+      "Assuming exactly-once.",
+      "Fat events that couple everything."
+    ],
+    "interview_q": "Why outbox?",
+    "interview_a": "Atomically record state change + event to avoid lost messages.",
+    "analogy": "Picture Event-Driven Architecture clearly."
+  },
+  "84": {
+    "why": "Performance is a loop: measure, hypothesize, change one thing, remeasure.",
+    "points": [
+      "Define SLOs/percentiles.",
+      "JFR/profilers.",
+      "Allocation and locks.",
+      "Avoid premature micro-opts.",
+      "Load tests that resemble reality."
+    ],
+    "code": "// 1) capture baseline percentiles\n// 2) profile under load\n// 3) change one variable\n// 4) remeasure",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Tuning without baseline.",
+      "Optimizing cold paths.",
+      "Load tests that aren't production-like."
+    ],
+    "interview_q": "First performance question?",
+    "interview_a": "Which percentile/error budget fails under what load?",
+    "analogy": "Picture Performance Playbook clearly."
+  },
+  "85": {
+    "why": "Production-ready means observable, recoverable, capacity-tested, and owned.",
+    "points": [
+      "SLOs and alerts.",
+      "Dashboards that answer questions.",
+      "Rollback plan.",
+      "Dependency limits.",
+      "Runbooks and ownership."
+    ],
+    "code": "// checklist: SLO, dashboard, alert, runbook, rollback, load test, dependency timeouts",
+    "code_lang": "java",
+    "code_walk": [
+      "Walk this like pair-programming.",
+      "Focus on what each line means.",
+      "Connect to the failure mode."
+    ],
+    "mistakes": [
+      "Shipping without rollback.",
+      "Alerts nobody understands.",
+      "No owner for 3 a.m."
+    ],
+    "interview_q": "What is production-ready?",
+    "interview_a": "Observable, recoverable, capacity-tested, and owned \u2014 not merely running.",
+    "analogy": "Picture Production Readiness Capstone clearly."
+  }
+}
