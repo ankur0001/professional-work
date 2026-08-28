@@ -1,0 +1,131 @@
+1
+00:00:00,000 --> 00:00:14,759
+Suppose a teammate says, "This class only
+has a byte field, so each instance is
+basically one byte." Then they multiply by
+
+2
+00:00:14,879 --> 00:00:24,559
+Episode Sixty-Two taught us to measure.
+Object layout is one reason measurements
+surprise people who estimate memory by
+
+3
+00:00:24,679 --> 00:00:37,359
+On HotSpot, that header carries identity
+and metadata the runtime needs — mark-
+related information, class pointer
+
+4
+00:00:37,479 --> 00:00:47,759
+You do not need every bit field to learn
+the lesson: a "tiny" object is never only
+its fields. Look at this java for a
+
+5
+00:00:47,879 --> 00:00:59,719
+Alignment and padding round the instance
+size up to the platform's object alignment
+— commonly eight bytes on many
+
+6
+00:00:59,839 --> 00:01:12,679
+Create millions of Tiny instances and you
+have paid for millions of headers and
+padding gaps. Arrays add their own story:
+
+7
+00:01:12,799 --> 00:01:23,840
+A byte[] is not simply "length bytes" in
+retained-size accounting. Empty arrays are
+not free either — thousands of empty
+
+8
+00:01:23,959 --> 00:01:32,759
+Sometimes a shared empty singleton or null
+meaning empty is denser — with care for
+mutability. References complicate the
+
+9
+00:01:32,879 --> 00:01:44,879
+A field of type String is not "the
+string's characters inside your object."
+It is a reference — a pointer-sized slot,
+
+10
+00:01:45,000 --> 00:01:58,359
+Ignoring reference costs is how people
+underestimate graphs of wrappers, tree
+nodes, and DTOs. Compressed oops use
+
+11
+00:01:58,480 --> 00:02:10,400
+On many heaps, references cost less than a
+full 64-bit pointer — which is also why
+whiteboard "pointer is eight bytes"
+
+12
+00:02:10,520 --> 00:02:22,520
+Field order can matter for packing. The
+JVM lays out fields with alignment rules;
+reordering source fields can change
+
+13
+00:02:22,640 --> 00:02:28,400
+Algorithms, data-structure choice, and
+retention policy usually dominate before
+field packing saves you.
+
+14
+00:02:28,520 --> 00:02:38,400
+Use layout knowledge to interpret heap
+numbers and to decide when many tiny
+objects should become denser
+
+15
+00:02:38,520 --> 00:02:45,040
+flyweight-style sharing — not as an excuse
+to rearrange fields while an unbounded
+cache still grows.
+
+16
+00:02:45,159 --> 00:02:59,000
+Bring Tiny into a product decision. A
+telemetry pipeline boxes every metric
+sample into a small object with a few
+
+17
+00:02:59,120 --> 00:03:11,120
+The fix might be a columnar structure —
+parallel arrays of primitives and a
+dictionary for names — not a field reorder
+
+18
+00:03:11,240 --> 00:03:19,480
+So why is a tiny object bigger than
+expected? Headers, alignment, and
+references add overhead. Say that in an
+
+19
+00:03:19,600 --> 00:03:30,680
+Then say what you would do next: measure
+retained sizes with a heap dump or
+instrumentation, ask whether the design
+
+20
+00:03:30,800 --> 00:03:43,640
+Estimating by field sizes only, ignoring
+reference costs, and layout-obsessing
+before algorithms are the three mistakes
+
+21
+00:03:43,760 --> 00:03:53,800
+But pauses are not only about how big
+objects are. Sometimes latency appears
+when the JVM needs all threads to reach a
+
+22
+00:03:53,920 --> 00:04:02,480
+Those rendezvous points are safepoints —
+and time-to-safepoint can show up as
+mysterious latency even when "GC was slow"
