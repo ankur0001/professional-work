@@ -4,4 +4,5 @@ Episode 84: Performance Playbook
 
 Narration: `java/narrative_review/episodes/ep84_performance-playbook.md`
 Renderer: `java/video_build/render_v2_from_narrative.py`
-TTS: local Chatterbox Turbo
+Visuals: animated scenes via `java/video_build/visual_engine.py`
+TTS: local Chatterbox Turbo (narration text unchanged)
