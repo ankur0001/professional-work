@@ -1,0 +1,158 @@
+1
+00:00:00,000 --> 00:00:07,280
+Bytecode runs inside a model of memory. If
+you only remember "objects on the heap,"
+you already have a useful half-truth.
+
+2
+00:00:07,400 --> 00:00:20,320
+The other half — the stack — explains
+recursion limits, local variables, and why
+a crash dump's stack trace is not a heap
+
+3
+00:00:20,439 --> 00:00:32,239
+Mixing those stories is how people misread
+incidents. Look at this java for a moment.
+When f is invoked, the JVM creates a stack
+
+4
+00:00:32,359 --> 00:00:40,799
+The frame holds locals — including x and
+the reference u — plus bookkeeping for
+return. new User() allocates an object on
+
+5
+00:00:40,920 --> 00:00:49,800
+The local variable does not contain the
+whole object; it contains a reference
+pointing at the heap object. When f
+
+6
+00:00:49,920 --> 00:01:03,359
+If nothing else references that User, the
+object becomes eligible for garbage
+collection later. The reference died with
+
+7
+00:01:03,480 --> 00:01:12,079
+Deep recursion creates many frames and can
+throw StackOverflowError. Huge or many
+objects can exhaust the heap and throw
+
+8
+00:01:12,200 --> 00:01:16,240
+Those errors sound similar in a chat
+message and mean different missing
+resources.
+
+9
+00:01:16,359 --> 00:01:29,159
+Confusing heap dumps with stack traces is
+a classic ops mix-up: one shows objects
+and retention; the other shows who called
+
+10
+00:01:29,280 --> 00:01:42,439
+Escape analysis may elide allocations. The
+JIT sometimes proves an object never
+leaves a method and can allocate it in a
+
+11
+00:01:42,560 --> 00:01:54,760
+That is why "every new always hits the
+heap forever" is too strong. You need
+enough humility to know optimizations can
+
+12
+00:01:54,879 --> 00:02:03,599
+Whether boxed becomes a real heap object
+in steady state depends on escape and JIT
+decisions. Microbenchmarks that ignore
+
+13
+00:02:03,719 --> 00:02:14,840
+GC cares about heap reachability from GC
+roots — including references in stack
+frames, static fields, and JNI handles. An
+
+14
+00:02:14,960 --> 00:02:26,360
+Stack frames are temporary roots for their
+locals. That is why a long-lived thread
+stuck in a method can pin objects through
+
+15
+00:02:26,480 --> 00:02:38,200
+What if we ignore native and stack limits
+while staring only at -Xmx? We miss
+StackOverflowError, thread stack sizing,
+
+16
+00:02:38,320 --> 00:02:46,400
+Thread stacks have size limits configured
+by the runtime. Many threads mean many
+stacks — a footprint cost separate from
+
+17
+00:02:46,520 --> 00:03:00,160
+Virtual threads change the economics of
+stack usage for blocking workloads, but
+the conceptual split remains: frame state
+
+18
+00:03:00,280 --> 00:03:03,319
+When you read a heap OOM, look at
+retention charts.
+
+19
+00:03:03,439 --> 00:03:16,199
+A heap dump answers "what objects dominate
+and who retains them?" A stack trace
+answers "what was this thread doing?" An
+
+20
+00:03:16,319 --> 00:03:18,759
+ — teaches why the two views belong
+together.
+
+21
+00:03:18,879 --> 00:03:32,759
+Picture a recursive XML parser that dies
+with StackOverflowError on a hostile deep
+document. The heap may be fine. Raising
+
+22
+00:03:32,879 --> 00:03:42,799
+The stack/heap split decides the fix
+family before you touch a single flag.
+Picture the opposite: a cache growing
+
+23
+00:03:42,919 --> 00:03:49,919
+Stack traces show random request threads;
+the heap dump shows the cache. Different
+tool, different truth.
+
+24
+00:03:50,039 --> 00:04:02,719
+Hold a practical checklist: frames for
+locals and control; heap for objects; SO
+vs OOM as different resources; heap dumps
+
+25
+00:04:02,840 --> 00:04:06,599
+escape analysis as a reason to measure
+before declaring allocation fate.
+
+26
+00:04:06,719 --> 00:04:15,000
+Prefer the right dump for the question. If
+the question is retention, dump the heap.
+If the question is "who called what," read
+
+27
+00:04:15,120 --> 00:04:23,000
+The next question is the reclaim story
+itself: how and when unused objects go
+away, and what your allocation rate does
