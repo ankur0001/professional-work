@@ -1,0 +1,149 @@
+1
+00:00:00,000 --> 00:00:13,560
+Episode Sixty-Seven left us with a rule:
+name a pattern when a problem recurs.
+Creation is one of those problems. Objects
+
+2
+00:00:13,679 --> 00:00:27,079
+Creational patterns manage how objects
+come to life. In modern Java services, DI
+containers often own lifecycle — classical
+
+3
+00:00:27,199 --> 00:00:41,359
+Their addresses change. Start with the
+singleton everyone meets too early: Look
+at this java for a moment. A simple eager
+
+4
+00:00:41,479 --> 00:00:46,359
+Singleton as a global mutable bag
+recreates global variables with better
+branding.
+
+5
+00:00:46,479 --> 00:00:56,519
+Double-checked locking myths still
+circulate for lazy singletons; modern Java
+has safer idioms, enums-as-singleton, or
+
+6
+00:00:56,639 --> 00:01:02,359
+The interview trap is debating locking
+trivia while missing the design smell: do
+you need a global at all?
+
+7
+00:01:02,539 --> 00:01:15,179
+Separate "one instance" from "global
+access." A process may need a single cache
+manager without every class reaching into
+
+8
+00:01:15,299 --> 00:01:27,459
+A Spring bean defaulting to singleton
+scope is not the same social object as a
+mutable App.INSTANCE bag — dependencies
+
+9
+00:01:27,579 --> 00:01:37,620
+Factory methods appear when construction
+deserves a name.
+Order.createFromCart(cart) encapsulates
+
+10
+00:01:37,739 --> 00:01:46,459
+Factories also hide concrete classes
+behind interfaces — useful when tests need
+fakes. A factory that only wraps new
+
+11
+00:01:46,579 --> 00:01:54,340
+Use factories when creation policy exists:
+caching, subtype selection, validation, or
+environment-specific wiring.
+
+12
+00:01:54,459 --> 00:02:04,780
+Boundary types shine here:
+Money.of(amount, currency) rejects invalid
+combinations; UserId.from(string)
+
+13
+00:02:04,899 --> 00:02:20,019
+Builders earn their keep when telescoping
+constructors appear and call sites become
+unreadable: Look at this java for a
+
+14
+00:02:20,139 --> 00:02:31,259
+Telescoping constructors force nulls and
+argument-order bugs. A builder makes the
+call site self-describing and can enforce
+
+15
+00:02:31,379 --> 00:02:43,620
+That is creational policy, not mere sugar.
+Prototype — cloning — shows up rarely in
+Java application code; prefer clear copy
+
+16
+00:02:43,740 --> 00:02:56,060
+In Spring and similar containers, beans
+have scopes and lifecycle callbacks. The
+container may be your factory. Constructor
+
+17
+00:02:56,180 --> 00:03:06,300
+You still decide what is singleton-scoped,
+what is request-scoped, what should be
+built per call, and what a builder should
+
+18
+00:03:06,420 --> 00:03:14,780
+A team makes a "service locator" singleton
+that hands out dependencies anywhere.
+Tests become hard. Circular creation
+
+19
+00:03:14,900 --> 00:03:22,860
+The creational pattern that would have
+helped was not a fancier singleton — it
+was explicit construction or DI with
+
+20
+00:03:22,980 --> 00:03:33,820
+If construction is dishonest — half-
+initialized objects, setters required
+after new — every creational pattern
+
+21
+00:03:33,940 --> 00:03:40,420
+In tests: if you cannot construct a valid
+domain object in one or two lines,
+construction policy is too scattered.
+
+22
+00:03:40,540 --> 00:03:47,820
+If asked builder versus telescoping
+constructors, say: builder keeps call
+sites readable when many optional fields
+
+23
+00:03:47,940 --> 00:03:56,700
+If asked about singletons, admit caveats:
+global mutable state, testing pain, and
+that containers often own the one-instance
+
+24
+00:03:56,820 --> 00:04:04,620
+On double-checked locking: say why people
+reached for it historically, why it was
+easy to get wrong, and what you would do
+
+25
+00:04:04,740 --> 00:04:16,379
+Creation sets the stage for structure:
+once objects exist, how do we assemble
+them so behavior can grow without subclass
