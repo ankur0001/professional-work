@@ -1,0 +1,137 @@
+1
+00:00:00,000 --> 00:00:15,199
+Episode Two already whispered: do not
+equate Java memory with -Xmx. By now we
+have lived inside the heap — collectors,
+
+2
+00:00:15,319 --> 00:00:29,119
+The heap dump shows free space. Old gen
+looked fine. The container's OOMKiller
+does not care about your heap chart.
+
+3
+00:00:29,299 --> 00:00:44,019
+Metaspace holds class metadata — the JVM's
+data about classes and classloaders, not
+your instance fields. Load many classes,
+
+4
+00:00:44,140 --> 00:00:56,780
+A classloader leak does not only retain
+heap objects; it can pin metadata until
+metaspace pressure becomes the incident.
+
+5
+00:00:56,899 --> 00:01:08,859
+Unlimited metaspace with rogue loaders is
+a slow fuse with a polite heap graph.
+Native memory is a broader umbrella.
+
+6
+00:01:08,980 --> 00:01:23,180
+Direct byte buffers allocate off-heap for
+I/O paths that avoid extra copies. JNI
+libraries bring allocations a heap dump
+
+7
+00:01:23,299 --> 00:01:35,259
+None of that is billed to -Xmx, yet all of
+it lives inside the process — and inside a
+container memory limit if you have one.
+
+8
+00:01:35,379 --> 00:01:51,539
+Someone sees a 768 megabyte container and
+sets -Xmx to 768m, or sets heap plus
+metaspace equal to the limit with no
+
+9
+00:01:51,659 --> 00:02:04,579
+The cgroup limit is hit while the heap
+still looks polite. Setting -Xmx equal to
+the container limit is a popular way to
+
+10
+00:02:04,699 --> 00:02:21,779
+Walk a container story end to end. Limit
+is 1Gi. Someone sets -Xmx768m and feels
+conservative. Hundreds of threads, each
+
+11
+00:02:21,899 --> 00:02:32,099
+RSS crosses the limit while heap used is
+500m. Opening heap charts first loses an
+hour. The correct first comparison is
+
+12
+00:02:32,219 --> 00:02:44,419
+If they diverge, leave the collector alone
+until native and metaspace are ruled out.
+Direct memory deserves its own glare. NIO
+
+13
+00:02:44,539 --> 00:02:49,099
+Without a bound and without visibility,
+direct memory becomes a silent second
+heap.
+
+14
+00:02:49,219 --> 00:03:00,499
+Another failure mode: the heap looks fine,
+OutOfMemoryError: Direct buffer memory
+appears, and the team never set
+
+15
+00:03:00,619 --> 00:03:06,819
+Native Memory Tracking — NMT — helps
+attribute native usage when RSS disagrees
+with heap.
+
+16
+00:03:06,939 --> 00:03:17,139
+You would not leave the most detailed
+tracking on forever without cost
+awareness, but when the graphs diverge,
+
+17
+00:03:17,259 --> 00:03:26,419
+If loaders cannot unload, metaspace trends
+upward across redeploys. Cap metaspace
+when you need a tripwire that fails fast.
+
+18
+00:03:26,539 --> 00:03:39,699
+Leave container headroom for stacks,
+direct buffers, code cache, and GC native
+memory. Framework hot reload in
+
+19
+00:03:39,819 --> 00:03:54,939
+The lifetime bug is the same family: a
+reference that outlived its intended
+scope. So why can a JVM die with free
+
+20
+00:03:55,059 --> 00:04:12,059
+Say that in an interview, then say how you
+would confirm: compare RSS or cgroup usage
+to heap, check metaspace growth, inspect
+
+21
+00:04:12,179 --> 00:04:18,179
+Dying with free heap is not a paradox. It
+is a reminder that the heap is one account
+in a larger bank.
+
+22
+00:04:18,299 --> 00:04:25,739
+We widened memory from "the heap" to "the
+process." Next we return to the heap with
+more precision: soft, weak,
+
+23
+00:04:25,859 --> 00:04:33,419
+and phantom references — ways to cooperate
+with GC for caches and cleanup without
+pretending reachability is only strong-or-
