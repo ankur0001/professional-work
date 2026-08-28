@@ -1,0 +1,125 @@
+1
+00:00:00,000 --> 00:00:07,759
+Synchronous APIs couple latency: your
+checkout waits on inventory. Sometimes you
+need facts to propagate without blocking
+
+2
+00:00:07,879 --> 00:00:21,079
+Events are facts — something that happened
+— and consumers must tolerate at-least-
+once delivery. Assuming exactly-once is
+
+3
+00:00:21,199 --> 00:00:33,840
+CreateOrder is a command. Facts let
+multiple consumers react — email,
+analytics, inventory — without the
+
+4
+00:00:33,960 --> 00:00:45,880
+Emit what happened; let consumers decide
+what to do. Dual writes without an outbox
+are a classic failure. Transaction commits
+
+5
+00:00:46,000 --> 00:01:00,640
+Customer sees success; inventory never
+hears. The outbox pattern records the
+state change and the event in one
+
+6
+00:01:00,820 --> 00:01:10,180
+Atomically record state change plus event
+to avoid lost messages. Dual write looks
+shorter in a demo; under failure
+
+7
+00:01:10,299 --> 00:01:22,979
+Outbox publishers need their own
+monitoring: lag, failure counts, poison
+messages. An outbox that stops draining is
+
+8
+00:01:23,099 --> 00:01:29,019
+At-least-once delivery means duplicates
+are normal. Consumers must treat
+redelivery as expected.
+
+9
+00:01:29,140 --> 00:01:43,260
+Idempotency keys, dedupe tables, or
+natural unique constraints — upserting
+state keyed by order id — turn duplicates
+
+10
+00:01:43,379 --> 00:01:54,979
+Exactly-once end-to-end across independent
+systems is a marketing phrase more often
+than an engineering guarantee. Ordering is
+
+11
+00:01:55,099 --> 00:02:01,619
+Design workflows that tolerate inventory-
+before-email unless you intentionally
+serialize through a single key and
+
+12
+00:02:01,739 --> 00:02:11,620
+If your business needs strong global order
+or a saga with orchestration, say so — do
+not pretend a firehose of events gives you
+
+13
+00:02:11,740 --> 00:02:17,939
+Schema evolution needs compatibility
+rules: additive fields, careful renames,
+consumers that ignore unknowns.
+
+14
+00:02:18,060 --> 00:02:26,140
+Prefer expand/contract: add fields, deploy
+consumers that tolerate them, then switch
+producers, then remove old fields later.
+
+15
+00:02:26,259 --> 00:02:34,379
+Fat events that embed every nested entity
+make evolution and PII handling harder —
+every consumer breaks when pricing shape
+
+16
+00:02:34,500 --> 00:02:43,780
+Prefer identifiers plus essential
+attributes; let consumers query details or
+maintain their own read models from
+
+17
+00:02:43,900 --> 00:02:51,060
+Every event should carry correlation ids
+so a checkout trace includes the async
+legs that fire after the HTTP response.
+
+18
+00:02:51,180 --> 00:03:02,659
+When events cross team boundaries,
+ownership of schema becomes political —
+decide who may add fields and how
+
+19
+00:03:02,780 --> 00:03:13,180
+Events are facts; consumers must tolerate
+at-least-once; outbox protects producers
+from dual-write loss. That triad is the
+
+20
+00:03:13,300 --> 00:03:22,100
+Event-driven designs shine when they
+reduce coupling and absorb load spikes.
+They punish teams that skip idempotency,
+
+21
+00:03:22,219 --> 00:03:30,060
+Performance across sync and async paths
+still needs a disciplined loop — measure,
+hypothesize, change one thing, remeasure.
