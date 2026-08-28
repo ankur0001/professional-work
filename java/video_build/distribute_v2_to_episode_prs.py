@@ -137,10 +137,12 @@ def push_episode(ep: int) -> None:
     # stash-less: worktree in /tmp
     wt = Path(f"/tmp/ep-v2-{ep:02d}")
     if wt.exists():
+        run(["git", "worktree", "unlock", str(wt)], check=False)
         run(["git", "worktree", "remove", "--force", str(wt)], check=False)
         shutil_rm = __import__("shutil").rmtree
         if wt.exists():
             shutil_rm(wt, ignore_errors=True)
+        run(["git", "worktree", "prune"], check=False)
     run(["git", "worktree", "add", "-f", str(wt), f"origin/{branch}"])
     dest = wt / "java" / "output" / "v2"
     # some older branches use output/ at repo root
