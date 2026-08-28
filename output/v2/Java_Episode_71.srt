@@ -1,0 +1,158 @@
+1
+00:00:00,000 --> 00:00:16,760
+You are joining a team that ships a Java
+backend. On day one someone says, "We use
+Spring." It sounds like a product name.
+
+2
+00:00:16,880 --> 00:00:18,600
+Spring is not one jar.
+
+3
+00:00:18,720 --> 00:00:33,040
+Spring is an ecosystem centered on
+dependency injection and portable
+abstractions — a way to wire applications
+
+4
+00:00:33,160 --> 00:00:42,280
+Look at this java for a moment. The
+practical situation that makes Spring
+necessary is the same pain Episode Sixty-
+
+5
+00:00:42,400 --> 00:00:52,800
+Without a container, every service builds
+its dependencies by hand, or reaches into
+static locators, or news up concrete
+
+6
+00:00:52,920 --> 00:00:56,880
+Swapping a real mailer for a fake means
+editing production construction paths.
+
+7
+00:00:57,000 --> 00:01:08,719
+Enterprises adopt Spring because large
+codebases need consistent wiring,
+lifecycle, and extension points — not
+
+8
+00:01:08,840 --> 00:01:20,320
+IoC means inversion of control over
+construction: instead of your class
+creating its dependencies, something
+
+9
+00:01:20,439 --> 00:01:34,159
+Objects the container manages are beans.
+You describe what beans exist and how they
+relate; the container instantiates,
+
+10
+00:01:34,280 --> 00:01:41,519
+It declares a constructor taking a
+repository interface. You do not see new
+JdbcOrderRepository inside.
+
+11
+00:01:41,640 --> 00:01:49,120
+Somewhere else — configuration class,
+component scan, Boot auto-config — a bean
+implementing that interface is defined.
+
+12
+00:01:49,239 --> 00:02:02,359
+At runtime the context creates the
+repository, creates the service, injects
+the repository, and hands you a ready
+
+13
+00:02:02,479 --> 00:02:15,199
+Convention plus extension points is why
+teams stay. Defaults get you moving.
+Interfaces and SPI hooks let you replace
+
+14
+00:02:15,319 --> 00:02:27,319
+Treating Spring as magic is the first
+misunderstanding. Avoiding understanding
+DI is the second: people copy @Autowired
+
+15
+00:02:27,439 --> 00:02:33,680
+Bringing every module for a hello world is
+the third. "Not magic — wiring" deserves a
+debugging ritual.
+
+16
+00:02:33,800 --> 00:02:45,560
+When a bean is missing, read the startup
+failure: which definition was expected,
+which condition failed, which auto-config
+
+17
+00:02:45,680 --> 00:02:57,800
+When a property is wrong, trace binding.
+Teams that treat Spring as magic restart
+until it works. Teams that treat it as
+
+18
+00:02:57,920 --> 00:03:06,080
+A DataSource, a messaging template, a
+cache manager — your code can target
+Spring's abstractions while drivers and
+
+19
+00:03:06,200 --> 00:03:13,680
+That portability is incomplete — dialects
+leak — but it beats scattering vendor API
+calls through domain services.
+
+20
+00:03:13,800 --> 00:03:25,800
+Why enterprises adopt Spring becomes
+clearer with ten teams sharing platform
+practices: a shared grammar of beans,
+
+21
+00:03:25,920 --> 00:03:35,520
+A healthy first service uses a small
+slice: Boot for executable shape, web for
+HTTP, maybe JDBC or JPA, Security when
+
+22
+00:03:35,640 --> 00:03:43,920
+Expanding module count without expanding
+understanding is how microservices become
+micro-monoliths of configuration. You do
+
+23
+00:03:44,040 --> 00:03:54,920
+You need the container story, then the
+modules your service actually imports —
+curiosity driven by a situation, not a
+
+24
+00:03:55,040 --> 00:04:08,000
+If your domain is a mud ball, the
+container will happily wire a mud ball.
+IoC makes dependencies explicit; it does
+
+25
+00:04:08,120 --> 00:04:17,840
+What is Spring at heart? A DI-centered
+programming and configuration model with a
+large ecosystem around web, data,
+
+26
+00:04:17,960 --> 00:04:24,640
+Say that, then connect it to why your team
+chose it: testability, consistent
+structure, and battle-tested integrations.
+
+27
+00:04:24,760 --> 00:04:36,040
+Curiosity should already be tugging: how
+exactly should we inject — constructor,
+setter, field — and why do tests become
