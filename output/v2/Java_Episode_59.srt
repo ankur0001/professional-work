@@ -1,164 +1,207 @@
 1
-00:00:00,000 --> 00:00:09,560
+00:00:00,000 --> 00:00:10,560
 We have been talking about heaps,
 collectors, and dumps as if every new in
 source becomes a heap object GC must
+eventually judge. That model is useful —
+and incomplete.
 
 2
-00:00:09,679 --> 00:00:22,240
+00:00:10,679 --> 00:00:24,119
 After the JIT warms up, the runtime may
 prove that some objects never escape the
 method that created them. If nothing
+outside needs to see that object as an
+object, the JIT can optimize it away.
 
 3
-00:00:22,359 --> 00:00:35,719
+00:00:24,239 --> 00:00:37,159
 That is escape analysis — one reason
 microbenchmarks lie, and why "I allocated
 less in source" does not always match
+profiles. Here is a tiny example that
+forces the question: Look at this java for
+a moment.
 
 4
-00:00:35,839 --> 00:00:38,479
+00:00:37,280 --> 00:00:40,079
 In source, you clearly constructed a
 Point.
 
 5
-00:00:38,599 --> 00:00:50,959
+00:00:40,200 --> 00:00:51,920
 In a hot method, after inlining and escape
 analysis, the JIT may scalar-replace it:
 keep 1 and 2 in registers or stack slots,
+never allocate a heap Point, and still
+return the sum.
 
 6
-00:00:51,079 --> 00:01:04,119
+00:00:52,040 --> 00:01:04,280
 From the programmer's view there was an
 object. From the machine's view there may
 only have been values. If an allocation
+profile wonders where Point went, it may
+never have become a heap citizen on this
+path.
 
 7
-00:01:04,239 --> 00:01:05,799
+00:01:04,400 --> 00:01:05,920
 What does "escape" mean?
 
 8
-00:01:05,979 --> 00:01:17,339
+00:01:06,100 --> 00:01:18,140
 If the object is returned to an unknown
 caller, stored in a field, placed into a
 collection that outlives the method,
+published to another thread, or otherwise
+made reachable outside the analyzing
+scope, it escapes.
 
 9
-00:01:17,459 --> 00:01:27,219
+00:01:18,260 --> 00:01:28,540
 If it stays local and the JIT can see all
 uses, it may not. Non-escaping objects
 enable scalar replacement — breaking an
+object into its fields.
 
 10
-00:01:27,339 --> 00:01:41,259
+00:01:28,659 --> 00:01:43,060
 Sometimes more: if you synchronize on an
 object the JIT proves is thread-local and
 never escapes, lock elision becomes
+possible. The source still shows
+synchronized; optimized native code may
+not pay for a real monitor.
 
 11
-00:01:41,379 --> 00:01:52,899
+00:01:43,179 --> 00:01:53,579
 That is not a license to sprinkle
 synchronized blocks randomly. It explains
 why some synchronized local objects do not
+show up as contended locks. Walk the Point
+variations.
 
 12
-00:01:53,019 --> 00:02:04,739
+00:01:53,699 --> 00:02:05,539
 Local carrier that never leaves the method
 — scalar replacement may apply. Store p
 into a list that outlives the method — it
+escapes. Return p — it escapes.
 
 13
-00:02:04,859 --> 00:02:11,460
+00:02:05,659 --> 00:02:12,459
 Pass p into a method the JIT cannot inline
 or analyze fully — escape may be assumed
 conservatively.
 
 14
-00:02:11,580 --> 00:02:21,580
+00:02:12,579 --> 00:02:21,659
 The keyword is not "never allocate." It is
 "allocate when the object must be visible
 as an object." This is exciting in
+interviews and dangerous in reviews.
 
 15
-00:02:21,700 --> 00:02:34,060
+00:02:21,779 --> 00:02:34,259
 Do not rewrite clear code into contortions
 because you imagine every new is
 expensive. Readability still wins off the
+proven hot path; the JIT may already
+remove the allocation you are about to
+uglify.
 
 16
-00:02:34,180 --> 00:02:43,060
+00:02:34,379 --> 00:02:43,379
 Do not trust a tiny microbenchmark without
 JMH and a warmup story that matches
 production. Escape analysis depends on
+inlining and profiles.
 
 17
-00:02:43,180 --> 00:02:52,580
+00:02:43,499 --> 00:02:52,579
 A cold microbench can miss the
 optimization or panic about allocations
 that disappear in the real service.
+Connect this to GC pressure conversations.
 
 18
-00:02:52,700 --> 00:03:02,460
+00:02:52,699 --> 00:03:02,819
 A developer deletes a temporary object in
 a hot loop and declares victory. Sometimes
 profiles improve. Sometimes nothing
+changes because the object never escaped
+after warmup.
 
 19
-00:03:02,580 --> 00:03:13,180
+00:03:02,939 --> 00:03:14,059
 Sometimes things get worse because the
 "optimization" blocked inlining. Escape
 analysis does not forbid caring about
+allocations. It forbids caring about them
+without profiles from the warmed path.
 
 20
-00:03:13,300 --> 00:03:27,860
+00:03:14,179 --> 00:03:27,059
 Lock elision deserves one grounded
 picture. You synchronize on a freshly
 created local lock object "to be safe." No
+other thread can see it. After JIT
+optimization, the monitor may disappear.
 
 21
-00:03:27,980 --> 00:03:37,940
+00:03:27,179 --> 00:03:36,419
 The review should still ask why the lock
 exists for readers — but the performance
 conversation should not assume contention
+the runtime proved impossible. So when do
+you care?
 
 22
-00:03:38,120 --> 00:03:47,120
+00:03:36,599 --> 00:03:45,799
 When allocation profiles under real load
 show pressure. When synchronized blocks on
 obviously local objects make you wonder
+whether contention is imaginary.
 
 23
-00:03:47,240 --> 00:03:54,120
+00:03:45,919 --> 00:03:52,239
 When someone claims "Java always allocates
 this" as a reason to rewrite an API into
 primitive soup before measuring.
 
 24
-00:03:54,240 --> 00:04:01,879
+00:03:52,359 --> 00:04:00,759
 Measure with real workloads: JFR
 allocation samples and async-profiler show
 what survived into the heap, not what your
+eyes saw in source.
 
 25
-00:04:02,000 --> 00:04:14,280
+00:04:00,879 --> 00:04:14,399
 If asked what escape analysis is, say: the
 JIT analyzes whether an object escapes a
 method or thread; if it does not,
+optimizations like scalar replacement and
+sometimes lock elision become legal.
 
 26
-00:04:14,400 --> 00:04:21,199
+00:04:14,519 --> 00:04:22,359
 Then add humility: do not micro-optimize
 assuming every new escapes, and do not
 rewrite clear code for imaginary
+allocations.
 
 27
-00:04:21,319 --> 00:04:30,000
+00:04:22,479 --> 00:04:31,639
 Today's lesson connects the JIT back to
 the heap: not every object you construct
 becomes collector work. Next we leave the
+"objects on the heap" frame.
 
 28
-00:04:30,120 --> 00:04:39,280
+00:04:31,759 --> 00:04:40,799
 Processes die with free heap space when
 native memory, metaspace, or container
 limits are the real budget — and that
+paradox needs its own explanation.
