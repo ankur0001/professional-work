@@ -1,137 +1,181 @@
 1
-00:00:00,000 --> 00:00:15,199
+00:00:00,000 --> 00:00:14,759
 Episode Two already whispered: do not
 equate Java memory with -Xmx. By now we
 have lived inside the heap — collectors,
+leaks, dumps — so it is easy to forget.
+Then production serves a cruel demo. The
+process is killed.
 
 2
-00:00:15,319 --> 00:00:29,119
+00:00:14,879 --> 00:00:29,039
 The heap dump shows free space. Old gen
 looked fine. The container's OOMKiller
 does not care about your heap chart.
+Something outside the heap exhausted the
+budget. So if -Xmx is not the process
+size, what else counts?
 
 3
-00:00:29,299 --> 00:00:44,019
+00:00:29,219 --> 00:00:44,140
 Metaspace holds class metadata — the JVM's
 data about classes and classloaders, not
 your instance fields. Load many classes,
+generate proxies, spin up scripting
+engines, hot-reload carelessly, and
+metaspace grows.
 
 4
-00:00:44,140 --> 00:00:56,780
+00:00:44,259 --> 00:00:56,659
 A classloader leak does not only retain
 heap objects; it can pin metadata until
 metaspace pressure becomes the incident.
+"We still had heap" and "metaspace was
+huge" can be the same outage from two
+angles.
 
 5
-00:00:56,899 --> 00:01:08,859
+00:00:56,780 --> 00:01:08,500
 Unlimited metaspace with rogue loaders is
 a slow fuse with a polite heap graph.
 Native memory is a broader umbrella.
+Thread stacks consume native memory for
+every platform thread you start.
 
 6
-00:01:08,980 --> 00:01:23,180
+00:01:08,620 --> 00:01:23,939
 Direct byte buffers allocate off-heap for
 I/O paths that avoid extra copies. JNI
 libraries bring allocations a heap dump
+cannot see. GC keeps native structures.
+The code cache holds JIT-compiled methods.
 
 7
-00:01:23,299 --> 00:01:35,259
+00:01:24,060 --> 00:01:37,460
 None of that is billed to -Xmx, yet all of
 it lives inside the process — and inside a
 container memory limit if you have one.
+Watch a common misconfiguration: Look at
+this bash for a moment.
 
 8
-00:01:35,379 --> 00:01:51,539
+00:01:37,579 --> 00:01:53,979
 Someone sees a 768 megabyte container and
 sets -Xmx to 768m, or sets heap plus
 metaspace equal to the limit with no
+headroom. Threads start. Direct buffers
+appear. Native GC structures appear.
 
 9
-00:01:51,659 --> 00:02:04,579
+00:01:54,099 --> 00:02:07,419
 The cgroup limit is hit while the heap
 still looks polite. Setting -Xmx equal to
 the container limit is a popular way to
+create mysterious OOMs. Headroom is not
+waste — it admits the process is larger
+than its heap.
 
 10
-00:02:04,699 --> 00:02:21,779
+00:02:07,539 --> 00:02:24,180
 Walk a container story end to end. Limit
 is 1Gi. Someone sets -Xmx768m and feels
 conservative. Hundreds of threads, each
+with a stack. Netty burns direct memory.
+Metaspace sits at 150m after proxy
+generation.
 
 11
-00:02:21,899 --> 00:02:32,099
+00:02:24,299 --> 00:02:34,979
 RSS crosses the limit while heap used is
 500m. Opening heap charts first loses an
 hour. The correct first comparison is
+process memory versus heap memory.
 
 12
-00:02:32,219 --> 00:02:44,419
+00:02:35,099 --> 00:02:47,219
 If they diverge, leave the collector alone
 until native and metaspace are ruled out.
 Direct memory deserves its own glare. NIO
+and many networking stacks love direct
+buffers.
 
 13
-00:02:44,539 --> 00:02:49,099
+00:02:47,340 --> 00:02:51,700
 Without a bound and without visibility,
 direct memory becomes a silent second
 heap.
 
 14
-00:02:49,219 --> 00:03:00,499
+00:02:51,819 --> 00:03:03,900
 Another failure mode: the heap looks fine,
 OutOfMemoryError: Direct buffer memory
 appears, and the team never set
+-XX:MaxDirectMemorySize or monitored
+BufferPool metrics.
 
 15
-00:03:00,619 --> 00:03:06,819
+00:03:04,019 --> 00:03:09,859
 Native Memory Tracking — NMT — helps
 attribute native usage when RSS disagrees
 with heap.
 
 16
-00:03:06,939 --> 00:03:17,139
+00:03:09,979 --> 00:03:21,099
 You would not leave the most detailed
 tracking on forever without cost
 awareness, but when the graphs diverge,
+NMT stops the shrug. Connect this back to
+Episode Fifty-Seven.
 
 17
-00:03:17,259 --> 00:03:26,419
+00:03:21,219 --> 00:03:30,860
 If loaders cannot unload, metaspace trends
 upward across redeploys. Cap metaspace
 when you need a tripwire that fails fast.
+Fix the leak.
 
 18
-00:03:26,539 --> 00:03:39,699
+00:03:30,979 --> 00:03:44,299
 Leave container headroom for stacks,
 direct buffers, code cache, and GC native
 memory. Framework hot reload in
+environments never meant to reload forever
+adds a metaspace step each failed unload —
+eventually an outage.
 
 19
-00:03:39,819 --> 00:03:54,939
+00:03:44,419 --> 00:03:59,739
 The lifetime bug is the same family: a
 reference that outlived its intended
 scope. So why can a JVM die with free
+heap? Because native memory, metaspace,
+stacks, direct buffers, and container
+limits live beyond -Xmx.
 
 20
-00:03:55,059 --> 00:04:12,059
+00:03:59,859 --> 00:04:14,819
 Say that in an interview, then say how you
 would confirm: compare RSS or cgroup usage
 to heap, check metaspace growth, inspect
+direct buffer metrics, enable NMT when
+needed, and look for loader growth across
+redeploys.
 
 21
-00:04:12,179 --> 00:04:18,179
+00:04:14,939 --> 00:04:20,300
 Dying with free heap is not a paradox. It
 is a reminder that the heap is one account
 in a larger bank.
 
 22
-00:04:18,299 --> 00:04:25,739
+00:04:20,420 --> 00:04:27,620
 We widened memory from "the heap" to "the
 process." Next we return to the heap with
 more precision: soft, weak,
 
 23
-00:04:25,859 --> 00:04:33,419
+00:04:27,740 --> 00:04:35,699
 and phantom references — ways to cooperate
 with GC for caches and cleanup without
 pretending reachability is only strong-or-
+gone.
