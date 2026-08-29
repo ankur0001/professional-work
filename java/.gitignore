@@ -1,0 +1,7 @@
+video_build/v2_work/
+video_build/**/__pycache__/
+output/v2/*.mp4
+output/v2/*.srt
+output/v2/*SOURCE.md
+output/v2/v2_manifest.json
+output/v2/distribute_ep*.json
