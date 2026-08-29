@@ -1,144 +1,183 @@
 1
-00:00:00,000 --> 00:00:12,080
+00:00:00,000 --> 00:00:12,359
 Episode Two ended on a frustration that
 arrives the moment the tools work. You
 write a class, name a file, maybe add a
+package — and the compiler or the launcher
+refuses until those pieces agree with each
+other.
 
 2
-00:00:12,199 --> 00:00:14,599
+00:00:12,479 --> 00:00:15,199
 That refusal is not Java being petty.
 
 3
-00:00:14,719 --> 00:00:25,759
+00:00:15,319 --> 00:00:26,960
 It is Java answering a practical question:
 when you type java Something, how does the
 runtime find the right bytecode, and when
+you type javac, how does the compiler know
+what belongs together?
 
 4
-00:00:25,939 --> 00:00:31,539
+00:00:27,140 --> 00:00:33,299
 Start with the smallest piece: a single
 source file. A .java file is a compilation
 unit.
 
 5
-00:00:31,659 --> 00:00:50,739
+00:00:33,420 --> 00:00:50,140
 The rule that trips almost everyone first
 is this: if a top-level class is public,
 its name must match the filename,
+including case. App lives in App.java. Not
+app.java. Not Application.java.
 
 6
-00:00:50,859 --> 00:01:00,460
+00:00:50,260 --> 00:01:02,340
 Filenames are how tools locate the public
 type you asked them to compile. Look at
 this java for a moment. Save that as
+App.java, compile it, run it.
 
 7
-00:01:00,579 --> 00:01:11,700
+00:01:02,460 --> 00:01:13,100
 Now rename the file to Demo.java without
 renaming the class and compile again. The
 error is teaching you the contract: public
+top-level type and filename are one
+identity.
 
 8
-00:01:11,819 --> 00:01:20,299
+00:01:13,220 --> 00:01:23,300
 But a real project is not one lonely class
 in the current folder. Names collide. Two
 teams invent User. Two libraries invent
+Util.
 
 9
-00:01:20,419 --> 00:01:29,979
+00:01:23,420 --> 00:01:32,620
 So the next natural question is: how do we
 give types an address so the same short
 name can exist in different places without
+chaos? Packages are that address.
 
 10
-00:01:30,099 --> 00:01:42,379
+00:01:32,740 --> 00:01:44,300
 A package is a namespace, and on disk it
 maps to directories. package
 com.example.demo; is not a comment. It
+claims that this type lives under folders
+that mirror those segments.
 
 11
-00:01:42,500 --> 00:01:56,180
+00:01:44,420 --> 00:01:58,420
 If the declaration says com.example.demo
 and the file sits in the wrong tree, the
 tools lose the trail. Look at this java
+for a moment. Walk the pieces. The package
+line places App in com.example.demo.
 
 12
-00:01:56,299 --> 00:02:11,219
+00:01:58,540 --> 00:02:11,100
 The public class still matches App.java.
 Inside it, public static void
 main(String[] args) is the classic
+launcher entry point — the door the JVM
+knocks on. args is how command-line words
+arrive.
 
 13
-00:02:11,340 --> 00:02:22,699
+00:02:11,220 --> 00:02:24,060
 Printing args.length is a tiny proof that
 the entry point was found and executed.
 Once types live in packages, how does one
+file talk about a type from another
+package without writing the full address
+every time?
 
 14
-00:02:22,879 --> 00:02:32,280
+00:02:24,240 --> 00:02:33,640
 Imports bring types into scope. An import
 does not copy code into your file. It
 tells the compiler which fully qualified
+name you mean when you write the short
+name.
 
 15
-00:02:32,400 --> 00:02:45,240
+00:02:33,760 --> 00:02:47,240
 Behind that sits the classpath — and later
 the module path — which tells the tools
 where to look for already-compiled
+classes. If the type is not on that path,
+the import cannot save you. Look at this
+java for a moment.
 
 16
-00:02:45,360 --> 00:02:57,560
+00:02:47,360 --> 00:02:59,160
 import java.util.ArrayList; means: when I
 say ArrayList, I mean that type from the
 standard library. Without the import, you
+could still write java.util.ArrayList in
+full.
 
 17
-00:02:57,680 --> 00:03:05,879
+00:02:59,280 --> 00:03:07,520
 The import is convenience with a clear
 cost — you are declaring a dependency on a
 specific type. These rules feel expensive
+until you need them.
 
 18
-00:03:06,000 --> 00:03:17,479
+00:03:07,640 --> 00:03:19,840
 A public class that does not match its
 filename stops at compile time — cheaper
 than a runtime hunt. A package that does
+not match its folders may compile in one
+layout and fail to launch from another.
 
 19
-00:03:17,599 --> 00:03:29,120
+00:03:19,960 --> 00:03:32,320
 Assuming the working directory alone finds
 classes works for tiny demos, then a
 second jar appears and "it worked on my
+machine" becomes a classpath story.
+Structure is how tools search.
 
 20
-00:03:29,239 --> 00:03:36,119
+00:03:32,440 --> 00:03:39,880
 If the search path is wrong, perfect
 source still fails at launch. Episode Two
 named the layers that build and run
+bytecode.
 
 21
-00:03:36,239 --> 00:03:47,319
+00:03:40,000 --> 00:03:51,080
 Today we answered why those layers care so
 much about agreement: a compilation unit
 binds public type to filename, packages
+bind names to directories, main is the
+launcher door,
 
 22
-00:03:47,439 --> 00:03:51,919
+00:03:51,200 --> 00:03:55,680
 and imports plus classpath tell the tools
 which types you mean and where they live.
 
 23
-00:03:52,039 --> 00:03:56,279
+00:03:55,800 --> 00:04:00,360
 Once a program has a home and an entry
 point, a more basic need appears.
 
 24
-00:03:56,399 --> 00:04:06,079
+00:04:00,480 --> 00:04:09,920
 Before the program can do useful work, it
 must remember information — an age, a
 name, a flag — with meaning attached, not
+as anonymous literals scattered through
+main.
 
 25
-00:04:06,199 --> 00:04:09,719
+00:04:10,040 --> 00:04:13,400
 That need is what variables and data types
 exist to solve.
