@@ -1,149 +1,186 @@
 1
-00:00:00,000 --> 00:00:07,719
+00:00:00,000 --> 00:00:08,119
 We can store values, operate on them,
 choose paths, name behavior with methods,
 hold lists in arrays, and work with text.
 
 2
-00:00:07,839 --> 00:00:17,119
+00:00:08,239 --> 00:00:17,719
 For a while that is enough — until the
 same cluster of fields keeps appearing
 together, and the rules about those fields
+are scattered across every method that
+touches them.
 
 3
-00:00:17,239 --> 00:00:25,239
+00:00:17,839 --> 00:00:25,319
 Imagine a user id that must never be
 blank, a balance that must never go
 negative, an order that must keep its line
+items consistent.
 
 4
-00:00:25,359 --> 00:00:32,200
+00:00:25,439 --> 00:00:31,559
 If those values live as public fields
 floating beside unrelated helpers, any
 line of code can break the rules.
 
 5
-00:00:32,320 --> 00:00:39,480
+00:00:31,679 --> 00:00:38,479
 You end up with comments that say "do not
 set this directly" — which is another way
 of admitting the language is not helping
+you.
 
 6
-00:00:39,600 --> 00:00:52,520
+00:00:38,600 --> 00:00:50,880
 So a natural question appears: can related
 data and the behavior that protects it
 travel as one unit? That question is what
+object-oriented programming answers in
+Java — as a modeling tool, not a religion.
 
 7
-00:00:52,640 --> 00:01:03,759
+00:00:51,000 --> 00:01:03,320
 Start with encapsulation: hide the
 representation, expose a controlled
 surface, protect invariants. Look at this
+java for a moment. The field is private.
+Construction validates.
 
 8
-00:01:03,879 --> 00:01:18,560
+00:01:03,439 --> 00:01:16,599
 Callers can read the id through a method,
 but they cannot assign user.id = "" from
 outside. Encapsulation is not a checkbox
+labeled "I used a class." It is a boundary
+that keeps illegal states harder to
+create.
 
 9
-00:01:18,679 --> 00:01:30,479
+00:01:16,719 --> 00:01:28,000
 Contrast that with the scattered version
 everyone writes first: a string id in
 main, a helper that assumes it is non-
+blank, another helper that forgets to
+check. The rules exist only as hope.
 
 10
-00:01:30,599 --> 00:01:37,559
+00:01:28,120 --> 00:01:35,120
 An object gathers the noun and the verbs
 that protect it. Once you have objects,
 reuse becomes the next temptation.
 
 11
-00:01:37,679 --> 00:01:48,599
+00:01:35,240 --> 00:01:47,720
 Inheritance looks like the fastest reuse:
 a subclass "is a" kind of parent and picks
 up its fields and methods. The cost is
+coupling. Changes in the parent ripple
+through every child.
 
 12
-00:01:48,719 --> 00:02:00,680
+00:01:47,840 --> 00:01:59,280
 Composition — "has a" collaborator you
 call — often evolves more safely. Look at
 this java for a moment. OrderService is
+not a subclass of Pricing. It holds a
+Pricing and uses it.
 
 13
-00:02:00,799 --> 00:02:12,639
+00:01:59,400 --> 00:02:10,759
 You can swap pricing strategies without
 rewriting the service's type hierarchy.
 Prefer inheritance when you truly have a
+stable subtype relationship. Prefer
+composition when you mainly wanted reuse.
 
 14
-00:02:12,759 --> 00:02:23,199
+00:02:10,879 --> 00:02:23,199
 Polymorphism is the payoff that makes
 abstractions worth depending on. Callers
 program to a general type; runtime chooses
+the specific behavior. Look at this java
+for a moment.
 
 15
-00:02:23,319 --> 00:02:35,840
+00:02:23,319 --> 00:02:35,599
 welcome does not care which notifier
 arrived. It depends on the abstraction.
 New channels can appear without rewriting
+every caller. Two words collide for
+beginners: overriding and overloading.
 
 16
-00:02:35,959 --> 00:02:47,879
+00:02:35,719 --> 00:02:47,759
 Overloading is same name, different
 parameter lists, resolved at compile time.
 Overriding is a subclass replacing a
+superclass method with the same signature,
+resolved at runtime for instance methods.
 
 17
-00:02:47,999 --> 00:02:56,319
+00:02:47,879 --> 00:02:56,079
 If you "override" with a different
 parameter list, you actually overloaded —
 and the parent method still runs when
+callers use the parent type.
 
 18
-00:02:56,439 --> 00:03:09,599
+00:02:56,199 --> 00:03:09,359
 Finally, once objects live in sets and
 maps, identity and equality stop being
 philosophy. Suppose two UserId objects
+both wrap "u-42", but equals was never
+overridden. A HashSet may hold both.
 
 19
-00:03:09,719 --> 00:03:22,599
+00:03:09,479 --> 00:03:22,599
 Lookups fail in ways that look like ghost
 bugs. If you fix equals and forget
 hashCode, the set still misbehaves — equal
+objects must share a hash code. Treat that
+pair as part of the type's meaning, not an
+afterthought.
 
 20
-00:03:22,719 --> 00:03:31,359
+00:03:22,719 --> 00:03:31,120
 Public fields everywhere, god classes that
 know every feature, inheritance used as a
 junk drawer — the program still runs until
+change arrives.
 
 21
-00:03:31,479 --> 00:03:46,359
+00:03:31,240 --> 00:03:45,960
 Then every feature touches everything, and
 invariants live only in tribal memory. OOP
 did not fail. Design refused to use the
+tools for their purpose. Scattered data
+needed a boundary; encapsulation provided
+one.
 
 22
-00:03:46,479 --> 00:03:54,439
+00:03:46,080 --> 00:03:54,040
 Reuse needed a safer default than deep
 trees; composition often wins. Callers
 needed stability; polymorphism provided
+abstractions.
 
 23
-00:03:54,559 --> 00:04:00,719
+00:03:54,160 --> 00:04:00,200
 OOP is how Java lets you model those
 pressures — not a requirement to turn
 every script into a framework.
 
 24
-00:04:00,839 --> 00:04:09,879
+00:04:00,320 --> 00:04:09,400
 As soon as classes have insides and
 outsides, a sharper question appears: who
 is allowed to see the private field, call
+the helper, or extend the hook?
 
 25
-00:04:10,059 --> 00:04:18,259
+00:04:09,580 --> 00:04:17,300
 Without language-level permissions,
 encapsulation is only a polite agreement.
 That vocabulary is access modifiers.
