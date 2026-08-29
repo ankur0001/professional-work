@@ -1,119 +1,158 @@
 1
-00:00:00,000 --> 00:00:11,599
+00:00:00,000 --> 00:00:13,160
 Last time we treated exceptions as part of
 an API. That conversation almost always
 collides with another duty: if your code
+opened something, it must close it.
+Picture a method that reads a whole file
+into memory.
 
 2
-00:00:11,719 --> 00:00:20,679
+00:00:13,279 --> 00:00:22,399
 You open an input stream, read bytes, and
 return them. On the happy path you
 remember to close. On the exception path
+you might forget.
 
 3
-00:00:20,799 --> 00:00:31,719
+00:00:22,519 --> 00:00:33,559
 Or you close in finally, but close()
 itself throws, and the original read
 failure disappears behind the close
+failure. Leaks are not dramatic in a five-
+minute demo.
 
 4
-00:00:31,839 --> 00:00:42,399
+00:00:33,679 --> 00:00:44,439
 They are dramatic after a week of open
 file handles, when the process can no
 longer open anything new. So can closing
+become boring and correct? Try-with-
+resources is Java's answer.
 
 5
-00:00:42,519 --> 00:00:53,199
+00:00:44,559 --> 00:00:56,599
 If a resource implements AutoCloseable,
 you declare it in the try header, and Java
 closes it when the block exits — whether
+by return or by exception. Look at this
+java for a moment.
 
 6
-00:00:53,319 --> 00:01:06,239
+00:00:56,719 --> 00:01:08,599
 Files.newInputStream(path) opens the
 stream. The variable in is scoped to the
 try — it is not floating around the method
+for someone to misuse after close. When
+the body finishes, the runtime calls
+close() on in.
 
 7
-00:01:06,359 --> 00:01:18,919
+00:01:08,719 --> 00:01:20,799
 You did not write a finally. The structure
 encodes the rule: if it opens here, it
 closes here. Multiple resources belong in
+one try when their lifetimes match: Look
+at this java for a moment.
 
 8
-00:01:19,039 --> 00:01:31,399
+00:01:20,919 --> 00:01:32,919
 They close in reverse order of declaration
 — the way you would unwind a stack. Prefer
 this over manual finally chains that close
+in the wrong order under stress, or that
+skip close on an early return you added
+later.
 
 9
-00:01:31,519 --> 00:01:41,039
+00:01:33,039 --> 00:01:42,000
 Suppressed exceptions make the feature
 trustworthy. Suppose the body throws
 exception A because the read failed
+halfway. Then close() throws exception B.
 
 10
-00:01:41,159 --> 00:01:50,799
+00:01:42,119 --> 00:01:52,119
 Older manual patterns often lost A or B
 depending on how you wrote finally. Try-
 with-resources keeps A as the primary
+exception and attaches B as suppressed.
 
 11
-00:01:50,920 --> 00:02:00,599
+00:01:52,239 --> 00:02:01,879
 Ignoring suppressed exceptions means you
 only ever see half the story when close
 fails during an already-failing operation.
+Why prefer this over a hand-written
+finally?
 
 12
-00:02:00,780 --> 00:02:12,099
+00:02:02,060 --> 00:02:13,539
 Because the hand-written version is easy
 to almost get right. Null checks,
 ordering, secondary failures, and early
+returns all compete for attention while
+you are also trying to express the
+business meaning.
 
 13
-00:02:12,219 --> 00:02:20,740
+00:02:13,659 --> 00:02:22,780
 Try-with-resources removes those degrees
 of freedom for the common case. Boring is
 the goal. Custom resources should follow
+the same contract.
 
 14
-00:02:20,859 --> 00:02:34,219
+00:02:22,900 --> 00:02:36,500
 If your class owns a socket, a lock file,
 or an external session, implement
 AutoCloseable and let callers use try-
+with-resources: Look at this java for a
+moment. The body focuses on rendering.
+Cleanup is structural.
 
 15
-00:02:34,339 --> 00:02:47,459
+00:02:36,620 --> 00:02:49,860
 Once you see resources as values with
 lifetimes, try-with-resources stops
 feeling like syntax sugar and starts
+feeling like the default way to say "this
+block owns these lifetimes." Where do
+people still stumble?
 
 16
-00:02:47,639 --> 00:02:55,239
+00:02:50,039 --> 00:02:58,000
 Closing only on success. Catching close
 failures empty-handed. Ignoring suppressed
 exceptions during incident review.
 
 17
-00:02:55,359 --> 00:03:06,399
+00:02:58,120 --> 00:03:08,759
 Forgetting resources in tests — tests pass
 while production leaks, because the test
 process exits before OS pressure appears.
+Notice how this cooperates with the
+exception story.
 
 18
-00:03:06,519 --> 00:03:11,359
+00:03:08,879 --> 00:03:13,919
 The primary exception remains the one from
 your business operation when both body and
 close fail.
 
 19
-00:03:11,479 --> 00:03:23,079
+00:03:14,039 --> 00:03:26,280
 That preserves the failure mode operators
 should chase first, while suppressed
 exceptions keep the cleanup failure from
+vanishing. Resource safety and failure
+forensics are the same design conversation
+from two angles.
 
 20
-00:03:23,199 --> 00:03:36,039
+00:03:26,399 --> 00:03:38,759
 Once closing files is reliable, the next
 hunger is richer: we want to talk to the
 filesystem with modern path APIs — create,
+read, write, walk directories — without
+living forever in legacy File habits.
