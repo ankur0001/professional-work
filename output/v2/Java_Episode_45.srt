@@ -1,131 +1,179 @@
 1
-00:00:00,000 --> 00:00:08,519
+00:00:00,000 --> 00:00:08,759
 Synchronizers coordinate phases.
 Producer/consumer pipelines coordinate
 flow. One side creates jobs; the other
+side processes them.
 
 2
-00:00:08,639 --> 00:00:18,759
+00:00:08,879 --> 00:00:18,399
 If producers sprint ahead without a brake,
 memory fills with queued work until the
 process dies. If consumers spin forever
+checking a list, you waste CPU.
 
 3
-00:00:18,879 --> 00:00:30,679
+00:00:18,519 --> 00:00:29,559
 What structure hands off work, waits when
 empty, and pushes back when full? Blocking
 queues are the backbone of
+producer/consumer designs. put and take
+block.
 
 4
-00:00:30,799 --> 00:00:42,039
+00:00:29,679 --> 00:00:40,999
 offer and poll can time out or fail fast
 depending on the overload. Bounded queues
 apply backpressure so producers cannot
+crash the process with unbounded growth.
+Look at this java for a moment.
 
 5
-00:00:42,159 --> 00:00:55,719
+00:00:41,119 --> 00:00:53,559
 The queue holds at most one hundred jobs.
 A producer blocks in put when the queue is
 full — that block is backpressure. A
+consumer blocks in take when the queue is
+empty — that block is patience without
+busy spin.
 
 6
-00:00:55,839 --> 00:01:08,679
+00:00:53,679 --> 00:01:06,839
 Producers and consumers need not know each
 other's identities; they need a shared
 queue and a shutdown protocol. Why bound
+the queue? Because an unbounded queue
+turns a slow consumer into an out-of-
+memory incident.
 
 7
-00:01:08,799 --> 00:01:20,479
+00:01:06,959 --> 00:01:19,319
 Bounding makes overload visible as
 blocking or rejection instead of silent
 heap growth. The wrong default feels
+convenient in demos and lethal in
+production. Variants exist for different
+needs.
 
 8
-00:01:20,599 --> 00:01:34,359
+00:01:19,439 --> 00:01:33,039
 ArrayBlockingQueue is bounded and array-
 backed. LinkedBlockingQueue can be bounded
 or left unbounded if you pass no capacity
+— know which you chose.
+PriorityBlockingQueue orders by priority
+instead of plain FIFO.
 
 9
-00:01:34,479 --> 00:01:47,479
+00:01:33,159 --> 00:01:46,479
 Choose the variant for the ordering and
 bounding story you mean. Shutdown needs a
 protocol. One common pattern is a poison
+pill — a special job that means "stop."
+Another is interrupting consumers and
+letting them exit.
 
 10
-00:01:47,599 --> 00:01:57,159
+00:01:46,599 --> 00:01:56,119
 No shutdown protocol means threads waiting
 in take forever after the rest of the app
 wants to die: Look at this java for a
+moment. Pair queues with executors
+thoughtfully.
 
 11
-00:01:57,280 --> 00:02:10,879
+00:01:56,239 --> 00:02:09,199
 Often consumers are pool workers that take
 from a queue, or the executor's own
 internal queue is the handoff. Understand
+which queue you are bounding — the one you
+created, or the one hiding inside
+newFixedThreadPool.
 
 12
-00:02:11,000 --> 00:02:23,759
+00:02:09,319 --> 00:02:21,719
 Hidden unbounded queues are still
 unbounded. What if we busy-spin instead of
 take? Look at this java for a moment. When
+empty, this burns a core. Blocking exists
+so waiting is cheap.
 
 13
-00:02:23,879 --> 00:02:36,240
+00:02:21,840 --> 00:02:33,560
 Poll with timeout can be valid when you
 must wake periodically; pure spin is
 rarely the design you meant. Backpressure
+is easiest to feel with numbers. Capacity
+100 means the 101st put waits.
 
 14
-00:02:36,359 --> 00:02:41,719
+00:02:33,680 --> 00:02:39,120
 Waiting producers slow the intake. That
 slowdown is information: the system is
 saturated.
 
 15
-00:02:41,839 --> 00:02:49,999
+00:02:39,240 --> 00:02:47,800
 Prefer the symptom you can operate on —
 blocked puts, rejected offers, visible
 queue depth — over the symptom that pages
+you with an OOM at midnight.
 
 16
-00:02:50,119 --> 00:03:02,119
+00:02:47,920 --> 00:03:00,360
 offer and poll with timeouts give hybrid
 policies: try for a while, then reject a
 user request or shed load. Not every
+producer should block forever. Boundedness
+gives you the right to choose.
 
 17
-00:03:02,239 --> 00:03:10,479
+00:03:00,480 --> 00:03:09,080
 Priority queues change fairness: urgent
 jobs jump ahead. That helps deadlines and
 hurts starvation if low priority work
+never runs.
 
 18
-00:03:10,599 --> 00:03:23,519
+00:03:09,200 --> 00:03:22,120
 Priority is an ordering policy inside the
 capacity story, not a replacement for
 capacity. Document the shutdown pill
+carefully when multiple producers exist;
+only one poison may not stop every
+consumer.
 
 19
-00:03:23,639 --> 00:03:38,199
+00:03:22,240 --> 00:03:37,920
 Picture an image-processing pipeline:
 upload threads put jobs into a bounded
 queue of 200; four worker threads take and
+process. When the queue fills, uploads
+block or reject. Operators watch queue
+depth.
 
 20
-00:03:38,319 --> 00:03:49,759
+00:03:38,040 --> 00:03:49,200
 That visible pressure is healthier than an
 unbounded list silently holding ten
 thousand pending images in heap. The
+blocking queue is not only a data
+structure — it is an operational control
+surface.
 
 21
-00:03:49,879 --> 00:04:01,119
+00:03:49,320 --> 00:04:00,680
 Hold the checklist: capacity chosen from
 memory and latency budgets; consumers
 blocking without spin; producers handling
+full queues with policy; shutdown that
+wakes waiters.
 
 22
-00:04:01,239 --> 00:04:13,439
+00:04:00,800 --> 00:04:13,080
 Once handoffs and pools feel familiar, the
 next hunger is composing asynchronous
 stages — transform this result, then
+combine with that other call, with
+timeouts and error recovery along the
+graph.
