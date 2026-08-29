@@ -1,101 +1,132 @@
 1
-00:00:00,000 --> 00:00:13,439
+00:00:00,000 --> 00:00:13,160
 Maps excel at lookup. They are awkward as
 waiting lines. A print spooler, a task
 buffer, a chat message pipe — these
+problems care about who arrived first, or
+who may enter and leave from both ends.
 
 2
-00:00:13,559 --> 00:00:20,399
+00:00:13,279 --> 00:00:20,600
 Suppose jobs arrive faster than a worker
 can finish them. You need a place to hold
 pending work and take the oldest job next.
 
 3
-00:00:20,519 --> 00:00:34,280
+00:00:20,719 --> 00:00:34,320
 A list can fake that with add at the end
 and remove(0) at the front, but the intent
 is muddy and the performance story for
+ArrayList removal at zero is poor. The
+natural question is: what collection means
+"waiting line"?
 
 4
-00:00:34,460 --> 00:00:45,820
+00:00:34,500 --> 00:00:45,460
 Queues shape producer/consumer flow. A
 classic queue is FIFO — first in, first
 out. A deque (double-ended queue) allows
+insertion and removal at both ends.
 
 5
-00:00:45,939 --> 00:00:59,939
+00:00:45,579 --> 00:01:00,259
 In modern Java, Deque is the versatile
 choice, and ArrayDeque is a strong general
 default for single-threaded use. Look at
+this java for a moment. Walk it.
+offerLast("a") places work at the tail.
 
 6
-00:01:00,059 --> 00:01:06,899
+00:01:00,379 --> 00:01:06,979
 pollFirst() takes from the head and
 returns "a". The method names advertise
 ends: last and first.
 
 7
-00:01:07,019 --> 00:01:20,739
+00:01:07,099 --> 00:01:20,699
 Queues shape producer/consumer flow —
 Deque is the modern versatile choice
 because the same structure can act as
+queue or stack. Method pairs matter
+because exception behavior differs: Look
+at this java for a moment.
 
 8
-00:01:20,859 --> 00:01:30,980
+00:01:20,819 --> 00:01:31,379
 offer/poll speak in return values.
 add/remove speak in exceptions. Pick the
 style that matches whether emptiness is
+normal control flow or a true error.
 
 9
-00:01:31,099 --> 00:01:45,500
+00:01:31,500 --> 00:01:46,939
 Used as a stack, a deque replaces the
 legacy Stack class: Look at this java for
 a moment. Prefer Deque over
+java.util.Stack. Stack is an old
+synchronized subclass of Vector with a
+design that modern code avoids.
 
 10
-00:01:45,619 --> 00:01:59,139
+00:01:47,060 --> 00:02:01,340
 A tiny job-buffer story makes the FIFO
 intent obvious: Look at this java for a
 moment. Producers offer last. The consumer
+polls first. Ordering is the feature. You
+are not looking up by key; you are
+draining a line.
 
 11
-00:01:59,259 --> 00:02:08,939
+00:02:01,460 --> 00:02:10,659
 When multiple threads produce and consume
 together, blocking queues appear in the
 concurrency chapters — structures that
+wait when empty or full instead of
+returning immediately.
 
 12
-00:02:09,060 --> 00:02:21,620
+00:02:10,780 --> 00:02:22,979
 Today, keep the single-threaded mental
 model clear: ArrayDeque for local flow
 control. What if we skip queues and abuse
+lists? Look at this java for a moment. The
+code reads like a list accident.
 
 13
-00:02:21,740 --> 00:02:35,260
+00:02:23,099 --> 00:02:36,900
 Every reader must infer FIFO intent. With
 a queue or deque, the type itself
 documents the flow. Deque's double-ended
+nature also models undo stacks. Same class
+as the FIFO queue, different end
+discipline.
 
 14
-00:02:35,379 --> 00:02:47,500
+00:02:37,019 --> 00:02:49,339
 Avoid using LinkedList as a queue just
 because it implements Deque — ArrayDeque
 almost always outperforms it for stack and
+queue workloads. Waiting-line problems
+outgrew maps and ordinary list usage.
 
 15
-00:02:47,620 --> 00:02:59,020
+00:02:49,459 --> 00:03:00,739
 Queues gave FIFO language; deques added
 both ends. ArrayDeque became the default.
 offer/poll versus add/remove clarified
+empty and full handling. Legacy Stack was
+set aside.
 
 16
-00:02:59,140 --> 00:03:09,780
+00:03:00,859 --> 00:03:11,139
 Once collections hold real domain objects,
 another pressure appears: humans want them
 sorted — by name, by price, by date — and
+the rule is rarely only one field.
 
 17
-00:03:09,900 --> 00:03:17,580
+00:03:11,259 --> 00:03:18,979
 How do we declare comparison policy
 without baking a single order into the
 class forever? That is the pressure that
+brings sorting and comparators.
