@@ -1,131 +1,168 @@
 1
-00:00:00,000 --> 00:00:11,320
+00:00:00,000 --> 00:00:11,199
 Future gave us one result with a timed
 get. Real services often need a pipeline:
 load something, transform it, combine it
+with another call, handle failure, enforce
+a timeout, then save.
 
 2
-00:00:11,439 --> 00:00:23,799
+00:00:11,319 --> 00:00:21,879
 Blocking on each get in sequence works and
 throws away concurrency. Nesting callbacks
 by hand works and becomes unreadable. How
+do we compose asynchronous work as a graph
+of stages?
 
 3
-00:00:23,979 --> 00:00:35,459
+00:00:22,059 --> 00:00:33,140
 CompletableFuture is Java's standard
 answer for that composition. Look at this
 java for a moment. supplyAsync starts load
+on an async pool and yields a future of
+its result.
 
 4
-00:00:35,579 --> 00:00:46,619
+00:00:33,259 --> 00:00:43,619
 thenApply maps the value through transform
 when load completes. orTimeout fails the
 stage if the pipeline takes too long.
+thenAccept consumes the final value in
+save.
 
 5
-00:00:46,739 --> 00:00:59,979
+00:00:43,739 --> 00:00:57,019
 The code reads top to bottom like a happy-
 path story, while the machinery runs
 asynchronously. thenApply versus
+thenCompose is the composition subtlety
+interviews love. thenApply maps a value to
+another value.
 
 6
-00:01:00,099 --> 00:01:06,179
+00:00:57,139 --> 00:01:03,499
 thenCompose maps a value to another future
 and flattens the nesting — the async
 cousin of flatMap.
 
 7
-00:01:06,299 --> 00:01:17,739
+00:01:03,619 --> 00:01:15,939
 If transform itself returns a
 CompletableFuture, thenApply gives you a
 future of a future; thenCompose keeps one
+layer: Look at this java for a moment.
+Error handling belongs in the graph.
 
 8
-00:01:17,859 --> 00:01:29,579
+00:01:16,059 --> 00:01:27,699
 exceptionally recovers a value from a
 failure. handle sees success or failure
 together. Swallowing exceptions inside a
+stage without recovering or completing
+exceptionally is how pipelines die
+quietly.
 
 9
-00:01:29,700 --> 00:01:41,540
+00:01:27,819 --> 00:01:40,859
 Preserve causes, decide policy, do not
 erase failure. Executor choice matters.
 supplyAsync without an executor uses the
+common Fork/Join pool. That pool is
+shared.
 
 10
-00:01:41,659 --> 00:01:54,539
+00:01:40,979 --> 00:01:53,379
 Blocking on I/O inside common-pool stages
 can starve other async work on the JVM —
 including parallel streams. For blocking
+I/O, pass an executor sized for that
+workload: Look at this java for a moment.
 
 11
-00:01:54,659 --> 00:02:04,299
+00:01:53,499 --> 00:02:02,819
 Timeouts and cancellation remain part of
 the story. orTimeout and completeOnTimeout
 define latency policy in the graph instead
+of hoping callers remember to wrap get.
 
 12
-00:02:04,420 --> 00:02:15,460
+00:02:02,939 --> 00:02:13,939
 Cancellation still cooperates with
 interruptible work underneath. What if we
 use thenApply where thenCompose was
+needed, or block with get inside a common-
+pool stage to "keep it simple"?
 
 13
-00:02:15,639 --> 00:02:28,159
+00:02:14,119 --> 00:02:26,839
 Nested futures appear, or the common pool
 stalls. Both bugs look like "async is
 hard" when they are really operator
+mismatch and pool misuse. thenCombine
+earns a mention once pipelines grow
+branches.
 
 14
-00:02:28,279 --> 00:02:37,679
+00:02:26,959 --> 00:02:36,959
 You start two asynchronous loads, then
 combine their results when both complete.
 That is the graph thinking single futures
+were missing: not only chains, but joins.
 
 15
-00:02:37,799 --> 00:02:42,919
+00:02:37,079 --> 00:02:42,759
 Timeouts on the combined stage still
 matter; a slow sibling should not pin a
 request forever.
 
 16
-00:02:43,039 --> 00:02:49,840
+00:02:42,879 --> 00:02:49,240
 Debugging a composed future means reading
 the exception from the stage that failed
 and remembering which executor ran which
+lambda.
 
 17
-00:02:49,959 --> 00:02:59,359
+00:02:49,359 --> 00:02:59,279
 Silent exceptionally that returns null
 converts a loud failure into a null that
 explodes later — the same anti-pattern as
+swallowing checked exceptions, wearing
+async clothes.
 
 18
-00:02:59,479 --> 00:03:07,799
+00:02:59,399 --> 00:03:07,679
 Picture loading a user profile and a set
 of entitlements concurrently, then
 combining them into a view model with a
+one-second timeout on the join.
 
 19
-00:03:07,919 --> 00:03:18,159
+00:03:07,799 --> 00:03:18,999
 thenCombine expresses the join; orTimeout
 expresses the budget; exceptionally maps
 failures to a safe fallback or an error
+type. The graph matches the product
+sentence.
 
 20
-00:03:18,279 --> 00:03:29,959
+00:03:19,119 --> 00:03:31,839
 Keep stages small and pure when you can:
 load, transform, save. Side effects in the
 middle of a graph make cancellation and
+retries harder. Composition is easiest
+when each stage has one job.
 
 21
-00:03:30,079 --> 00:03:40,719
+00:03:31,959 --> 00:03:44,919
 Hold the checklist: operators match shapes
 (thenApply vs thenCompose); executors
 match blocking; timeouts sit on the graph;
+failures recover or surface with causes.
 
 22
-00:03:40,839 --> 00:03:50,439
+00:03:45,039 --> 00:03:56,199
 Some workloads are not async I/O graphs —
 they are CPU-heavy divide-and-conquer over
 large arrays or trees. That shape has its
+own pool and its own recursion style.
