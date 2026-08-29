@@ -1,113 +1,144 @@
 1
-00:00:00,000 --> 00:00:11,839
+00:00:00,000 --> 00:00:10,919
 Platform boundaries can now be declared.
 That does not shrink the data inside a
 feature. Arrays still give us fixed
+length; real carts, search hits, and
+timelines rarely promise one.
 
 2
-00:00:11,959 --> 00:00:23,280
+00:00:11,039 --> 00:00:22,439
 Suppose you are collecting tags a user
 adds to a post. They might add three, then
 delete one, then add five more. With an
+array you allocate, copy, allocate again.
 
 3
-00:00:23,399 --> 00:00:37,239
+00:00:22,559 --> 00:00:34,320
 The natural question becomes: is there a
 resizable, ordered collection that still
 lets me talk about "the first item" and
+"insert here"? That collection is a List.
+A list is ordered and allows duplicates.
 
 4
-00:00:37,359 --> 00:00:44,840
+00:00:34,439 --> 00:00:42,599
 Position matters. The same value can
 appear twice and mean two entries. Look at
 this java for a moment. Walk the lines.
 
 5
-00:00:44,960 --> 00:01:00,039
+00:00:42,719 --> 00:00:58,679
 We program to the List interface and
 construct an ArrayList — the default
 workhorse for most application code.
+add("a") appends. add(0, "b") inserts at
+the front, shifting what was there.
 
 6
-00:01:00,159 --> 00:01:07,439
+00:00:58,799 --> 00:01:07,280
 get(0) reads by index and prints b. The
 list now holds [b, a]. Why ArrayList by
 default?
 
 7
-00:01:07,619 --> 00:01:17,379
+00:01:07,459 --> 00:01:17,019
 Under the hood it uses a resizable array:
 fast random access by index, fast append
 at the end amortized, slower inserts at
+the front because elements shift.
 
 8
-00:01:17,499 --> 00:01:31,139
+00:01:17,139 --> 00:01:31,299
 That profile matches how most business
 code actually uses lists. What about
 LinkedList? It is a doubly linked
+structure. Inserts and removals at known
+nodes can be cheap, but getting the nth
+element means walking links.
 
 9
-00:01:31,259 --> 00:01:39,379
+00:01:31,419 --> 00:01:38,619
 In practice, LinkedList rarely wins for
 typical access patterns. Prefer the boring
 default until a profiler argues otherwise.
 
 10
-00:01:39,499 --> 00:01:51,339
+00:01:38,739 --> 00:01:50,419
 Programming to the List interface matters:
 callers depend on list behavior, not on a
 concrete class. Look at this java for a
+moment. printAll does not care how the
+list is stored.
 
 11
-00:01:51,459 --> 00:02:02,419
+00:01:50,539 --> 00:02:02,379
 It cares that iteration and order behave
 like a list. Now the failure mode that
 bites during iteration: structural
+modification while an iterator is live.
+Look at this java for a moment.
 
 12
-00:02:02,539 --> 00:02:10,419
+00:02:02,499 --> 00:02:10,819
 The enhanced for-loop uses an iterator.
 Removing directly from the list during
 that iteration can throw
+ConcurrentModificationException.
 
 13
-00:02:10,539 --> 00:02:22,339
+00:02:10,939 --> 00:02:21,939
 The safe habits are: use the iterator's
 own remove, collect removals and apply
 them after, or use removeIf. What if we
+skip lists and keep resizing arrays by
+hand?
 
 14
-00:02:22,519 --> 00:02:34,119
+00:02:22,119 --> 00:02:32,279
 It works until the copy logic drifts, or
 someone forgets to update a length
 variable. Lists exist so resizable ordered
+sequences stop being a DIY project.
 
 15
-00:02:34,239 --> 00:02:50,799
+00:02:32,399 --> 00:02:48,119
 A small product-shaped fragment ties it
 together: Look at this java for a moment.
 The cart is ordered. Duplicate cables are
+two lines until we remove them. That is
+list thinking: sequence, not uniqueness,
+not key lookup.
 
 16
-00:02:50,919 --> 00:02:59,359
+00:02:48,239 --> 00:02:57,039
 Also watch aliasing: subList views share
 structure with the backing list. When you
 need a true independent snapshot, copy
+into a new ArrayList.
 
 17
-00:02:59,479 --> 00:03:13,479
+00:02:57,159 --> 00:03:09,879
 Prefer List.of and List.copyOf when the
 collection should not grow — fixed lists
 fail fast on add, which is better than a
+mutable list that callers mutate by
+accident. Growing sequences outgrew
+arrays.
 
 18
-00:03:13,599 --> 00:03:25,919
+00:03:09,999 --> 00:03:22,799
 List answered with ordered, duplicate-
 friendly collections. ArrayList became the
 default workhorse. Programming to List
+kept APIs flexible. Iteration-modification
+rules kept us from surprising exceptions.
 
 19
-00:03:26,039 --> 00:03:40,279
+00:03:22,919 --> 00:03:37,359
 But sometimes duplicates are exactly what
 you do not want. A set of roles, a set of
 visited ids, a set of tags where "java"
+should appear once. How does Java say
+"unique membership"? That question opens
+sets.
