@@ -1,121 +1,161 @@
 1
-00:00:00,000 --> 00:00:13,800
+00:00:00,000 --> 00:00:14,759
 Pipelines can run in parallel, but they
 still end in moments that may produce no
 value — an empty find, a missing key, a
+failed parse. Returning null from those
+moments recreates silent absence. Callers
+forget to check.
 
 2
-00:00:13,919 --> 00:00:24,079
+00:00:14,879 --> 00:00:25,719
 Somewhere deeper, user.name() throws
 NullPointerException. The stack trace
 points at a symptom, not at the API that
+lied by using null as a silent status
+code.
 
 3
-00:00:24,199 --> 00:00:36,799
+00:00:25,839 --> 00:00:39,640
 The natural question is: can absence be
 part of the return type? Optional makes
 absence explicit at API boundaries — not
+everywhere. Prefer it as a return type
+when "maybe none" is a normal outcome.
 
 4
-00:00:36,920 --> 00:00:50,120
+00:00:39,759 --> 00:00:54,399
 Look at this java for a moment. Walk it.
 find() returns Optional<User> — either a
 user or empty. map(User::name) transforms
+the inner value if present, otherwise
+stays empty.
 
 5
-00:00:50,240 --> 00:01:03,960
+00:00:54,519 --> 00:01:08,439
 orElse("unknown") unwraps to a concrete
 string, supplying a default when absent.
 Callers must confront the optional. map,
+flatMap, and filter are the vocabulary for
+transforming absence safely.
 
 6
-00:01:04,079 --> 00:01:15,959
+00:01:08,560 --> 00:01:21,680
 Look at this java for a moment. filter
 drops inactive users to empty. flatMap
 chains another optional-returning step
+without nesting. map extracts a city when
+the address exists.
 
 7
-00:01:16,079 --> 00:01:29,079
+00:01:21,799 --> 00:01:34,959
 orElse versus orElseGet matters when the
 default is expensive: Look at this java
 for a moment. orElse evaluates its
+argument immediately. orElseGet accepts a
+supplier and runs it only on absence.
 
 8
-00:01:29,200 --> 00:01:42,079
+00:01:35,079 --> 00:01:48,000
 Use orElse for cheap constants. Use
 orElseGet for work you do not want to
 waste. Avoid Optional.of(null). It throws
+immediately. If the value might be null,
+use Optional.ofNullable.
 
 9
-00:01:42,200 --> 00:01:54,359
+00:01:48,120 --> 00:01:59,359
 If you already know it is non-null,
 Optional.of documents that belief — and
 fails fast if you were wrong. Look at this
+java for a moment. Do not use Optional
+fields everywhere.
 
 10
-00:01:54,480 --> 00:02:04,520
+00:01:59,480 --> 00:02:09,719
 Optional is a poor fit for fields,
 parameters, and collections of optionals
 as a general style. It shines on return
+types where the caller must decide what
+absence means.
 
 11
-00:02:04,640 --> 00:02:18,120
+00:02:09,840 --> 00:02:24,080
 Inside a class, a nullable private field
 with clear invariants is often simpler.
 What if we skip Optional and keep
+returning null? Look at this java for a
+moment. Every caller reinvents the check.
+One misses.
 
 12
-00:02:18,240 --> 00:02:31,080
+00:02:24,199 --> 00:02:37,439
 Production pays. Optional does not remove
 null from Java; it moves the "might be
 missing" declaration to a place the type
+system can see. A clean repository
+boundary looks like this: Look at this
+java for a moment.
 
 13
-00:02:31,200 --> 00:02:45,200
+00:02:37,560 --> 00:02:52,599
 findById admits absence. requireById turns
 absence into an exception for paths that
 truly need a user. Both are honest.
+Optional in streams appears often as a
+bridge: Look at this java for a moment.
 
 14
-00:02:45,320 --> 00:02:59,920
+00:02:52,719 --> 00:03:06,000
 Each id may or may not resolve.
 Optional::stream flattens presence into
 the stream and drops absence. Resist
+optional.get() without a guard — prefer
+orElseThrow, ifPresent, or explicit
+branching.
 
 15
-00:03:00,040 --> 00:03:12,800
+00:03:06,120 --> 00:03:20,759
 Teams sometimes wrap collections in
 Optional — Optional<List<User>> — to mean
 "no list." Prefer an empty list for "no
+users" and Optional only for a missing
+singular thing.
 
 16
-00:03:12,920 --> 00:03:28,480
+00:03:20,879 --> 00:03:36,039
 Empty collections already express absence
 of elements. Null returns hid absence.
 Optional made it explicit at boundaries.
+map/flatMap/filter transformed carefully.
+orElse versus orElseGet controlled default
+cost.
 
 17
-00:03:28,600 --> 00:03:34,600
+00:03:36,159 --> 00:03:42,240
 Fields everywhere were rejected as style
 abuse. Absence is not only about missing
 objects.
 
 18
-00:03:34,720 --> 00:03:36,800
+00:03:42,359 --> 00:03:44,279
 Business rules live on calendars:
 
 19
-00:03:36,920 --> 00:03:50,800
+00:03:44,399 --> 00:04:00,679
 "expire this offer at midnight Tokyo,"
 "schedule a job in three hours," "compare
 two instants from different zones."
+Stringly-typed timestamps recreate the
+same silent-mistake pattern — until
+parsing and zone rules fail
 
 20
-00:03:50,920 --> 00:03:52,360
+00:04:00,799 --> 00:04:02,279
 at the worst time.
 
 21
-00:03:52,480 --> 00:03:58,280
+00:04:02,399 --> 00:04:08,919
 How does Java talk about time without that
 fog? That pressure is what java.time
 exists to answer.
