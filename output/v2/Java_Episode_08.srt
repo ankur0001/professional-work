@@ -1,131 +1,168 @@
 1
-00:00:00,000 --> 00:00:10,039
+00:00:00,000 --> 00:00:10,599
 Episode Seven gave behavior a name.
 Methods let us calculate a total once and
 call it from checkout, invoice, and
+refund. That solves duplicated verbs.
 
 2
-00:00:10,159 --> 00:00:22,079
+00:00:10,719 --> 00:00:23,640
 It does not solve another kind of
 duplication that shows up the moment you
 have more than a few values of the same
+kind. Suppose you need three quiz scores.
+You could write score1, score2, score3.
 
 3
-00:00:22,199 --> 00:00:33,559
+00:00:23,759 --> 00:00:34,799
 Then a fourth quiz appears. Then you need
 to average them, sort them, or pass them
 into a method that should not grow a new
+parameter every semester. Separate
+variables do not scale.
 
 4
-00:00:33,679 --> 00:00:47,159
+00:00:34,919 --> 00:00:50,559
 You need many values under one name,
 reachable by position. That need is an
 array. An array is a fixed-length sequence
+of elements of one type. You create it
+with a length, and that length does not
+grow later.
 
 5
-00:00:47,279 --> 00:01:01,319
+00:00:50,679 --> 00:01:05,279
 Indexes start at zero. The last valid
 index is length - 1. Those three facts —
 fixed length, zero-based indexes, typed
+slots — explain most beginner array bugs
+before they happen. Look at this java for
+a moment.
 
 6
-00:01:01,439 --> 00:01:14,839
+00:01:05,399 --> 00:01:17,799
 scores is one variable. Inside it live
 three ints. scores.length is a field, not
 a method — that detail matters when you
+later meet List.size(). Reading scores[0]
+is the first element.
 
 7
-00:01:14,959 --> 00:01:25,479
+00:01:17,919 --> 00:01:27,959
 Asking for scores[3] throws, because three
 is past the end. Off-by-one bugs are what
 happen when zero-based indexing meets a
+human habit of counting from one.
 
 8
-00:01:25,599 --> 00:01:37,159
+00:01:28,079 --> 00:01:39,039
 Try averaging without an array and you
 feel the pain immediately: score1 + score2
 + score3 does not generalize. With an
+array you loop. Look at this java for a
+moment.
 
 9
-00:01:37,280 --> 00:01:47,040
+00:01:39,159 --> 00:01:50,159
 Notice the cast to double — Episode Four's
 integer-division trap still applies. The
 array did not invent new arithmetic; it
+gave the loop a single place to read from.
 
 10
-00:01:47,159 --> 00:02:02,199
+00:01:50,279 --> 00:02:04,599
 Once the happy path is clear, helpers save
 you from hand-rolling common work. Look at
 this java for a moment. Arrays.sort
+rearranges the same array in place.
+Arrays.toString gives a readable print.
 
 11
-00:02:02,319 --> 00:02:15,840
+00:02:04,719 --> 00:02:17,279
 If you call System.out.println(nums)
 directly, you usually see a type-and-hash
 style string, not the contents — another
+beginner surprise that looks like a broken
+array when the array is fine.
 
 12
-00:02:15,959 --> 00:02:28,239
+00:02:17,399 --> 00:02:29,639
 What if the data is not a single line of
 scores but a grid — seats in a theater,
 pixels, a small table of daily
+temperatures by week? Java models that as
+arrays of arrays. Look at this java for a
+moment.
 
 13
-00:02:28,359 --> 00:02:40,519
+00:02:29,759 --> 00:02:42,519
 week[1] is the second row. week[1][0] is
 the first value in that row. Rows can even
 have different lengths — "ragged" arrays —
+which is powerful and easy to misuse.
 
 14
-00:02:40,639 --> 00:02:47,199
+00:02:42,639 --> 00:02:47,639
 When you loop a grid, nest carefully:
 outer loop over rows, inner over
 week[r].length.
 
 15
-00:02:47,319 --> 00:02:57,239
+00:02:47,759 --> 00:02:57,959
 Now the design question arrays force: what
 happens when the number of scores is not
 known up front, or keeps changing as users
+add and remove items? Arrays do not grow.
 
 16
-00:02:57,359 --> 00:03:08,959
+00:02:58,079 --> 00:03:09,399
 To "add" an element you allocate a larger
 array and copy. That is fine for fixed
 tables or buffers with a known capacity.
+When size changes as a normal part of the
+feature, prefer a List.
 
 17
-00:03:09,079 --> 00:03:19,799
+00:03:09,519 --> 00:03:19,279
 Arrays remain the fixed-length backbone
 under many collections, but they are not
 the default tool for an open-ended
+shopping cart. Assuming arrays grow is one
+of the most common early mistakes.
 
 18
-00:03:19,919 --> 00:03:32,000
+00:03:19,399 --> 00:03:32,479
 Someone writes nums[nums.length] = 99
 hoping to extend the array and gets an
 exception instead. The honest move is
+either a correctly sized array from the
+start or a List that is allowed to grow.
 
 19
-00:03:32,119 --> 00:03:46,119
+00:03:32,599 --> 00:03:45,599
 Interviewers often ask array.length versus
 List.size(): arrays expose a length field
 because size is part of the array object;
+collections expose size() because their
+size is behavior that can change.
 
 20
-00:03:46,239 --> 00:03:58,799
+00:03:45,719 --> 00:03:58,879
 Methods packaged repeated behavior. Arrays
 package repeated values by position. When
 the size must change as a product
+requirement, lists take over. And yet many
+programs are not mainly lists of numbers.
 
 21
-00:03:58,919 --> 00:04:09,319
+00:03:58,999 --> 00:04:10,119
 They are full of text — names, messages,
 ids, error lines. You can store characters
 in a char[], but almost nobody wants to
+manage text that way day to day.
 
 22
-00:04:09,439 --> 00:04:16,240
+00:04:10,239 --> 00:04:17,279
 Java's String type looks friendly until
 modification and comparison surprise you.
 That surprise is where strings begin.
