@@ -1,128 +1,168 @@
 1
-00:00:00,000 --> 00:00:12,480
+00:00:00,000 --> 00:00:12,599
 Annotations gave us metadata. Frameworks
 still need a way to discover that metadata
 — and the shapes of classes — while the
+program is running. Ordinary application
+code does not need that superpower every
+day.
 
 2
-00:00:12,599 --> 00:00:22,119
+00:00:12,719 --> 00:00:21,320
 Frameworks do. The temptation for
 beginners is to treat reflection as
 cleverness: look up a method by name, call
+it, feel powerful.
 
 3
-00:00:22,239 --> 00:00:32,320
+00:00:21,439 --> 00:00:30,839
 The cost shows up months later when
 renames break production and nobody's IDE
 could see the string. Learn the mechanism
+so you can read framework code — then keep
+it out of your domain layer.
 
 4
-00:00:32,439 --> 00:00:45,000
+00:00:30,959 --> 00:00:42,959
 Imagine you are writing a tiny serializer.
 You do not want a handwritten method for
 every domain type. You want to ask an
+object: what fields do you have, what are
+their names, what values are inside?
 
 5
-00:00:45,179 --> 00:00:57,019
+00:00:43,140 --> 00:00:54,219
 That question is reflection: inspect
 classes, methods, and fields at runtime,
 then optionally invoke or read them. Look
+at this java for a moment. Walk the
+example slowly.
 
 6
-00:00:57,140 --> 00:01:11,540
+00:00:54,340 --> 00:01:11,379
 String.class is a Class object — a runtime
 handle on the type. getMethod("length")
 looks up a public method by name and
+signature. invoke("hi") calls that method
+on the instance "hi" and returns the
+result.
 
 7
-00:01:11,659 --> 00:01:23,739
+00:01:11,500 --> 00:01:25,099
 Nothing in this snippet names length as a
 normal Java call. The call path is data-
 driven. That is exactly how many
+frameworks wire controllers, inject
+dependencies, and map JSON: discover, then
+invoke.
 
 8
-00:01:23,859 --> 00:01:37,980
+00:01:25,219 --> 00:01:39,299
 So when is reflection justified?
 Frameworks, tools, serializers, debuggers
 — places where the set of types is not
+known when the library was compiled. In
+day-to-day domain code, prefer a direct
+call.
 
 9
-00:01:38,099 --> 00:01:53,139
+00:01:39,420 --> 00:01:52,579
 Reflection is slower and more brittle than
 "hi".length(). Names become strings.
 Refactors break silently until runtime.
+The mechanism is powerful; casual use
+wrecks readability and performance.
 
 10
-00:01:53,259 --> 00:02:00,019
+00:01:52,700 --> 00:01:59,299
 Modules tighten the story further. The
 module system can restrict deep reflective
 access to internal packages.
 
 11
-00:02:00,139 --> 00:02:06,339
+00:01:59,420 --> 00:02:05,900
 Code that once called setAccessible(true)
 on private fields may now fail unless the
 module opens that package.
 
 12
-00:02:06,459 --> 00:02:18,339
+00:02:06,019 --> 00:02:18,019
 When a library breaks on a newer JDK with
 illegal reflective access errors, you are
 meeting this episode in production.
+Because of cost and brittleness, prefer
+interfaces or codegen when possible.
 
 13
-00:02:18,459 --> 00:02:30,019
+00:02:18,139 --> 00:02:29,179
 If you control both sides, a clear
 interface beats scanning private fields.
 If you need speed at scale, annotation
+processors and generated code often
+outperform repeated reflective lookup.
 
 14
-00:02:30,139 --> 00:02:41,699
+00:02:29,299 --> 00:02:41,059
 When reflection is unavoidable, cache the
 Method and Field handles — looking them up
 on every request pays the search cost
+again and again. What if we use reflection
+for ordinary business logic?
 
 15
-00:02:41,879 --> 00:02:55,519
+00:02:41,239 --> 00:02:52,599
 Look at this java for a moment. It works
 until the method is renamed, overloaded,
 or moved. The compiler cannot protect you.
+That is the wrong trade for a total that
+could have been order.total().
 
 16
-00:02:55,639 --> 00:03:07,639
+00:02:52,719 --> 00:03:04,839
 Keep reflection at the edges — frameworks
 and tools — and keep domain code boring
 and direct. Stretch the idea one step
+toward a framework-shaped helper: read a
+runtime annotation and call the method.
 
 17
-00:03:07,759 --> 00:03:18,799
+00:03:04,959 --> 00:03:16,239
 Look at this java for a moment. Here
 reflection and annotations cooperate. The
 controller methods stay ordinary Java. The
+routing table is discovered, not
+handwritten for every new endpoint.
 
 18
-00:03:18,919 --> 00:03:29,159
+00:03:16,359 --> 00:03:27,759
 Discovery at the edge; direct calls in the
 domain. If you remember only one design
 rule from this episode, make it this:
+reflection is for discovering what you
+could not know at compile time.
 
 19
-00:03:29,279 --> 00:03:41,279
+00:03:27,879 --> 00:03:38,919
 If you already know the type, call it
 directly. If you need many types to share
 a behavior, give them an interface. If you
+need speed with discovery, generate the
+code once.
 
 20
-00:03:41,399 --> 00:03:55,239
+00:03:39,039 --> 00:03:51,599
 After living in that reflective,
 framework-heavy world, another fatigue
 appears: so many classes exist only to
+carry a few immutable fields, yet we still
+write constructors, accessors, equals,
+hashCode,
 
 21
-00:03:55,359 --> 00:03:57,399
+00:03:51,719 --> 00:03:53,400
 and toString by hand.
 
 22
-00:03:57,519 --> 00:04:01,919
+00:03:53,520 --> 00:03:58,040
 Is there a tighter way to model plain
 data? That pressure opens records.
