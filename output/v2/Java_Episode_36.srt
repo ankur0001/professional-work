@@ -1,147 +1,186 @@
 1
-00:00:00,000 --> 00:00:11,880
+00:00:00,000 --> 00:00:12,279
 So far, a Java program has mostly felt
 like one cook in one kitchen: start at
 main, do the next step, finish. That model
+breaks the moment you need progress on two
+fronts at once.
 
 2
-00:00:12,000 --> 00:00:20,800
+00:00:12,399 --> 00:00:21,199
 Imagine a server handling a user request
 while also refreshing a cache in the
 background. Or a desktop tool that must
+stay responsive while a long export runs.
 
 3
-00:00:20,920 --> 00:00:33,359
+00:00:21,320 --> 00:00:33,480
 If everything stays on one thread, the
 export freezes the rest of the world. How
 does Java run an independent path of
+execution beside the one we are already
+on? A thread is that independent path.
 
 4
-00:00:33,480 --> 00:00:40,040
+00:00:33,600 --> 00:00:40,640
 Shared memory is what makes threads
 powerful — and dangerous. Multiple threads
 can see the same objects.
 
 5
-00:00:40,160 --> 00:00:47,040
+00:00:40,760 --> 00:00:48,360
 Without a coordination story, they can
 also step on each other in ways demos
 never reproduce and production reproduces
+at 2 a.m.
 
 6
-00:00:47,160 --> 00:01:00,400
+00:00:48,480 --> 00:01:01,680
 The everyday unit of work is often a
 Runnable and a Thread that will execute
 it: Look at this java for a moment. We
+create a Thread whose work is the lambda.
+Calling start() asks the JVM to schedule a
+new thread.
 
 7
-00:01:00,520 --> 00:01:05,760
+00:01:01,800 --> 00:01:07,359
 Calling join() waits until that thread
 finishes. Two timelines meet again at
 join.
 
 8
-00:01:05,880 --> 00:01:15,240
+00:01:07,480 --> 00:01:16,000
 After join returns, you know the worker's
 writes are visible to you in the happens-
 before sense — a detail that will matter
+more as we go deeper into memory,
 
 9
-00:01:15,360 --> 00:01:19,360
+00:01:16,120 --> 00:01:20,600
 and that already explains why join is more
 than a boolean flag you invent yourself.
 
 10
-00:01:19,480 --> 00:01:32,000
+00:01:20,719 --> 00:01:32,359
 The classic beginner trap sits in one
 method name. start schedules. run does not
 start a new thread — it executes the work
+on the current thread, like a normal
+method call: Look at this java for a
+moment.
 
 11
-00:01:32,120 --> 00:01:43,880
+00:01:32,480 --> 00:01:43,680
 If you call run() by accident, your
 program may look multi-threaded in the
 source and still be single-threaded in
+behavior. Interrupt basics appear as soon
+as you need cooperative cancellation.
 
 12
-00:01:44,000 --> 00:01:54,360
+00:01:43,799 --> 00:01:53,239
 You can interrupt a thread to request that
 it stop waiting or finish early. Well-
 behaved blocking calls notice the
+interrupt and throw InterruptedException
+or exit.
 
 13
-00:01:54,480 --> 00:02:05,880
+00:01:53,359 --> 00:02:05,480
 Code that catches that exception and
 swallows it without restoring interrupt
 status becomes hard to shut down cleanly —
+the signal dies, and higher layers keep
+waiting. Treat interrupt as a request, not
+as noise.
 
 14
-00:02:06,000 --> 00:02:20,280
+00:02:05,599 --> 00:02:19,159
 Shared mutation is the deeper issue. If
 two threads increment the same counter
 with count++, you can lose updates,
+because that one line is not one atomic
+action under the hood. Creating threads
+does not create safety.
 
 15
-00:02:20,400 --> 00:02:30,319
+00:02:19,280 --> 00:02:30,000
 It creates the need for a protocol —
 mutual exclusion, visibility rules,
 higher-level concurrent structures.
+Unbounded thread creation hurts for a
+different reason.
 
 16
-00:02:30,439 --> 00:02:39,840
+00:02:30,120 --> 00:02:38,520
 Spawning a new OS-backed thread per task
 feels simple under light load and
 catastrophic under a spike. Threads cost
+memory and scheduling time.
 
 17
-00:02:39,960 --> 00:02:49,960
+00:02:38,640 --> 00:02:48,600
 Hold that worry; thread pools will address
 it once we understand starting, joining,
 and not lying to ourselves about shared
+state. Make the shared-memory warning
+concrete.
 
 18
-00:02:50,080 --> 00:03:05,280
+00:02:48,720 --> 00:03:04,360
 Thread A writes user.name = "Ada" and then
 user.ready = true without any protocol.
 Thread B sees ready and prints user.name.
+On some machines, some of the time, B
+prints null or an old name.
 
 19
-00:03:05,400 --> 00:03:16,800
+00:03:04,480 --> 00:03:15,640
 Threads did not "break Java." They exposed
 that modern CPUs and compilers reorder and
 cache aggressively unless your program
+establishes happens-before edges. Starting
+a thread is easy.
 
 20
-00:03:16,920 --> 00:03:27,720
+00:03:15,760 --> 00:03:26,240
 Establishing a memory protocol is the real
 craft. What if we avoid shared mutation
 entirely and only pass immutable messages
+between threads? That can be an excellent
+design.
 
 21
-00:03:27,840 --> 00:03:38,480
+00:03:26,360 --> 00:03:36,520
 It does not remove the need to understand
 threads; it changes which problems you
 still have — lifecycle, interruption,
+bounding concurrency — and which ones you
+dodge.
 
 22
-00:03:38,599 --> 00:03:44,879
+00:03:36,640 --> 00:03:43,240
 A final beginner trap: treating thread
 priority as a correctness tool. Priorities
 are hints at best.
 
 23
-00:03:45,000 --> 00:03:53,360
+00:03:43,360 --> 00:03:52,040
 If your program is only correct when a
 thread runs "soon enough," you need
 coordination and timeouts — not a hope
+that the scheduler favors you.
 
 24
-00:03:53,479 --> 00:03:59,000
+00:03:52,160 --> 00:03:57,800
 Hold that picture: threads give timelines;
 shared memory gives both speed and risk.
 
 25
-00:03:59,119 --> 00:04:09,239
+00:03:57,920 --> 00:04:07,360
 The moment two threads touch the same
 mutable data, a new question dominates:
 how do we take turns safely, and how do we
+make sure one thread's writes become
+visible to another?
