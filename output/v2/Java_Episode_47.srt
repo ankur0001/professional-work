@@ -1,119 +1,158 @@
 1
-00:00:00,000 --> 00:00:11,800
+00:00:00,000 --> 00:00:11,560
 CompletableFuture composed asynchronous
 stages. Another family of problems looks
 different: take a large CPU-bound job,
+split it into pieces, solve the pieces,
+combine the results.
 
 2
-00:00:11,919 --> 00:00:25,719
+00:00:11,679 --> 00:00:25,119
 Sorting, compressing, scanning huge arrays
 — divide and conquer. You could submit
 every piece to a fixed thread pool by
+hand. You would also reinvent work
+stealing poorly. What machinery is built
+for recursive splitting?
 
 3
-00:00:25,899 --> 00:00:36,259
+00:00:25,299 --> 00:00:35,179
 ForkJoinPool is divide-and-conquer with
 work stealing. Idle workers steal tasks
 from busy workers' queues so cores stay
+busy even when splits are uneven.
 
 4
-00:00:36,379 --> 00:00:44,779
+00:00:35,299 --> 00:00:43,859
 Parallel streams use this machinery under
 the hood — which is why blocking the
 common pool hurt in the last episode too.
+Look at this java for a moment.
 
 5
-00:00:44,899 --> 00:00:52,539
+00:00:43,979 --> 00:00:50,339
 You define a task — typically a
 RecursiveTask that returns a value, or a
 RecursiveAction that does not.
 
 6
-00:00:52,659 --> 00:01:04,219
+00:00:50,459 --> 00:01:02,899
 The task decides whether the range is
 small enough to solve directly, or should
 fork into subtasks and join their results.
+invoke runs the root task and waits for
+the answer. Look at this java for a
+moment.
 
 7
-00:01:04,339 --> 00:01:20,299
+00:01:03,019 --> 00:01:17,859
 Small ranges add directly. Large ranges
 split, fork one side, compute the other,
 join, and add. The threshold matters: too
+large and you under-parallelize; too small
+and task overhead dominates.
 
 8
-00:01:20,419 --> 00:01:33,899
+00:01:17,979 --> 00:01:32,379
 Unbalanced splits — always peeling one
 element — defeat the model. Aim for pieces
 that are meaningful work units. Work
+stealing in interview language: idle
+workers steal tasks from busy workers'
+queues.
 
 9
-00:01:34,019 --> 00:01:46,179
+00:01:32,499 --> 00:01:44,019
 That sentence explains why the pool
 tolerates uneven task sizes better than a
 naive global queue of giant chunks. The
+common pool is shared across the JVM. Best
+for CPU-bound splitting.
 
 10
-00:01:46,299 --> 00:01:58,579
+00:01:44,139 --> 00:01:57,699
 Do not block worker threads on I/O or
 locks held for long. A blocked worker
 cannot steal or run other tasks; under
+enough blocking, the pool's parallelism
+collapses. Submit blocking work to a
+separate executor.
 
 11
-00:01:58,699 --> 00:02:12,699
+00:01:57,819 --> 00:02:11,419
 Keep Fork/Join for computation. What if we
 treat Fork/Join as a general application
 executor for mixed I/O? You will contend
+with every parallel stream and many async
+defaults for the same workers, then block
+them.
 
 12
-00:02:12,819 --> 00:02:21,979
+00:02:11,539 --> 00:02:20,219
 That is how "parallelism" becomes
 mysterious latency. Parallel streams made
 Fork/Join popular even among developers
+who never wrote a RecursiveTask.
 
 13
-00:02:22,099 --> 00:02:35,659
+00:02:20,340 --> 00:02:33,620
 A library that blocks inside
 parallelStream forbids other features from
 using the same common pool effectively.
+Prefer sequential streams for I/O-bound
+work; reserve parallel for measured CPU
+gains on large enough data.
 
 14
-00:02:35,780 --> 00:02:43,780
+00:02:33,740 --> 00:02:42,900
 Fork/Join task sizing is an empirical
 craft. Start with a threshold that does
 meaningful work — thousands of elements,
+not one — and measure.
 
 15
-00:02:43,900 --> 00:02:55,700
+00:02:43,020 --> 00:02:55,300
 The steal scheduler is clever; it is not a
 substitute for sane task granularity. A
 final caution: invoke on a huge task from
+a request thread still occupies that
+request thread until completion.
 
 16
-00:02:55,819 --> 00:03:04,419
+00:02:55,420 --> 00:03:03,900
 Fork/Join parallelizes the work; it does
 not automatically make the caller
 asynchronous. Divide-and-conquer shines
+when subproblems are independent.
 
 17
-00:03:04,539 --> 00:03:15,699
+00:03:04,020 --> 00:03:15,740
 Shared mutable accumulators without
 atomics or reduction discipline
 reintroduce races the pool cannot fix.
+Picture summing sensor readings across a
+multi-million-element array on a batch
+box.
 
 18
-00:03:15,819 --> 00:03:29,299
+00:03:15,860 --> 00:03:27,820
 A recursive task splits until chunks fit
 in cache-friendly sizes, then adds. Wall-
 clock time drops until you hit cores or
+memory bandwidth. Blocking on a database
+inside those tasks would waste the win.
 
 19
-00:03:29,419 --> 00:03:36,819
+00:03:27,940 --> 00:03:35,380
 Hold the checklist: CPU-bound splits; sane
 thresholds; no blocking on workers;
 measure before celebrating.
 
 20
-00:03:36,939 --> 00:03:50,219
+00:03:35,500 --> 00:03:50,260
 Sometimes the data you need is not shared
 through a queue or map — it is ambient
 per-thread context: a request id, a
+principal, a legacy formatter that is not
+thread-safe. That temptation has a name,
+and a leak story.
