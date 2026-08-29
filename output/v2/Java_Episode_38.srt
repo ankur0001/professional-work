@@ -1,130 +1,166 @@
 1
-00:00:00,000 --> 00:00:12,279
+00:00:00,000 --> 00:00:12,519
 Synchronization taught us that locks give
 both exclusion and visibility. That is a
 strong tool. It is also heavier than some
+problems need — and easy to misunderstand
+as the only visibility story Java has.
 
 2
-00:00:12,399 --> 00:00:25,719
+00:00:12,639 --> 00:00:26,359
 Here is a classic setup. One thread
 prepares a packet of data — fills several
 fields on a result object — then sets a
+boolean ready flag to true. Another thread
+loops until ready is true, then reads the
+data.
 
 3
-00:00:25,839 --> 00:00:35,919
+00:00:26,479 --> 00:00:36,719
 Without a careful memory protocol, the
 reader can see ready == true and still
 observe stale fields. Or it can spin
+forever on a cached false that never
+updates in its view of memory.
 
 4
-00:00:36,039 --> 00:00:46,799
+00:00:36,839 --> 00:00:47,319
 How do we publish "I am done writing" so
 another thread reliably sees both the flag
 and the data that came before it? volatile
+is visibility tooling for that kind of
+publication story.
 
 5
-00:00:46,919 --> 00:00:57,479
+00:00:47,439 --> 00:00:57,399
 It is not a magic atomic wand for every
 compound action. Look at this java for a
 moment. The writer fills the data fields
+first, then writes ready = true.
 
 6
-00:00:57,599 --> 00:01:09,479
+00:00:57,519 --> 00:01:09,599
 The reader waits until it sees ready ==
 true, then reads the data. The volatile
 write and later volatile read create a
+happens-before edge: actions before the
+write become visible to a thread that
+observed the read.
 
 7
-00:01:09,599 --> 00:01:21,560
+00:01:09,719 --> 00:01:21,879
 Reverse the order — set ready first, then
 write the fields — and you reopen the
 window for a reader to see ready without
+seeing the data. Happens-before is the
+language Java uses for these guarantees.
 
 8
-00:01:21,679 --> 00:01:30,599
+00:01:22,000 --> 00:01:31,960
 You do not need to recite the entire Java
 Memory Model in one sitting. You need the
 habit of asking: which write is ordered
+before which read, and by what rule?
 
 9
-00:01:30,779 --> 00:01:42,099
+00:01:32,140 --> 00:01:42,980
 Lock release happens-before a later
 acquire of the same lock. A volatile write
 happens-before a later read that sees that
+write. Starting a thread happens-before
+the first action in that thread.
 
 10
-00:01:42,219 --> 00:01:55,219
+00:01:43,099 --> 00:01:57,219
 join completes after the dying thread's
 actions. These edges are why concurrency
 is more than "take turns on a CPU." What
+volatile does not do is make compound
+actions atomic: Look at this java for a
+moment.
 
 11
-00:01:55,339 --> 00:02:03,219
+00:01:57,339 --> 00:02:05,339
 count++ is still read-modify-write. Two
 threads can both read 10, both write 11,
 and lose an increment.
 
 12
-00:02:03,339 --> 00:02:10,379
+00:02:05,459 --> 00:02:12,340
 Volatility may make each individual read
 or write more visible; it does not merge
 three steps into one atomic update.
 
 13
-00:02:10,500 --> 00:02:22,259
+00:02:12,459 --> 00:02:24,099
 For counters, prefer atomics — which we
 will treat properly soon — or locking when
 the invariant spans more than one
+variable. Another publication pattern: a
+volatile reference to an immutable object.
 
 14
-00:02:22,379 --> 00:02:34,419
+00:02:24,219 --> 00:02:37,499
 The writer builds a complete immutable
 snapshot, then assigns it to a volatile
 field in one write. Readers read the
+reference once and use the snapshot
+without further locking: Look at this java
+for a moment.
 
 15
-00:02:34,539 --> 00:02:42,659
+00:02:37,619 --> 00:02:46,419
 This pattern fails if the object is
 mutable and still being changed after
 publication — because then you are back to
+sharing mutable state without a protocol.
 
 16
-00:02:42,780 --> 00:02:55,819
+00:02:46,539 --> 00:03:01,379
 Using volatile on every field "for safety"
 adds cost and still fails to protect
 multi-step invariants like "transfer money
+between two accounts." Overuse is not
+caution. It is a sign the protocol was
+never designed.
 
 17
-00:02:55,939 --> 00:03:00,780
+00:03:01,499 --> 00:03:06,739
 Does volatile make ++ atomic? No. Use
 atomics or locks for that.
 
 18
-00:03:00,900 --> 00:03:13,340
+00:03:06,859 --> 00:03:18,659
 Use volatile when the need is visibility
 and ordered publication — not when the
 need is "update this counter safely under
+contention." One more boundary: volatile
+is about one variable's reads and writes.
 
 19
-00:03:13,460 --> 00:03:25,500
+00:03:18,779 --> 00:03:29,939
 It does not freeze an entire object graph.
 If you publish a volatile reference to a
 mutable object and then keep mutating that
+object from the writer thread, readers can
+still see torn state inside.
 
 20
-00:03:25,620 --> 00:03:31,300
+00:03:30,059 --> 00:03:36,139
 Immutability after publication — or
 locking for ongoing mutation — remains
 part of the design.
 
 21
-00:03:31,420 --> 00:03:41,060
+00:03:36,259 --> 00:03:45,899
 Sometimes synchronized is almost enough,
 but you need try-lock, timed waits,
 multiple wait-sets, or fairness knobs the
+intrinsic lock does not offer.
 
 22
-00:03:41,180 --> 00:03:49,620
+00:03:46,019 --> 00:03:54,619
 That is when explicit locks enter — not as
 a replacement for thinking, but as a
 richer toolbox for ownership you must
+manage yourself.
