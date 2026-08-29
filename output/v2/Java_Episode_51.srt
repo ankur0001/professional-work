@@ -1,164 +1,209 @@
 1
-00:00:00,000 --> 00:00:10,000
+00:00:00,000 --> 00:00:10,720
 Virtual threads closed a long concurrency
 arc. A quieter question has been waiting
 since the beginning: when you run a
+program, how do classes actually appear
+inside the JVM?
 
 2
-00:00:10,179 --> 00:00:22,899
+00:00:10,900 --> 00:00:24,019
 You write source, compile to bytecode, and
 somehow main runs. Between "bytecode on
 disk" and "code the CPU can execute" sits
+class loading — lazy, layered, and
+responsible for a family of mysterious
+errors.
 
 3
-00:00:23,019 --> 00:00:32,939
+00:00:24,140 --> 00:00:33,579
 Classes appear lazily. Understanding
 loaders explains ClassNotFoundException
 and NoClassDefFoundError mysteries that
+look identical until you know what failed
+when.
 
 4
-00:00:33,060 --> 00:00:44,579
+00:00:33,700 --> 00:00:44,940
 Start from a deliberate load: Look at this
 java for a moment. Class.forName asks the
 JVM to load, link, and initialize the
+named class if needed, then returns a
+Class object.
 
 5
-00:00:44,700 --> 00:00:54,460
+00:00:45,060 --> 00:00:54,460
 Printing the class loader shows which
 loader defined it. Classes are not all
 dumped into one flat bag at startup. They
+arrive through loaders with parents and
+responsibilities.
 
 6
-00:00:54,579 --> 00:01:06,340
+00:00:54,579 --> 00:01:06,420
 The usual hierarchy is bootstrap,
 platform, and application loaders. The
 bootstrap loader knows the most
+fundamental JDK classes. The platform
+loader covers other modular JDK content.
 
 7
-00:01:06,459 --> 00:01:16,179
+00:01:06,539 --> 00:01:15,619
 The application loader finds your
 classpath or module path types. Parent
 delegation is the rule of thumb: ask the
+parent loader first before loading a class
+yourself.
 
 8
-00:01:16,299 --> 00:01:21,780
+00:01:15,739 --> 00:01:21,259
 That keeps core types unique and prevents
 user code from casually replacing String
 with a rogue version.
 
 9
-00:01:21,899 --> 00:01:31,659
+00:01:21,379 --> 00:01:31,099
 Custom loaders — plugin systems,
 containers — complicate it, but the
 delegation instinct remains: prefer
+parents for shared types so identity stays
+coherent.
 
 10
-00:01:31,779 --> 00:01:44,859
+00:01:31,219 --> 00:01:45,019
 Two classes with the same binary name
 loaded by different loaders are different
 runtime types. That fact alone explains
+entire categories of "but they look the
+same!" cast failures in plugin
+architectures.
 
 11
-00:01:44,979 --> 00:01:59,939
+00:01:45,140 --> 00:01:58,700
 Loading is only one phase. Linking
 verifies bytecode and prepares memory
 structures. Verification checks that the
+bytecode obeys JVM safety rules — stack
+discipline, type constraints — so the
+runtime can trust it.
 
 12
-00:02:00,059 --> 00:02:09,859
+00:01:58,819 --> 00:02:07,939
 Initialization runs static initializers.
 Forcing eager init everywhere can slow
 startup; lazy init can defer surprises
+until first use.
 
 13
-00:02:09,979 --> 00:02:19,099
+00:02:08,060 --> 00:02:17,300
 Know that Class.forName and first active
 use are moments when initialization can
 run. Metaspace holds class metadata — not
+your ordinary object heap.
 
 14
-00:02:19,219 --> 00:02:32,020
+00:02:17,420 --> 00:02:30,620
 When you generate or load huge numbers of
 classes, metaspace pressure can become its
 own incident story. Dynamic loading has
+costs: more classes, more metadata, more
+chances for classpath order surprises.
 
 15
-00:02:32,139 --> 00:02:46,899
+00:02:30,740 --> 00:02:43,860
 "Memory" is not only -Xmx. Classpath order
 surprises are legendary. Two JARs contain
 different versions of a type; the first
+one wins. The code compiles against one
+version and runs against another.
 
 16
-00:02:47,019 --> 00:02:58,379
+00:02:43,980 --> 00:02:54,860
 ClassNotFoundException often means a
 loader could not find the bytes.
 NoClassDefFoundError often means the JVM
+previously failed to initialize or link a
+class that the compiler thought existed.
 
 17
-00:02:58,499 --> 00:03:09,459
+00:02:54,980 --> 00:03:05,580
 The names are not interchangeable. A
 container incident makes the loader story
 concrete. The app JAR expects a library
+class. The image's classpath omits that
+JAR version.
 
 18
-00:03:09,579 --> 00:03:20,579
+00:03:05,700 --> 00:03:18,620
 At compile time on a developer machine
 everything resolved. At runtime first use
 fails. Printing loaders and examining the
+layered classpath turns "works on my
+machine" into a diff you can fix.
 
 19
-00:03:20,699 --> 00:03:33,539
+00:03:18,740 --> 00:03:31,420
 What if two plugins each ship a different
 version of the same library and each uses
 its own loader? Same names, different
+types, confusing ClassCastException.
+Identity is loader plus name, not name
+alone.
 
 20
-00:03:33,659 --> 00:03:45,060
+00:03:31,540 --> 00:03:42,740
 Dynamic proxies and generated subclasses
 multiply classes at runtime. Frameworks do
 this constantly. Each generated class
+consumes metaspace and must be loadable
+under the right loader.
 
 21
-00:03:45,180 --> 00:03:50,939
+00:03:42,860 --> 00:03:49,020
 When a framework says "add this agent" or
 "open this module," it is often speaking
 loader and linkage language.
 
 22
-00:03:51,060 --> 00:04:00,659
+00:03:49,140 --> 00:03:58,860
 Initialization order can also bite: static
 fields that call code which loads more
 classes which initialize more statics.
+Keep static initializers boring.
 
 23
-00:04:00,780 --> 00:04:12,900
+00:03:58,980 --> 00:04:12,660
 Picture an application that fails on first
 request with NoClassDefFoundError for a
 class that "is clearly in the JAR." Often
+static initialization threw earlier, the
+JVM marked the class failed,
 
 24
-00:04:13,020 --> 00:04:15,980
+00:04:12,780 --> 00:04:15,820
 and later use reports
 NoClassDefFoundError.
 
 25
-00:04:16,100 --> 00:04:20,260
+00:04:15,940 --> 00:04:19,860
 Reading the first failure in the log
 matters more than staring at the second.
 
 26
-00:04:20,379 --> 00:04:31,620
+00:04:19,980 --> 00:04:31,420
 Hold a practical checklist: know which
 loader owns your application types; treat
 linkage errors as phase failures, not
+random noise; watch metaspace when
+generating classes;
 
 27
-00:04:31,740 --> 00:04:34,819
+00:04:31,540 --> 00:04:34,900
 make classpath contents an explicit
 deployment concern.
 
 28
-00:04:34,939 --> 00:04:41,100
+00:04:35,020 --> 00:04:40,420
 The next natural hunger is what those
 bytes actually contain — the JVM's
 instruction language itself.
