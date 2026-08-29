@@ -3,123 +3,158 @@
 Fork/Join and pools make threads into
 shared workers. That sharing collides with
 an older convenience: sometimes people
+stash data "on the thread" so deep call
+stacks need not pass it as a parameter.
 
 2
-00:00:13,199 --> 00:00:27,399
+00:00:13,199 --> 00:00:26,119
 A request id for logging. A tenant id. A
 non-thread-safe formatter reused without
 locking. The convenience is real. So is
+the leak. ThreadLocal is per-thread global
+state — powerful and leak-prone.
 
 3
-00:00:27,519 --> 00:00:39,839
+00:00:26,239 --> 00:00:38,200
 Prefer explicit context parameters when
 possible. Use ThreadLocal when
 interoperation with legacy APIs or cross-
+cutting instrumentation truly needs
+ambient state — and then treat cleanup as
+part of the design.
 
 4
-00:00:39,959 --> 00:00:51,319
+00:00:38,320 --> 00:00:49,920
 Look at this java for a moment. Each
 thread gets its own SimpleDateFormat via
 withInitial, avoiding races on a shared
+mutable formatter. That pattern was common
+before java.time.
 
 5
-00:00:51,439 --> 00:01:02,239
+00:00:50,039 --> 00:01:01,200
 It still illustrates the mechanics: get
 returns this thread's value, creating it
 lazily if absent. The danger appears when
+the thread belongs to a pool and is reused
+for the next request.
 
 6
-00:01:02,359 --> 00:01:09,959
+00:01:01,320 --> 00:01:10,200
 Always remove in request-scoped pool
 usage: Look at this java for a moment. If
 you forget remove, the value sticks to the
+worker thread.
 
 7
-00:01:10,079 --> 00:01:20,239
+00:01:10,319 --> 00:01:19,719
 The next request on that thread may see
 the previous request's tenant, user, or
 formatter state. Classic ThreadLocal leak:
+values stick to reused pool threads.
 
 8
-00:01:20,359 --> 00:01:32,760
+00:01:19,839 --> 00:01:31,559
 In long-lived pools, that is a security
 and correctness incident waiting for the
 unlucky reuse. Harder reasoning than
+passing context is the deeper cost. A
+parameter is visible in the signature.
 
 9
-00:01:32,879 --> 00:01:39,640
+00:01:31,679 --> 00:01:38,639
 A ThreadLocal is invisible ambient state.
 Callers cannot see what they must set.
 Tests forget to clear it.
 
 10
-00:01:39,759 --> 00:01:48,759
+00:01:38,759 --> 00:01:47,999
 New virtual threads multiply instances
 when you create millions of short-lived
 threads — each with its own copy — which
+can amplify memory if values are large.
 
 11
-00:01:48,879 --> 00:01:57,159
+00:01:48,119 --> 00:01:56,599
 What if we use ThreadLocal as a hidden API
 between layers "so signatures stay clean"?
 Signatures stay clean while behavior
+becomes spooky.
 
 12
-00:01:57,280 --> 00:02:10,000
+00:01:56,719 --> 00:02:09,279
 A method that only works when someone else
 set a thread-local upstream is a landmine.
 If the ambient value is required, at least
+document and enforce it at a framework
+boundary — and still remove it on the way
+out.
 
 13
-00:02:10,120 --> 00:02:21,200
+00:02:09,399 --> 00:02:20,359
 SimpleDateFormat in a ThreadLocal was a
 pre-java.time workaround. Prefer
 DateTimeFormatter, which is immutable and
+thread-safe, over clever thread
+confinement for formatting.
 
 14
-00:02:21,319 --> 00:02:30,759
+00:02:20,479 --> 00:02:30,039
 When a better shared immutable tool
 exists, take it and delete the
 ThreadLocal. Memory leaks with
+ThreadLocals are not only about
+correctness of the next request.
 
 15
-00:02:30,879 --> 00:02:39,319
+00:02:30,159 --> 00:02:38,439
 Large objects retained on idle pool
 threads pin memory for the life of the
 pool. remove is both a correctness and a
+footprint discipline.
 
 16
-00:02:39,439 --> 00:02:51,199
+00:02:38,560 --> 00:02:50,159
 If you must use ThreadLocal for a request
 id, set it at the earliest framework
 filter and remove it at the same layer's
+exit. Symmetry of enter/exit beats
+scattered gets in business code.
 
 17
-00:02:51,319 --> 00:03:04,519
+00:02:50,280 --> 00:03:03,240
 Picture a legacy library that requires a
 thread-bound credentials object you cannot
 change. You set a ThreadLocal in a filter,
+call the library, and remove in finally.
+The library is confined; the pool stays
+clean.
 
 18
-00:03:04,639 --> 00:03:14,079
+00:03:03,360 --> 00:03:12,360
 That is a justified ThreadLocal. Using the
 same pattern to avoid adding a parameter
 to your own new code is not justification
+— it is avoiding a signature.
 
 19
-00:03:14,199 --> 00:03:28,839
+00:03:12,480 --> 00:03:26,040
 Hold the checklist: prefer parameters; if
 ThreadLocal is required, set and remove at
 the same boundary; avoid large retained
+values on pooled threads; do not hide
+required context in ambient state for new
+APIs.
 
 20
-00:03:28,959 --> 00:03:36,159
+00:03:26,160 --> 00:03:33,040
 When in doubt, pass the context. Ambient
 state is for the seams you cannot change,
 not for greenfield code this afternoon.
 
 21
-00:03:36,279 --> 00:03:44,119
+00:03:33,160 --> 00:03:41,280
 When many locks enter a system without a
 global order, a different failure mode
 appears — not a leak, but a permanent wait
+cycle.
