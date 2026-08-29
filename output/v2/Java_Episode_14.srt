@@ -1,101 +1,135 @@
 1
-00:00:00,000 --> 00:00:12,839
+00:00:00,000 --> 00:00:11,160
 Enums gave us type-safe vocabulary as
 objects. Now the language runs into a
 different friction: Java's collections and
+many APIs speak in objects, while everyday
+numbers still want to be primitives.
 
 2
-00:00:12,959 --> 00:00:24,039
+00:00:11,279 --> 00:00:22,079
 Imagine a shopping cart that stores item
 quantities. You reach for a list and try
 to think in int values. Conceptually and
+historically, a general list holds
+objects, not raw primitives.
 
 3
-00:00:24,159 --> 00:00:36,399
+00:00:22,199 --> 00:00:35,320
 So the question becomes unavoidable: how
 does a primitive participate in an object
 world? The answer is wrapper types.
+Integer wraps int. Boolean wraps boolean.
+Double wraps double.
 
 4
-00:00:36,519 --> 00:00:45,519
+00:00:35,439 --> 00:00:44,280
 Each wrapper is a reference type that
 holds a primitive value and can sit in a
 collection, return from a generic method,
+or represent "maybe missing" with null.
 
 5
-00:00:45,639 --> 00:00:57,519
+00:00:44,399 --> 00:00:57,439
 Java then softens the ceremony with
 autoboxing and unboxing. You can write
 code that looks like it mixes primitives
+and wrappers, and the compiler inserts the
+conversions. Look at this java for a
+moment.
 
 6
-00:00:57,639 --> 00:01:11,599
+00:00:57,559 --> 00:01:12,239
 Walk the lines like a slow debugger. 10 is
 an int literal; assigning it to Integer a
 boxes it into an object. Reading a into
+int b unboxes it. list.add(b) boxes again
+so the list can store an Integer.
 
 7
-00:01:11,719 --> 00:01:19,799
+00:01:12,359 --> 00:01:19,680
 The convenience is real. The danger is
 that the conversions become invisible, so
 allocation costs and null failures become
+invisible too.
 
 8
-00:01:19,920 --> 00:01:30,519
+00:01:19,799 --> 00:01:31,000
 Here is the failure that every Java
 developer meets eventually: Look at this
 java for a moment. Unboxing needs a real
+object. A null wrapper has nothing to
+unwrap.
 
 9
-00:01:30,640 --> 00:01:41,359
+00:01:31,119 --> 00:01:41,719
 Prefer primitives when absence is not part
 of the meaning. If absence matters, keep
 the wrapper — and check it before you
+unbox. Autoboxing has another subtle trap
+around identity.
 
 10
-00:01:41,480 --> 00:01:57,600
+00:01:41,839 --> 00:01:57,919
 Small Integer values are cached: Look at
 this java for a moment. == on wrappers
 compares references, not numeric value.
+Inside the cache range, two boxed values
+may share an instance. Outside it, they
+usually do not.
 
 11
-00:01:57,719 --> 00:02:10,240
+00:01:58,039 --> 00:02:10,759
 Use equals — or better, compare primitives
 — when you mean numeric equality. The
 cache is an optimization, not a contract
+you should design around. Once you see the
+conversions, performance questions follow.
 
 12
-00:02:10,359 --> 00:02:22,119
+00:02:10,879 --> 00:02:21,960
 In a tight numeric loop, prefer
 primitives. Repeated boxing creates
 objects and pressure on the allocator.
+Wrappers are the right tool at API
+boundaries and in collections.
 
 13
-00:02:22,239 --> 00:02:34,999
+00:02:22,079 --> 00:02:35,199
 They are the wrong default inside a hot
 sum of a million numbers. Look at this
 java for a moment. Let's place the bridge
+inside a tiny cart that tallies
+quantities. Look at this java for a
+moment.
 
 14
-00:02:35,119 --> 00:02:46,799
+00:02:35,319 --> 00:02:47,159
 The list cannot store bare int values;
 Integer is the ticket in. For a handful of
 line items this is fine. For a million
+sensor readings in a tight loop, the same
+pattern becomes a tax.
 
 15
-00:02:46,919 --> 00:03:00,879
+00:02:47,280 --> 00:03:01,240
 Collections needed objects; wrappers
 answered. Autoboxing made the bridge
 quiet. Null unboxing and == on cached
+Integers showed the traps. Hot loops
+reminded us to prefer primitives where
+wrappers add no meaning.
 
 16
-00:03:01,000 --> 00:03:10,719
+00:03:01,360 --> 00:03:11,000
 And yet once lists of Integer feel
 natural, another problem shows up: a raw
 list that can hold anything forces casts
+and hides bugs until runtime.
 
 17
-00:03:10,840 --> 00:03:20,120
+00:03:11,120 --> 00:03:20,360
 How do we tell a collection "these are
 strings" or "these are orders" and have
 the compiler enforce it? That is the
+pressure that brings generics.
