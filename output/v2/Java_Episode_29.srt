@@ -1,113 +1,151 @@
 1
-00:00:00,000 --> 00:00:13,199
+00:00:00,000 --> 00:00:13,759
 Sequential streams made bulk work
 declarative. Looking at a long CPU-heavy
 map, a temptation appears: add .parallel()
+and wait for a speedup. Parallel streams
+are a power tool — and a foot-gun on IO
+and tiny data.
 
 2
-00:00:13,319 --> 00:00:27,239
+00:00:13,879 --> 00:00:28,039
 Suppose you transform a large list of in-
 memory records with a pure, expensive
 function — compress a buffer, score a
+document, compute a hash. The work is
+independent: one element's result does not
+depend on another's.
 
 3
-00:00:27,359 --> 00:00:37,439
+00:00:28,159 --> 00:00:39,159
 That is the profile where parallel streams
 can help. Look at this java for a moment.
 Walk the claim carefully. parallelStream()
+splits the source and runs pieces
+concurrently.
 
 4
-00:00:37,560 --> 00:00:50,400
+00:00:39,279 --> 00:00:51,039
 Under the hood it uses the common
 ForkJoinPool. Your lambdas must tolerate
 running on multiple threads. Prefer purity
+— no unsynchronized mutation of shared
+collections inside the map.
 
 5
-00:00:50,520 --> 00:01:01,600
+00:00:51,159 --> 00:01:01,839
 Best for CPU-heavy independent work on
 sizable data. What goes wrong when the
 problem is smaller or messier? On tiny
+lists, the cost of splitting and joining
+dwarfs the work.
 
 6
-00:01:01,719 --> 00:01:12,599
+00:01:01,959 --> 00:01:14,280
 You can make a sort slower by
 parallelizing it. Measure; don't hope.
 Ordering and side effects get weird.
+Encounter order may differ. forEach on a
+parallel stream does not promise sequence.
 
 7
-00:01:12,719 --> 00:01:25,120
+00:01:14,399 --> 00:01:25,759
 If you mutate an external ArrayList from
 parallel threads, you corrupt it. Look at
 this java for a moment. Use a proper
+concurrent collector or keep the pipeline
+pure and collect at the end.
 
 8
-00:01:25,239 --> 00:01:31,039
+00:01:25,879 --> 00:01:31,640
 IO-bound work wants explicit executors or
 virtual threads, not the common fork-join
 pool.
 
 9
-00:01:31,159 --> 00:01:44,199
+00:01:31,759 --> 00:01:42,799
 A parallel stream that blocks on network
 calls inside map can stall shared compute
 work for the whole JVM process — other
+unrelated parallel streams may wait. Look
+at this java for a moment.
 
 10
-00:01:44,319 --> 00:01:56,239
+00:01:42,919 --> 00:01:55,479
 A fair check: when would you refuse
 parallel streams? Tiny data, IO inside the
 pipeline, need for strict encounter order
+with side effects, or already saturated
+cores. When would you consider them?
 
 11
-00:01:56,419 --> 00:02:11,659
+00:01:55,659 --> 00:02:10,219
 Large in-memory data, pure CPU work,
 associative reductions, measured
 improvement. What if we always call
+parallel() for fashion? Look at this java
+for a moment. Three elements. No win.
+Harder debugging.
 
 12
-00:02:11,779 --> 00:02:21,019
+00:02:10,339 --> 00:02:19,699
 Keep sequential as the default; go
 parallel when evidence says so. Reductions
 have associativity requirements under
+parallelism. Summing integers works.
 
 13
-00:02:21,139 --> 00:02:34,739
+00:02:19,819 --> 00:02:32,659
 Prefer Collectors.joining or concurrent
 collectors designed for the job. Look at
 this java for a moment. Primitive
+specialized streams avoid boxing and
+parallelize cleanly for numeric work.
 
 14
-00:02:34,859 --> 00:02:47,779
+00:02:32,779 --> 00:02:46,579
 Also know the pool: the common
 ForkJoinPool size defaults around
 available processors. Saturating it with
+blocking tasks hurts unrelated parallel
+streams library-wide. Thread-safety of the
+source matters.
 
 15
-00:02:47,899 --> 00:03:02,779
+00:02:46,699 --> 00:03:01,699
 Parallel streams over freshly built
 ArrayLists of immutable data are the happy
 path. Stabilize inputs first. Naming tip:
+processInParallel(data) as a dedicated
+method signals intent and localizes the
+parallel boundary.
 
 16
-00:03:02,899 --> 00:03:17,099
+00:03:01,819 --> 00:03:16,819
 Independent CPU work suggested
 parallelism. The common ForkJoinPool
 powered parallel streams. Purity and
+sizing constraints appeared. Ordering and
+shared mutation failed loudly. IO-bound
+work pointed elsewhere.
 
 17
-00:03:17,219 --> 00:03:25,459
+00:03:16,939 --> 00:03:26,299
 Measurement closed the argument. One
 leftover from every pipeline — parallel or
 not — still bites at the edges: a stage
+that might produce no value.
 
 18
-00:03:25,579 --> 00:03:36,739
+00:03:26,419 --> 00:03:37,819
 findFirst on an empty stream, a lookup
 inside a map operation, a parse that
 fails. Returning null from those moments
+recreates the same silent absence problem
+collections already taught us to hate.
 
 19
-00:03:36,859 --> 00:03:43,819
+00:03:37,939 --> 00:03:44,499
 How do we make "maybe none" part of the
 type at the boundary? That pressure is
 what Optional exists to answer.
