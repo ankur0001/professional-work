@@ -1,112 +1,146 @@
 1
-00:00:00,000 --> 00:00:03,160
+00:00:00,000 --> 00:00:02,919
 Lists proudly allow duplicates and
 remember order.
 
 2
-00:00:03,280 --> 00:00:15,440
+00:00:03,040 --> 00:00:14,839
 The next product requirement often flips
 that pride into a bug: a user should have
 each role only once, a crawler should not
+visit the same url twice, a tag cloud
+should not print "java" three times.
 
 3
-00:00:15,559 --> 00:00:24,559
+00:00:14,960 --> 00:00:23,200
 Suppose you store roles in a list and
 check membership with contains before
 every add. It works for tiny data and
+becomes awkward as rules grow.
 
 4
-00:00:24,679 --> 00:00:40,840
+00:00:23,320 --> 00:00:39,560
 The natural question is: is there a
 collection whose whole point is
 uniqueness? That collection is a Set. Set
+means uniqueness — and uniqueness means
+equals/hashCode discipline. Look at this
+java for a moment. Walk it.
 
 5
-00:00:40,960 --> 00:00:51,359
+00:00:39,679 --> 00:00:51,920
 The first add inserts "a". The second add
 sees an equal element already present and
 leaves the set unchanged. Size stays one.
+If you needed two entries, you wanted a
+list.
 
 6
-00:00:51,480 --> 00:01:00,960
+00:00:52,039 --> 00:01:02,719
 Under a HashSet, uniqueness is decided by
 hashing into buckets, then confirming with
 equals. If two objects are equal, they
+must share a hash code.
 
 7
-00:01:01,080 --> 00:01:12,200
+00:01:02,839 --> 00:01:13,560
 If you break that contract, a set can hold
 what looks like duplicates, or fail to
 find what you just inserted. For your own
+classes, implementing equals and hashCode
+together is not optional decoration.
 
 8
-00:01:12,320 --> 00:01:23,000
+00:01:13,679 --> 00:01:24,399
 Different set implementations trade
 properties: Look at this java for a
 moment. HashSet is the common default when
+you only care about membership.
+LinkedHashSet preserves insertion order.
 
 9
-00:01:23,120 --> 00:01:30,800
+00:01:24,519 --> 00:01:32,239
 TreeSet keeps elements sorted, which means
 it needs a consistent ordering — natural
 Comparable order or an explicit
+Comparator.
 
 10
-00:01:30,920 --> 00:01:38,159
+00:01:32,359 --> 00:01:40,480
 If the comparator says two elements are
 equal for ordering purposes, the set
 treats them as duplicates even if equals
+would disagree.
 
 11
-00:01:38,280 --> 00:01:49,960
+00:01:40,599 --> 00:01:52,679
 Here is a domain-shaped example where set
 algebra shows up in real rules: Look at
 this java for a moment. removeAll,
+retainAll, and addAll express difference,
+intersection, and union.
 
 12
-00:01:50,079 --> 00:02:03,799
+00:01:52,799 --> 00:02:05,879
 Permission checks and feature flag merges
 sound like set talk once you stop forcing
 lists to pretend. One sharp edge: do not
+mutate fields used in hashing while an
+object sits in a set. Look at this java
+for a moment.
 
 13
-00:02:03,920 --> 00:02:15,840
+00:02:06,000 --> 00:02:18,919
 After mutation, the object may live in the
 wrong bucket. Treat elements as
 effectively immutable while they are set
+members, or remove, mutate, and re-add.
+What if we skip sets and keep unique lists
+by hand?
 
 14
-00:02:16,020 --> 00:02:28,660
+00:02:19,099 --> 00:02:31,539
 Fine for one call site. Then five call
 sites forget the check. A set makes the
 rule structural instead of ceremonial.
+Equality discipline with a domain type:
+Look at this java for a moment.
 
 15
-00:02:28,780 --> 00:02:38,860
+00:02:31,659 --> 00:02:42,500
 Because Role is a record, equal names
 compare equal and hash alike. A hand-
 written class that compares names in
+equals but forgets name in hashCode would
+break HashSet membership.
 
 16
-00:02:38,979 --> 00:02:45,819
+00:02:42,620 --> 00:02:48,819
 Iteration order stories cause flaky tests.
 A HashSet may print elements in different
 orders across runs.
 
 17
-00:02:45,939 --> 00:03:01,539
+00:02:48,939 --> 00:03:04,219
 If a test asserts a stringified set,
 prefer LinkedHashSet, a sorted set, or
 compare as sets without relying on order.
+Lists allowed duplicates; many domains
+forbid them. Sets answered with uniqueness
+via equals/hashCode.
 
 18
-00:03:01,659 --> 00:03:13,180
+00:03:04,340 --> 00:03:17,099
 HashSet, LinkedHashSet, and TreeSet traded
 speed, insertion order, and sorted order.
 Mutating hashed fields showed a classic
+foot-gun. Uniqueness of elements is still
+not lookup by key.
 
 19
-00:03:13,299 --> 00:03:27,619
+00:03:17,219 --> 00:03:31,099
 Often you need "given a user id, find the
 user" or "given a sku, find the price."
 Searching a list linearly gets old fast.
+How does Java give us keyed lookup? That
+is the pressure that brings maps.
