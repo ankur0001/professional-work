@@ -1,120 +1,158 @@
 1
-00:00:00,000 --> 00:00:04,400
+00:00:00,000 --> 00:00:04,080
 Wrappers let primitives enter object
 collections. That solves storage.
 
 2
-00:00:04,520 --> 00:00:14,839
+00:00:04,200 --> 00:00:15,160
 It does not solve a different kind of lie:
 a collection that claims to hold
 "anything." Picture an old-style list of
+names: Look at this java for a moment. The
+cast is a confession.
 
 3
-00:00:14,960 --> 00:00:29,560
+00:00:15,280 --> 00:00:29,320
 You are telling the compiler, "trust me."
 Runtime is where trust breaks. So the
 natural question is: can the collection
+itself remember what it holds, so the
+mistake dies at compile time? That is what
+generics are for.
 
 4
-00:00:29,679 --> 00:00:41,159
+00:00:29,439 --> 00:00:41,479
 A type parameter says what belongs inside.
 Generics move class-cast failures to
 compile time — if you learn the rules,
+including wildcards. Look at this java for
+a moment.
 
 5
-00:00:41,280 --> 00:00:56,039
+00:00:41,599 --> 00:00:55,439
 List<String> rejects names.add(42) before
 the program runs. get returns String
 without a cast. The type argument is part
+of the API contract, not a comment. Using
+raw types throws that safety away.
 
 6
-00:00:56,159 --> 00:01:08,759
+00:00:55,559 --> 00:01:08,359
 But there is a twist learners must hear
 early: type parameters erase at runtime.
 The compiler uses <String> for checking,
+then much of that detail is removed for
+the JVM's older object model.
 
 7
-00:01:08,879 --> 00:01:22,599
+00:01:08,479 --> 00:01:20,439
 At runtime you largely see a list of
 objects with inserted checks. That is why
 you cannot write List<int> — no primitive
+type arguments — and why wrappers from the
+previous episode matter for List<Integer>.
 
 8
-00:01:22,719 --> 00:01:35,280
+00:01:20,559 --> 00:01:35,559
 Erasure is the compatibility deal Java
 made. Once you write APIs that accept or
 return collections of related types,
+wildcards appear. The mnemonic is PECS:
+producer extends, consumer super.
 
 9
-00:01:35,400 --> 00:01:47,480
+00:01:35,679 --> 00:01:47,799
 Look at this java for a moment. If a list
 produces values for you to read, ? extends
 Number is safe — every element is some
+kind of Number. If a list consumes values
+you want to put in, ?
 
 10
-00:01:47,660 --> 00:01:50,340
+00:01:47,979 --> 00:01:51,099
 super Number is safe — it can accept a
 Number.
 
 11
-00:01:50,460 --> 00:02:04,900
+00:01:51,219 --> 00:02:04,579
 Wrong wildcard bounds are not a style
 debate; they are a symptom of mixing "I
 need to read" with "I need to write."
+Generic methods solve a related need:
+sometimes the type parameter belongs to
+the method, not the class.
 
 12
-00:02:05,020 --> 00:02:20,180
+00:02:04,699 --> 00:02:18,379
 Look at this java for a moment. Here <T>
 is declared on the method. Call sites can
 pass a List<String> or a List<Order> and
+get the matching element type back. The
+compiler infers T from the argument.
 
 13
-00:02:20,300 --> 00:02:34,100
+00:02:18,500 --> 00:02:31,780
 What if we skip generics and live with raw
 types? Look at this java for a moment. It
 feels flexible. Then every read needs a
+cast, and unchecked warnings start
+lighting up. Those warnings are clues, not
+noise.
 
 14
-00:02:34,219 --> 00:02:46,860
+00:02:31,900 --> 00:02:44,420
 An unchecked warning means the compiler
 lost the proof it normally gives you.
 Ignoring them is how ClassCastExceptions
+hide until a customer hits the bad path.
+Let's make the generic contract visible in
+a small helper.
 
 15
-00:02:46,979 --> 00:02:59,899
+00:02:44,539 --> 00:02:56,659
 Look at this java for a moment.
 Box<String> and Box<Integer> share the
 same bytecode-shaped class after erasure,
+but at compile time they are different
+contracts. You cannot set(42) on name.
 
 16
-00:03:00,019 --> 00:03:12,499
+00:02:56,780 --> 00:03:08,259
 That is the everyday value of generics:
 one implementation, many safe uses.
 Untyped lists forced casts and late
+failures. Generics restored compile-time
+clarity.
 
 17
-00:03:12,619 --> 00:03:22,259
+00:03:08,379 --> 00:03:17,019
 Erasure explained the runtime shape and
 the ban on primitive type arguments. PECS
 guided wildcards. Generic methods
+localized type parameters.
 
 18
-00:03:22,379 --> 00:03:37,419
+00:03:17,139 --> 00:03:32,099
 Notice how wrappers and generics cooperate
 in real APIs: List<Integer>, Map<String,
 Double>. The type parameter needs a
+reference type, so the previous episode's
+wrappers are how primitives enter generic
+APIs.
 
 19
-00:03:37,539 --> 00:03:41,619
+00:03:32,219 --> 00:03:36,699
 Now that types can carry parameters,
 another kind of metadata wants a home:
 
 20
-00:03:41,739 --> 00:03:54,459
+00:03:36,819 --> 00:03:49,379
 not "what type is this list," but "this
 method overrides a parent," or "this field
 is injected," or "this test is disabled."
+How does Java attach structured notes that
+tools and frameworks can read?
 
 21
-00:03:54,639 --> 00:03:57,039
+00:03:49,560 --> 00:03:52,080
 That is the doorway into annotations.
