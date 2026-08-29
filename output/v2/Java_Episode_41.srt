@@ -1,137 +1,177 @@
 1
-00:00:00,000 --> 00:00:07,320
+00:00:00,000 --> 00:00:07,360
 ExecutorService taught us to submit work
 to a pool instead of inventing threads by
 hand. That solves concurrency budgeting.
 
 2
-00:00:07,440 --> 00:00:17,280
+00:00:07,480 --> 00:00:17,560
 It does not yet answer a hunger that
 appears the moment the task computes
 something you need: how do I get a result
+back, wait with a timeout, and cancel when
+the caller no longer cares?
 
 3
-00:00:17,460 --> 00:00:31,899
+00:00:17,740 --> 00:00:32,620
 Runnable returns nothing and cannot throw
 checked exceptions. Many real tasks need
 both. That is why Callable exists — and
+why Future is the handle you hold while
+the pool does the work. Look at this java
+for a moment.
 
 4
-00:00:32,019 --> 00:00:45,619
+00:00:32,740 --> 00:00:45,420
 submit accepts a Callable that returns an
 Integer. The method returns a Future
 immediately; the computation may still be
+running. get(1, TimeUnit.SECONDS) blocks
+for at most one second.
 
 5
-00:00:45,739 --> 00:00:56,379
+00:00:45,539 --> 00:00:55,060
 If the task finishes in time, you receive
 the value. If it does not, you get a
 timeout instead of hanging forever. Always
+prefer timeouts on get in server code.
 
 6
-00:00:56,499 --> 00:01:08,139
+00:00:55,179 --> 00:01:07,060
 A bare get() with no limit is how one
 stuck worker becomes a stuck request
 thread — and then a stuck thread pool.
+Cancellation is cooperative, not magical:
+Look at this java for a moment.
 
 7
-00:01:08,259 --> 00:01:16,659
+00:01:07,180 --> 00:01:14,940
 cancel(true) asks the pool to interrupt
 the running task if it has already
 started, or to prevent it from starting if
+it is still queued.
 
 8
-00:01:16,779 --> 00:01:25,659
+00:01:15,060 --> 00:01:23,659
 "Cooperative" means the task must notice
 the interrupt — by exiting a blocking call
 that throws InterruptedException, or by
+checking interrupted status in a loop.
 
 9
-00:01:25,779 --> 00:01:36,859
+00:01:23,780 --> 00:01:36,299
 Assuming cancel instantly stops arbitrary
 CPU work is a common production
 disappointment. Cancellation is a request.
+Well-behaved tasks honor it; stubborn
+tight loops ignore it.
 
 10
-00:01:36,979 --> 00:01:50,139
+00:01:36,420 --> 00:01:49,540
 Callable versus Runnable is the short form
 of today's design choice. Callable returns
 a value and may throw checked exceptions
+wrapped by the future machinery. Runnable
+is for fire-and-forget side effects.
 
 11
-00:01:50,259 --> 00:02:00,819
+00:01:49,659 --> 00:01:59,699
 If you find yourself stuffing results into
 a shared mutable field from a Runnable,
 you are reinventing Future badly.
+Exceptions from the task surface when you
+call get.
 
 12
-00:02:00,939 --> 00:02:08,979
+00:01:59,819 --> 00:02:07,459
 They arrive wrapped — typically as
 ExecutionException with the original cause
 inside. Your wait site is also your
+failure-handling site.
 
 13
-00:02:09,099 --> 00:02:22,259
+00:02:07,579 --> 00:02:21,180
 Ignoring the cause and only logging
 "execution failed" throws away the
 forensic trail we fought to keep in the
+exceptions episode. What if we skip
+futures and only use shared variables?
+Look at this java for a moment.
 
 14
-00:02:22,379 --> 00:02:28,419
+00:02:21,300 --> 00:02:27,500
 You still need a completion protocol.
 Future is that protocol with timeouts and
 cancellation already designed.
 
 15
-00:02:28,539 --> 00:02:40,859
+00:02:27,620 --> 00:02:38,460
 A practical pattern in services is
 "submit, then wait with timeout, then
 cancel on timeout." The timeout protects
+the caller. The cancel attempt protects
+the pool from continuing useless work.
 
 16
-00:02:40,979 --> 00:02:53,379
+00:02:38,580 --> 00:02:49,660
 Neither alone is a complete story;
 together they are the minimum polite
 concurrent call. Picture a payment
+authorization callable that hits a slow
+bank link. The request thread waits with a
+two-second get.
 
 17
-00:02:53,500 --> 00:03:03,259
+00:02:49,780 --> 00:03:00,379
 On timeout it cancels and returns "try
 again." On success it continues the order.
 On ExecutionException it unwraps the cause
+and maps it to an API error.
 
 18
-00:03:03,379 --> 00:03:16,579
+00:03:00,500 --> 00:03:13,939
 That three-branch wait site is the
 everyday craft — not the lambda syntax,
 but the policy around waiting. Composition
+pressure appears even with one future. You
+might wish the transformation happened
+asynchronously too.
 
 19
-00:03:16,699 --> 00:03:29,060
+00:03:14,060 --> 00:03:25,460
 That wish is how teams graduate to
 CompletableFuture. For now, keep the
 contract crisp: submit returns a handle;
+the handle offers timed wait, cancel, and
+exception delivery.
 
 20
-00:03:29,179 --> 00:03:41,659
+00:03:25,580 --> 00:03:37,340
 What if every task is fire-and-forget
 logging? Then Runnable and execute may be
 enough. Futures are for results and
+failure delivery. Matching the tool to the
+need keeps APIs honest.
 
 21
-00:03:41,779 --> 00:03:47,499
+00:03:37,460 --> 00:03:43,939
 Always shut down the executor with a
 defined owner. Futures do not excuse
 leaked executors.
 
 22
-00:03:47,619 --> 00:04:00,619
+00:03:44,060 --> 00:03:56,219
 The result handle and the worker pool are
 partners; lifecycle belongs to the pool's
 owner, while the future belongs to the
+caller waiting for a value. Prefer
+timeouts at every boundary where a peer
+can stall.
 
 23
-00:04:00,739 --> 00:04:10,899
+00:03:56,340 --> 00:04:06,939
 Once many threads share maps and queues,
 another question appears: can the
 collections themselves participate in
+thread safety, or must every access sit
+inside our own locks?
