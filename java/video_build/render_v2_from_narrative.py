@@ -189,10 +189,11 @@ def parse_srt(path: Path) -> list[tuple[float, float, str]]:
 
 def find_existing_mp4(ep: int) -> Path | None:
     matches = sorted(OUT.glob(f"Java_Episode_{ep:02d}_*_CAPTIONED.mp4"))
+    matches = [p for p in matches if "PREVIEW" not in p.name]
     if matches:
         return matches[0]
     matches = sorted(OUT.glob(f"Java_Episode_{ep:02d}_*.mp4"))
-    matches = [p for p in matches if "CAPTIONED" not in p.name]
+    matches = [p for p in matches if "CAPTIONED" not in p.name and "PREVIEW" not in p.name]
     return matches[0] if matches else None
 
 
@@ -204,6 +205,51 @@ def extract_audio_from_mp4(mp4: Path, out_mp3: Path) -> Path:
         capture_output=True,
     )
     return out_mp3
+
+
+def beat_wavs_complete(audio_dir: Path, n_beats: int) -> bool:
+    if n_beats <= 0:
+        return False
+    for i in range(n_beats):
+        if not (audio_dir / f"b{i:04d}.wav").exists():
+            return False
+    return True
+
+
+def concat_narration_from_beat_wavs(beats: list[str], audio_dir: Path) -> tuple[Path, list[tuple[float, float, str]]]:
+    """Rebuild full narration.mp3 from per-beat wavs (includes gaps + end pad)."""
+    wavs: list[Path] = []
+    cues: list[tuple[float, float, str]] = []
+    t = 0.0
+    for i, beat in enumerate(beats):
+        wav = audio_dir / f"b{i:04d}.wav"
+        dur = probe(wav)
+        cues.append((t, t + dur, beat))
+        wavs.append(wav)
+        if i < len(beats) - 1:
+            gap = 0.18 if beat.endswith("?") else 0.12
+            sil = audio_dir / f"s{i:04d}.wav"
+            if not sil.exists() or abs(probe(sil) - gap) > 0.05:
+                sf.write(str(sil), np.zeros(int(gap * SAMPLE_RATE), dtype=np.float32), SAMPLE_RATE)
+            wavs.append(sil)
+            t += dur + gap
+        else:
+            t += dur
+    end_pad = 0.45
+    sil_end = audio_dir / "s_end.wav"
+    sf.write(str(sil_end), np.zeros(int(end_pad * SAMPLE_RATE), dtype=np.float32), SAMPLE_RATE)
+    wavs.append(sil_end)
+    lst = audio_dir / "concat.txt"
+    with open(lst, "w") as f:
+        for p in wavs:
+            f.write(f"file '{p}'\n")
+    out = audio_dir / "narration.mp3"
+    subprocess.run(
+        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c:a", "libmp3lame", "-q:a", "2", str(out)],
+        check=True,
+        capture_output=True,
+    )
+    return out, cues
 
 
 def synth_episode_audio(beats: list[str], audio_dir: Path) -> tuple[Path, list[tuple[float, float, str]]]:
@@ -228,6 +274,11 @@ def synth_episode_audio(beats: list[str], audio_dir: Path) -> tuple[Path, list[t
             t += dur + gap
         else:
             t += dur
+    # Trailing silence so the last words are never encoder-clipped.
+    end_pad = 0.45
+    sil_end = audio_dir / "s_end.wav"
+    sf.write(str(sil_end), np.zeros(int(end_pad * SAMPLE_RATE), dtype=np.float32), SAMPLE_RATE)
+    wavs.append(sil_end)
     lst = audio_dir / "concat.txt"
     with open(lst, "w") as f:
         for p in wavs:
@@ -251,9 +302,32 @@ def write_srt(cues: list[tuple[float, float, str]], path: Path) -> None:
 
     lines = []
     for i, (a, b, text) in enumerate(cues, 1):
-        wrapped = "\n".join(textwrap.wrap(text, width=42)[:3])
+        # Keep full caption text (do not truncate mid-sentence).
+        wrapped = "\n".join(textwrap.wrap(text, width=42)[:8])
         lines.append(f"{i}\n{ts(a)} --> {ts(b)}\n{wrapped}\n")
     path.write_text("\n".join(lines))
+
+
+def clip_durations(cues: list[tuple[float, float, str]], audio_dur: float) -> list[float]:
+    """Visual clip lengths must cover the full audio timeline, including gaps.
+
+    Previously each clip used (end-start) speech-only, so inter-beat gaps were
+    missing from the video track and ffmpeg -shortest cut the narration mid-sentence.
+    """
+    if not cues:
+        return []
+    durs: list[float] = []
+    for i, (start, end, _) in enumerate(cues):
+        if i + 1 < len(cues):
+            next_start = cues[i + 1][0]
+            durs.append(max(next_start - start, 0.05))
+        else:
+            # Last beat: hold through remaining audio (incl. end pad).
+            durs.append(max(audio_dur - start, end - start, 0.8))
+    total = sum(durs)
+    if audio_dur - total > 0.02:
+        durs[-1] += audio_dur - total
+    return durs
 
 
 def encode_clip_from_frames(frames: list[Image.Image], clip: Path, duration: float, fps: float = FPS) -> None:
@@ -288,11 +362,15 @@ def build_video(ep: int, title: str, beats: list[str], cues, narration: Path, wo
         shutil.rmtree(clips)
     clips.mkdir(parents=True)
 
+    audio_dur = probe(narration)
+    durs = clip_durations(cues, audio_dur)
+    if len(durs) != len(beats):
+        raise ValueError(f"cue/beat mismatch: {len(durs)} durations vs {len(beats)} beats")
+
     for i, beat in enumerate(beats):
-        start, end, _ = cues[i]
-        dur = max(end - start, 0.8)
+        dur = durs[i]
         print(f"    VISUAL {i+1}/{len(beats)} ({dur:.1f}s)")
-        frames = render_beat_frames(ep, title, beat, i, len(beats), duration=dur, fps=FPS)
+        frames = render_beat_frames(ep, title, beat, i, len(beats), duration=min(dur, 6.0), fps=FPS)
         clip = clips / f"c{i:04d}.mp4"
         encode_clip_from_frames(frames, clip, duration=dur, fps=FPS)
 
@@ -306,7 +384,27 @@ def build_video(ep: int, title: str, beats: list[str], cues, narration: Path, wo
         check=True,
         capture_output=True,
     )
+
+    # Ensure video track is never shorter than audio (pad last frame if needed).
+    v_dur = probe(silent)
+    if v_dur + 0.05 < audio_dur:
+        pad = audio_dur - v_dur + 0.05
+        padded = work / "silent_padded.mp4"
+        subprocess.run(
+            [
+                "ffmpeg", "-y", "-i", str(silent),
+                "-vf", f"tpad=stop_mode=clone:stop_duration={pad:.3f}",
+                "-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "veryfast", "-crf", "20",
+                "-an",
+                str(padded),
+            ],
+            check=True,
+            capture_output=True,
+        )
+        silent = padded
+
     out_mp4.parent.mkdir(parents=True, exist_ok=True)
+    # Prefer finishing the full narration; video is padded to cover it.
     subprocess.run(
         [
             "ffmpeg", "-y",
@@ -314,13 +412,19 @@ def build_video(ep: int, title: str, beats: list[str], cues, narration: Path, wo
             "-i", str(narration),
             "-c:v", "copy",
             "-c:a", "aac", "-b:a", "192k",
-            "-shortest",
             "-map", "0:v:0", "-map", "1:a:0",
+            "-shortest",
             str(out_mp4),
         ],
         check=True,
         capture_output=True,
     )
+    # Sanity: output must cover (almost) all narration.
+    out_dur = probe(out_mp4)
+    if audio_dur - out_dur > 0.35:
+        raise RuntimeError(
+            f"EP{ep:02d}: output {out_dur:.2f}s shorter than narration {audio_dur:.2f}s — refusing truncated mux"
+        )
 
 
 def burn_captions(mp4: Path, srt: Path, out: Path) -> None:
@@ -344,50 +448,78 @@ def render_one(path: Path, reuse_audio: bool = False, max_beats: int | None = No
         beats = beats[:max_beats]
     print(f"==> EP{ep:02d} {title}: {len(beats)} beats, ~{len(spoken.split())} words")
     work = WORK / f"ep{ep:02d}"
-    # keep audio dir if reusing
     audio_dir = work / "audio"
-    if work.exists() and not reuse_audio:
+    # Always keep beat wavs when present so we can rebuild full narration.
+    if work.exists() and not reuse_audio and not beat_wavs_complete(audio_dir, len(beats)):
         shutil.rmtree(work)
         work.mkdir(parents=True)
     elif not work.exists():
         work.mkdir(parents=True)
+    audio_dir.mkdir(parents=True, exist_ok=True)
 
     srt = OUT / f"Java_Episode_{ep:02d}.srt"
     narration = audio_dir / "narration.mp3"
     cues2: list[tuple[float, float, str]]
 
-    if reuse_audio and srt.exists() and (narration.exists() or find_existing_mp4(ep)):
-        print("    reusing existing audio + SRT timings")
-        if not narration.exists():
-            mp4_src = find_existing_mp4(ep)
-            assert mp4_src is not None
-            extract_audio_from_mp4(mp4_src, narration)
-        cues2 = parse_srt(srt)
+    if beat_wavs_complete(audio_dir, len(beats)):
+        print("    rebuilding narration from complete beat wavs (full audio)")
+        narration, cues2 = concat_narration_from_beat_wavs(beats, audio_dir)
+        if max_beats is None:
+            write_srt(cues2, srt)
+    elif reuse_audio and srt.exists():
+        # Only reuse extracted narration if it covers the full SRT timeline
+        # (older builds truncated audio via ffmpeg -shortest).
+        cues_srt = parse_srt(srt)
         if max_beats is not None:
-            cues2 = cues2[:max_beats]
-        # align beat count: if mismatch, prefer SRT texts as beats for visuals
-        if len(cues2) != len(beats):
-            print(f"    note: beats {len(beats)} vs srt {len(cues2)} — using SRT texts for visuals")
-            beats = [c[2] for c in cues2]
-        # trim narration to preview end if max_beats
-        if max_beats is not None and cues2:
-            end_t = cues2[-1][1] + 0.15
-            trimmed = audio_dir / "narration_trim.mp3"
-            subprocess.run(
-                ["ffmpeg", "-y", "-i", str(narration), "-t", f"{end_t:.3f}", "-c:a", "libmp3lame", "-q:a", "2", str(trimmed)],
-                check=True,
-                capture_output=True,
-            )
-            narration = trimmed
+            cues_srt = cues_srt[:max_beats]
+        if not narration.exists() and find_existing_mp4(ep):
+            extract_audio_from_mp4(find_existing_mp4(ep), narration)  # type: ignore[arg-type]
+        ok = False
+        if narration.exists() and cues_srt:
+            a_dur = probe(narration)
+            need = cues_srt[-1][1]
+            if a_dur + 0.15 >= need:
+                ok = True
+            else:
+                print(f"    refusing truncated audio ({a_dur:.1f}s < srt end {need:.1f}s); re-synthesizing")
+        if ok:
+            print("    reusing existing full narration + SRT timings")
+            cues2 = cues_srt
+            if len(cues2) != len(beats):
+                print(f"    note: beats {len(beats)} vs srt {len(cues2)} — using SRT texts for visuals")
+                beats = [c[2] for c in cues2]
+            if max_beats is not None and cues2:
+                end_t = cues2[-1][1] + 0.45
+                trimmed = audio_dir / "narration_trim.mp3"
+                subprocess.run(
+                    ["ffmpeg", "-y", "-i", str(narration), "-t", f"{end_t:.3f}", "-c:a", "libmp3lame", "-q:a", "2", str(trimmed)],
+                    check=True,
+                    capture_output=True,
+                )
+                narration = trimmed
+        else:
+            narration, _ = synth_episode_audio(beats, audio_dir)
+            cues2 = []
+            t = 0.0
+            for i, beat in enumerate(beats):
+                dur = probe(audio_dir / f"b{i:04d}.wav")
+                gap = 0.18 if beat.endswith("?") else 0.12
+                if i == len(beats) - 1:
+                    gap = 0.0
+                cues2.append((t, t + dur, beat))
+                t += dur + gap
+            if max_beats is None:
+                write_srt(cues2, srt)
     else:
-        if audio_dir.exists():
+        # Clear stale truncated narration.mp3 but keep nothing else if incomplete.
+        if audio_dir.exists() and not beat_wavs_complete(audio_dir, len(beats)):
             shutil.rmtree(audio_dir)
-        narration, cues = synth_episode_audio(beats, audio_dir)
-        t = 0.0
+            audio_dir.mkdir(parents=True)
+        narration, _ = synth_episode_audio(beats, audio_dir)
         cues2 = []
+        t = 0.0
         for i, beat in enumerate(beats):
-            wav = audio_dir / f"b{i:04d}.wav"
-            dur = probe(wav)
+            dur = probe(audio_dir / f"b{i:04d}.wav")
             gap = 0.18 if beat.endswith("?") else 0.12
             if i == len(beats) - 1:
                 gap = 0.0
@@ -414,10 +546,10 @@ def render_one(path: Path, reuse_audio: bool = False, max_beats: int | None = No
         f"Narration: `java/narrative_review/episodes/{path.name}`\n"
         f"Renderer: `java/video_build/render_v2_from_narrative.py`\n"
         f"Visuals: animated scenes via `java/video_build/visual_engine.py`\n"
-        f"TTS: local Chatterbox Turbo (narration text unchanged)\n"
+        f"TTS: local Chatterbox Turbo (full audio; video padded through end)\n"
     )
     dur = probe(mp4)
-    print(f"    wrote {mp4.name} ({dur/60:.1f} min)")
+    print(f"    wrote {mp4.name} ({dur/60:.1f} min) audio_ok")
     return {"ep": ep, "title": title, "beats": len(beats), "duration_sec": dur, "mp4": str(mp4)}
 
 

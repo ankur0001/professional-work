@@ -199,6 +199,7 @@ def main() -> None:
             push_episode(ep)
         except Exception as e:
             print(f"FAIL EP{ep:02d}: {e}", file=sys.stderr)
+            sys.exit(1)
 
 
 if __name__ == "__main__":
