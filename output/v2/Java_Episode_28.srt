@@ -1,100 +1,131 @@
 1
-00:00:00,000 --> 00:00:11,880
+00:00:00,000 --> 00:00:10,160
 Collectors taught us to finish pipelines
 into maps and groups. Domain models still
 nest: a customer has orders, an order has
+line items, a team has members who have
+skills.
 
 2
-00:00:12,000 --> 00:00:26,679
+00:00:10,279 --> 00:00:23,359
 If you map each customer to their orders,
 you get a stream of lists — a nested
 world. flatMap flattens nested worlds —
+lists of lists, optional chains, effect
+pipelines. Suppose you want every order
+across all users.
 
 3
-00:00:26,799 --> 00:00:37,599
+00:00:23,479 --> 00:00:35,319
 Look at this java for a moment. That is
 not a list of orders. It is a list of
 lists. The natural question: how do we
+flatten one level? Look at this java for a
+moment. Walk the difference.
 
 4
-00:00:37,719 --> 00:00:52,960
+00:00:35,439 --> 00:00:49,039
 map would wrap each user's orders as one
 element of type List<Order>. flatMap
 expects each element to produce a stream,
+then concatenates those streams into one.
+Map nests; flatMap flattens.
 
 5
-00:00:53,079 --> 00:01:06,159
+00:00:49,159 --> 00:01:01,039
 Domain models often nest collections —
 flatMap is how pipelines stay honest about
 that shape. Composition beats manual
+nested loops when the pipeline stays
+readable: Look at this java for a moment.
 
 6
-00:01:06,280 --> 00:01:13,159
+00:01:01,159 --> 00:01:07,280
 Each flatMap removes one nesting level.
 The final map extracts skus. Distinct
 uniquifies.
 
 7
-00:01:13,280 --> 00:01:25,240
+00:01:07,399 --> 00:01:18,679
 You can say the sentence out loud: "all
 skus from all lines from all orders from
 all users." When the pipeline becomes a
+puzzle, stop — nested loops with clear
+names may be kinder.
 
 8
-00:01:25,359 --> 00:01:38,719
+00:01:18,799 --> 00:01:31,639
 The same flattening idea appears with
 Optional. Multi-step lookups often return
 empty at any stage. Look at this java for
+a moment. Optional.flatMap for multi-step
+absence avoids nested isPresent pyramids.
 
 9
-00:01:38,840 --> 00:01:50,040
+00:01:31,759 --> 00:01:44,319
 If findUser is empty, the chain short-
 circuits to empty. map would have produced
 Optional<Optional<City>> shaped confusion;
+flatMap keeps a single optional layer.
 
 10
-00:01:50,159 --> 00:02:01,120
+00:01:44,439 --> 00:01:56,559
 When a function already returns Optional,
 flatMap is the join you want: Look at this
 java for a moment. What if we flatten with
+hand-rolled loops every time? Clear for
+two levels.
 
 11
-00:02:01,239 --> 00:02:10,960
+00:01:56,679 --> 00:02:06,639
 At three levels with filters in between,
 the loop version grows braces while the
 stream version grows steps. Choose the
+form your teammates can amend safely next
+month.
 
 12
-00:02:11,079 --> 00:02:22,799
+00:02:06,759 --> 00:02:18,359
 Another flattening pattern: turning
 optional fields into zero-or-one streams.
 Look at this java for a moment. Empty
+optionals contribute nothing; present ones
+contribute one element.
 
 13
-00:02:22,919 --> 00:02:35,000
+00:02:18,479 --> 00:02:30,799
 When composition grows, extract named
 methods for each nesting level — ordersOf,
 linesOf, skuOf — so the pipeline reads as
+business vocabulary. Flattening is
+fundamentally about shape.
 
 14
-00:02:35,119 --> 00:02:48,399
+00:02:30,919 --> 00:02:44,879
 Each time you are unsure whether to map or
 flatMap, ask: does my function return an
 element, or a collection/optional/stream
+of elements? Element → map. Collection of
+elements → flatMap.
 
 15
-00:02:48,519 --> 00:02:59,919
+00:02:44,999 --> 00:02:55,799
 That question alone removes most
 guesswork. Nested collections made map
 produce the wrong shape. flatMap flattened
+streams of streams. Optional flatMap
+handled multi-step absence.
 
 16
-00:03:00,039 --> 00:03:12,039
+00:02:55,919 --> 00:03:10,279
 Readability set the limit on how far to
 push pipeline style. Once sequential
 pipelines feel comfortable, someone asks
+the speed question: can we run this in
+parallel and use more cores? Sometimes
+yes.
 
 17
-00:03:12,159 --> 00:03:16,919
+00:03:10,399 --> 00:03:14,359
 Often not for the reason people hope. That
 caution is parallel streams.
