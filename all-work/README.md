@@ -13,7 +13,8 @@ Personal work hub for **Ankur Kumar** — career assets, freelance profile groom
 
 ## The Java Story
 
-Lives at repo-root [`../java-story/`](../java-story/) (narrations, video tooling, and all 85 v2 videos).
+Lives at repo-root [`../java-story/`](../java-story/) — [`v1/`](../java-story/v1/) original cut, [`v2/`](../java-story/v2/) current videos + narrations + tooling.
+
 
 ## Quick start (freelance)
 

@@ -1,0 +1,1112 @@
+[
+  {
+    "ep": 1,
+    "branch": "cursor/java-youtube-video-production-0689",
+    "files": [
+      "Java_Episode_01.srt",
+      "Java_Episode_01_Why_Java_Exists.mp4",
+      "Java_Episode_01_Why_Java_Exists_CAPTIONED.mp4",
+      "Java_Episode_01_thumbnail.jpg",
+      "Java_Episode_01_production_bible.md",
+      "episodes/ep01_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 2,
+    "branch": "cursor/java-ep02-jdk-jre-jvm-0689",
+    "files": [
+      "Java_Episode_02.srt",
+      "Java_Episode_02_JDK_JRE_JVM.mp4",
+      "Java_Episode_02_JDK_JRE_JVM_CAPTIONED.mp4",
+      "episodes/ep02_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 3,
+    "branch": "cursor/java-ep03-program-structure-0689",
+    "files": [
+      "Java_Episode_03.srt",
+      "Java_Episode_03_Program_Structure.mp4",
+      "Java_Episode_03_Program_Structure_CAPTIONED.mp4",
+      "episodes/ep03_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 4,
+    "branch": "cursor/java-ep04-variables-data-types-0689",
+    "files": [
+      "Java_Episode_04.srt",
+      "Java_Episode_04_Variables_Data_Types.mp4",
+      "Java_Episode_04_Variables_Data_Types_CAPTIONED.mp4",
+      "episodes/ep04_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 5,
+    "branch": "cursor/java-ep05-operators-0689",
+    "files": [
+      "Java_Episode_05.srt",
+      "Java_Episode_05_Operators.mp4",
+      "Java_Episode_05_Operators_CAPTIONED.mp4",
+      "episodes/ep05_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 6,
+    "branch": "cursor/java-ep06-control-flow-0689",
+    "files": [
+      "Java_Episode_06.srt",
+      "Java_Episode_06_Control_Flow.mp4",
+      "Java_Episode_06_Control_Flow_CAPTIONED.mp4",
+      "episodes/ep06_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 7,
+    "branch": "cursor/java-ep07-methods-0689",
+    "files": [
+      "Java_Episode_07.srt",
+      "Java_Episode_07_Methods.mp4",
+      "Java_Episode_07_Methods_CAPTIONED.mp4",
+      "episodes/ep07_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 8,
+    "branch": "cursor/java-ep08-arrays-0689",
+    "files": [
+      "Java_Episode_08.srt",
+      "Java_Episode_08_Arrays.mp4",
+      "Java_Episode_08_Arrays_CAPTIONED.mp4",
+      "episodes/ep08_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 9,
+    "branch": "cursor/java-ep09-strings-0689",
+    "files": [
+      "Java_Episode_09.srt",
+      "Java_Episode_09_Strings.mp4",
+      "Java_Episode_09_Strings_CAPTIONED.mp4",
+      "episodes/ep09_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 10,
+    "branch": "cursor/java-ep10-oop-0689",
+    "files": [
+      "Java_Episode_10.srt",
+      "Java_Episode_10_OOP.mp4",
+      "Java_Episode_10_OOP_CAPTIONED.mp4",
+      "episodes/ep10_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 11,
+    "branch": "cursor/java-ep11-access-modifiers-0689",
+    "files": [
+      "Java_Episode_11.srt",
+      "Java_Episode_11_Access_Modifiers.mp4",
+      "Java_Episode_11_Access_Modifiers_CAPTIONED.mp4",
+      "episodes/ep11_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 12,
+    "branch": "cursor/java-ep12-packages-0689",
+    "files": [
+      "Java_Episode_12.srt",
+      "Java_Episode_12_Packages.mp4",
+      "Java_Episode_12_Packages_CAPTIONED.mp4",
+      "episodes/ep12_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 13,
+    "branch": "cursor/java-ep13-enums-0689",
+    "files": [
+      "Java_Episode_13.srt",
+      "Java_Episode_13_Enums.mp4",
+      "Java_Episode_13_Enums_CAPTIONED.mp4",
+      "episodes/ep13_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 14,
+    "branch": "cursor/java-ep14-wrappers-autoboxing-0689",
+    "files": [
+      "Java_Episode_14.srt",
+      "Java_Episode_14_Wrappers_Autoboxing.mp4",
+      "Java_Episode_14_Wrappers_Autoboxing_CAPTIONED.mp4",
+      "episodes/ep14_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 15,
+    "branch": "cursor/java-ep15-generics-0689",
+    "files": [
+      "Java_Episode_15.srt",
+      "Java_Episode_15_Generics.mp4",
+      "Java_Episode_15_Generics_CAPTIONED.mp4",
+      "episodes/ep15_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 16,
+    "branch": "cursor/java-ep16-annotations-0689",
+    "files": [
+      "Java_Episode_16.srt",
+      "Java_Episode_16_Annotations.mp4",
+      "Java_Episode_16_Annotations_CAPTIONED.mp4",
+      "episodes/ep16_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 17,
+    "branch": "cursor/java-ep17-reflection-0689",
+    "files": [
+      "Java_Episode_17.srt",
+      "Java_Episode_17_Reflection.mp4",
+      "Java_Episode_17_Reflection_CAPTIONED.mp4",
+      "episodes/ep17_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 18,
+    "branch": "cursor/java-ep18-records-0689",
+    "files": [
+      "Java_Episode_18.srt",
+      "Java_Episode_18_Records.mp4",
+      "Java_Episode_18_Records_CAPTIONED.mp4",
+      "episodes/ep18_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 19,
+    "branch": "cursor/java-ep19-sealed-classes-0689",
+    "files": [
+      "Java_Episode_19.srt",
+      "Java_Episode_19_Sealed_Classes.mp4",
+      "Java_Episode_19_Sealed_Classes_CAPTIONED.mp4"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 20,
+    "branch": "cursor/java-ep20-modules-0689",
+    "files": [
+      "Java_Episode_20.srt",
+      "Java_Episode_20_Modules_JPMS.mp4",
+      "Java_Episode_20_Modules_JPMS_CAPTIONED.mp4",
+      "episodes/ep20_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 21,
+    "branch": "cursor/java-ep21-lists-0689",
+    "files": [
+      "Java_Episode_21.srt",
+      "Java_Episode_21_Lists.mp4",
+      "Java_Episode_21_Lists_CAPTIONED.mp4",
+      "episodes/ep21_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 22,
+    "branch": "cursor/java-ep22-sets-0689",
+    "files": [
+      "Java_Episode_22.srt",
+      "Java_Episode_22_Sets.mp4",
+      "Java_Episode_22_Sets_CAPTIONED.mp4",
+      "episodes/ep22_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 23,
+    "branch": "cursor/java-ep23-maps-0689",
+    "files": [
+      "Java_Episode_23.srt",
+      "Java_Episode_23_Maps.mp4",
+      "Java_Episode_23_Maps_CAPTIONED.mp4",
+      "episodes/ep23_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 24,
+    "branch": "cursor/java-ep24-queues-deques-0689",
+    "files": [
+      "Java_Episode_24.srt",
+      "Java_Episode_24_Queues_Deques.mp4",
+      "Java_Episode_24_Queues_Deques_CAPTIONED.mp4",
+      "episodes/ep24_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 25,
+    "branch": "cursor/java-ep25-sorting-comparators-0689",
+    "files": [
+      "Java_Episode_25.srt",
+      "Java_Episode_25_Sorting_Comparators.mp4",
+      "Java_Episode_25_Sorting_Comparators_CAPTIONED.mp4",
+      "episodes/ep25_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 26,
+    "branch": "cursor/java-ep26-streams-intro-0689",
+    "files": [
+      "Java_Episode_26.srt",
+      "Java_Episode_26_Streams_Intro.mp4",
+      "Java_Episode_26_Streams_Intro_CAPTIONED.mp4",
+      "episodes/ep26_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 27,
+    "branch": "cursor/java-ep27-stream-collectors-0689",
+    "files": [
+      "Java_Episode_27.srt",
+      "Java_Episode_27_Stream_Collectors.mp4",
+      "Java_Episode_27_Stream_Collectors_CAPTIONED.mp4",
+      "episodes/ep27_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 28,
+    "branch": "cursor/java-ep28-flatmap-0689",
+    "files": [
+      "Java_Episode_28.srt",
+      "Java_Episode_28_FlatMap_Composition.mp4",
+      "Java_Episode_28_FlatMap_Composition_CAPTIONED.mp4",
+      "episodes/ep28_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 29,
+    "branch": "cursor/java-ep29-parallel-streams-0689",
+    "files": [
+      "Java_Episode_29.srt",
+      "Java_Episode_29_Parallel_Streams.mp4",
+      "Java_Episode_29_Parallel_Streams_CAPTIONED.mp4",
+      "episodes/ep29_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 30,
+    "branch": "cursor/java-ep30-optional-0689",
+    "files": [
+      "Java_Episode_30.srt",
+      "Java_Episode_30_Optional.mp4",
+      "Java_Episode_30_Optional_CAPTIONED.mp4",
+      "episodes/ep30_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 31,
+    "branch": "cursor/java-ep31-java-time-0689",
+    "files": [
+      "Java_Episode_31.srt",
+      "Java_Episode_31_Java_Time.mp4",
+      "Java_Episode_31_Java_Time_CAPTIONED.mp4",
+      "episodes/ep31_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 32,
+    "branch": "cursor/java-ep32-exceptions-0689",
+    "files": [
+      "Java_Episode_32.srt",
+      "Java_Episode_32_Exceptions.mp4",
+      "Java_Episode_32_Exceptions_CAPTIONED.mp4",
+      "episodes/ep32_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 33,
+    "branch": "cursor/java-ep33-try-with-resources-0689",
+    "files": [
+      "Java_Episode_33.srt",
+      "Java_Episode_33_Try_With_Resources.mp4",
+      "Java_Episode_33_Try_With_Resources_CAPTIONED.mp4",
+      "episodes/ep33_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 34,
+    "branch": "cursor/java-ep34-files-nio2-0689",
+    "files": [
+      "Java_Episode_34.srt",
+      "Java_Episode_34_Files_NIO2.mp4",
+      "Java_Episode_34_Files_NIO2_CAPTIONED.mp4",
+      "episodes/ep34_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 35,
+    "branch": "cursor/java-ep35-readers-writers-0689",
+    "files": [
+      "Java_Episode_35.srt",
+      "Java_Episode_35_Readers_Writers.mp4",
+      "Java_Episode_35_Readers_Writers_CAPTIONED.mp4",
+      "episodes/ep35_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 36,
+    "branch": "cursor/java-ep36-threads-intro-0689",
+    "files": [
+      "Java_Episode_36.srt",
+      "Java_Episode_36_Threads_Intro.mp4",
+      "Java_Episode_36_Threads_Intro_CAPTIONED.mp4",
+      "episodes/ep36_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 37,
+    "branch": "cursor/java-ep37-synchronization-0689",
+    "files": [
+      "Java_Episode_37.srt",
+      "Java_Episode_37_Synchronization.mp4",
+      "Java_Episode_37_Synchronization_CAPTIONED.mp4",
+      "episodes/ep37_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 38,
+    "branch": "cursor/java-ep38-volatile-happens-before-0689",
+    "files": [
+      "Java_Episode_38.srt",
+      "Java_Episode_38_Volatile_Happens_Before.mp4",
+      "Java_Episode_38_Volatile_Happens_Before_CAPTIONED.mp4",
+      "episodes/ep38_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 39,
+    "branch": "cursor/java-ep39-explicit-locks-0689",
+    "files": [
+      "Java_Episode_39.srt",
+      "Java_Episode_39_Explicit_Locks.mp4",
+      "Java_Episode_39_Explicit_Locks_CAPTIONED.mp4",
+      "episodes/ep39_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 40,
+    "branch": "cursor/java-ep40-executor-service-0689",
+    "files": [
+      "Java_Episode_40.srt",
+      "Java_Episode_40_ExecutorService.mp4",
+      "Java_Episode_40_ExecutorService_CAPTIONED.mp4",
+      "episodes/ep40_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 41,
+    "branch": "cursor/java-ep41-callable-future-0689",
+    "files": [
+      "Java_Episode_41.srt",
+      "Java_Episode_41_Callable_Future.mp4",
+      "Java_Episode_41_Callable_Future_CAPTIONED.mp4",
+      "episodes/ep41_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 42,
+    "branch": "cursor/java-ep42-concurrent-collections-0689",
+    "files": [
+      "Java_Episode_42.srt",
+      "Java_Episode_42_Concurrent_Collections.mp4",
+      "Java_Episode_42_Concurrent_Collections_CAPTIONED.mp4",
+      "episodes/ep42_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 43,
+    "branch": "cursor/java-ep43-atomics-0689",
+    "files": [
+      "Java_Episode_43.srt",
+      "Java_Episode_43_Atomics.mp4",
+      "Java_Episode_43_Atomics_CAPTIONED.mp4",
+      "episodes/ep43_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 44,
+    "branch": "cursor/java-ep44-synchronizers-0689",
+    "files": [
+      "Java_Episode_44.srt",
+      "Java_Episode_44_Synchronizers.mp4",
+      "Java_Episode_44_Synchronizers_CAPTIONED.mp4",
+      "episodes/ep44_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 45,
+    "branch": "cursor/java-ep45-blocking-queue-0689",
+    "files": [
+      "Java_Episode_45.srt",
+      "Java_Episode_45_BlockingQueue.mp4",
+      "Java_Episode_45_BlockingQueue_CAPTIONED.mp4",
+      "episodes/ep45_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 46,
+    "branch": "cursor/java-ep46-completable-future-0689",
+    "files": [
+      "Java_Episode_46.srt",
+      "Java_Episode_46_CompletableFuture.mp4",
+      "Java_Episode_46_CompletableFuture_CAPTIONED.mp4",
+      "episodes/ep46_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 47,
+    "branch": "cursor/java-ep47-forkjoinpool-0689",
+    "files": [
+      "Java_Episode_47.srt",
+      "Java_Episode_47_ForkJoinPool.mp4",
+      "Java_Episode_47_ForkJoinPool_CAPTIONED.mp4",
+      "episodes/ep47_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 48,
+    "branch": "cursor/java-ep48-threadlocal-0689",
+    "files": [
+      "Java_Episode_48.srt",
+      "Java_Episode_48_ThreadLocal.mp4",
+      "Java_Episode_48_ThreadLocal_CAPTIONED.mp4",
+      "episodes/ep48_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 49,
+    "branch": "cursor/java-ep49-deadlocks-0689",
+    "files": [
+      "Java_Episode_49.srt",
+      "Java_Episode_49_Deadlocks.mp4",
+      "Java_Episode_49_Deadlocks_CAPTIONED.mp4",
+      "episodes/ep49_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 50,
+    "branch": "cursor/java-ep50-virtual-threads-0689",
+    "files": [
+      "Java_Episode_50.srt",
+      "Java_Episode_50_Virtual_Threads.mp4",
+      "Java_Episode_50_Virtual_Threads_CAPTIONED.mp4",
+      "episodes/ep50_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 51,
+    "branch": "cursor/java-ep51-class-loading-0689",
+    "files": [
+      "Java_Episode_51.srt",
+      "Java_Episode_51_Class_Loading.mp4",
+      "Java_Episode_51_Class_Loading_CAPTIONED.mp4",
+      "episodes/ep51_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 52,
+    "branch": "cursor/java-ep52-bytecode-basics-0689",
+    "files": [
+      "Java_Episode_52.srt",
+      "Java_Episode_52_Bytecode_Basics.mp4",
+      "Java_Episode_52_Bytecode_Basics_CAPTIONED.mp4",
+      "episodes/ep52_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 53,
+    "branch": "cursor/java-ep53-heap-and-stack-0689",
+    "files": [
+      "Java_Episode_53.srt",
+      "Java_Episode_53_Heap_and_Stack.mp4",
+      "Java_Episode_53_Heap_and_Stack_CAPTIONED.mp4",
+      "episodes/ep53_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 54,
+    "branch": "cursor/java-ep54-garbage-collection-0689",
+    "files": [
+      "Java_Episode_54.srt",
+      "Java_Episode_54_Garbage_Collection.mp4",
+      "Java_Episode_54_Garbage_Collection_CAPTIONED.mp4",
+      "episodes/ep54_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 55,
+    "branch": "cursor/java-ep55-jit-compilation-0689",
+    "files": [
+      "Java_Episode_55.srt",
+      "Java_Episode_55_JIT_Compilation.mp4",
+      "Java_Episode_55_JIT_Compilation_CAPTIONED.mp4",
+      "episodes/ep55_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 56,
+    "branch": "cursor/java-ep56-gc-collectors-0689",
+    "files": [
+      "Java_Episode_56.srt",
+      "Java_Episode_56_GC_Collectors.mp4",
+      "Java_Episode_56_GC_Collectors_CAPTIONED.mp4",
+      "episodes/ep56_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 57,
+    "branch": "cursor/java-ep57-memory-leaks-0689",
+    "files": [
+      "Java_Episode_57.srt",
+      "Java_Episode_57_Memory_Leaks_Profiling.mp4",
+      "Java_Episode_57_Memory_Leaks_Profiling_CAPTIONED.mp4",
+      "episodes/ep57_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 58,
+    "branch": "cursor/java-ep58-diagnostic-tools-0689",
+    "files": [
+      "Java_Episode_58.srt",
+      "Java_Episode_58_Diagnostic_Tools.mp4",
+      "Java_Episode_58_Diagnostic_Tools_CAPTIONED.mp4",
+      "episodes/ep58_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 59,
+    "branch": "cursor/java-ep59-escape-analysis-0689",
+    "files": [
+      "Java_Episode_59.srt",
+      "Java_Episode_59_Escape_Analysis.mp4",
+      "Java_Episode_59_Escape_Analysis_CAPTIONED.mp4",
+      "episodes/ep59_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 60,
+    "branch": "cursor/java-ep60-metaspace-native-0689",
+    "files": [
+      "Java_Episode_60.srt",
+      "Java_Episode_60_Metaspace_Native_Memory.mp4",
+      "Java_Episode_60_Metaspace_Native_Memory_CAPTIONED.mp4",
+      "episodes/ep60_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 61,
+    "branch": "cursor/java-ep61-reference-types-0689",
+    "files": [
+      "Java_Episode_61.srt",
+      "Java_Episode_61_Reference_Types.mp4",
+      "Java_Episode_61_Reference_Types_CAPTIONED.mp4",
+      "episodes/ep61_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 62,
+    "branch": "cursor/java-ep62-jvm-flags-0689",
+    "files": [
+      "Java_Episode_62.srt",
+      "Java_Episode_62_JVM_Flags_Tuning.mp4",
+      "Java_Episode_62_JVM_Flags_Tuning_CAPTIONED.mp4",
+      "episodes/ep62_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 63,
+    "branch": "cursor/java-ep63-object-layout-0689",
+    "files": [
+      "Java_Episode_63.srt",
+      "Java_Episode_63_Object_Layout.mp4",
+      "Java_Episode_63_Object_Layout_CAPTIONED.mp4",
+      "episodes/ep63_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 64,
+    "branch": "cursor/java-ep64-safepoints-0689",
+    "files": [
+      "Java_Episode_64.srt",
+      "Java_Episode_64_Safepoints.mp4",
+      "Java_Episode_64_Safepoints_CAPTIONED.mp4",
+      "episodes/ep64_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 65,
+    "branch": "cursor/java-ep65-jvm-startup-0689",
+    "files": [
+      "Java_Episode_65.srt",
+      "Java_Episode_65_JVM_Startup.mp4",
+      "Java_Episode_65_JVM_Startup_CAPTIONED.mp4",
+      "episodes/ep65_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 66,
+    "branch": "cursor/java-ep66-jvm-interview-wrap-0689",
+    "files": [
+      "Java_Episode_66.srt",
+      "Java_Episode_66_JVM_Interview_Wrap.mp4",
+      "Java_Episode_66_JVM_Interview_Wrap_CAPTIONED.mp4",
+      "episodes/ep66_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 67,
+    "branch": "cursor/java-ep67-design-patterns-intro-0689",
+    "files": [
+      "Java_Episode_67.srt",
+      "Java_Episode_67_Design_Patterns_Intro.mp4",
+      "Java_Episode_67_Design_Patterns_Intro_CAPTIONED.mp4",
+      "episodes/ep67_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 68,
+    "branch": "cursor/java-ep68-creational-patterns-0689",
+    "files": [
+      "Java_Episode_68.srt",
+      "Java_Episode_68_Creational_Patterns.mp4",
+      "Java_Episode_68_Creational_Patterns_CAPTIONED.mp4",
+      "episodes/ep68_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 69,
+    "branch": "cursor/java-ep69-structural-patterns-0689",
+    "files": [
+      "Java_Episode_69.srt",
+      "Java_Episode_69_Structural_Patterns.mp4",
+      "Java_Episode_69_Structural_Patterns_CAPTIONED.mp4",
+      "episodes/ep69_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 70,
+    "branch": "cursor/java-ep70-behavioral-patterns-0689",
+    "files": [
+      "Java_Episode_70.srt",
+      "Java_Episode_70_Behavioral_Patterns.mp4",
+      "Java_Episode_70_Behavioral_Patterns_CAPTIONED.mp4",
+      "episodes/ep70_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 71,
+    "branch": "cursor/java-ep71-spring-intro-0689",
+    "files": [
+      "Java_Episode_71.srt",
+      "Java_Episode_71_Spring_Framework_Intro.mp4",
+      "Java_Episode_71_Spring_Framework_Intro_CAPTIONED.mp4",
+      "episodes/ep71_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 72,
+    "branch": "cursor/java-ep72-ioc-di-0689",
+    "files": [
+      "Java_Episode_72.srt",
+      "Java_Episode_72_IoC_and_DI.mp4",
+      "Java_Episode_72_IoC_and_DI_CAPTIONED.mp4",
+      "episodes/ep72_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 73,
+    "branch": "cursor/java-ep73-spring-boot-0689",
+    "files": [
+      "Java_Episode_73.srt",
+      "Java_Episode_73_Spring_Boot_Basics.mp4",
+      "Java_Episode_73_Spring_Boot_Basics_CAPTIONED.mp4",
+      "episodes/ep73_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 74,
+    "branch": "cursor/java-ep74-spring-mvc-rest-0689",
+    "files": [
+      "Java_Episode_74.srt",
+      "Java_Episode_74_Spring_MVC_REST.mp4",
+      "Java_Episode_74_Spring_MVC_REST_CAPTIONED.mp4",
+      "episodes/ep74_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 75,
+    "branch": "cursor/java-ep75-spring-data-0689",
+    "files": [
+      "Java_Episode_75.srt",
+      "Java_Episode_75_Spring_Data_Persistence.mp4",
+      "Java_Episode_75_Spring_Data_Persistence_CAPTIONED.mp4",
+      "episodes/ep75_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 76,
+    "branch": "cursor/java-ep76-spring-security-0689",
+    "files": [
+      "Java_Episode_76.srt",
+      "Java_Episode_76_Spring_Security.mp4",
+      "Java_Episode_76_Spring_Security_CAPTIONED.mp4",
+      "episodes/ep76_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 77,
+    "branch": "cursor/java-ep77-spring-testing-0689",
+    "files": [
+      "Java_Episode_77.srt",
+      "Java_Episode_77_Spring_Testing.mp4",
+      "Java_Episode_77_Spring_Testing_CAPTIONED.mp4",
+      "episodes/ep77_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 78,
+    "branch": "cursor/java-ep78-microservices-0689",
+    "files": [
+      "Java_Episode_78.srt",
+      "Java_Episode_78_Microservices_Basics.mp4",
+      "Java_Episode_78_Microservices_Basics_CAPTIONED.mp4",
+      "episodes/ep78_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 79,
+    "branch": "cursor/java-ep79-observability-resilience-0689",
+    "files": [
+      "Java_Episode_79.srt",
+      "Java_Episode_79_Observability_Resilience.mp4",
+      "Java_Episode_79_Observability_Resilience_CAPTIONED.mp4",
+      "episodes/ep79_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 80,
+    "branch": "cursor/java-ep80-architecture-interview-wrap-0689",
+    "files": [
+      "Java_Episode_80.srt",
+      "Java_Episode_80_Architecture_Interview_Wrap.mp4",
+      "Java_Episode_80_Architecture_Interview_Wrap_CAPTIONED.mp4",
+      "episodes/ep80_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 81,
+    "branch": "cursor/java-ep81-caching-strategies-0689",
+    "files": [
+      "Java_Episode_81.srt",
+      "Java_Episode_81_Caching_Strategies.mp4",
+      "Java_Episode_81_Caching_Strategies_CAPTIONED.mp4",
+      "Java_Episode_81_thumbnail.jpg",
+      "episodes/ep81_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 82,
+    "branch": "cursor/java-ep82-api-design-0689",
+    "files": [
+      "Java_Episode_82.srt",
+      "Java_Episode_82_API_Design_Deep_Dive.mp4",
+      "Java_Episode_82_API_Design_Deep_Dive_CAPTIONED.mp4",
+      "episodes/ep82_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 83,
+    "branch": "cursor/java-ep83-event-driven-0689",
+    "files": [
+      "Java_Episode_83.srt",
+      "Java_Episode_83_Event_Driven_Architecture.mp4",
+      "Java_Episode_83_Event_Driven_Architecture_CAPTIONED.mp4",
+      "Java_Episode_83_thumbnail.jpg",
+      "episodes/ep83_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 84,
+    "branch": "cursor/java-ep84-performance-playbook-0689",
+    "files": [
+      "Java_Episode_84.srt",
+      "Java_Episode_84_Performance_Playbook.mp4",
+      "Java_Episode_84_Performance_Playbook_CAPTIONED.mp4",
+      "Java_Episode_84_thumbnail.jpg",
+      "episodes/ep84_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  },
+  {
+    "ep": 85,
+    "branch": "cursor/java-ep85-production-readiness-0689",
+    "files": [
+      "Java_Episode_85.srt",
+      "Java_Episode_85_Production_Readiness_Capstone.mp4",
+      "Java_Episode_85_Production_Readiness_Capstone_CAPTIONED.mp4",
+      "Java_Episode_85_thumbnail.jpg",
+      "episodes/ep85_README.md"
+    ],
+    "has_captioned": true,
+    "has_clean": true,
+    "has_srt": true
+  }
+]

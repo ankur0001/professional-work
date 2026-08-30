@@ -7,33 +7,24 @@ Personal professional hub for **Ankur Kumar** — freelance profiles, career ass
 ## Structure
 
 ```
-java-story/                     ← The Java Story (85-episode series + videos)
-├── narrative_review/
-├── video_build/
-└── output/v2/                  ← all episode mp4 / CAPTIONED / srt
+java-story/
+├── v1/                         ← original episode videos + notes
+└── v2/                         ← current videos + narrations + tooling
 
 all-work/
-├── freelance-profile/          ← LinkedIn, Upwork, portfolio grooming
-│   ├── portfolio/index.html
-│   └── docs/                   ← was repo-root /docs (Pages publish copy)
-└── ...
+└── freelance-profile/          ← LinkedIn, Upwork, portfolio + docs/
 ```
 
 ## The Java Story
 
-- Overview: [`java-story/README.md`](java-story/README.md)
-- Videos: [`java-story/output/v2/`](java-story/output/v2/)
-- Narrations: [`java-story/narrative_review/`](java-story/narrative_review/)
+- Hub: [`java-story/README.md`](java-story/README.md)
+- **v1 videos:** [`java-story/v1/output/`](java-story/v1/output/)
+- **v2 videos (current):** [`java-story/v2/output/`](java-story/v2/output/)
 
 ## Freelance profile grooming
 
-- **Laptop setup:** [`all-work/LAPTOP-SETUP.md`](all-work/LAPTOP-SETUP.md)
 - Guide: [`all-work/freelance-profile/README.md`](all-work/freelance-profile/README.md)
 - Pack: [`all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md`](all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md)
-
-## Cloud Agent environment
-
-`.cursor/environment.json` configures future agent runs (Chrome for profile/browser workflows).
 
 ## Author
 

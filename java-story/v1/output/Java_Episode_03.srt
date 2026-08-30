@@ -1,0 +1,195 @@
+1
+00:00:00,000 --> 00:00:03,697
+In Episode Two, we separated JDK, JRE, and JVM.
+
+2
+00:00:03,697 --> 00:00:05,979
+Now look at a real Java file.
+
+3
+00:00:05,979 --> 00:00:10,384
+Every line has a job — package, class, main, statements.
+
+4
+00:00:10,384 --> 00:00:12,587
+Structure is not decoration.
+
+5
+00:00:12,587 --> 00:00:17,386
+It decides how your code is found, loaded, tested, and owned.
+
+6
+00:00:17,386 --> 00:00:18,409
+Episode Three.
+
+7
+00:00:18,409 --> 00:00:23,084
+Java Program Structure — packages, classes, and the entry point.
+
+8
+00:00:23,084 --> 00:00:25,635
+Here is the shape of a Java program.
+
+9
+00:00:25,635 --> 00:00:28,470
+A package is the folder — the namespace.
+
+10
+00:00:28,470 --> 00:00:33,926
+Inside it — a type. Usually a class. Sometimes an interface, record, or enum.
+
+11
+00:00:33,926 --> 00:00:40,304
+Inside the class — fields for state, constructors to create objects, methods for behavior.
+
+12
+00:00:40,304 --> 00:00:44,910
+That hierarchy is the blueprint Java expects — and tools rely on.
+
+13
+00:00:44,910 --> 00:00:47,895
+Walk a classic Hello World — line by line.
+
+14
+00:00:47,895 --> 00:00:52,444
+First, optional package — the fully qualified home of the class.
+
+15
+00:00:52,444 --> 00:00:56,993
+Then public class HelloWorld — and yes, the filename must match.
+
+16
+00:00:56,993 --> 00:01:02,252
+Java is case-sensitive. HelloWorld.java means HelloWorld — not helloworld.
+
+17
+00:01:02,252 --> 00:01:05,521
+public static void main — the JVM starts here.
+
+18
+00:01:05,521 --> 00:01:09,217
+System.out.println — a statement that prints a line.
+
+19
+00:01:09,217 --> 00:01:11,776
+Four jobs. Four layers. One program.
+
+20
+00:01:11,776 --> 00:01:13,828
+Access is part of structure too.
+
+21
+00:01:13,828 --> 00:01:16,329
+public means other packages can see it.
+
+22
+00:01:16,329 --> 00:01:21,139
+No modifier means package-private — same package only. Perfect for helpers.
+
+23
+00:01:21,139 --> 00:01:23,897
+private fields keep state inside the class.
+
+24
+00:01:23,897 --> 00:01:28,130
+Good structure hides what shouldn't leak — and makes APIs smaller.
+
+25
+00:01:28,130 --> 00:01:31,099
+In real services, packages mirror ownership.
+
+26
+00:01:31,099 --> 00:01:33,730
+api at the edge — controllers and DTOs.
+
+27
+00:01:33,730 --> 00:01:36,226
+application to orchestrate use-cases.
+
+28
+00:01:36,226 --> 00:01:40,882
+domain for business rules. infrastructure for databases and adapters.
+
+29
+00:01:40,882 --> 00:01:45,605
+Arrows should point inward — not dump everything into one flat folder.
+
+30
+00:01:45,605 --> 00:01:49,788
+That is how teams keep domain code clean as the service grows.
+
+31
+00:01:49,788 --> 00:01:50,820
+Follow runtime.
+
+32
+00:01:50,820 --> 00:01:54,190
+Load the class. Verify bytecode. Prepare statics.
+
+33
+00:01:54,190 --> 00:01:57,355
+Initialize. Construct objects. Invoke methods.
+
+34
+00:01:57,355 --> 00:02:01,688
+Your package and class names become the identity the JVM loads.
+
+35
+00:02:01,688 --> 00:02:06,022
+Same simple name in two packages? Completely different classes.
+
+36
+00:02:06,022 --> 00:02:07,518
+Three common mistakes.
+
+37
+00:02:07,518 --> 00:02:11,667
+One — every class in one giant package. Ownership disappears.
+
+38
+00:02:11,667 --> 00:02:16,563
+Two — public fields everywhere — no encapsulation, hard to change later.
+
+39
+00:02:16,563 --> 00:02:22,208
+Three — Spring main class buried too deep, so component scanning misses your beans.
+
+40
+00:02:22,208 --> 00:02:27,512
+Put the main class at a sensible root — and keep infrastructure out of domain.
+
+41
+00:02:27,512 --> 00:02:30,637
+Interview question — why do packages matter?
+
+42
+00:02:30,637 --> 00:02:32,980
+Answer with four words on screen.
+
+43
+00:02:32,980 --> 00:02:36,601
+Namespacing. Access. Ownership. Framework scanning.
+
+44
+00:02:36,601 --> 00:02:40,791
+Then add — class identity is the name plus the classloader.
+
+45
+00:02:40,791 --> 00:02:45,762
+That answer shows you understand design and runtime — not just syntax.
+
+46
+00:02:45,762 --> 00:02:49,063
+You can now read a Java file like a map.
+
+47
+00:02:49,063 --> 00:02:51,704
+Next — variables and data types.
+
+48
+00:02:51,704 --> 00:02:56,325
+int, long, boolean, String — what lives where in memory.
+
+49
+00:02:56,325 --> 00:02:58,636
+Episode Four. See you there.

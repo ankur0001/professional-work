@@ -1,25 +1,31 @@
 # The Java Story
 
-85-episode YouTube-style Java series — coherent narrations, animated visuals, and local Chatterbox TTS video builds.
+85-episode YouTube-style Java series.
 
 ## Layout
 
 ```
 java-story/
-├── narrative_review/     ← episode narrations (ep01–ep85) + style guides
-├── video_build/          ← TTS, visual engine, render + distribute scripts
-└── output/v2/            ← all 85 episode videos (clean + CAPTIONED + srt)
+├── v1/                 ← original episode cut (videos + episode notes)
+│   ├── output/         ← clean + CAPTIONED mp4, srt, thumbnails
+│   ├── episodes/       ← per-episode README notes
+│   ├── EPISODE_CATALOG.md
+│   └── manifest.json
+└── v2/                 ← current cut (coherent narration + animated visuals)
+    ├── output/         ← clean + CAPTIONED mp4, srt, SOURCE.md
+    ├── narrative_review/
+    └── video_build/
 ```
 
-## Videos
+## Quick links
 
-All episodes: [`output/v2/`](output/v2/)
+- **v1 videos:** [`v1/output/`](v1/output/)
+- **v2 videos:** [`v2/output/`](v2/output/)
+- **v2 narrations:** [`v2/narrative_review/`](v2/narrative_review/)
 
-## Quick start
+## Render v2
 
 ```bash
-python3 java-story/video_build/render_v2_from_narrative.py --ep 1
-python3 java-story/video_build/distribute_v2_to_episode_prs.py --ep 1
+python3 java-story/v2/video_build/render_v2_from_narrative.py --ep 1
+python3 java-story/v2/video_build/distribute_v2_to_episode_prs.py --ep 1
 ```
-
-See [`narrative_review/README.md`](narrative_review/README.md) for narration standards.

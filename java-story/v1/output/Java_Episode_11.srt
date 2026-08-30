@@ -1,0 +1,191 @@
+1
+00:00:00,000 --> 00:00:04,004
+Objects need boundaries. Access modifiers draw those lines.
+
+2
+00:00:04,004 --> 00:00:07,330
+Who can see this field? Who can call this method?
+
+3
+00:00:07,330 --> 00:00:10,181
+Visibility is ownership encoded in syntax.
+
+4
+00:00:10,181 --> 00:00:14,321
+Today we map private, package-private, protected, and public.
+
+5
+00:00:14,321 --> 00:00:17,986
+Visibility is a design decision — not an afterthought.
+
+6
+00:00:17,986 --> 00:00:19,193
+Episode Eleven.
+
+7
+00:00:19,193 --> 00:00:24,260
+Access Modifiers — private, public, protected, package-private.
+
+8
+00:00:24,260 --> 00:00:26,324
+Four levels. Narrow to wide.
+
+9
+00:00:26,324 --> 00:00:28,240
+private — only this class.
+
+10
+00:00:28,240 --> 00:00:31,926
+No modifier — package-private — same package only.
+
+11
+00:00:31,926 --> 00:00:34,579
+protected — package plus subclasses.
+
+12
+00:00:34,579 --> 00:00:37,896
+public — anyone. A promise. Use it carefully.
+
+13
+00:00:37,896 --> 00:00:41,802
+Default to the narrowest visibility that still works.
+
+14
+00:00:41,802 --> 00:00:45,414
+Widen only when a real collaborator needs access.
+
+15
+00:00:45,414 --> 00:00:48,059
+private is your first encapsulation tool.
+
+16
+00:00:48,059 --> 00:00:51,027
+Fields start private unless you have a reason.
+
+17
+00:00:51,027 --> 00:00:54,511
+Helpers that are not part of the API stay private too.
+
+18
+00:00:54,511 --> 00:00:58,254
+If everything is public, you have no boundary — only hope.
+
+19
+00:00:58,254 --> 00:01:00,060
+Hope is not an architecture.
+
+20
+00:01:00,060 --> 00:01:02,512
+Start private. Widen only with intent.
+
+21
+00:01:02,512 --> 00:01:04,433
+Package-private is underrated.
+
+22
+00:01:04,433 --> 00:01:07,827
+Same package collaboration without publishing an API.
+
+23
+00:01:07,827 --> 00:01:10,965
+Great for internal helpers shared by a few types.
+
+24
+00:01:10,965 --> 00:01:15,447
+When a type must leave the package — promote visibility intentionally.
+
+25
+00:01:15,447 --> 00:01:18,328
+Accidental public is how APIs grow barnacles.
+
+26
+00:01:18,328 --> 00:01:21,146
+Package-private keeps the neighborhood tidy.
+
+27
+00:01:21,146 --> 00:01:24,234
+protected supports inheritance-aware extension.
+
+28
+00:01:24,234 --> 00:01:27,519
+Subclasses can reach it — so can the same package.
+
+29
+00:01:27,519 --> 00:01:32,512
+public is the stable contract. Every public method is a promise to maintain.
+
+30
+00:01:32,512 --> 00:01:36,060
+In libraries, public surface area is a long-term cost.
+
+31
+00:01:36,060 --> 00:01:39,608
+Architect tip — treat public like a published product.
+
+32
+00:01:39,608 --> 00:01:42,564
+Every public method is a maintenance promise.
+
+33
+00:01:42,564 --> 00:01:44,025
+Three common mistakes.
+
+34
+00:01:44,025 --> 00:01:48,276
+One — public fields for convenience. Encapsulation dies quietly.
+
+35
+00:01:48,276 --> 00:01:51,332
+Two — making every helper public just in case.
+
+36
+00:01:51,332 --> 00:01:55,716
+Three — protected used as a lazy public for subclasses everywhere.
+
+37
+00:01:55,716 --> 00:01:59,967
+Also — widening visibility to fix a test instead of redesigning.
+
+38
+00:01:59,967 --> 00:02:03,022
+Fix the design — do not dissolve the boundary.
+
+39
+00:02:03,022 --> 00:02:06,428
+Interview question — default access versus private?
+
+40
+00:02:06,428 --> 00:02:09,700
+Default — package-private — same package sees it.
+
+41
+00:02:09,700 --> 00:02:12,037
+private — only the declaring class.
+
+42
+00:02:12,037 --> 00:02:15,844
+Then — prefer narrowest visibility. Public is a contract.
+
+43
+00:02:15,844 --> 00:02:18,048
+That answer shows API discipline.
+
+44
+00:02:18,048 --> 00:02:21,320
+Visibility choices are architecture in miniature.
+
+45
+00:02:21,320 --> 00:02:24,608
+Visibility needs a home. Next — packages.
+
+46
+00:02:24,608 --> 00:02:26,694
+Episode Twelve — packages.
+
+47
+00:02:26,694 --> 00:02:30,383
+Namespaces, boundaries, and ownership on disk.
+
+48
+00:02:30,383 --> 00:02:31,506
+See you there.

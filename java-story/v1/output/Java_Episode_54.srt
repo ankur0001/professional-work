@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:03,548
+Episode Fifty-Three placed objects on the shared heap.
+
+2
+00:00:03,548 --> 00:00:07,293
+Who frees memory when those objects are no longer needed?
+
+3
+00:00:07,293 --> 00:00:12,550
+Java has no free or delete — the garbage collector reclaims unreachable objects.
+
+4
+00:00:12,550 --> 00:00:16,952
+GC traces from roots — stack locals, static fields, JNI references.
+
+5
+00:00:16,952 --> 00:00:21,157
+Generations exploit the observation that most objects die young.
+
+6
+00:00:21,157 --> 00:00:25,954
+Today — garbage collection basics, mark-sweep, and stop-the-world pauses.
+
+7
+00:00:25,954 --> 00:00:27,658
+Episode Fifty-Four.
+
+8
+00:00:27,658 --> 00:00:29,900
+Garbage Collection Intro.
+
+9
+00:00:29,900 --> 00:00:33,420
+GC roots are starting points for reachability analysis.
+
+10
+00:00:33,420 --> 00:00:37,389
+Local variables and operand stacks in active frames are roots.
+
+11
+00:00:37,389 --> 00:00:40,781
+Static fields in loaded classes hold root references.
+
+12
+00:00:40,781 --> 00:00:44,877
+JNI global references and JVM internal structures are roots too.
+
+13
+00:00:44,877 --> 00:00:48,974
+An object is live if reachable from any root through references.
+
+14
+00:00:48,974 --> 00:00:52,686
+Unreachable objects are garbage — eligible for collection.
+
+15
+00:00:52,686 --> 00:00:55,496
+Mark-sweep is the foundational GC algorithm.
+
+16
+00:00:55,496 --> 00:00:59,455
+Mark phase — traverse from roots, flag every reachable object.
+
+17
+00:00:59,455 --> 00:01:02,904
+Sweep phase — walk the heap, reclaim unmarked objects.
+
+18
+00:01:02,904 --> 00:01:06,672
+Compact phase in some collectors — defragment live objects.
+
+19
+00:01:06,672 --> 00:01:09,865
+Simple but can fragment memory without compaction.
+
+20
+00:01:09,865 --> 00:01:14,080
+Modern collectors extend this with copying and concurrent marking.
+
+21
+00:01:14,080 --> 00:01:17,810
+The generational hypothesis — most objects die young.
+
+22
+00:01:17,810 --> 00:01:22,384
+Young generation — Eden plus Survivor spaces — frequent minor GC.
+
+23
+00:01:22,384 --> 00:01:27,098
+Objects that survive several collections promote to old generation.
+
+24
+00:01:27,098 --> 00:01:32,165
+Old generation — long-lived data — collected less often, more expensive.
+
+25
+00:01:32,165 --> 00:01:35,473
+Minor GC is fast — scans only the young region.
+
+26
+00:01:35,473 --> 00:01:39,554
+Major or full GC collects the entire heap — longer pauses.
+
+27
+00:01:39,554 --> 00:01:43,536
+Stop-the-world means all application threads pause during GC.
+
+28
+00:01:43,536 --> 00:01:47,648
+Safepoints are locations where the JVM can safely halt threads.
+
+29
+00:01:47,648 --> 00:01:51,304
+During STW, roots are scanned and the heap is processed.
+
+30
+00:01:51,304 --> 00:01:55,677
+Pause time is the metric users feel — latency spikes in production.
+
+31
+00:01:55,677 --> 00:01:59,071
+Concurrent collectors reduce STW but add complexity.
+
+32
+00:01:59,071 --> 00:02:02,988
+GC logs show pause durations — always monitor in production.
+
+33
+00:02:02,988 --> 00:02:05,457
+Minor GC triggers when Eden fills up.
+
+34
+00:02:05,457 --> 00:02:10,128
+Major GC triggers when old generation is full or explicitly requested.
+
+35
+00:02:10,128 --> 00:02:14,331
+System.gc is a hint — JVM may ignore it depending on collector.
+
+36
+00:02:14,331 --> 00:02:18,802
+OutOfMemoryError fires only after GC fails to reclaim enough space.
+
+37
+00:02:18,802 --> 00:02:22,338
+Heap flags like Xms and Xmx control generation sizes.
+
+38
+00:02:22,338 --> 00:02:26,542
+Tuning starts with understanding what triggers each collection.
+
+39
+00:02:26,542 --> 00:02:28,003
+Three common mistakes.
+
+40
+00:02:28,003 --> 00:02:32,652
+One — calling System.gc expecting immediate cleanup — unreliable hint.
+
+41
+00:02:32,652 --> 00:02:37,035
+Two — setting heap huge without understanding GC pause trade-offs.
+
+42
+00:02:37,035 --> 00:02:40,820
+Three — ignoring GC logs until production latency spikes.
+
+43
+00:02:40,820 --> 00:02:45,801
+Also — assuming all unreachable objects collect instantly — GC is periodic.
+
+44
+00:02:45,801 --> 00:02:49,520
+Measure pause times before tuning — data beats folklore.
+
+45
+00:02:49,520 --> 00:02:52,732
+Interview question — how does Java GC work?
+
+46
+00:02:52,732 --> 00:02:56,542
+Trace from roots — stack locals, statics, JNI refs.
+
+47
+00:02:56,542 --> 00:03:00,949
+Mark reachable objects — sweep or compact unreachable ones.
+
+48
+00:03:00,949 --> 00:03:05,356
+Generational — young collected often, old collected rarely.
+
+49
+00:03:05,356 --> 00:03:08,941
+Stop-the-world pauses all threads at safepoints.
+
+50
+00:03:08,941 --> 00:03:13,722
+Collector choice and heap sizing affect pause versus throughput.
+
+51
+00:03:13,722 --> 00:03:18,274
+Bytecode starts in the interpreter — hot code gets compiled.
+
+52
+00:03:18,274 --> 00:03:21,081
+Episode Fifty-Five — JIT Compilation.
+
+53
+00:03:21,081 --> 00:03:25,558
+Interpreter, C1, C2 tiers, hot methods, and deoptimization.
+
+54
+00:03:25,558 --> 00:03:26,620
+See you there.
