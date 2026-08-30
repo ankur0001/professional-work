@@ -5,10 +5,10 @@ Animated visual cut: flows, stacks, pipelines, lanes, diagrams — not
 text-wall slides. Narration audio stays Chatterbox TTS (unchanged text).
 
 Output layout (common across episode PRs):
-  java-story/v2/output/Java_Episode_XX_<Slug>.mp4
-  java-story/v2/output/Java_Episode_XX_<Slug>_CAPTIONED.mp4
-  java-story/v2/output/Java_Episode_XX.srt
-  java-story/v2/output/SOURCE.md
+  java-story/v2/Java_Episode_XX_<Slug>.mp4
+  java-story/v2/Java_Episode_XX_<Slug>_CAPTIONED.mp4
+  java-story/v2/Java_Episode_XX.srt
+  java-story/v2/SOURCE.md
 
 Usage:
   python3 java-story/v2/video_build/render_v2_from_narrative.py --ep 1
@@ -34,7 +34,7 @@ ROOT = Path("/workspace")
 NARR_DIR = ROOT / "java-story" / "v2" / "narrative_review" / "episodes"
 BUILD = ROOT / "java-story" / "v2" / "video_build"
 WORK = BUILD / "v2_work"
-OUT = ROOT / "java-story" / "v2" / "output"
+OUT = ROOT / "java-story" / "v2"
 SYS_PATH_TTS = BUILD
 
 W, H = 1920, 1080

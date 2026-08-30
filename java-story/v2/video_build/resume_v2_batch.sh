@@ -114,7 +114,7 @@ PR_MAP = {
 done = []
 for ep, br in PR_MAP.items():
     ok = False
-    for path in ("output/v2", "java-story/v2/output"):
+    for path in ("output/v2", "java-story/v2"):
         r = subprocess.run(
             ["gh", "api", f"repos/ankur0001/professional-work/contents/{path}?ref={br}"],
             capture_output=True, text=True,
@@ -148,7 +148,7 @@ LOG=/tmp/watch_distribute.log
 echo "watcher start $(date)" >> "$LOG"
 while true; do
   shopt -s nullglob
-  for f in java-story/v2/output/Java_Episode_*_CAPTIONED.mp4; do
+  for f in java-story/v2/Java_Episode_*_CAPTIONED.mp4; do
     [ -f "$f" ] || continue
     base=$(basename "$f")
     ep_padded=${base#Java_Episode_}
@@ -158,7 +158,7 @@ while true; do
     if [ -f "$marker" ]; then
       continue
     fi
-    clean_count=$(ls java-story/v2/output/Java_Episode_${ep_padded}_*.mp4 2>/dev/null | grep -v CAPTIONED | wc -l || true)
+    clean_count=$(ls java-story/v2/Java_Episode_${ep_padded}_*.mp4 2>/dev/null | grep -v CAPTIONED | wc -l || true)
     if [ "$clean_count" -lt 1 ]; then
       continue
     fi
@@ -173,7 +173,7 @@ while true; do
   done
   if ! pgrep -f 'render_v2_from_narrative.py --ep' >/dev/null 2>&1; then
     pending=0
-    for f in java-story/v2/output/Java_Episode_*_CAPTIONED.mp4; do
+    for f in java-story/v2/Java_Episode_*_CAPTIONED.mp4; do
       [ -f "$f" ] || continue
       base=$(basename "$f"); ep_padded=${base#Java_Episode_}; ep_padded=${ep_padded%%_*}; ep=$((10#$ep_padded))
       [ -f /tmp/v2_distributed_ep${ep} ] || pending=1
@@ -191,7 +191,7 @@ WATCH
 main() {
   ensure_branch
   ensure_deps
-  mkdir -p java-story/v2/output
+  mkdir -p java-story/v2
   mark_remote_done
   resume=$(cat /tmp/v2_resume_from)
   if [ "$resume" -gt 85 ]; then

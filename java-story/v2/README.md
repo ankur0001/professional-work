@@ -1,18 +1,12 @@
-# The Java Story — v2 (current)
+# The Java Story — v2 video deliverables
 
-Current series cut: coherent narrations, animated visuals (`visual_engine.py`), Chatterbox TTS, end-cut-fixed full audio.
+All 85 episodes (end-cut fixed, animated visuals):
 
-## Contents
+Per episode:
+- `Java_Episode_XX_<Slug>.mp4` — clean video
+- `Java_Episode_XX_<Slug>_CAPTIONED.mp4` — burned-in captions
+- `Java_Episode_XX.srt` — captions
+- `Java_Episode_XX_SOURCE.md` — build provenance
+- `narration.md` — narration snapshot used for that render (when present; may share name across copies)
 
-| Path | Description |
-|------|-------------|
-| [`output/`](output/) | All 85 episodes: clean + CAPTIONED mp4, srt, SOURCE.md |
-| [`narrative_review/`](narrative_review/) | ep01–ep85 full narrations + style guides |
-| [`video_build/`](video_build/) | Render, TTS, distribute, rebuild scripts |
-
-## Render
-
-```bash
-python3 java-story/v2/video_build/render_v2_from_narrative.py --ep 1
-python3 java-story/v2/video_build/distribute_v2_to_episode_prs.py --ep 1
-```
+Render tooling: `java-story/v2/video_build/`

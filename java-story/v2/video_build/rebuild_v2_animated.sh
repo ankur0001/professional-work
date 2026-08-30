@@ -3,7 +3,7 @@
 set -euo pipefail
 cd /workspace
 MAP_PY='java-story/v2/video_build/distribute_v2_to_episode_prs.py'
-OUT=java-story/v2/output
+OUT=java-story/v2
 mkdir -p "$OUT"
 
 fetch_episode_assets() {
@@ -26,7 +26,7 @@ print(f"EP{ep:02d}: fetching from {br}")
 subprocess.check_call(["git", "fetch", "-q", "origin", br])
 sha = subprocess.check_output(["git", "rev-parse", f"origin/{br}"], text=True).strip()
 files = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", sha], text=True).splitlines()
-# prefer output/v2 then java-story/v2/output
+# prefer output/v2 then java-story/v2
 candidates = [f for f in files if "/v2/" in f and f.endswith((".mp4", ".srt", ".md"))]
 want_srt = [f for f in candidates if f.endswith(f"Java_Episode_{ep:02d}.srt")]
 want_cap = [f for f in candidates if "CAPTIONED.mp4" in f and f"Java_Episode_{ep:02d}_" in f]

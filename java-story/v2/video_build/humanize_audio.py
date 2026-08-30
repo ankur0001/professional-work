@@ -22,7 +22,7 @@ ROOT = Path("/workspace/java-story/v2/video_build")
 AUDIO = ROOT / "audio_human"
 CLIPS_IN = ROOT / "clips"
 CLIPS_OUT = ROOT / "clips_human"
-OUTPUT = Path("/workspace/java-story/v2/output")
+OUTPUT = Path("/workspace/java-story/v2")
 ARTIFACTS = Path("/opt/cursor/artifacts")
 
 VOICE = "en-IN-PrabhatNeural"

@@ -6,22 +6,21 @@
 
 ```
 java-story/
-├── v1/                 ← original episode cut (videos + episode notes)
-│   ├── output/         ← clean + CAPTIONED mp4, srt, thumbnails
-│   ├── episodes/       ← per-episode README notes
+├── v1/                      ← original cut (all episode files here)
+│   ├── Java_Episode_XX_*.mp4 / _CAPTIONED.mp4 / .srt
+│   ├── episodes/            ← episode README notes
 │   ├── EPISODE_CATALOG.md
 │   └── manifest.json
-└── v2/                 ← current cut (coherent narration + animated visuals)
-    ├── output/         ← clean + CAPTIONED mp4, srt, SOURCE.md
-    ├── narrative_review/
-    └── video_build/
+└── v2/                      ← current cut (all episode files here)
+    ├── Java_Episode_XX_*.mp4 / _CAPTIONED.mp4 / .srt / _SOURCE.md
+    ├── narrative_review/    ← coherent narrations
+    └── video_build/         ← render tooling
 ```
 
-## Quick links
+## Browse
 
-- **v1 videos:** [`v1/output/`](v1/output/)
-- **v2 videos:** [`v2/output/`](v2/output/)
-- **v2 narrations:** [`v2/narrative_review/`](v2/narrative_review/)
+- **v1 files:** [`v1/`](v1/)
+- **v2 files (current):** [`v2/`](v2/)
 
 ## Render v2
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Push java-story/v2/output deliverables into each episode PR branch and retitle.
+"""Push java-story/v2 deliverables into each episode PR branch and retitle.
 
-Expects v2 files already rendered under java-story/v2/output/.
-Copies into each episode branch as java-story/v2/output/ (common folder name).
+Expects v2 files already rendered under java-story/v2/.
+Copies into each episode branch as java-story/v2/ (common folder name).
 
 Usage:
   python3 java-story/v2/video_build/distribute_v2_to_episode_prs.py --ep 1-5
@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path("/workspace")
-V2 = ROOT / "java-story" / "v2" / "output"
+V2 = ROOT / "java-story" / "v2"
 NARR = ROOT / "java-story" / "v2" / "narrative_review" / "episodes"
 
 # episode -> (pr_number, branch)
@@ -144,10 +144,10 @@ def push_episode(ep: int) -> None:
             shutil_rm(wt, ignore_errors=True)
         run(["git", "worktree", "prune"], check=False)
     run(["git", "worktree", "add", "-f", str(wt), f"origin/{branch}"])
-    dest = wt / "java-story" / "v2" / "output"
+    dest = wt / "java-story" / "v2"
     # fall back to legacy episode-PR paths
-    if (wt / "java-story" / "output" / "v2").exists() and not (wt / "java-story" / "v2").exists():
-        dest = wt / "java-story" / "output" / "v2"
+    if (wt / "java-story" / "v2").exists() and not (wt / "java-story" / "v2").exists():
+        dest = wt / "java-story" / "v2"
     elif (wt / "java" / "output" / "v2").exists() and not (wt / "java-story").exists():
         dest = wt / "java" / "output" / "v2"
     elif not (wt / "java-story").exists() and not (wt / "java").exists() and (wt / "output").exists():

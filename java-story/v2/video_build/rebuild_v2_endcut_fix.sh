@@ -3,7 +3,7 @@
 # Does NOT reuse truncated mp4 audio. Uses beat wavs when complete; else TTS.
 set -euo pipefail
 cd /workspace
-OUT=java-story/v2/output
+OUT=java-story/v2
 mkdir -p "$OUT"
 START=${1:-1}
 END=${2:-85}
@@ -26,7 +26,7 @@ for ep in $(seq "$START" "$END"); do
 from pathlib import Path
 import subprocess, re
 ep = $ep
-out = Path("java-story/v2/output")
+out = Path("java-story/v2")
 cap = next(p for p in out.glob(f"Java_Episode_{ep:02d}_*_CAPTIONED.mp4") if "PREVIEW" not in p.name)
 srt = out / f"Java_Episode_{ep:02d}.srt"
 

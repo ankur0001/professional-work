@@ -1,6 +1,6 @@
 # professional-work
 
-Personal professional hub for **Ankur Kumar** — freelance profiles, career assets, learning resources, and agent-session outputs.
+Personal professional hub for **Ankur Kumar**.
 
 **Repository:** https://github.com/ankur0001/professional-work
 
@@ -8,23 +8,21 @@ Personal professional hub for **Ankur Kumar** — freelance profiles, career ass
 
 ```
 java-story/
-├── v1/                         ← original episode videos + notes
-└── v2/                         ← current videos + narrations + tooling
+├── v1/     ← original episode videos + notes (files in this folder)
+└── v2/     ← current videos + narrations + tooling (files in this folder)
 
 all-work/
-└── freelance-profile/          ← LinkedIn, Upwork, portfolio + docs/
+└── freelance-profile/
 ```
 
 ## The Java Story
 
-- Hub: [`java-story/README.md`](java-story/README.md)
-- **v1 videos:** [`java-story/v1/output/`](java-story/v1/output/)
-- **v2 videos (current):** [`java-story/v2/output/`](java-story/v2/output/)
+- [`java-story/v1/`](java-story/v1/) — original cut (all files)
+- [`java-story/v2/`](java-story/v2/) — current cut (all files)
 
-## Freelance profile grooming
+## Freelance profile
 
-- Guide: [`all-work/freelance-profile/README.md`](all-work/freelance-profile/README.md)
-- Pack: [`all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md`](all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md)
+- [`all-work/freelance-profile/`](all-work/freelance-profile/)
 
 ## Author
 
