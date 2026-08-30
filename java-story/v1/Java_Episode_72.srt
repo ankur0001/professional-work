@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,896
+Episode Seventy-One introduced Spring as a platform around an IoC container.
+
+2
+00:00:04,896 --> 00:00:09,856
+Inversion of Control flips who constructs collaborators — the framework does.
+
+3
+00:00:09,856 --> 00:00:14,366
+Dependency Injection is the main technique Spring uses to achieve IoC.
+
+4
+00:00:14,366 --> 00:00:19,391
+Get this wrong — mysterious nulls, circular dependencies, and untestable code.
+
+5
+00:00:19,391 --> 00:00:23,707
+Get this right — clear graphs, easy mocks, and predictable startup.
+
+6
+00:00:23,707 --> 00:00:28,474
+Today — IoC versus DI, injection styles, bean scopes, and wiring pitfalls.
+
+7
+00:00:28,474 --> 00:00:30,378
+Episode Seventy-Two.
+
+8
+00:00:30,378 --> 00:00:33,140
+IoC and Dependency Injection.
+
+9
+00:00:33,140 --> 00:00:35,837
+IoC is the principle — DI is the mechanism.
+
+10
+00:00:35,837 --> 00:00:40,352
+Inversion of Control — your code does not new up the whole object graph.
+
+11
+00:00:40,352 --> 00:00:44,868
+Dependency Injection — dependencies are provided from outside the class.
+
+12
+00:00:44,868 --> 00:00:49,007
+Spring's ApplicationContext is the injector and lifecycle manager.
+
+13
+00:00:49,007 --> 00:00:54,087
+Factories, service locators, and events are other IoC styles — DI is the default.
+
+14
+00:00:54,087 --> 00:00:58,038
+Say IoC for the idea — DI for how Spring usually implements it.
+
+15
+00:00:58,038 --> 00:01:01,123
+Three injection styles you will see in Spring code.
+
+16
+00:01:01,123 --> 00:01:05,600
+Constructor injection — required dependencies as final fields — preferred.
+
+17
+00:01:05,600 --> 00:01:10,017
+Setter injection — optional dependencies or reconfiguration after create.
+
+18
+00:01:10,017 --> 00:01:14,615
+Field injection with Autowired — short, but harder to test and reason about.
+
+19
+00:01:14,615 --> 00:01:19,334
+Constructor injection makes invariants obvious — object is complete after new.
+
+20
+00:01:19,334 --> 00:01:23,992
+Modern Spring and Boot samples default to constructor injection for a reason.
+
+21
+00:01:23,992 --> 00:01:27,903
+Bean scopes control how many instances the container creates.
+
+22
+00:01:27,903 --> 00:01:32,069
+Singleton — one shared instance per context — the Spring default.
+
+23
+00:01:32,069 --> 00:01:35,916
+Prototype — a new instance every time you ask the container.
+
+24
+00:01:35,916 --> 00:01:39,955
+Request and session scopes — web-aware, tied to HTTP lifecycle.
+
+25
+00:01:39,955 --> 00:01:44,314
+Wrong scope — shared mutable state across requests is a classic bug.
+
+26
+00:01:44,314 --> 00:01:49,250
+Default to singleton services with immutable or carefully synchronized state.
+
+27
+00:01:49,250 --> 00:01:51,428
+How Spring finds and wires beans.
+
+28
+00:01:51,428 --> 00:01:57,037
+Component scanning picks up Stereotype annotations — Service, Repository, Controller.
+
+29
+00:01:57,037 --> 00:02:01,129
+Configuration classes with Bean methods define explicit beans.
+
+30
+00:02:01,129 --> 00:02:05,221
+Qualifiers disambiguate when multiple candidates share a type.
+
+31
+00:02:05,221 --> 00:02:09,708
+Profiles activate environment-specific beans — local, staging, prod.
+
+32
+00:02:09,708 --> 00:02:14,724
+Circular dependencies signal a design smell — break the cycle with redesign.
+
+33
+00:02:14,724 --> 00:02:16,649
+DI pays off hardest in tests.
+
+34
+00:02:16,649 --> 00:02:21,029
+Unit tests construct the class with mocks — no container required.
+
+35
+00:02:21,029 --> 00:02:25,276
+Slice tests load a thin Spring context — web or data layer only.
+
+36
+00:02:25,276 --> 00:02:30,187
+Full ApplicationContext tests catch wiring mistakes — slower but valuable.
+
+37
+00:02:30,187 --> 00:02:34,634
+Avoid static singletons and ServiceLocator lookups — they fight DI.
+
+38
+00:02:34,634 --> 00:02:38,350
+If you cannot inject a fake, the design is fighting you.
+
+39
+00:02:38,350 --> 00:02:39,771
+Three common mistakes.
+
+40
+00:02:39,771 --> 00:02:44,488
+One — field injection everywhere — invisible dependencies, awkward tests.
+
+41
+00:02:44,488 --> 00:02:48,430
+Two — singleton beans holding request-specific mutable state.
+
+42
+00:02:48,430 --> 00:02:53,146
+Three — Autowired on concrete classes with no interface — tight coupling.
+
+43
+00:02:53,146 --> 00:02:58,768
+Also — ignoring constructor failure — missing beans explode at startup for good reason.
+
+44
+00:02:58,768 --> 00:03:03,872
+Fail fast at context refresh — never with a NullPointerException in production.
+
+45
+00:03:03,872 --> 00:03:07,129
+Interview question — why prefer constructor injection?
+
+46
+00:03:07,129 --> 00:03:10,265
+Required dependencies are explicit and can be final.
+
+47
+00:03:10,265 --> 00:03:14,667
+The object is fully initialized after construction — no half-ready beans.
+
+48
+00:03:14,667 --> 00:03:18,105
+Unit tests pass mocks without Spring or reflection hacks.
+
+49
+00:03:18,105 --> 00:03:22,387
+Circular dependencies surface earlier — design problems become visible.
+
+50
+00:03:22,387 --> 00:03:26,850
+Spring and the community treat constructor injection as the default style.
+
+51
+00:03:26,850 --> 00:03:30,601
+Wiring is clear — next is how projects start fast.
+
+52
+00:03:30,601 --> 00:03:33,827
+Episode Seventy-Three — Spring Boot Basics.
+
+53
+00:03:33,827 --> 00:03:39,754
+Starters, auto-configuration, configuration properties, and the executable jar.
+
+54
+00:03:39,754 --> 00:03:40,804
+See you there.

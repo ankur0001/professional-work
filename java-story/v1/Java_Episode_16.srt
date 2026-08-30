@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,033
+Generics typed our containers. Annotations label our code.
+
+2
+00:00:04,033 --> 00:00:09,388
+An annotation is metadata — information about the code, attached to the code.
+
+3
+00:00:09,388 --> 00:00:13,212
+Override. Deprecated. Spring markers. Validation rules.
+
+4
+00:00:13,212 --> 00:00:15,646
+Tiny symbols. Huge framework power.
+
+5
+00:00:15,646 --> 00:00:19,818
+Today we learn what annotations are — and what they are not.
+
+6
+00:00:19,818 --> 00:00:23,434
+Angle brackets were contracts. At-signs are signals.
+
+7
+00:00:23,434 --> 00:00:24,791
+Episode Sixteen.
+
+8
+00:00:24,791 --> 00:00:29,708
+Annotations — metadata that frameworks and compilers read.
+
+9
+00:00:29,708 --> 00:00:32,271
+An annotation starts with an at-sign.
+
+10
+00:00:32,271 --> 00:00:37,673
+It can mark a class, a method, a field, a parameter — even another annotation.
+
+11
+00:00:37,673 --> 00:00:41,691
+By itself, most annotations do nothing magical at runtime.
+
+12
+00:00:41,691 --> 00:00:46,124
+Something must read them — the compiler, a tool, or a framework.
+
+13
+00:00:46,124 --> 00:00:49,241
+Think of them as sticky notes with structure.
+
+14
+00:00:49,241 --> 00:00:51,942
+The note matters only if someone looks.
+
+15
+00:00:51,942 --> 00:00:54,324
+Start with built-ins you already use.
+
+16
+00:00:54,324 --> 00:00:58,831
+Override — catch signature mistakes when you think you are overriding.
+
+17
+00:00:58,831 --> 00:01:02,179
+Deprecated — warn callers that an API is going away.
+
+18
+00:01:02,179 --> 00:01:06,493
+SuppressWarnings — silence a warning you have consciously accepted.
+
+19
+00:01:06,493 --> 00:01:10,420
+FunctionalInterface — document a single abstract method type.
+
+20
+00:01:10,420 --> 00:01:13,768
+These are small, precise, and compile-time friendly.
+
+21
+00:01:13,768 --> 00:01:17,211
+Retention answers — how long does this annotation live?
+
+22
+00:01:17,211 --> 00:01:19,966
+Source — only in source. Gone after compile.
+
+23
+00:01:19,966 --> 00:01:23,847
+Class — in the class file. Not necessarily visible at runtime.
+
+24
+00:01:23,847 --> 00:01:27,665
+Runtime — readable through reflection while the program runs.
+
+25
+00:01:27,665 --> 00:01:30,796
+Spring and many frameworks need runtime retention.
+
+26
+00:01:30,796 --> 00:01:34,802
+If retention is wrong, your marker is invisible when it matters.
+
+27
+00:01:34,802 --> 00:01:37,370
+In Spring, annotations drive wiring.
+
+28
+00:01:37,370 --> 00:01:41,509
+SpringBootApplication. RestController. Service. Autowired.
+
+29
+00:01:41,509 --> 00:01:45,575
+They tell the framework what to scan, create, and inject.
+
+30
+00:01:45,575 --> 00:01:48,358
+That is powerful — and easy to overuse.
+
+31
+00:01:48,358 --> 00:01:53,138
+Prefer clear boundaries. Do not decorate every line into a mystery.
+
+32
+00:01:53,138 --> 00:01:57,276
+Annotations should clarify intent — not hide architecture.
+
+33
+00:01:57,276 --> 00:01:59,453
+You can define your own annotations.
+
+34
+00:01:59,453 --> 00:02:03,201
+Declare an interface with an at-sign — interface RoleRequired.
+
+35
+00:02:03,201 --> 00:02:06,587
+Add retention and target so tools know where it applies.
+
+36
+00:02:06,587 --> 00:02:10,033
+Then write a processor or runtime check that enforces it.
+
+37
+00:02:10,033 --> 00:02:14,386
+Without a reader, a custom annotation is just documentation in disguise.
+
+38
+00:02:14,386 --> 00:02:17,470
+Design the annotation and the enforcement together.
+
+39
+00:02:17,470 --> 00:02:19,023
+Three common mistakes.
+
+40
+00:02:19,023 --> 00:02:23,751
+One — assuming an annotation does work with no processor behind it.
+
+41
+00:02:23,751 --> 00:02:28,339
+Two — wrong retention — runtime framework never sees your marker.
+
+42
+00:02:28,339 --> 00:02:33,067
+Three — annotation soup — so many markers the real flow disappears.
+
+43
+00:02:33,067 --> 00:02:38,078
+Also — using SuppressWarnings to hide problems instead of fixing types.
+
+44
+00:02:38,078 --> 00:02:41,960
+Annotations amplify discipline. They do not replace it.
+
+45
+00:02:41,960 --> 00:02:45,454
+Interview question — what is an annotation in Java?
+
+46
+00:02:45,454 --> 00:02:48,605
+Structured metadata attached to code elements.
+
+47
+00:02:48,605 --> 00:02:52,167
+Useful when compilers, tools, or frameworks read it.
+
+48
+00:02:52,167 --> 00:02:55,112
+Mention retention — source, class, runtime.
+
+49
+00:02:55,112 --> 00:02:59,085
+Then give Override versus a Spring stereotype as examples.
+
+50
+00:02:59,085 --> 00:03:01,962
+That answer covers language and ecosystem.
+
+51
+00:03:01,962 --> 00:03:06,342
+Metadata is clear. Next — looking inside types at runtime.
+
+52
+00:03:06,342 --> 00:03:08,683
+Episode Seventeen — reflection.
+
+53
+00:03:08,683 --> 00:03:12,459
+Inspect classes, call methods, and know the costs.
+
+54
+00:03:12,459 --> 00:03:13,516
+See you there.

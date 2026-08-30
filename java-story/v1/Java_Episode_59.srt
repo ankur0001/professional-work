@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,305
+Episode Fifty-Eight showed jcmd, jmap, and JFR for live diagnostics.
+
+2
+00:00:04,305 --> 00:00:09,432
+But the JIT compiler makes invisible optimizations before runtime tools see them.
+
+3
+00:00:09,432 --> 00:00:13,483
+Escape analysis asks — does this object leave the current scope?
+
+4
+00:00:13,483 --> 00:00:17,092
+If not, the JVM may never allocate it on the heap at all.
+
+5
+00:00:17,092 --> 00:00:21,713
+Stack allocation and scalar replacement eliminate heap pressure silently.
+
+6
+00:00:21,713 --> 00:00:25,954
+Today — escape analysis, stack allocation, and when objects escape.
+
+7
+00:00:25,954 --> 00:00:28,005
+Episode Fifty-Nine.
+
+8
+00:00:28,005 --> 00:00:29,732
+Escape Analysis.
+
+9
+00:00:29,732 --> 00:00:34,110
+An object escapes when a reference outlives the creating method or thread.
+
+10
+00:00:34,110 --> 00:00:36,891
+Returned from a method — escapes to the caller.
+
+11
+00:00:36,891 --> 00:00:40,855
+Stored in a field or static variable — escapes to the object graph.
+
+12
+00:00:40,855 --> 00:00:44,405
+Passed to another thread — escapes across thread boundaries.
+
+13
+00:00:44,405 --> 00:00:48,133
+Published to a collection visible elsewhere — escapes globally.
+
+14
+00:00:48,133 --> 00:00:52,038
+No escape means the JIT can treat the object as method-local only.
+
+15
+00:00:52,038 --> 00:00:56,518
+Stack allocation places short-lived objects on the thread stack frame.
+
+16
+00:00:56,518 --> 00:01:01,191
+Avoids heap allocation and GC pressure entirely for non-escaping objects.
+
+17
+00:01:01,191 --> 00:01:05,607
+The object dies when the stack frame pops — no collector involvement.
+
+18
+00:01:05,607 --> 00:01:08,743
+Enabled by escape analysis during C2 compilation.
+
+19
+00:01:08,743 --> 00:01:13,672
+You cannot observe stack allocation directly — it is a compiler optimization.
+
+20
+00:01:13,672 --> 00:01:18,472
+Micro-benchmarks with millions of tiny allocations may show zero GC impact.
+
+21
+00:01:18,472 --> 00:01:22,695
+Scalar replacement goes further — the object may not exist at all.
+
+22
+00:01:22,695 --> 00:01:27,046
+Fields of a non-escaping object become local variables in registers.
+
+23
+00:01:27,046 --> 00:01:31,077
+No object header, no alignment padding — just primitive values.
+
+24
+00:01:31,077 --> 00:01:35,044
+Point class with int x and int y — replaced by two local ints.
+
+25
+00:01:35,044 --> 00:01:38,691
+Combines with dead code elimination and constant folding.
+
+26
+00:01:38,691 --> 00:01:42,146
+Most powerful when objects are small and method-local.
+
+27
+00:01:42,146 --> 00:01:44,865
+When does escape analysis fail to optimize?
+
+28
+00:01:44,865 --> 00:01:48,468
+Returning the object — always escapes to the caller heap.
+
+29
+00:01:48,468 --> 00:01:52,578
+Storing in an instance field — escapes with the enclosing object.
+
+30
+00:01:52,578 --> 00:01:56,750
+Synchronized blocks publishing to shared state — escapes globally.
+
+31
+00:01:56,750 --> 00:02:00,986
+Logging or debug toString that captures references — subtle escape.
+
+32
+00:02:00,986 --> 00:02:05,412
+Inlining boundaries — if callee escapes, caller object may escape too.
+
+33
+00:02:05,412 --> 00:02:07,968
+Observing escape analysis in practice.
+
+34
+00:02:07,968 --> 00:02:12,339
+C2 compiler performs escape analysis by default — no flag needed.
+
+35
+00:02:12,339 --> 00:02:16,441
+PrintCompilation shows when methods reach C2 optimized level.
+
+36
+00:02:16,441 --> 00:02:20,342
+JITWatch and -XX:+PrintInlining reveal inlining decisions.
+
+37
+00:02:20,342 --> 00:02:25,655
+Async Profiler allocation samples drop when optimizations kick in after warmup.
+
+38
+00:02:25,655 --> 00:02:30,766
+Do not disable escape analysis in production — it is a core C2 optimization.
+
+39
+00:02:30,766 --> 00:02:32,348
+Three common mistakes.
+
+40
+00:02:32,348 --> 00:02:37,956
+One — assuming every new creates a heap object — escape analysis may elide it.
+
+41
+00:02:37,956 --> 00:02:43,493
+Two — benchmarking without warmup — measures interpreter, not optimized code.
+
+42
+00:02:43,493 --> 00:02:48,814
+Three — storing objects in fields to avoid allocation — guarantees escape.
+
+43
+00:02:48,814 --> 00:02:54,782
+Also — relying on object identity for non-escaping locals — may be scalar-replaced.
+
+44
+00:02:54,782 --> 00:02:59,528
+Write clear, short-lived objects — let the JIT optimize naturally.
+
+45
+00:02:59,528 --> 00:03:02,469
+Interview question — what is escape analysis?
+
+46
+00:03:02,469 --> 00:03:06,912
+JIT analyzes whether object references leave method or thread scope.
+
+47
+00:03:06,912 --> 00:03:11,094
+No escape — stack allocate or scalar replace fields into locals.
+
+48
+00:03:11,094 --> 00:03:14,754
+Escapes on return, field store, or cross-thread publish.
+
+49
+00:03:14,754 --> 00:03:19,262
+Reduces allocation rate and GC pressure invisibly at C2 compile time.
+
+50
+00:03:19,262 --> 00:03:23,706
+Warmup required — optimization appears after hot method compilation.
+
+51
+00:03:23,706 --> 00:03:29,989
+Heap objects are only part of JVM memory — classes and native buffers live elsewhere.
+
+52
+00:03:29,989 --> 00:03:33,241
+Episode Sixty — Metaspace and Native Memory.
+
+53
+00:03:33,241 --> 00:03:36,937
+Metaspace versus PermGen, direct buffers, and NMT.
+
+54
+00:03:36,937 --> 00:03:37,972
+See you there.

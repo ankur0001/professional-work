@@ -1,0 +1,204 @@
+1
+00:00:00,000 --> 00:00:12,279
+Episode Fifty-Five left us with a warmed-
+up JVM: hot methods become native code,
+and allocation keeps happening while that
+code runs. The heap fills. Something has
+to reclaim unreachable objects.
+
+2
+00:00:12,399 --> 00:00:22,359
+The question is no longer "does Java have
+GC?" — it is which collector should we
+run, and what are we trading when we
+choose? Imagine a checkout API under load.
+
+3
+00:00:22,479 --> 00:00:31,279
+Requests allocate short-lived objects —
+DTOs, temporary lists, buffers — while
+some data lives longer: sessions, caches,
+pools.
+
+4
+00:00:31,399 --> 00:00:43,000
+Your product owner does not ask for "GC."
+They ask for p99 latency under two hundred
+milliseconds, or for a nightly batch that
+finishes before the window closes. Those
+are different goals.
+
+5
+00:00:43,119 --> 00:00:56,559
+Collectors answer different goals with
+different algorithms. Treat collector
+choice as fashion — "what is everyone
+using?" — and you skip the only question
+that matters: what does this service owe
+its users?
+
+6
+00:00:56,739 --> 00:01:06,619
+Speak the trade space plainly. Throughput
+is useful work over time. Latency is how
+long requests wait when the collector
+pauses threads or steals CPU.
+
+7
+00:01:06,739 --> 00:01:20,259
+Footprint is how much memory and processor
+time the collector itself consumes. You
+rarely maximize all three. Tiny pauses
+often cost concurrent CPU; batch
+throughput often accepts harder pauses.
+
+8
+00:01:20,379 --> 00:01:33,019
+Pick for service-level objectives, then
+measure. Goals first, flags second —
+otherwise tuning is superstition. On
+modern server JDKs, G1 is a common default
+for a reason.
+
+9
+00:01:33,140 --> 00:01:42,939
+It is region-based: the heap is divided
+into regions, and G1 collects sets of
+regions rather than treating the whole
+heap as one slab every time.
+
+10
+00:01:43,060 --> 00:01:50,900
+That helps mixed workloads — lots of
+short-lived garbage plus some longer-lived
+data — without exotic configuration on day
+one.
+
+11
+00:01:51,019 --> 00:02:01,579
+Starting with G1 and learning to read its
+logs is more honest than hunting for a
+"best" collector the night before launch.
+When SLOs are about pause time, low-pause
+collectors enter.
+
+12
+00:02:01,699 --> 00:02:14,739
+ZGC and Shenandoah chase short pauses by
+doing more work concurrently with the
+application. They are not free lunches —
+they shift cost into CPU and footprint.
+Latency-sensitive services with headroom
+can win.
+
+13
+00:02:14,859 --> 00:02:26,699
+CPU-bound batch jobs on tight machines may
+lose: you paid for concurrency you did not
+need and slowed wall-clock completion.
+Parallel and throughput-oriented
+collectors still exist for that reason.
+
+14
+00:02:26,819 --> 00:02:39,579
+Batch jobs and offline pipelines often
+care more about finishing than about a
+pretty user-facing p99. A collector that
+pauses harder but reclaims efficiently can
+win on total time. "Newer" is not
+automatically better.
+
+15
+00:02:39,699 --> 00:02:47,219
+"Lower pause" is not automatically better.
+Fit the tool to the SLO. Region-based
+design is the mental model upgrade.
+
+16
+00:02:47,339 --> 00:02:53,419
+The JVM tries to reclaim where garbage
+actually is instead of treating every
+collection as a full-heap emergency.
+
+17
+00:02:53,539 --> 00:03:06,379
+Once you see regions, mixed collections
+and evacuation read as "work on the messy
+parts" rather than "boil the ocean." Make
+the choice operational — evidence, not
+vibes: Look at this bash for a moment.
+
+18
+00:03:06,499 --> 00:03:18,179
+UseG1GC selects the collector. -Xlog:gc*
+writes behavior you can inspect after a
+load test or incident. Without the log,
+choosing a collector is storytelling.
+
+19
+00:03:18,299 --> 00:03:28,939
+With it, you see pause times, occupancy
+after collections, and whether young or
+mixed collections dominate — validated
+under production-like load, not a laptop
+idle heap.
+
+20
+00:03:29,059 --> 00:03:37,859
+People fall down when they copy blog flags
+for a different heap and allocation
+pattern, chase zero pauses for a nightly
+report nobody watches live,
+
+21
+00:03:37,979 --> 00:03:42,219
+or switch collectors while an unbounded
+cache grows the live set forever.
+
+22
+00:03:42,339 --> 00:03:50,299
+The collector performs on the stage set by
+allocation rate and live set size.
+Changing the orchestra does not fix a
+score that never ends.
+
+23
+00:03:50,419 --> 00:04:01,899
+If an interview asks how you choose a
+collector, answer under constraints: match
+pause and throughput goals to the
+workload, respect heap and CPU budget,
+then measure under realistic load.
+
+24
+00:04:02,019 --> 00:04:11,979
+G1 for a solid server default; ZGC or
+Shenandoah when latency SLOs demand it and
+you can afford the cost; a throughput
+collector when batch wall-clock wins.
+
+25
+00:04:12,099 --> 00:04:18,339
+Say what you will look at in the GC log —
+and what you will refuse to change until
+allocation behavior is understood.
+
+26
+00:04:18,459 --> 00:04:28,939
+Today we moved from "GC exists" to "GC is
+a product decision with algorithms behind
+it." The next pain usually arrives after
+you pick a collector and the heap still
+climbs:
+
+27
+00:04:29,060 --> 00:04:31,740
+objects that should have died are still
+reachable.
+
+28
+00:04:31,860 --> 00:04:39,300
+That is not a collector bug. That is a
+reference leak — and the next skill is
+finding those chains with dumps and
+profilers.

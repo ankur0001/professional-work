@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:05,742
+Episode Seventy-Eight framed microservices — boundaries, data, and operational cost.
+
+2
+00:00:05,742 --> 00:00:11,278
+Distributed systems do not fail cleanly — they fail partially and intermittently.
+
+3
+00:00:11,278 --> 00:00:16,404
+Observability tells you what is happening — resilience limits blast radius.
+
+4
+00:00:16,404 --> 00:00:20,642
+Without both, on-call becomes guesswork and cascading outages.
+
+5
+00:00:20,642 --> 00:00:25,700
+Spring Boot Actuator, Micrometer, and Resilience4j show up in many stacks.
+
+6
+00:00:25,700 --> 00:00:29,938
+Today — logs, metrics, traces, timeouts, and circuit breakers.
+
+7
+00:00:29,938 --> 00:00:31,867
+Episode Seventy-Nine.
+
+8
+00:00:31,867 --> 00:00:34,532
+Observability and Resilience.
+
+9
+00:00:34,532 --> 00:00:37,730
+Three observability pillars — use them together.
+
+10
+00:00:37,730 --> 00:00:41,794
+Logs — event narratives with correlation IDs across services.
+
+11
+00:00:41,794 --> 00:00:46,258
+Metrics — RED and USE signals — rate, errors, duration, saturation.
+
+12
+00:00:46,258 --> 00:00:50,190
+Traces — request paths across process boundaries via spans.
+
+13
+00:00:50,190 --> 00:00:54,254
+OpenTelemetry is becoming the portable instrumentation layer.
+
+14
+00:00:54,254 --> 00:00:58,518
+If you cannot answer why latency spiked, your pillars have gaps.
+
+15
+00:00:58,518 --> 00:01:00,582
+Spring Boot operations surface.
+
+16
+00:01:00,582 --> 00:01:04,842
+Actuator health endpoints feed load balancers and orchestrators.
+
+17
+00:01:04,842 --> 00:01:09,569
+Micrometer binds timers and counters to Prometheus or similar backends.
+
+18
+00:01:09,569 --> 00:01:13,297
+Structured JSON logs beat free-text grepping under load.
+
+19
+00:01:13,297 --> 00:01:16,759
+Propagate trace and span IDs on every outbound call.
+
+20
+00:01:16,759 --> 00:01:21,352
+Alert on symptoms users feel — error rate and latency — not only CPU.
+
+21
+00:01:21,352 --> 00:01:24,154
+Resilience starts with timeouts and limits.
+
+22
+00:01:24,154 --> 00:01:28,845
+Every remote call needs a timeout — infinite waits hold threads hostage.
+
+23
+00:01:28,845 --> 00:01:32,951
+Bulkheads isolate pools so one dependency cannot starve others.
+
+24
+00:01:32,951 --> 00:01:37,121
+Rate limits protect you from stampeding clients and buggy loops.
+
+25
+00:01:37,121 --> 00:01:41,291
+Retries need jitter and budgets — blind retries amplify outages.
+
+26
+00:01:41,291 --> 00:01:45,266
+Idempotent APIs make safe retries possible — design for them.
+
+27
+00:01:45,266 --> 00:01:48,356
+Circuit breakers stop calling a sick dependency.
+
+28
+00:01:48,356 --> 00:01:52,733
+Closed — calls flow — open — fail fast — half-open — probe recovery.
+
+29
+00:01:52,733 --> 00:01:55,887
+Resilience4j integrates cleanly with Spring Boot.
+
+30
+00:01:55,887 --> 00:01:59,942
+Combine with fallbacks — cached responses or degraded features.
+
+31
+00:01:59,942 --> 00:02:03,804
+Failing fast is kinder than queueing until thread pools die.
+
+32
+00:02:03,804 --> 00:02:08,052
+Tune thresholds from real SLOs — not copy-pasted defaults forever.
+
+33
+00:02:08,052 --> 00:02:10,570
+Graceful degradation is a product skill.
+
+34
+00:02:10,570 --> 00:02:15,166
+Show partial results when recommendations are down — still take checkout.
+
+35
+00:02:15,166 --> 00:02:18,691
+Feature flags shut off expensive paths during incidents.
+
+36
+00:02:18,691 --> 00:02:23,224
+Read-only mode can save a write-path outage from becoming total failure.
+
+37
+00:02:23,224 --> 00:02:27,001
+Document dependency criticality — which outages are SEV-one.
+
+38
+00:02:27,001 --> 00:02:31,030
+Practice game days — resilience untested is resilience imagined.
+
+39
+00:02:31,030 --> 00:02:32,522
+Three common mistakes.
+
+40
+00:02:32,522 --> 00:02:37,135
+One — logs without correlation IDs — cannot stitch a single request.
+
+41
+00:02:37,135 --> 00:02:41,272
+Two — retries without backoff — turn a blip into a self-DDoS.
+
+42
+00:02:41,272 --> 00:02:45,681
+Three — health checks that always return up while the DB is down.
+
+43
+00:02:45,681 --> 00:02:50,564
+Also — paging on raw CPU — ignore saturation of thread pools and queues.
+
+44
+00:02:50,564 --> 00:02:53,888
+Observe what users feel — defend what users need.
+
+45
+00:02:53,888 --> 00:02:58,525
+Interview question — how do you keep a distributed Spring system reliable?
+
+46
+00:02:58,525 --> 00:03:02,911
+Instrument logs, metrics, and traces with correlation across services.
+
+47
+00:03:02,911 --> 00:03:07,172
+Timeout every dependency — bulkhead and rate-limit shared resources.
+
+48
+00:03:07,172 --> 00:03:11,683
+Circuit-break sick calls — degrade features instead of failing entirely.
+
+49
+00:03:11,683 --> 00:03:15,693
+Alert on SLOs — error rate and latency — with runnable runbooks.
+
+50
+00:03:15,693 --> 00:03:19,578
+Prove it with load tests and failure injection, not slideware.
+
+51
+00:03:19,578 --> 00:03:23,632
+The platform story is complete — next we wrap the interview arc.
+
+52
+00:03:23,632 --> 00:03:26,482
+Episode Eighty — Architecture Interview Wrap.
+
+53
+00:03:26,482 --> 00:03:31,106
+How to structure system-design answers using everything from this series.
+
+54
+00:03:31,106 --> 00:03:32,500
+See you in the finale.

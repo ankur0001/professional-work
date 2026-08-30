@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,714
+flatMap flattened pipelines. Parallelism multiplies throughput — sometimes.
+
+2
+00:00:04,714 --> 00:00:08,235
+parallelStream splits work across threads automatically.
+
+3
+00:00:08,235 --> 00:00:11,566
+ForkJoinPool common pool backs most parallel streams.
+
+4
+00:00:11,566 --> 00:00:14,583
+Speedups are not free — coordination has a cost.
+
+5
+00:00:14,583 --> 00:00:17,852
+Today — parallel streams with measurement, not hope.
+
+6
+00:00:17,852 --> 00:00:21,058
+Parallel when it pays. Sequential when it does not.
+
+7
+00:00:21,058 --> 00:00:22,800
+Episode Twenty-Nine.
+
+8
+00:00:22,800 --> 00:00:26,372
+Parallel Streams — fork-join in practice.
+
+9
+00:00:26,372 --> 00:00:29,572
+Parallel streams build on the fork-join framework.
+
+10
+00:00:29,572 --> 00:00:33,477
+Work splits into chunks. Threads process chunks concurrently.
+
+11
+00:00:33,477 --> 00:00:35,717
+Results combine when chunks finish.
+
+12
+00:00:35,717 --> 00:00:39,109
+Java uses a shared ForkJoinPool for parallel streams.
+
+13
+00:00:39,109 --> 00:00:42,374
+You do not manage threads manually — the pool does.
+
+14
+00:00:42,374 --> 00:00:45,510
+Understand the pool before you trust the speedup.
+
+15
+00:00:45,510 --> 00:00:48,980
+Call parallel or parallelStream to enable parallelism.
+
+16
+00:00:48,980 --> 00:00:53,028
+The same pipeline runs — but elements may process concurrently.
+
+17
+00:00:53,028 --> 00:00:56,755
+Intermediate operations can run in parallel on sub-splits.
+
+18
+00:00:56,755 --> 00:00:59,390
+Terminal operations coordinate the merge.
+
+19
+00:00:59,390 --> 00:01:02,603
+Sequential is the default — parallelism is opt-in.
+
+20
+00:01:02,603 --> 00:01:05,944
+One method call does not guarantee a faster program.
+
+21
+00:01:05,944 --> 00:01:08,109
+Ordering changes under parallelism.
+
+22
+00:01:08,109 --> 00:01:11,696
+Sequential streams preserve encounter order when required.
+
+23
+00:01:11,696 --> 00:01:14,913
+Parallel streams may process out of order for speed.
+
+24
+00:01:14,913 --> 00:01:17,387
+forEachOrdered restores order at a cost.
+
+25
+00:01:17,387 --> 00:01:21,841
+sorted still produces a sorted result — but work may shuffle internally.
+
+26
+00:01:21,841 --> 00:01:25,490
+If order matters for correctness, design for it explicitly.
+
+27
+00:01:25,490 --> 00:01:28,085
+The common pool is shared across the JVM.
+
+28
+00:01:28,085 --> 00:01:31,692
+Blocking tasks in parallel streams can starve other work.
+
+29
+00:01:31,692 --> 00:01:36,248
+Custom ForkJoinPool wrapping is possible for isolation — advanced topic.
+
+30
+00:01:36,248 --> 00:01:39,665
+Do not nest parallel streams on the same pool blindly.
+
+31
+00:01:39,665 --> 00:01:43,652
+IO-bound work usually belongs elsewhere — not parallel streams.
+
+32
+00:01:43,652 --> 00:01:47,196
+CPU-bound, large, independent chunks are the sweet spot.
+
+33
+00:01:47,196 --> 00:01:48,746
+When parallelism helps.
+
+34
+00:01:48,746 --> 00:01:52,923
+Large collections. Pure transformations. Minimal shared state.
+
+35
+00:01:52,923 --> 00:01:53,866
+When it hurts.
+
+36
+00:01:53,866 --> 00:01:56,493
+Small collections — overhead dominates.
+
+37
+00:01:56,493 --> 00:02:00,468
+Shared mutable accumulators without thread-safe collectors.
+
+38
+00:02:00,468 --> 00:02:04,174
+Measure on real hardware — micro-benchmarks lie easily.
+
+39
+00:02:04,174 --> 00:02:05,757
+Three common mistakes.
+
+40
+00:02:05,757 --> 00:02:08,923
+One — parallel by default without profiling.
+
+41
+00:02:08,923 --> 00:02:12,592
+Two — mutating shared fields inside map or forEach.
+
+42
+00:02:12,592 --> 00:02:16,405
+Three — assuming encounter order in parallel forEach.
+
+43
+00:02:16,405 --> 00:02:20,074
+Also — running blocking IO inside parallel streams.
+
+44
+00:02:20,074 --> 00:02:23,456
+Parallel code must still be correct code first.
+
+45
+00:02:23,456 --> 00:02:27,111
+Interview question — when would you use parallel streams?
+
+46
+00:02:27,111 --> 00:02:31,343
+Large in-memory data, CPU-heavy pure transforms, few side effects.
+
+47
+00:02:31,343 --> 00:02:34,806
+Mention ForkJoinPool and measurement before and after.
+
+48
+00:02:34,806 --> 00:02:38,526
+Contrast with sequential — default until proven otherwise.
+
+49
+00:02:38,526 --> 00:02:41,411
+Note ordering and thread-safety requirements.
+
+50
+00:02:41,411 --> 00:02:44,874
+That answer shows engineering judgment, not buzzwords.
+
+51
+00:02:44,874 --> 00:02:49,096
+Parallelism needs safe absence handling. Next — Optional.
+
+52
+00:02:49,096 --> 00:02:51,021
+Episode Thirty — Optional.
+
+53
+00:02:51,021 --> 00:02:55,391
+Present, empty, and chained without null checks everywhere.
+
+54
+00:02:55,391 --> 00:02:56,428
+See you there.

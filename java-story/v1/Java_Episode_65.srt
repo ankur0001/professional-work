@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,675
+Episode Sixty-Four explained safepoints and stop-the-world coordination.
+
+2
+00:00:04,675 --> 00:00:09,481
+Runtime pauses matter — but so does the time before your service is ready.
+
+3
+00:00:09,481 --> 00:00:14,545
+Cold JVM startup loads hundreds of classes, initializes JIT, and warms caches.
+
+4
+00:00:14,545 --> 00:00:20,195
+First requests after deploy are often slow — class loading and interpretation dominate.
+
+5
+00:00:20,195 --> 00:00:24,870
+Class Data Sharing and warmup strategies shrink that cold-start penalty.
+
+6
+00:00:24,870 --> 00:00:29,026
+Today — JVM startup phases, class loading cost, CDS, and warmup.
+
+7
+00:00:29,026 --> 00:00:30,941
+Episode Sixty-Five.
+
+8
+00:00:30,941 --> 00:00:33,260
+JVM Startup and Warmup.
+
+9
+00:00:33,260 --> 00:00:37,904
+JVM startup unfolds in distinct phases before your main method runs.
+
+10
+00:00:37,904 --> 00:00:42,752
+VM initialization — memory regions, thread system, and core subsystems.
+
+11
+00:00:42,752 --> 00:00:47,805
+Class loading and linking — bootstrap classes, then application classpath.
+
+12
+00:00:47,805 --> 00:00:52,107
+Interpreter executes bytecode until JIT identifies hot methods.
+
+13
+00:00:52,107 --> 00:00:57,024
+JIT compilation kicks in — C1 quick compile, then C2 optimizing compile.
+
+14
+00:00:57,024 --> 00:01:01,326
+Steady state — most hot code runs compiled native instructions.
+
+15
+00:01:01,326 --> 00:01:05,353
+Class loading is a major cold-start cost for large applications.
+
+16
+00:01:05,353 --> 00:01:09,757
+Each class — parse bytecode, verify, create Class object in metaspace.
+
+17
+00:01:09,757 --> 00:01:14,602
+Spring and dependency injection frameworks load thousands of classes at boot.
+
+18
+00:01:14,602 --> 00:01:19,006
+Fat JARs with many dependencies multiply class count and startup time.
+
+19
+00:01:19,006 --> 00:01:23,599
+Lazy initialization defers loading — but first touch still pays the cost.
+
+20
+00:01:23,599 --> 00:01:28,192
+Measure with -Xlog:class+load or startup JFR events — know your baseline.
+
+21
+00:01:28,192 --> 00:01:33,002
+Class Data Sharing — CDS — archives loaded classes for faster restart.
+
+22
+00:01:33,002 --> 00:01:36,849
+JVM builds a shared archive of classes at training time.
+
+23
+00:01:36,849 --> 00:01:41,796
+Subsequent JVM instances memory-map the archive — skip parse and verify.
+
+24
+00:01:41,796 --> 00:01:46,812
+AppCDS extends CDS to application classpath classes — not just bootstrap.
+
+25
+00:01:46,812 --> 00:01:51,897
+java -Xshare:dump with classpath creates the archive — -Xshare:on uses it.
+
+26
+00:01:51,897 --> 00:01:57,050
+Container images can bake the archive in — significant startup improvement.
+
+27
+00:01:57,050 --> 00:02:01,956
+Warmup brings the JVM to steady state before serving production traffic.
+
+28
+00:02:01,956 --> 00:02:06,726
+Synthetic load — replay health checks or canary requests after deploy.
+
+29
+00:02:06,726 --> 00:02:12,041
+AOT compilation — GraalVM native image — trades flexibility for instant start.
+
+30
+00:02:12,041 --> 00:02:17,152
+Tiered compilation — TieredStopAtLevel tunes how aggressively JIT compiles.
+
+31
+00:02:17,152 --> 00:02:21,990
+Spring AOT and CRaC explore checkpoint-restore for sub-second restarts.
+
+32
+00:02:21,990 --> 00:02:26,964
+Warmup is workload-specific — exercise the code paths users actually hit.
+
+33
+00:02:26,964 --> 00:02:30,068
+Measure startup like any other performance metric.
+
+34
+00:02:30,068 --> 00:02:33,916
+Time from process start to ready — health endpoint responding.
+
+35
+00:02:33,916 --> 00:02:37,764
+JFR ApplicationStarted and ClassLoad events break down phases.
+
+36
+00:02:37,764 --> 00:02:42,420
+Compare cold start versus warm restart — CDS impact is visible immediately.
+
+37
+00:02:42,420 --> 00:02:46,889
+Track P99 latency for first N requests after deploy — the warmup window.
+
+38
+00:02:46,889 --> 00:02:51,358
+Set SLOs on startup time — regressions from new dependencies are common.
+
+39
+00:02:51,358 --> 00:02:52,738
+Three common mistakes.
+
+40
+00:02:52,738 --> 00:02:57,567
+One — measuring only steady-state latency — ignoring cold-start after deploy.
+
+41
+00:02:57,567 --> 00:03:02,208
+Two — skipping warmup in staging — production first request pays the cost.
+
+42
+00:03:02,208 --> 00:03:06,222
+Three — adding dependencies without checking class count impact.
+
+43
+00:03:06,222 --> 00:03:11,364
+Also — assuming GraalVM native image fits every service — reflection limits apply.
+
+44
+00:03:11,364 --> 00:03:16,256
+Profile startup separately — it is a different problem than throughput tuning.
+
+45
+00:03:16,256 --> 00:03:20,516
+Interview question — how do you reduce JVM startup time?
+
+46
+00:03:20,516 --> 00:03:25,613
+Identify class loading cost — log class load events, count classes.
+
+47
+00:03:25,613 --> 00:03:30,634
+CDS and AppCDS — shared archives skip parse and verify on restart.
+
+48
+00:03:30,634 --> 00:03:35,198
+Warmup traffic before cutting over — JIT compiles hot paths.
+
+49
+00:03:35,198 --> 00:03:39,914
+Lazy init and smaller classpath reduce classes loaded at boot.
+
+50
+00:03:39,914 --> 00:03:43,794
+Measure time-to-ready — not just main method entry.
+
+51
+00:03:43,794 --> 00:03:49,514
+Startup and warmup complete the internals picture — time to tie it together.
+
+52
+00:03:49,514 --> 00:03:52,676
+Episode Sixty-Six — JVM Interview Wrap-Up.
+
+53
+00:03:52,676 --> 00:03:57,342
+Crisp explanations of heap, stack, GC, and JIT for interviews.
+
+54
+00:03:57,342 --> 00:03:58,396
+See you there.

@@ -1,0 +1,173 @@
+1
+00:00:00,000 --> 00:00:10,240
+Generics taught the compiler what a
+collection holds. Sometimes what we need
+to say is not a type parameter, but a note
+about intent — a note that another tool
+should notice.
+
+2
+00:00:10,359 --> 00:00:23,039
+Suppose you override toString on a domain
+class. You type carefully… and misspell
+the method as tostring. Without help, Java
+treats that as a brand-new method. Your
+override never runs.
+
+3
+00:00:23,159 --> 00:00:35,959
+Logging still shows the useless default.
+The compiler did not fail you; it simply
+never knew you meant to override. So the
+question appears: can we declare intent so
+the compiler verifies it?
+
+4
+00:00:36,140 --> 00:00:43,100
+Annotations are structured metadata
+attached to declarations. Compilers, build
+tools, and frameworks listen to them.
+
+5
+00:00:43,219 --> 00:00:55,939
+Think of an annotation as a structured
+sticky note: humans can read it, but more
+importantly, programs can read it without
+parsing comments. Look at this java for a
+moment. @Override is the smallest useful
+illustration.
+
+6
+00:00:56,060 --> 00:01:07,260
+It does not change runtime behavior by
+itself. It tells the compiler: this method
+must match a superclass or interface
+method. If the signature is wrong,
+compilation fails.
+
+7
+00:01:07,379 --> 00:01:19,819
+Put @Override on every method you believe
+is an override. Let the compiler argue
+with you early. Once you accept that
+metadata can drive tools, retention
+becomes the next natural question.
+
+8
+00:01:19,939 --> 00:01:28,700
+How long does the annotation live? Java
+defines three retentions. SOURCE means the
+annotation helps during compilation and
+may disappear afterward.
+
+9
+00:01:28,819 --> 00:01:41,859
+CLASS means it is recorded in the class
+file but not necessarily visible through
+normal reflection. RUNTIME means the
+annotation remains available while the
+program runs, so frameworks can read it
+with reflection.
+
+10
+00:01:41,979 --> 00:01:54,379
+Assuming all annotations exist at runtime
+is a common misunderstanding; check
+@Retention before you blame the framework.
+That runtime case is why annotations feel
+ubiquitous in modern Java.
+
+11
+00:01:54,499 --> 00:02:00,859
+Dependency injection, web mappings, test
+runners, and serializers lean on runtime
+annotations.
+
+12
+00:02:00,979 --> 00:02:13,780
+A method marked for a request path, a
+field marked for injection, a test marked
+to ignore — the framework scans, reads the
+metadata, and wires behavior. Look at this
+java for a moment.
+
+13
+00:02:13,899 --> 00:02:23,179
+A custom annotation like @Route does
+nothing alone. Custom annotations need
+processors at build time, or reflection at
+runtime, to mean anything.
+
+14
+00:02:23,299 --> 00:02:31,299
+Writing @Route without a reader is like
+writing a sticky note and never looking at
+it. What if we over-annotate instead of
+simplifying design?
+
+15
+00:02:31,479 --> 00:02:40,959
+Teams sometimes decorate every class with
+a forest of markers while the underlying
+API stays confused. Annotations do not
+replace good API design.
+
+16
+00:02:41,079 --> 00:02:50,719
+They amplify a design that already makes
+sense, and they can obscure one that does
+not. Prefer a clear method and a clear
+type. Then add the annotation that tools
+need.
+
+17
+00:02:50,839 --> 00:03:01,159
+Now watch how a test runner might use the
+same idea: Look at this java for a moment.
+A tiny runner would scan MathTest, keep
+methods annotated with @Test, and invoke
+them.
+
+18
+00:03:01,279 --> 00:03:11,679
+Without @Retention(RUNTIME), reflective
+lookup finds nothing and the suite looks
+empty for mysterious reasons. The
+annotation is a signal — the design still
+has to be worth signaling.
+
+19
+00:03:11,799 --> 00:03:22,439
+A missed override showed why intent needs
+verification. @Override answered with
+compiler-checked metadata. Retention
+explained how long that metadata survives.
+
+20
+00:03:22,559 --> 00:03:30,799
+Frameworks showed why runtime annotations
+dominate application architecture. Custom
+annotations revealed they need processors
+or reflection.
+
+21
+00:03:30,919 --> 00:03:41,479
+A final check when you invent a custom
+annotation: name the consumer in the same
+pull request. If nobody reads it — no
+processor, no reflective scanner, no
+compiler plugin — delete it.
+
+22
+00:03:41,599 --> 00:03:53,039
+Dead metadata is worse than no metadata
+because it teaches the team that
+annotations are decorative. And if
+frameworks read annotations at runtime by
+inspecting classes and methods, how does
+that inspection work?
+
+23
+00:03:53,219 --> 00:03:58,019
+What API lets a program look at itself?
+That curiosity is reflection.

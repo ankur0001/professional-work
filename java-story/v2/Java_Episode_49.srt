@@ -1,0 +1,154 @@
+1
+00:00:00,000 --> 00:00:12,359
+ThreadLocal taught us ambient state can
+leak across borrowed threads. Locks create
+a different freeze: nest them without a
+global order and the process can wait
+forever while every thread looks busy. The
+CPU is idle.
+
+2
+00:00:12,479 --> 00:00:22,599
+The health check fails. Nobody is making
+progress. That shape has a name. Deadlocks
+are circular waits. Prevent them with
+ordering, smaller critical sections, and
+timeouts.
+
+3
+00:00:22,719 --> 00:00:36,759
+Detect them with thread dumps when
+prevention fails. The classic story is two
+locks, two threads, opposite orders: Look
+at this java for a moment. Thread One
+holds A and waits for B. Thread Two holds
+B and waits for A.
+
+4
+00:00:36,879 --> 00:00:46,199
+Each will wait forever. No exception is
+thrown. The bug is a schedule that
+eventually happens in production and
+rarely in a single-threaded test.
+
+5
+00:00:46,319 --> 00:00:55,519
+The four classic conditions for deadlock
+are worth knowing as a checklist: mutual
+exclusion, hold-and-wait, no preemption,
+and circular wait.
+
+6
+00:00:55,639 --> 00:01:09,839
+Prevention usually attacks circular wait
+and hold-and-wait — by imposing a global
+lock order, by avoiding nested locks, or
+by using tryLock with timeouts so threads
+can back off instead of waiting forever:
+
+7
+00:01:09,959 --> 00:01:11,839
+Look at this java for a moment.
+
+8
+00:01:11,959 --> 00:01:19,079
+Timed tryLock does not magically make
+nested locking free of design. It gives
+you an exit when the order goes wrong or
+contention spikes.
+
+9
+00:01:19,199 --> 00:01:31,599
+Global lock order — always acquire account
+locks by ascending account id, for example
+— removes the cycle before it starts.
+Shrink nested locking: if you can redesign
+so one lock protects the invariant, do
+that.
+
+10
+00:01:31,719 --> 00:01:44,519
+Holding locks while calling alien code is
+how you nest locks you did not even see —
+the alien code acquires something else,
+and your order story dies offstage.
+Detection via thread dumps is the
+operational skill.
+
+11
+00:01:44,639 --> 00:01:54,119
+When a system hangs, capture threads —
+jcmd Thread.print, jstack, or your
+platform's dump. Look for threads blocked
+on monitors or owning locks another thread
+wants.
+
+12
+00:01:54,239 --> 00:02:02,919
+Learning to read that dump is as important
+as knowing the theory. What if tests never
+deadlock and production does? Because
+deadlock depends on timing.
+
+13
+00:02:03,039 --> 00:02:15,079
+Two opposite orders can run for days until
+a rare interleaving appears. Testing helps
+when you stress nested paths; it cannot
+prove absence. Design prevention beats
+hopeful testing.
+
+14
+00:02:15,199 --> 00:02:26,399
+Shrink the story to design rules you can
+enforce in review. One: document lock
+order for any pair that can nest. Two:
+never call unknown code while holding a
+lock.
+
+15
+00:02:26,519 --> 00:02:35,959
+Three: prefer tryLock with timeout when
+nesting is unavoidable and order cannot be
+globally guaranteed. Four: keep critical
+sections small so you need fewer nests.
+
+16
+00:02:36,079 --> 00:02:46,879
+When a dump shows a deadlock, fix the
+order or remove a lock — do not "retry the
+request" as the only strategy unless you
+also understand you are masking a design
+bug that will return under load.
+
+17
+00:02:46,999 --> 00:02:56,599
+Picture transfer locks on two accounts
+acquired in random order under load. One
+night the interleaving appears; support
+sees a hung JVM; the dump shows the cycle.
+
+18
+00:02:56,719 --> 00:03:07,399
+The fix is sorted lock order by account id
+— a one-line policy that removes the
+cycle. Most deadlock stories end with a
+boring ordering rule that should have been
+written first.
+
+19
+00:03:07,519 --> 00:03:19,679
+Prefer ordering and confinement over
+cleverness. Deadlocks are not a badge of
+advanced concurrency — they are usually a
+missing policy. Write the policy early;
+let the dump be a last resort.
+
+20
+00:03:19,799 --> 00:03:32,239
+After platform-thread concurrency, a
+modern twist changes the economics of
+blocking: virtual threads make the thread-
+per-request style scalable again for
+blocking I/O — with new pitfalls of their
+own.

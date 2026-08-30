@@ -1,0 +1,199 @@
+1
+00:00:00,000 --> 00:00:07,080
+Bytecode runs inside a model of memory. If
+you only remember "objects on the heap,"
+you already have a useful half-truth.
+
+2
+00:00:07,200 --> 00:00:20,480
+The other half — the stack — explains
+recursion limits, local variables, and why
+a crash dump's stack trace is not a heap
+dump. The stack is per-call bookkeeping.
+The heap is where objects live
+(generally).
+
+3
+00:00:20,599 --> 00:00:32,079
+Mixing those stories is how people misread
+incidents. Look at this java for a moment.
+When f is invoked, the JVM creates a stack
+frame for that call on the current
+thread's stack.
+
+4
+00:00:32,199 --> 00:00:40,479
+The frame holds locals — including x and
+the reference u — plus bookkeeping for
+return. new User() allocates an object on
+the heap.
+
+5
+00:00:40,599 --> 00:00:49,439
+The local variable does not contain the
+whole object; it contains a reference
+pointing at the heap object. When f
+returns, the frame is discarded.
+
+6
+00:00:49,559 --> 00:01:03,719
+If nothing else references that User, the
+object becomes eligible for garbage
+collection later. The reference died with
+the frame; the object's fate depends on
+reachability. Frames hold locals and
+return info.
+
+7
+00:01:03,839 --> 00:01:12,399
+Deep recursion creates many frames and can
+throw StackOverflowError. Huge or many
+objects can exhaust the heap and throw
+OutOfMemoryError.
+
+8
+00:01:12,519 --> 00:01:17,079
+Those errors sound similar in a chat
+message and mean different missing
+resources.
+
+9
+00:01:17,199 --> 00:01:29,759
+Confusing heap dumps with stack traces is
+a classic ops mix-up: one shows objects
+and retention; the other shows who called
+whom when something blew up. You often
+need both, but they answer different
+questions.
+
+10
+00:01:29,879 --> 00:01:43,560
+Escape analysis may elide allocations. The
+JIT sometimes proves an object never
+leaves a method and can allocate it in a
+way that avoids a full heap object — or
+scale it into registers and stack-like
+storage.
+
+11
+00:01:43,679 --> 00:01:54,759
+That is why "every new always hits the
+heap forever" is too strong. You need
+enough humility to know optimizations can
+change allocation stories after warmup.
+Look at this java for a moment.
+
+12
+00:01:54,879 --> 00:02:03,399
+Whether boxed becomes a real heap object
+in steady state depends on escape and JIT
+decisions. Microbenchmarks that ignore
+warmup lie about these effects.
+
+13
+00:02:03,519 --> 00:02:15,879
+GC cares about heap reachability from GC
+roots — including references in stack
+frames, static fields, and JNI handles. An
+object is collectible when no GC root can
+reach it.
+
+14
+00:02:16,000 --> 00:02:26,639
+Stack frames are temporary roots for their
+locals. That is why a long-lived thread
+stuck in a method can pin objects through
+locals, and why finishing the method can
+suddenly make a large graph collectible.
+
+15
+00:02:26,759 --> 00:02:38,079
+What if we ignore native and stack limits
+while staring only at -Xmx? We miss
+StackOverflowError, thread stack sizing,
+and native memory. Heap is central, not
+total.
+
+16
+00:02:38,199 --> 00:02:45,759
+Thread stacks have size limits configured
+by the runtime. Many threads mean many
+stacks — a footprint cost separate from
+the heap.
+
+17
+00:02:45,879 --> 00:03:00,319
+Virtual threads change the economics of
+stack usage for blocking workloads, but
+the conceptual split remains: frame state
+versus heap objects. When you read a stack
+overflow, look at recursion depth and huge
+frames.
+
+18
+00:03:00,439 --> 00:03:03,759
+When you read a heap OOM, look at
+retention charts.
+
+19
+00:03:03,879 --> 00:03:18,280
+A heap dump answers "what objects dominate
+and who retains them?" A stack trace
+answers "what was this thread doing?" An
+incident that shows both — a thread stuck
+holding a large structure in locals while
+others allocate
+
+20
+00:03:18,400 --> 00:03:20,920
+ — teaches why the two views belong
+together.
+
+21
+00:03:21,039 --> 00:03:35,280
+Picture a recursive XML parser that dies
+with StackOverflowError on a hostile deep
+document. The heap may be fine. Raising
+heap size does nothing. Bounding depth or
+switching to an explicit stack structure
+does.
+
+22
+00:03:35,399 --> 00:03:46,319
+The stack/heap split decides the fix
+family before you touch a single flag.
+Picture the opposite: a cache growing
+without eviction until OutOfMemoryError:
+Java heap space.
+
+23
+00:03:46,439 --> 00:03:52,839
+Stack traces show random request threads;
+the heap dump shows the cache. Different
+tool, different truth.
+
+24
+00:03:52,959 --> 00:04:04,879
+Hold a practical checklist: frames for
+locals and control; heap for objects; SO
+vs OOM as different resources; heap dumps
+vs stack traces as different questions;
+
+25
+00:04:04,999 --> 00:04:08,879
+escape analysis as a reason to measure
+before declaring allocation fate.
+
+26
+00:04:08,999 --> 00:04:17,719
+Prefer the right dump for the question. If
+the question is retention, dump the heap.
+If the question is "who called what," read
+the stack.
+
+27
+00:04:17,839 --> 00:04:26,879
+The next question is the reclaim story
+itself: how and when unused objects go
+away, and what your allocation rate does
+to that pace.
