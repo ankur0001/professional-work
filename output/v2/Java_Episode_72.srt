@@ -1,107 +1,142 @@
 1
-00:00:00,000 --> 00:00:12,839
+00:00:00,000 --> 00:00:13,320
 Episode Seventy-One said Spring wires
 beans so your code can depend on
 interfaces. Today we make that wiring
+honest. IoC inverts construction — your
+class no longer news up its collaborators.
 
 2
-00:00:12,959 --> 00:00:26,159
+00:00:13,439 --> 00:00:27,039
 Dependency injection is how the inverted
 control delivers those collaborators. The
 style you choose changes testability,
+clarity, and failure modes. Here is the
+shape you want in new code: Look at this
+java for a moment.
 
 3
-00:00:26,279 --> 00:00:35,719
+00:00:27,159 --> 00:00:36,759
 Constructor injection preferred. Required
 dependencies are explicit, final, and
 impossible to forget if you construct the
+object yourself in a unit test.
 
 4
-00:00:35,839 --> 00:00:44,559
+00:00:36,879 --> 00:00:45,959
 new OrderService(fakeRepo) is a complete
 story — no Spring container required. That
 is why testability skyrockets when
+constructors tell the truth.
 
 5
-00:00:44,679 --> 00:00:58,079
+00:00:46,079 --> 00:00:59,359
 Field injection quietly destroys that
 path: you need reflection or a container
 to populate private fields. The annotation
+looked shorter. The feedback loop got
+longer. Avoid field injection in new code.
 
 6
-00:00:58,199 --> 00:01:08,919
+00:00:59,479 --> 00:01:10,479
 Setters can work for optional
 dependencies; required ones belong in the
 constructor. Compare three constructors
+aloud. No-args plus setters: the object
+exists before it is ready.
 
 7
-00:01:09,039 --> 00:01:17,839
+00:01:10,599 --> 00:01:20,280
 Field injection: the object looks ready in
 source but is not constructible in tests.
 Constructor with required deps: the object
+cannot exist unfinished.
 
 8
-00:01:17,959 --> 00:01:31,359
+00:01:20,399 --> 00:01:32,399
 Frameworks that encourage unfinished
 objects make illegal states representable;
 constructor injection fights that. IoC
+versus service locator is worth saying
+aloud. Both can avoid new inside business
+logic.
 
 9
-00:01:31,479 --> 00:01:42,399
+00:01:32,519 --> 00:01:42,920
 IoC with injection pushes dependencies
 inward from the outside. Service locator
 pulls them from a deep hole mid-method.
+Pulling hides graph shape. Pushing reveals
+it.
 
 10
-00:01:42,519 --> 00:01:52,879
+00:01:43,039 --> 00:01:54,039
 In legacy migrations you may find getBean
 calls mid-method — treat them as debt and
 replace with injection at the boundary
+when you can. Scopes matter once the
+container owns lifecycle.
 
 11
-00:01:52,999 --> 00:02:05,639
+00:01:54,159 --> 00:02:05,920
 A singleton-scoped bean is one shared
 instance — fine for stateless services,
 dangerous if you stash request state in
+fields. Under concurrent requests, users
+see each other's data.
 
 12
-00:02:05,759 --> 00:02:20,639
+00:02:06,039 --> 00:02:21,199
 Prefer stateless services; pass request
 data as method arguments. Mixing scopes
 carelessly — injecting a narrower-scoped
+bean into a singleton without care —
+creates subtle bugs. Circular dependencies
+are a design smell.
 
 13
-00:02:20,759 --> 00:02:30,799
+00:02:21,319 --> 00:02:32,159
 OrderService needs InventoryService;
 InventoryService needs OrderService to
 reserve stock. Frameworks may inject
+proxies to boot anyway; the domain remains
+confused.
 
 14
-00:02:30,919 --> 00:02:43,039
+00:02:32,280 --> 00:02:45,080
 Sometimes the fix is a third type that
 owns the interaction, sometimes an event,
 sometimes splitting a god service. Treat
+the cycle as a design alarm. Put the
+preference hierarchy in one spoken
+checklist.
 
 15
-00:02:43,159 --> 00:02:57,560
+00:02:45,199 --> 00:02:59,879
 Required collaborators: constructor
 parameters, final fields. Optional
 collaborators: optional parameters or
+setters with defaults. Lookups mid-method:
+debt. Field injection in new code: avoid.
+Why constructor injection?
 
 16
-00:02:57,740 --> 00:03:05,980
+00:03:00,060 --> 00:03:09,140
 Required dependencies are explicit, final,
 and easy to unit test — then mention
 scopes and circular dependencies as the
+next maturity topics.
 
 17
-00:03:06,100 --> 00:03:12,180
+00:03:09,259 --> 00:03:16,219
 Once wiring is clear, teams still drown in
 configuration for HTTP servers, JSON,
 DataSource, and logging.
 
 18
-00:03:12,300 --> 00:03:21,939
+00:03:16,340 --> 00:03:26,980
 Spring Boot exists to make the happy path
 executable with opinions and auto-
 configuration — but what does that
+classpath-driven magic actually buy, and
+what can it hide?
