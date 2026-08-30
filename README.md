@@ -7,29 +7,29 @@ Personal professional hub for **Ankur Kumar** — freelance profiles, career ass
 ## Structure
 
 ```
+java-story/                     ← The Java Story (85-episode series + videos)
+├── narrative_review/
+├── video_build/
+└── output/v2/                  ← all episode mp4 / CAPTIONED / srt
+
 all-work/
-├── README.md
-├── freelance-profile/        ← LinkedIn, Upwork, portfolio grooming
-│   ├── 10-ANKUR-KUMAR-PROFILE-PACK.md   ← start here (personalized from resume)
+├── freelance-profile/          ← LinkedIn, Upwork, portfolio grooming
 │   ├── portfolio/index.html
-│   └── docs/                 ← GitHub Pages publish copy of the portfolio
-└── java-story/               ← The Java Story (85-episode series)
-    ├── narrative_review/
-    ├── video_build/
-    └── output/v2/
+│   └── docs/                   ← was repo-root /docs (Pages publish copy)
+└── ...
 ```
+
+## The Java Story
+
+- Overview: [`java-story/README.md`](java-story/README.md)
+- Videos: [`java-story/output/v2/`](java-story/output/v2/)
+- Narrations: [`java-story/narrative_review/`](java-story/narrative_review/)
 
 ## Freelance profile grooming
 
 - **Laptop setup:** [`all-work/LAPTOP-SETUP.md`](all-work/LAPTOP-SETUP.md)
 - Guide: [`all-work/freelance-profile/README.md`](all-work/freelance-profile/README.md)
-- Your copy-paste pack: [`all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md`](all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md)
-
-## The Java Story
-
-- Overview: [`all-work/java-story/README.md`](all-work/java-story/README.md)
-- Narrations: [`all-work/java-story/narrative_review/`](all-work/java-story/narrative_review/)
-- Video tooling: [`all-work/java-story/video_build/`](all-work/java-story/video_build/)
+- Pack: [`all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md`](all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md)
 
 ## Cloud Agent environment
 
