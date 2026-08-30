@@ -1,0 +1,171 @@
+1
+00:00:00,000 --> 00:00:13,039
+Suppose a teammate says, "This class only
+has a byte field, so each instance is
+basically one byte." Then they multiply by
+ten million instances, glance at the heap,
+and wonder why reality refused the
+arithmetic.
+
+2
+00:00:13,159 --> 00:00:22,519
+Episode Sixty-Two taught us to measure.
+Object layout is one reason measurements
+surprise people who estimate memory by
+field sizes alone. Every object pays for a
+header.
+
+3
+00:00:22,639 --> 00:00:34,439
+On HotSpot, that header carries identity
+and metadata the runtime needs — mark-
+related information, class pointer
+information, and related machinery that
+varies with JVM version and configuration.
+
+4
+00:00:34,559 --> 00:00:45,199
+You do not need every bit field to learn
+the lesson: a "tiny" object is never only
+its fields. Look at this java for a
+moment. Tiny looks like one byte of
+payload.
+
+5
+00:00:45,319 --> 00:00:56,999
+Alignment and padding round the instance
+size up to the platform's object alignment
+— commonly eight bytes on many
+configurations. One byte of business data
+can sit inside a much larger footprint.
+
+6
+00:00:57,119 --> 00:01:09,999
+Create millions of Tiny instances and you
+have paid for millions of headers and
+padding gaps. Arrays add their own story:
+array headers include length, then
+elements, still subject to alignment.
+
+7
+00:01:10,119 --> 00:01:20,799
+A byte[] is not simply "length bytes" in
+retained-size accounting. Empty arrays are
+not free either — thousands of empty
+collections "just in case" pay header
+taxes repeatedly.
+
+8
+00:01:20,919 --> 00:01:29,679
+Sometimes a shared empty singleton or null
+meaning empty is denser — with care for
+mutability. References complicate the
+arithmetic further.
+
+9
+00:01:29,799 --> 00:01:41,799
+A field of type String is not "the
+string's characters inside your object."
+It is a reference — a pointer-sized slot,
+often compressed — plus whatever the
+String itself costs elsewhere.
+
+10
+00:01:41,919 --> 00:01:56,239
+Ignoring reference costs is how people
+underestimate graphs of wrappers, tree
+nodes, and DTOs. Compressed oops use
+narrower references on heaps in a certain
+size range, trading a little decode work
+for denser memory.
+
+11
+00:01:56,359 --> 00:02:08,039
+On many heaps, references cost less than a
+full 64-bit pointer — which is also why
+whiteboard "pointer is eight bytes"
+estimates can be wrong either way. When
+you need precision, measure.
+
+12
+00:02:08,159 --> 00:02:19,919
+Field order can matter for packing. The
+JVM lays out fields with alignment rules;
+reordering source fields can change
+padding gaps. This is real — and a footgun
+for premature obsession.
+
+13
+00:02:20,039 --> 00:02:25,919
+Algorithms, data-structure choice, and
+retention policy usually dominate before
+field packing saves you.
+
+14
+00:02:26,039 --> 00:02:35,120
+Use layout knowledge to interpret heap
+numbers and to decide when many tiny
+objects should become denser
+representations — arrays of primitives,
+fewer wrappers,
+
+15
+00:02:35,239 --> 00:02:41,799
+flyweight-style sharing — not as an excuse
+to rearrange fields while an unbounded
+cache still grows.
+
+16
+00:02:41,919 --> 00:02:53,879
+Bring Tiny into a product decision. A
+telemetry pipeline boxes every metric
+sample into a small object with a few
+fields and a reference to a name string.
+Ten million samples later, headers and
+references dominate.
+
+17
+00:02:54,000 --> 00:03:07,479
+The fix might be a columnar structure —
+parallel arrays of primitives and a
+dictionary for names — not a field reorder
+on the small class. Layout knowledge
+showed why the heap exploded; data
+representation fixed it.
+
+18
+00:03:07,599 --> 00:03:14,840
+So why is a tiny object bigger than
+expected? Headers, alignment, and
+references add overhead. Say that in an
+interview.
+
+19
+00:03:14,960 --> 00:03:25,800
+Then say what you would do next: measure
+retained sizes with a heap dump or
+instrumentation, ask whether the design
+needs millions of tiny objects at all, and
+only then worry about packing.
+
+20
+00:03:25,920 --> 00:03:36,320
+Estimating by field sizes only, ignoring
+reference costs, and layout-obsessing
+before algorithms are the three mistakes
+this episode exists to prevent. Object
+layout makes the heap's accounting honest.
+
+21
+00:03:36,440 --> 00:03:46,000
+But pauses are not only about how big
+objects are. Sometimes latency appears
+when the JVM needs all threads to reach a
+safe state before a VM operation.
+
+22
+00:03:46,120 --> 00:03:54,320
+Those rendezvous points are safepoints —
+and time-to-safepoint can show up as
+mysterious latency even when "GC was slow"
+is not the whole story.

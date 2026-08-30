@@ -1,0 +1,159 @@
+1
+00:00:00,000 --> 00:00:12,759
+Your REST controller needs to load a user
+by email. You could write JDBC by hand.
+You could write a full EntityManager
+repository. Spring Data says: declare an
+interface, get a repository.
+
+2
+00:00:12,879 --> 00:00:26,399
+That speed is real — and so is the bill
+that arrives later if you forget SQL,
+transactions, and fetch behavior. Look at
+this java for a moment. JpaRepository
+gives you CRUD and paging helpers.
+
+3
+00:00:26,519 --> 00:00:39,839
+Query methods derive queries from names —
+convenient until findByAccountIdAndStatusI
+nAndCreatedAtBetweenOrderByCreatedAtDesc
+becomes a novel. At that point a named
+@Query or a criteria approach can be
+clearer.
+
+4
+00:00:39,959 --> 00:00:49,959
+Spring Data did not remove SQL thinking;
+it deferred it. Explain plans still
+matter. Indexes still matter. Transaction
+boundaries decide consistency.
+
+5
+00:00:50,079 --> 00:00:55,359
+A service method that updates an order and
+records an outbox event should succeed or
+fail together.
+
+6
+00:00:55,479 --> 00:01:03,319
+Service-layer @Transactional is a common
+pattern so controllers stay thin and
+repositories do not each invent their own
+transaction story.
+
+7
+00:01:03,439 --> 00:01:14,399
+Marking every repository method
+transactional can create chatty
+transactions and lazy-loading surprises.
+Prefer coarse enough service transactions
+with clear read-only flags for query
+paths.
+
+8
+00:01:14,519 --> 00:01:23,560
+Connect this to the outbox teaser you will
+meet in event-driven design: update a row
+and publish a message in two separate
+steps without a shared transactional
+story,
+
+9
+00:01:23,679 --> 00:01:26,919
+and you will lose messages or double-apply
+effects under failure.
+
+10
+00:01:27,039 --> 00:01:38,119
+N+1 queries are the pitfall that turns
+demos into outages. You load a list of
+orders, then touch order.getLines() per
+order, and each touch fires another query.
+
+11
+00:01:38,239 --> 00:01:52,560
+Lazy loading outside a session throws
+LazyInitializationException. Make N+1
+detection part of Definition of Done for
+list endpoints: enable SQL logging in a
+test profile, hit the endpoint, count
+statements.
+
+12
+00:01:52,679 --> 00:02:06,199
+If count scales with list size, fix fetch
+strategy — join fetch, entity graphs — or
+reshape into a join or dedicated read
+model. The code looks clean while the
+database burns. Do not spill entities into
+web layers.
+
+13
+00:02:06,319 --> 00:02:13,799
+A mapper that touches lazy fields after
+the transaction closed is another reason
+Episode Seventy-Four refused to return
+entities.
+
+14
+00:02:13,919 --> 00:02:27,479
+God repositories that know every query in
+the company become dumpsters; split by
+aggregate or use case when the interface
+grows without bound. Migrations matter.
+Auto-ddl in production is not a strategy.
+
+15
+00:02:27,599 --> 00:02:40,799
+Flyway or Liquibase — or your team's
+equivalent — version schema changes beside
+code. A repository method that assumes a
+new column will fail until the migration
+lands. Treat schema changes as reviewed
+artifacts.
+
+16
+00:02:40,919 --> 00:02:50,919
+Pair with expand/contract practices when
+zero downtime matters. Read-write
+splitting appears as you scale, but the
+first victory is simpler: know which
+queries your page runs.
+
+17
+00:02:51,039 --> 00:02:58,879
+Spring Data makes it easy to hide a dozen
+queries behind a tidy method name. Logging
+and metrics bring them back into view.
+
+18
+00:02:59,000 --> 00:03:09,840
+Persistence literacy is still database
+literacy — repositories are a dialect, not
+an escape hatch. Biggest JPA pitfall? Lazy
+loading surprises and N+1 queries.
+
+19
+00:03:09,960 --> 00:03:23,960
+Say it, then say how you detect it: SQL
+logging in staging, metrics on query
+counts per request, and SQL-counting tests
+on critical list endpoints in CI. That
+turns a trivia answer into an engineering
+answer.
+
+20
+00:03:24,080 --> 00:03:34,680
+Spring Data speeds repositories — keep
+saying the second half aloud — you still
+own SQL and N+1 reality. Persistence
+without security is an open door.
+
+21
+00:03:34,800 --> 00:03:42,480
+The next question is how Spring Security
+draws that door — filter chains,
+authentication versus authorization, and
+never inventing crypto.

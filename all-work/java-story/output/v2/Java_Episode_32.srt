@@ -1,0 +1,190 @@
+1
+00:00:00,000 --> 00:00:10,119
+Time became a typed contract. That helps
+when values are valid. It does not help
+when the world refuses to cooperate.
+Suppose your service must load a
+configuration file at startup.
+
+2
+00:00:10,239 --> 00:00:19,359
+The happy path reads, parses, and
+continues. The unhappy path is just as
+real: the file is missing, the disk is
+full, permissions deny access.
+
+3
+00:00:19,479 --> 00:00:29,879
+Ignore failure and you get a crash with no
+context — or a silent wrong default that
+looks healthy until noon traffic arrives.
+So how should a method announce that it
+could not do its job?
+
+4
+00:00:30,059 --> 00:00:43,779
+Exceptions are control flow for failure.
+Treat them as part of the API, not an
+embarrassing side channel mentioned only
+in comments. Java splits checked and
+unchecked exceptions, and the split is a
+design choice.
+
+5
+00:00:43,899 --> 00:00:50,459
+Checked exceptions must be declared or
+handled — they push the caller to
+acknowledge a failure mode the type system
+can see.
+
+6
+00:00:50,579 --> 00:01:04,139
+Unchecked exceptions — subclasses of
+RuntimeException — need not be declared;
+they often represent programming mistakes
+or failures you do not expect every caller
+to recover from locally. Neither family is
+always better.
+
+7
+00:01:04,259 --> 00:01:14,219
+The question is whether the failure is
+part of the method's honest contract. Here
+is wrapping with context instead of
+leaking a low-level type through every
+layer: Look at this java for a moment.
+
+8
+00:01:14,339 --> 00:01:26,699
+read() can fail with IOException. Catching
+and throwing UncheckedIOException with a
+message and e as the cause preserves the
+original failure while changing how
+callers must react. The cause chain
+matters.
+
+9
+00:01:26,819 --> 00:01:37,459
+Catch and throw a new exception without
+the cause, and you erase the forensic
+trail production debugging needs. Do not
+swallow exceptions: Look at this java for
+a moment.
+
+10
+00:01:37,579 --> 00:01:46,060
+An empty catch makes the program continue
+as if success happened. If you catch,
+either recover meaningfully, translate
+with context, or rethrow.
+
+11
+00:01:46,179 --> 00:01:57,299
+Logging and continuing can be valid — only
+as intentional policy, not as a reflex to
+silence the compiler. finally exists for
+cleanup that must run whether the try
+succeeded or threw.
+
+12
+00:01:57,419 --> 00:02:06,339
+You will still see it in older code: Look
+at this java for a moment. This pattern is
+easy to almost get right and hard to get
+perfect when close() itself throws.
+
+13
+00:02:06,459 --> 00:02:16,779
+Modern Java prefers try-with-resources
+when the thing you opened implements
+AutoCloseable — and that story deserves
+its own space, because the close path has
+subtle failure modes.
+
+14
+00:02:16,899 --> 00:02:26,819
+Hold the rule lightly: if the point of the
+block is "close this resource," a better
+tool is coming. Meaningful exception types
+are the other half of API design.
+
+15
+00:02:26,939 --> 00:02:31,219
+A generic RuntimeException("failed") tells
+the caller almost nothing.
+
+16
+00:02:31,339 --> 00:02:45,819
+A domain exception —
+OrderNotFoundException,
+InvalidTaxRateException — lets upper
+layers choose policy: retry, skip, surface
+to the user, page an operator. Create
+types when the failure mode is part of
+your vocabulary.
+
+17
+00:02:45,939 --> 00:02:55,939
+What if we use exceptions for ordinary
+control flow — throwing to mean "not
+found" on a hot path that is usually
+empty? It can work mechanically and still
+be the wrong shape.
+
+18
+00:02:56,059 --> 00:03:08,379
+Exceptions are expensive compared with a
+normal branch, and they obscure the
+expected path. Prefer return values,
+Optional, or explicit result types for
+common, non-exceptional outcomes.
+
+19
+00:03:08,499 --> 00:03:20,819
+Reserve throws for genuine failure. Think
+about the call stack. A low-level I/O
+helper throws IOException. A repository
+catches it and throws ConfigLoadException
+with the path and the cause.
+
+20
+00:03:20,939 --> 00:03:27,539
+A startup component decides whether to
+abort or fall back. Each layer adds the
+decision it is qualified to make.
+
+21
+00:03:27,659 --> 00:03:36,739
+That is what "design exceptions like an
+API" means — not inventing twenty
+subclasses for fun, but placing failure
+information where policy can use it.
+
+22
+00:03:36,859 --> 00:03:47,099
+If every method only logs and returns null
+on failure, you have not removed
+exceptions. You have replaced them with a
+quieter protocol callers must remember to
+check.
+
+23
+00:03:47,219 --> 00:03:57,339
+Sometimes that quieter protocol is
+Optional — right for expected absence. For
+true operational failure, an exception
+that preserves context is often the
+clearer contract.
+
+24
+00:03:57,459 --> 00:04:06,779
+Once you accept that resources must open
+and may fail, a sharper problem appears:
+even on the success path, an open file,
+socket, or stream must be closed.
+
+25
+00:04:06,899 --> 00:04:12,499
+Doing that correctly in every finally is
+tedious — and easy to get slightly wrong
+when close itself throws.

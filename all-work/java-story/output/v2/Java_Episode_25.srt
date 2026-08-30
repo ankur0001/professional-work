@@ -1,0 +1,145 @@
+1
+00:00:00,000 --> 00:00:13,599
+Queues ordered things by arrival. Users
+often want a different order: alphabetical
+names, cheapest price first, newest
+message on top. Sorting is comparison
+policy — make that policy explicit and
+consistent.
+
+2
+00:00:13,719 --> 00:00:26,719
+Suppose you have a list of users. One
+screen sorts by name. Another sorts by
+age, then name. If User hard-codes one
+compareTo, every screen fights over the
+"natural" order.
+
+3
+00:00:26,839 --> 00:00:39,279
+The natural question is: can the
+collection stay dumb while the sort rule
+stays swappable? Java splits that
+responsibility. Comparable means natural
+order — the type itself knows how it
+compares.
+
+4
+00:00:39,399 --> 00:00:53,879
+Comparator means an external strategy — a
+separate rule you pass into sort or into
+sorted collections. Look at this java for
+a moment. Walk the policy.
+comparing(User::name) sorts by name.
+
+5
+00:00:53,999 --> 00:01:04,879
+thenComparingInt(User::age) breaks ties by
+age. Two Adas end up with age twenty
+before thirty-six. The User type did not
+need to implement Comparable.
+
+6
+00:01:05,000 --> 00:01:15,159
+The strategy lived at the call site —
+exactly where the screen's requirement
+lived. thenComparing chains are how real
+sorts grow without becoming unreadable
+nests of manual compare methods.
+
+7
+00:01:15,280 --> 00:01:20,079
+Start with the primary key, chain the
+secondary, reverse when needed with
+reversed().
+
+8
+00:01:20,200 --> 00:01:29,560
+Keep each piece a pure comparison: given
+two elements, return a negative number,
+zero, or positive — and do not mutate the
+world while deciding.
+
+9
+00:01:29,680 --> 00:01:39,640
+Natural order still matters when a type
+truly has one obvious sequence — integers,
+strings, enums, timestamps. Look at this
+java for a moment.
+
+10
+00:01:39,760 --> 00:01:50,840
+Now TreeSet or Collections.sort can use
+that order without a separate comparator.
+Choose Comparable when the order is
+intrinsic. Choose Comparator when the
+order is contextual.
+
+11
+00:01:50,960 --> 00:02:02,000
+Consistency with equals matters for sorted
+sets and maps. If two elements compare as
+zero — "equal for sorting" — a TreeSet
+will treat them as duplicates even when
+equals says they differ.
+
+12
+00:02:02,120 --> 00:02:13,000
+That mismatch drops data silently. Java's
+object sort uses TimSort, a stable
+mergesort variant. Stability means equal
+elements keep their relative order from
+before the sort.
+
+13
+00:02:13,120 --> 00:02:25,480
+That property matters when you sort in
+stages or when "equal under this
+comparator" should not scramble an earlier
+arrangement. What if comparison policy
+stays implicit? Each screen invents a
+slightly different rule.
+
+14
+00:02:25,599 --> 00:02:37,680
+Extracting a named Comparator makes the
+policy reviewable and reusable. Look at
+this java for a moment. Null-friendly
+comparators are another production detail.
+Real data has missing names.
+
+15
+00:02:37,799 --> 00:02:52,639
+Look at this java for a moment. You
+declare where nulls go instead of crashing
+mid-sort. Never write a compare method
+that subtracts ints and risk overflow —
+prefer Integer.compare and
+Comparator.comparingInt.
+
+16
+00:02:52,759 --> 00:03:09,319
+Reverse order is a one-liner: Look at this
+java for a moment. Arrival order was not
+enough. Comparable covered intrinsic
+order; Comparator covered external
+strategy. thenComparing chains expressed
+multi-key sorts.
+
+17
+00:03:09,439 --> 00:03:12,680
+Consistency with equals protected sorted
+sets and maps.
+
+18
+00:03:12,800 --> 00:03:24,320
+Once we can filter, transform, and sort
+collections, another itch appears:
+expressing bulk operations as a pipeline —
+"keep these, transform those, collect the
+result" — without handwriting every loop.
+
+19
+00:03:24,439 --> 00:03:27,680
+That style has a name in modern Java:
+streams.

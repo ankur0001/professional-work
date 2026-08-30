@@ -1,0 +1,166 @@
+1
+00:00:00,000 --> 00:00:13,560
+Packages gave our types a home. That does
+not yet solve a quieter mess that shows up
+the moment a domain has a fixed
+vocabulary. Suppose we are building an
+order system. An order can be new, paid,
+or shipped.
+
+2
+00:00:13,679 --> 00:00:26,960
+The fastest way to encode that is a string
+field: "NEW", "PAID", "SHIPPED". It
+compiles. It demos well. Then someone
+writes "Payed", or "paid", or "SHIPED".
+The compiler shrugs.
+
+3
+00:00:27,079 --> 00:00:33,799
+The bug arrives in production as a status
+that matches nothing — a branch never
+taken, a warehouse never notified.
+
+4
+00:00:33,920 --> 00:00:48,840
+So a natural question appears: if the set
+of legal values is known and closed, why
+are we letting arbitrary text pretend to
+be a state? That question is why enums
+exist. An enum is a type-safe set of named
+constants.
+
+5
+00:00:48,960 --> 00:01:02,679
+Instead of magic strings or magic ints,
+you get a vocabulary the compiler
+understands. Look at this java for a
+moment. Status is now a real type. A
+method that takes Status cannot
+accidentally receive "SHIPED".
+
+6
+00:01:02,799 --> 00:01:09,319
+The allowed values live in one place.
+Interviewers sometimes ask why enums beat
+public static final int.
+
+7
+00:01:09,439 --> 00:01:20,319
+The short answer is type safety,
+namespacing, and room for attached
+behavior — an int constant named PAID is
+still just another int that can be
+confused with a quantity or an HTTP code.
+
+8
+00:01:20,439 --> 00:01:30,239
+But enums in Java are not only labels.
+Once you have a named state, behavior
+often wants to hang off that state. Is
+this status terminal? Can we refund from
+here?
+
+9
+00:01:30,420 --> 00:01:40,460
+That pressure turns the enum into a small
+class with fields and methods. Look at
+this java for a moment. NEW, PAID, and
+SHIPPED are the only instances of Status.
+
+10
+00:01:40,579 --> 00:01:49,620
+terminal() answers a domain question
+without a scattered if chain of strings.
+Call sites write order.status().terminal()
+and stay readable.
+
+11
+00:01:49,739 --> 00:01:59,619
+You can also give constants fields — a
+display label, a sort rank — as long as
+you treat that data as part of the fixed
+vocabulary, not as a mutable global.
+
+12
+00:01:59,739 --> 00:02:13,979
+Enums also shine with switch, because the
+set of cases is finite. Modern Java can
+warn or error when a switch is not
+exhaustive. Look at this java for a
+moment. Each case is a real constant, not
+a quoted guess.
+
+13
+00:02:14,099 --> 00:02:26,900
+If someone later adds CANCELLED to the
+enum, the incomplete switch becomes a
+compile-time problem instead of a silent
+default path. Model states explicitly,
+then let the compiler herd every place
+that must react.
+
+14
+00:02:27,019 --> 00:02:42,819
+What if we skip enums and keep stringly-
+typed status codes? Look at this java for
+a moment. It looks small. Then "Paid"
+sneaks in from a form, or a partner API
+sends "paid". Equality fails. The order
+never ships.
+
+15
+00:02:42,939 --> 00:02:57,459
+Mutable enum fields cause a different
+surprise: if you stash changing data on an
+enum constant, every caller shares that
+mutation. Prefer enums as immutable
+vocabulary with behavior, not as disguised
+global variables.
+
+16
+00:02:57,579 --> 00:03:09,179
+There is one more practical detail once
+enums become common: collections
+specialized for them. EnumSet and EnumMap
+are fast, compact structures tuned for
+enum keys and values.
+
+17
+00:03:09,299 --> 00:03:21,139
+If you need a set of flags that are
+themselves enum constants, reach for
+EnumSet before a general HashSet. Let's
+put the enum inside a small order story so
+the vocabulary has somewhere to live.
+
+18
+00:03:21,259 --> 00:03:30,179
+Look at this java for a moment. The field
+is a Status, not a String. markPaid
+refuses nonsense transitions instead of
+comparing quoted text.
+
+19
+00:03:30,299 --> 00:03:42,459
+When you later add CANCELLED, every place
+that switches on status() becomes a
+checklist the compiler can help enforce.
+We started with status strings that
+compiled and lied. Enums answered with
+type-safe constants.
+
+20
+00:03:42,579 --> 00:03:48,259
+Fields and methods let vocabulary carry
+behavior. Switch made exhaustive handling
+natural.
+
+21
+00:03:48,379 --> 00:04:02,499
+Once constants can be objects, another
+pressure appears: collections and APIs
+often want objects, while hot paths still
+want primitives. How does an int sit
+inside a List? That bridge is wrappers and
+autoboxing.

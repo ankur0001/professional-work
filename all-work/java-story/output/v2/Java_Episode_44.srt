@@ -1,0 +1,169 @@
+1
+00:00:00,000 --> 00:00:11,560
+Atomics help when the problem is updating
+a value. Many concurrent designs are not
+about a value at all — they are about
+timing. Three workers must finish warming
+caches before the server accepts traffic.
+
+2
+00:00:11,679 --> 00:00:23,079
+A parallel algorithm must wait until every
+thread reaches the end of a phase before
+any starts the next. At most five database
+connections may be checked out at once.
+Those are coordination problems.
+
+3
+00:00:23,199 --> 00:00:36,439
+Reinventing them with bare wait and notify
+is possible and usually unwise. Latches,
+barriers, and semaphores are the standard
+synchronizers for those shapes. Pick the
+simplest tool that matches the phase you
+mean.
+
+4
+00:00:36,560 --> 00:00:48,640
+CountDownLatch is a one-shot gate. You set
+a count. Workers call countDown when they
+finish a step. Waiters call await until
+the count reaches zero. Look at this java
+for a moment. Three workers start.
+
+5
+00:00:48,760 --> 00:00:58,080
+Each counts down once when ready. The
+coordinator blocks in await until all
+three have counted down. Then it opens the
+gate and continues. The latch does not
+reset.
+
+6
+00:00:58,200 --> 00:01:10,719
+That one-shot nature is a feature when
+startup or a single rendezvous is the
+point. Forgetting to countDown on an error
+path is the classic hang: one worker
+throws, never counts down, and await waits
+forever.
+
+7
+00:01:10,840 --> 00:01:20,400
+Use try/finally so the count moves even
+when work fails — or fail the whole
+startup explicitly instead of stalling.
+CyclicBarrier is for recurring phases.
+
+8
+00:01:20,520 --> 00:01:34,040
+Parties arrive, wait until all are
+present, then the barrier releases and can
+be reused for the next round: Look at this
+java for a moment. Four workers finish
+phase one, meet at await, then start phase
+two together.
+
+9
+00:01:34,160 --> 00:01:45,920
+Latch versus barrier is the practical
+contrast: one-shot event set versus
+reusable multi-phase rendezvous. Semaphore
+manages permits. Acquire a permit to
+enter; release when done.
+
+10
+00:01:46,040 --> 00:01:54,560
+A semaphore of five is a clean way to
+limit concurrent access to a scarce
+resource without hand-rolling a counter
+and condition pair: Look at this java for
+a moment.
+
+11
+00:01:54,680 --> 00:02:04,960
+Leaking permits — acquiring and forgetting
+to release on exceptions — slowly starves
+the system. The finally release is the
+same ownership instinct as unlocking a
+ReentrantLock.
+
+12
+00:02:05,080 --> 00:02:15,240
+What if we skip these utilities and write
+our own wait/notify protocol for every
+gate? You can, and you will relearn missed
+signals, spurious wakes, and forgotten
+notifies.
+
+13
+00:02:15,360 --> 00:02:22,760
+Prefer the named tool whose contract
+matches the story you are telling in the
+code review. A teaching contrast locks the
+vocabulary.
+
+14
+00:02:22,880 --> 00:02:31,600
+Use a latch when the story is "wait until
+N one-time events happen." Use a barrier
+when the story is "N parties meet at the
+end of each phase,
+
+15
+00:02:31,720 --> 00:02:45,120
+then repeat." Use a semaphore when the
+story is "at most N may enter." If you
+catch yourself explaining a custom
+wait/notify graph that matches one of
+those sentences, delete the custom graph
+and use the synchronizer.
+
+16
+00:02:45,240 --> 00:02:53,760
+Error paths deserve one more beat. A
+worker that fails before countDown is
+indistinguishable from a worker that never
+existed — to the waiter.
+
+17
+00:02:53,880 --> 00:03:05,000
+Decide whether failure counts down and
+records an error, or whether failure
+aborts the latch by other means. Silence
+is the worst policy; hangs are how silence
+presents itself.
+
+18
+00:03:05,120 --> 00:03:13,920
+Picture three initializer threads warming
+cache, connecting to a broker, and loading
+feature flags. A latch of three gates the
+HTTP acceptor.
+
+19
+00:03:14,040 --> 00:03:25,400
+If flag loading fails, count down anyway
+and set a failed state the acceptor checks
+— or refuse to open the gate and crash the
+process loudly. Either policy beats a
+silent hang.
+
+20
+00:03:25,520 --> 00:03:30,920
+Name the synchronizer after the phase:
+startupLatch, phaseBarrier, dbPermits.
+
+21
+00:03:31,040 --> 00:03:40,840
+Clear names prevent the next developer
+from using a latch where a barrier
+belonged simply because both "wait for
+others." Once producers create work faster
+than consumers can take it,
+
+22
+00:03:40,960 --> 00:03:47,520
+another coordination structure dominates:
+a queue that blocks, bounds memory, and
+carries jobs between stages.

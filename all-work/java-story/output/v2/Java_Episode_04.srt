@@ -1,0 +1,254 @@
+1
+00:00:00,000 --> 00:00:12,119
+In the previous episode, we gave a Java
+program a place to live: packages,
+classes, and main. That solves structure.
+It does not yet solve a more basic need.
+
+2
+00:00:12,239 --> 00:00:23,039
+Before our program can work with
+information, it needs somewhere to keep
+that information. Let's say we are
+building a student application and the
+first thing we need to know about a
+student is their age.
+
+3
+00:00:23,159 --> 00:00:36,359
+We could simply write 25 in our program,
+but later we would have no idea what that
+number represents. Is it the student's
+age? Their marks? The number of subjects?
+We need to give that value a meaningful
+identity.
+
+4
+00:00:36,479 --> 00:00:48,319
+That is where a variable comes in. A
+variable allows us to give a name to a
+piece of information so that our program
+can remember it and work with it later. So
+we might write: Look at this java for a
+moment.
+
+5
+00:00:48,439 --> 00:00:58,039
+Now the number 25 has meaning because we
+have associated it with the name age. But
+notice something else: we have also
+written int. Why do we need that?
+
+6
+00:00:58,219 --> 00:01:10,980
+Because Java needs to know what kind of
+information we are planning to store. Not
+every piece of information is a whole
+number. A student's name is text. A
+percentage might contain decimal values.
+
+7
+00:01:11,099 --> 00:01:21,859
+Whether a student has passed can be true
+or false. So the question that follows
+naturally from naming a value is: what
+kind of value is this? That question
+brings us to data types.
+
+8
+00:01:21,979 --> 00:01:29,219
+Variables give us a way to name and
+remember information. Data types tell Java
+what kind of information that variable
+represents.
+
+9
+00:01:29,339 --> 00:01:40,299
+Together they turn a bare number into
+something the program — and the compiler —
+can reason about. What if we tried to
+avoid types and stored everything as text?
+Look at this java for a moment.
+
+10
+00:01:40,419 --> 00:01:51,419
+You can print those strings. But the
+moment you try to add marks, compare ages
+numerically, or enforce a rule like "age
+cannot be negative," the program has to
+guess what the text means.
+
+11
+00:01:51,539 --> 00:02:02,339
+Java's type system moves those decisions
+earlier. The compiler helps catch whole
+classes of mistakes before the program
+runs. Types are not bureaucracy. They are
+a design tool.
+
+12
+00:02:02,459 --> 00:02:15,139
+Once you accept that types matter, another
+distinction appears quickly. Java does not
+treat every type the same way in memory.
+Some variables hold values directly.
+Others hold references to objects.
+
+13
+00:02:15,259 --> 00:02:33,739
+Primitives hold values directly. Familiar
+ones are int, long, double, boolean, and
+char. A primitive variable is never null.
+References point to objects on the heap —
+String, arrays, and later the classes you
+write.
+
+14
+00:02:33,859 --> 00:02:46,099
+A reference can be null, which means it is
+not pointing at any object right now. Look
+at this java for a moment. Walk through
+what is happening. count remembers the
+integer ten as a value.
+
+15
+00:02:46,219 --> 00:02:57,699
+name does not store every character inside
+the variable slot the way count stores
+ten; it stores a reference to a String
+object. ready and percentage are again
+primitive values, just of different kinds.
+
+16
+00:02:57,819 --> 00:03:09,979
+This raises a practical question: when we
+assign one variable to another, what
+exactly gets copied? For primitives,
+assignment copies the value. For
+references, assignment copies the
+reference.
+
+17
+00:03:10,099 --> 00:03:18,539
+Two reference variables can end up
+pointing at the same object. That single
+fact will matter enormously when we reach
+objects, equality, and collections.
+
+18
+00:03:18,659 --> 00:03:30,339
+You do not need those chapters yet — you
+only need to feel why the family
+difference is not academic. Let's put the
+student story back together in a small
+program, so the types have a reason to
+coexist.
+
+19
+00:03:30,459 --> 00:03:41,819
+Look at this java for a moment. Read it as
+one thought. We remember a name as text,
+an age as a whole number, an average as a
+decimal, and a pass/fail flag as a
+boolean.
+
+20
+00:03:41,939 --> 00:03:51,659
+The expression averageMarks >= 40.0
+produces a boolean and stores it in
+passed. When the program runs, it prints
+labeled meaning instead of unexplained
+numbers.
+
+21
+00:03:51,779 --> 00:04:04,459
+The types are guiding the design: age
+should not be a String if we want numeric
+comparison; marks that need a fractional
+part should not be forced into int without
+a reason; pass/fail is naturally boolean.
+
+22
+00:04:04,579 --> 00:04:13,779
+Now that the happy path feels clear, we
+should look at the places this idea bites
+beginners. First, integer division: Look
+at this java for a moment.
+
+23
+00:04:13,899 --> 00:04:27,859
+Both operands are int, so Java performs
+integer division and discards the
+fraction. The code compiles. That is what
+makes the bug sneaky. The type system did
+what you asked — not what you meant.
+
+24
+00:04:27,979 --> 00:04:44,419
+If you needed 2.5, a floating-point value
+had to participate in the computation.
+Second, null references: Look at this java
+for a moment. nickname is a reference.
+null means it currently points to no
+object.
+
+25
+00:04:44,539 --> 00:04:47,579
+Asking for .length() requires an actual
+String.
+
+26
+00:04:47,699 --> 00:05:00,740
+Primitives protect you from this
+particular failure — an int cannot be null
+— but that does not make primitives
+"always better." It means each family has
+different rules, and you must know which
+family you are using.
+
+27
+00:05:00,860 --> 00:05:14,580
+Modern Java also lets you write var for
+local variables when the initializer makes
+the type obvious: Look at this java for a
+moment. This is still static typing. The
+compiler figures out the type and then
+enforces it.
+
+28
+00:05:14,699 --> 00:05:27,180
+var is not a door into a dynamically typed
+Java. It is a way to reduce repetition
+once the meaning is already clear. So
+let's connect the chain. We started with a
+nameless 25 and asked what it meant.
+
+29
+00:05:27,300 --> 00:05:39,900
+Naming gave us variables. Different kinds
+of information gave us data types. Memory
+behavior split types into primitives and
+references. A small student report showed
+the types cooperating.
+
+30
+00:05:40,019 --> 00:05:44,740
+Integer division and null showed the
+failure modes that make the rules worth
+respecting.
+
+31
+00:05:44,859 --> 00:05:51,939
+Once we can remember values, the next
+natural pressure appears: we need to
+combine them, compare them, and make
+decisions with them.
+
+32
+00:05:52,059 --> 00:06:05,419
+A single character — = versus ==, /
+between ints versus doubles — can change
+the meaning of a whole expression. That
+pressure is exactly why operators come
+next — the symbols that combine, compare,
+and decide.
