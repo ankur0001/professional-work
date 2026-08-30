@@ -1,136 +1,176 @@
 1
-00:00:00,000 --> 00:00:11,279
+00:00:00,000 --> 00:00:10,400
 Creational patterns asked how objects are
 born. Structural patterns ask how objects
 are assembled so you can extend behavior
+without melting the type hierarchy.
+Composition wraps behavior.
 
 2
-00:00:11,399 --> 00:00:27,280
+00:00:10,519 --> 00:00:24,280
 Inheritance is not banned — but exploding
 subclasses for every feature combination
 is how codebases become museums of
+LoggedCachedSecureX. Suppose you have a
+repository. You need logging around saves.
+Then metrics.
 
 3
-00:00:27,399 --> 00:00:42,239
+00:00:24,399 --> 00:00:38,200
 Then a circuit breaker. Inheritance would
 tempt LoggingRepo extends JdbcRepo, then
 MetricsLoggingRepo extends LoggingRepo. A
+decorator adds behavior by wrapping the
+same interface: Look at this java for a
+moment.
 
 4
-00:00:42,359 --> 00:00:49,079
+00:00:38,320 --> 00:00:44,520
 LoggingRepo is still a Repo. Callers need
 not know whether they hold the raw
 repository or a wrapped one.
 
 5
-00:00:49,200 --> 00:00:56,640
+00:00:44,640 --> 00:00:52,520
 Decorator versus inheritance, asked in an
 interview, is exactly this: add behavior
 via composition without exploding
+subclasses.
 
 6
-00:00:56,760 --> 00:01:08,120
+00:00:52,640 --> 00:01:05,040
 Stack decorators carefully — five wrappers
 with unclear order recreate the complexity
 you fled. Order matters: authentication
+before rate limiting before caching is a
+different system than the reverse.
 
 7
-00:01:08,240 --> 00:01:20,320
+00:01:05,159 --> 00:01:16,719
 Document the stack. Adapters appear when
 two interfaces do not match. The SMS
 provider wants sendSms(Phone, Text). Your
+domain port says notify(UserId,
+Notification).
 
 8
-00:01:20,440 --> 00:01:34,640
+00:01:16,840 --> 00:01:31,840
 The adapter loads the phone number,
 formats the text, translates errors into
 domain failures, and isolates the SDK.
+When the vendor changes, one class moves.
+Without an adapter, vendor types leak into
+services and tests.
 
 9
-00:01:34,760 --> 00:01:48,480
+00:01:31,960 --> 00:01:45,200
 Facades simplify subsystems: one entry
 point that orchestrates collaborating
 classes so callers are not wired to every
+moving part. They fail in two opposite
+ways. Too thin: pass-through methods with
+no policy.
 
 10
-00:01:48,600 --> 00:02:01,160
+00:01:45,320 --> 00:01:57,600
 Too thick: a god object that knows the
 entire company. A good facade encodes a
 few use cases your system actually owns —
+"charge customer for invoice" — not one
+hundred low-level dials.
 
 11
-00:02:01,280 --> 00:02:14,159
+00:01:57,719 --> 00:02:10,800
 Facades and adapters often travel
 together: facade for your policy, adapter
 for their shape. Split when the vendor
+story and the business story stop changing
+for the same reasons. Proxies control
+access.
 
 12
-00:02:14,280 --> 00:02:21,960
+00:02:10,919 --> 00:02:18,879
 They stand in for a real object and
 intercept calls — lazy loading, security,
 remote access, transactional boundaries.
 
 13
-00:02:22,080 --> 00:02:30,400
+00:02:19,000 --> 00:02:26,520
 If you have used Spring AOP, you have
 lived with proxies: the bean you inject
 may wrap your class to apply transactions
+or security.
 
 14
-00:02:30,520 --> 00:02:38,719
+00:02:26,639 --> 00:02:33,239
 Sharp edges: equals, final methods, and
 self-invocation (this.method() bypassing
 the proxy).
 
 15
-00:02:38,840 --> 00:02:51,159
+00:02:33,359 --> 00:02:44,799
 A method annotated transactional calls
 another method on this — the call does not
 pass through the proxy, so the annotation
+does not apply. Structural understanding
+prevents "Spring is broken" tickets.
 
 16
-00:02:51,280 --> 00:03:02,680
+00:02:44,919 --> 00:02:57,359
 Walk a design conversation. "Should we
 facade the payment SDK?" If three services
 each duplicate the same five SDK calls,
+yes. If one call site exists, maybe
+premature.
 
 17
-00:03:02,800 --> 00:03:17,040
+00:02:57,479 --> 00:03:13,159
 "Should we decorate the repository with
 caching?" Only if cache policy is clear —
 keys, TTL, invalidation — otherwise you
+hide a correctness problem behind a
+structural pattern. Patterns amplify both
+good and bad policy.
 
 18
-00:03:17,160 --> 00:03:30,200
+00:03:13,280 --> 00:03:25,840
 When reviewing wrappers, ask: does this
 buy a policy we can name? If the name is
 fuzzy, you may be looking at accidental
+complexity. Composition keeps showing up
+as the safe default. Adapter for foreign
+shapes.
 
 19
-00:03:30,320 --> 00:03:40,120
+00:03:25,960 --> 00:03:35,280
 Decorator for layered policies on one
 interface. Facade for a curated subsystem
 door. Proxy for controlled access and
+infrastructure concerns.
 
 20
-00:03:40,240 --> 00:03:45,520
+00:03:35,400 --> 00:03:41,319
 Spring's AOP proxies are not a different
 universe; they are this idea with a
 framework engine.
 
 21
-00:03:45,640 --> 00:03:59,320
+00:03:41,439 --> 00:03:52,520
 Before you leave structure, notice how
 these appear in reviews without the names:
 "wrap this client to add retries" is
+decorator talk; "hide these five SDK calls
+behind one method" is facade talk;
 
 22
-00:03:59,440 --> 00:04:03,520
+00:03:52,639 --> 00:03:56,319
 "translate this third-party DTO at the
 boundary" is adapter talk.
 
 23
-00:04:03,640 --> 00:04:13,960
+00:03:56,439 --> 00:04:07,240
 When structural assembly is in place, the
 next question is how objects communicate
 and how algorithms vary without rewriting
+callers — Strategy, Observer, Command, and
+friends.
