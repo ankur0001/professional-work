@@ -1,111 +1,144 @@
 1
-00:00:00,000 --> 00:00:15,439
+00:00:00,000 --> 00:00:12,480
 A product page is hot. The database is
 not. Someone says "add a cache." Caches
 buy latency with correctness risk — and
+invalidation is the boss fight. Without an
+invalidation story, you have a faster way
+to be wrong.
 
 2
-00:00:15,559 --> 00:00:27,679
+00:00:12,599 --> 00:00:25,640
 Local caches live in-process — fast,
 simple, per instance. Distributed caches
 shared across instances avoid each node
+reloading the same miss, at the cost of
+network and operational complexity.
 
 3
-00:00:27,799 --> 00:00:36,919
+00:00:25,759 --> 00:00:35,839
 A local Caffeine cache may be enough for
 read-mostly data with short TTL on each
 pod. A Redis-style cache may be needed
+when hit rate must be shared.
 
 4
-00:00:37,039 --> 00:00:48,199
+00:00:35,959 --> 00:00:46,399
 Local caches go stale independently after
 a write to another instance unless you
 broadcast invalidations — acceptable for
+short-TTL display data, unacceptable for
+permissions.
 
 5
-00:00:48,319 --> 00:00:58,719
+00:00:46,519 --> 00:00:56,439
 Distributed caches add a dependency that
 can be down; your resilience story must
 include cache-miss fallback without
+melting the database. Look at this java
+for a moment.
 
 6
-00:00:58,839 --> 00:01:10,279
+00:00:56,559 --> 00:01:08,679
 Size bounds and TTL or TTI eviction keep
 the cache from becoming Episode Fifty-
 Seven's unbounded map. Soft references
+alone are not a substitute — Episode
+Sixty-One warned.
 
 7
-00:01:10,399 --> 00:01:24,599
+00:01:08,799 --> 00:01:20,000
 Cache-aside means the app checks the
 cache, loads on miss, then populates.
 Read-through means the cache library loads
+via a loader — as above. Keep the pattern
+consistent across the codebase.
 
 8
-00:01:24,719 --> 00:01:34,559
+00:01:20,119 --> 00:01:29,999
 Invalidation is the boss fight because
 freshness and hit rate pull opposite
 directions. Short TTL increases misses;
+long TTL increases staleness.
 
 9
-00:01:34,679 --> 00:01:42,959
+00:01:30,119 --> 00:01:38,399
 Delete-on-write keeps freshness for that
 key but needs every write path to
 cooperate — including admin tools and
+batch jobs that bypass the app.
 
 10
-00:01:43,079 --> 00:01:59,279
+00:01:38,519 --> 00:01:51,999
 Before shipping, write the invalidation
 sentence in the PR: "On product update, we
 delete key product:{id}; TTL is five
+minutes as a backstop; loader is single-
+flight." If you cannot write that
+sentence,
 
 11
-00:01:59,399 --> 00:02:01,119
+00:01:52,119 --> 00:01:53,799
 the cache is not designed yet.
 
 12
-00:02:01,239 --> 00:02:15,799
+00:01:53,919 --> 00:02:08,159
 Stampede control matters when a popular
 key expires and a hundred requests miss
 together. Single-flight loading — like
+LoadingCache's loader — slightly staggered
+TTLs, or soft values reduce the thundering
+herd.
 
 13
-00:02:15,919 --> 00:02:21,359
+00:02:08,279 --> 00:02:13,479
 Measure hit rate and staleness together. A
 high hit rate serving wrong data is not a
 win.
 
 14
-00:02:21,479 --> 00:02:31,319
+00:02:13,599 --> 00:02:24,399
 If hit rate is high and origin load is
 still high, dig into miss traces before
 growing the cache cluster — you may be
+caching the wrong grain or suffering
+stampedes at expiry.
 
 15
-00:02:31,439 --> 00:02:41,599
+00:02:24,519 --> 00:02:35,159
 Caching non-idempotent results blindly is
 how duplicates appear. Caching a POST
 response that creates a seat reservation
+means a retry can return success without a
+seat.
 
 16
-00:02:41,719 --> 00:02:54,199
+00:02:35,279 --> 00:02:47,119
 Separate read models you cache from write
 side effects you do not. Cache keys should
 follow resource identifiers clients
+already understand — and those identifiers
+live inside longer-lived API contracts.
 
 17
-00:02:54,319 --> 00:03:04,079
+00:02:47,239 --> 00:02:56,639
 Personalized responses demand extra care
 for privacy and correctness. Hardest cache
 problem? Invalidation and stampede under
+concurrent misses.
 
 18
-00:03:04,199 --> 00:03:16,319
+00:02:56,759 --> 00:03:08,599
 Say that, then mention bounds, TTL, and
 explicit delete-on-write as the ordinary
 tools that prevent heroic outages. Caches
+buy latency with correctness risk — keep
+saying both halves.
 
 19
-00:03:16,439 --> 00:03:27,280
+00:03:08,719 --> 00:03:20,919
 APIs that sit in front of caches and
 databases need long-term contracts —
 idempotency, errors, and compatibility —
+or every cache win becomes a client
+migration tax.
