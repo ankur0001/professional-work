@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,479
+Creating a new Thread per request does not scale — creation is expensive.
+
+2
+00:00:04,479 --> 00:00:08,406
+Thread pools reuse a fixed set of worker threads for many tasks.
+
+3
+00:00:08,406 --> 00:00:12,333
+ExecutorService is the standard abstraction for submitting work.
+
+4
+00:00:12,333 --> 00:00:16,383
+Submit a Runnable, get back control — the pool handles scheduling.
+
+5
+00:00:16,383 --> 00:00:20,126
+Shutdown gracefully — in-flight tasks deserve a clean finish.
+
+6
+00:00:20,126 --> 00:00:23,746
+Today — ExecutorService, thread pools, and task submission.
+
+7
+00:00:23,746 --> 00:00:25,029
+Episode Forty.
+
+8
+00:00:25,029 --> 00:00:28,052
+ExecutorService and Thread Pools.
+
+9
+00:00:28,052 --> 00:00:32,449
+ExecutorService decouples task submission from thread management.
+
+10
+00:00:32,449 --> 00:00:36,575
+You describe what to run — the executor decides how and when.
+
+11
+00:00:36,575 --> 00:00:40,430
+Factories in Executors create common pool configurations.
+
+12
+00:00:40,430 --> 00:00:43,880
+newFixedThreadPool — bounded pool, unbounded queue.
+
+13
+00:00:43,880 --> 00:00:48,006
+newCachedThreadPool — grows on demand, reclaims idle threads.
+
+14
+00:00:48,006 --> 00:00:51,726
+Prefer factory methods — they encode sensible defaults.
+
+15
+00:00:51,726 --> 00:00:56,299
+A thread pool maintains a queue of tasks and a set of worker threads.
+
+16
+00:00:56,299 --> 00:00:59,679
+Workers pull tasks from the queue and execute them.
+
+17
+00:00:59,679 --> 00:01:04,186
+Bounded pools cap resource usage — critical for server applications.
+
+18
+00:01:04,186 --> 00:01:08,495
+Too few threads — tasks wait. Too many — context-switch overhead.
+
+19
+00:01:08,495 --> 00:01:12,339
+Size pools based on workload — CPU-bound versus I/O-bound.
+
+20
+00:01:12,339 --> 00:01:16,912
+Thread pools turn unbounded thread creation into managed concurrency.
+
+21
+00:01:16,912 --> 00:01:20,626
+submit takes a Runnable or Callable and returns a Future.
+
+22
+00:01:20,626 --> 00:01:23,624
+execute is fire-and-forget — no result handle.
+
+23
+00:01:23,624 --> 00:01:27,664
+shutdown stops accepting new tasks — existing tasks still run.
+
+24
+00:01:27,664 --> 00:01:32,029
+shutdownNow attempts to cancel pending and interrupt running tasks.
+
+25
+00:01:32,029 --> 00:01:36,591
+awaitTermination waits for the pool to finish — with optional timeout.
+
+26
+00:01:36,591 --> 00:01:40,826
+Always shut down executors — leaked pools keep JVM threads alive.
+
+27
+00:01:40,826 --> 00:01:42,374
+Common executor types.
+
+28
+00:01:42,374 --> 00:01:46,947
+Fixed thread pool — predictable concurrency for steady workloads.
+
+29
+00:01:46,947 --> 00:01:51,098
+Cached thread pool — bursty short tasks, grows and shrinks.
+
+30
+00:01:51,098 --> 00:01:55,531
+Single-thread executor — sequential execution, ordered results.
+
+31
+00:01:55,531 --> 00:01:59,541
+ScheduledThreadPoolExecutor — delayed and periodic tasks.
+
+32
+00:01:59,541 --> 00:02:04,044
+ForkJoinPool — work-stealing for divide-and-conquer parallelism.
+
+33
+00:02:04,044 --> 00:02:05,654
+When to use thread pools.
+
+34
+00:02:05,654 --> 00:02:08,744
+Server request handling — bound concurrent work.
+
+35
+00:02:08,744 --> 00:02:12,414
+Background processing — logging, indexing, notifications.
+
+36
+00:02:12,414 --> 00:02:15,440
+Batch jobs with many independent units of work.
+
+37
+00:02:15,440 --> 00:02:19,497
+When not — trivial one-off tasks — maybe just start one thread.
+
+38
+00:02:19,497 --> 00:02:23,038
+Always size and monitor — blind defaults cause outages.
+
+39
+00:02:23,038 --> 00:02:24,537
+Three common mistakes.
+
+40
+00:02:24,537 --> 00:02:28,828
+One — never calling shutdown — threads leak, JVM hangs on exit.
+
+41
+00:02:28,828 --> 00:02:32,983
+Two — unbounded queue with fixed pool — memory grows forever.
+
+42
+00:02:32,983 --> 00:02:37,070
+Three — submitting blocking tasks to a small CPU-bound pool.
+
+43
+00:02:37,070 --> 00:02:41,021
+Also — ignoring rejected execution when the queue is full.
+
+44
+00:02:41,021 --> 00:02:45,176
+Treat the executor as a managed resource — lifecycle matters.
+
+45
+00:02:45,176 --> 00:02:49,208
+Interview question — why use ExecutorService over raw Thread?
+
+46
+00:02:49,208 --> 00:02:52,778
+Decouples task logic from thread lifecycle management.
+
+47
+00:02:52,778 --> 00:02:56,149
+Reuses threads — avoids creation overhead per task.
+
+48
+00:02:56,149 --> 00:02:59,917
+Provides bounded concurrency — protects system resources.
+
+49
+00:02:59,917 --> 00:03:03,618
+Returns Future for results — supports graceful shutdown.
+
+50
+00:03:03,618 --> 00:03:07,386
+Mention shutdown and awaitTermination in production code.
+
+51
+00:03:07,386 --> 00:03:11,632
+Pools run tasks. What about tasks that return values?
+
+52
+00:03:11,632 --> 00:03:14,836
+Episode Forty-One — Callable and Future.
+
+53
+00:03:14,836 --> 00:03:19,402
+Typed results, blocking get, and CompletableFuture intro.
+
+54
+00:03:19,402 --> 00:03:20,524
+See you there.

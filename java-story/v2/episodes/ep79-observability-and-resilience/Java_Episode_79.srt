@@ -1,0 +1,157 @@
+1
+00:00:00,000 --> 00:00:10,240
+Episode Seventy-Eight admitted the network
+is unreliable. That admission is useless
+without two capabilities: you must see
+what the system is doing, and you must
+survive when a dependency fails.
+
+2
+00:00:10,359 --> 00:00:23,280
+If you cannot see it and cannot survive
+dependency failure, you are not
+production-ready — you are hosted.
+Observability rests on three pillars. Logs
+tell stories about particular requests and
+errors.
+
+3
+00:00:23,399 --> 00:00:29,479
+Metrics tell aggregate truths — rates,
+saturations, latencies, error percentages.
+
+4
+00:00:29,599 --> 00:00:41,280
+Traces show a request's path across
+services so "slow checkout" becomes
+"inventory took 800ms." Emit metrics for
+latency and errors; propagate a trace id
+across hops.
+
+5
+00:00:41,399 --> 00:00:51,920
+Without correlation, you have three
+museums instead of one investigation.
+Cardinality discipline matters: a metric
+label for every user id will explode your
+monitoring bill.
+
+6
+00:00:52,039 --> 00:01:02,000
+Structured logs with correlation ids beat
+novel-length unstructured dumps.
+Resilience begins with a blunt rule: set
+timeouts. Unbounded waits become outages.
+
+7
+00:01:02,119 --> 00:01:14,519
+An HTTP client with absurdly long waits
+piles up threads under dependency slowness
+until your own health check fails — even
+though your code was "fine." Explicit
+timeouts on every remote call,
+
+8
+00:01:14,640 --> 00:01:20,400
+including DNS and connection
+establishment, turn an unbounded risk into
+a bounded error.
+
+9
+00:01:20,519 --> 00:01:31,640
+Timeouts everywhere includes message
+consumers and database calls; one
+unbounded call undoes the rest. Look at
+this java for a moment. Retries need
+jitter and idempotency.
+
+10
+00:01:31,759 --> 00:01:42,599
+Blind retries amplify an outage into a
+retry storm. One hundred pods retrying ten
+times with no jitter can stampede a
+dependency exactly when it tries to
+recover.
+
+11
+00:01:42,719 --> 00:01:51,159
+Exponential backoff with jitter turns a
+stampede into a trickle. Retries without
+idempotency double-charge cards and
+double-create orders.
+
+12
+00:01:51,279 --> 00:02:03,119
+Circuit breakers stop calling a sick
+dependency for a cool-down so your service
+can fail fast. They need clear fallbacks:
+cached reads may be fine; silent success
+for a write is not.
+
+13
+00:02:03,239 --> 00:02:16,039
+Open on error rates and latency, half-open
+carefully, alert when circuits stay open.
+SLOs drive alerts. Alerting on raw CPU
+because it is easy produces pages nobody
+respects.
+
+14
+00:02:16,159 --> 00:02:26,319
+Alert on error budget burn and latency
+percentiles that users feel. Copy-pasted
+"three nines" without traffic math creates
+either constant pages or never pages.
+
+15
+00:02:26,439 --> 00:02:41,519
+Dashboards should answer questions: is
+user success healthy, which dependency
+hurts, are we near a limit? Walk an
+incident with the toolkit. Checkout p99
+rises. The dashboard shows inventory
+latency rising.
+
+16
+00:02:41,639 --> 00:02:51,079
+A trace confirms time in the inventory
+client. Inventory's metrics show DB pool
+exhaustion. Inventory's thread dump shows
+threads waiting on connections.
+
+17
+00:02:51,199 --> 00:03:01,239
+Timeout on the checkout-to-inventory call
+saved checkout from total collapse, but
+the circuit breaker should have opened
+earlier — the alert on inventory error
+budget was missing.
+
+18
+00:03:01,359 --> 00:03:09,959
+Traces get you to the guilty service;
+thread dumps and JFR from Episode Fifty-
+Eight finish the diagnosis inside that
+process.
+
+19
+00:03:10,079 --> 00:03:23,159
+Resilience without observability is flying
+blind; observability without resilience is
+watching the crash in high definition.
+First resilience rule in an interview? Set
+timeouts; unbounded waits become outages.
+
+20
+00:03:23,279 --> 00:03:35,279
+Then mention retries with jitter plus
+idempotency, circuit breakers, and SLO-
+based alerts so the answer sounds like a
+system, not a single flag. Seeing and
+surviving make distribution operable.
+
+21
+00:03:35,399 --> 00:03:42,199
+Next we wrap architecture talk for
+interviews: trade-offs under constraints,
+with JVM awareness in the story.

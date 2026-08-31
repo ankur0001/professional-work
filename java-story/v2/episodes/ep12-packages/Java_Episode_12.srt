@@ -1,0 +1,177 @@
+1
+00:00:00,000 --> 00:00:11,800
+Access modifiers taught us who may touch a
+member. Package-private visibility only
+makes sense if "same package" is a real
+neighborhood, not an accident of whatever
+folder someone happened to click.
+
+2
+00:00:11,919 --> 00:00:25,280
+As a project grows, another problem
+appears beside visibility: names collide,
+and the filesystem stops matching what the
+source claims. Two libraries can both
+invent Utils. Two features can both invent
+Order.
+
+3
+00:00:25,399 --> 00:00:37,640
+Without namespaces, short names become a
+fight. Onboarding suffers too: a newcomer
+opens src and finds fifty classes in one
+flat pile with no hint which ones form the
+checkout story.
+
+4
+00:00:37,759 --> 00:00:47,560
+So the natural question is: how does Java
+give types an address space large enough
+for a company, honest enough for the
+compiler, and useful enough for access
+boundaries?
+
+5
+00:00:47,739 --> 00:01:03,939
+Packages are that geography — names,
+folders, and boundaries together. Java's
+common convention is reverse-DNS style
+naming: com.shop.order, org.example.tools.
+The point is uniqueness and hierarchy, not
+fashion.
+
+6
+00:01:04,060 --> 00:01:16,260
+You own a domain, you flip it, you nest
+features underneath. order alone is a
+fight waiting to happen. com.shop.order is
+an address. Look at this java for a
+moment. The first line claims a package.
+
+7
+00:01:16,379 --> 00:01:29,739
+On disk, this file should live under
+folders that mirror com/shop/order. The
+import brings User from another package
+into short-name scope. Because the
+packages differ, package-private members
+of User stay hidden.
+
+8
+00:01:29,859 --> 00:01:39,019
+Packages and access modifiers combine into
+real boundaries, not just folder
+cosmetics. Episode Three already
+introduced packages as addresses for the
+compiler.
+
+9
+00:01:39,140 --> 00:01:48,340
+Today the stakes are higher: packages are
+how a growing product stays navigable, and
+how "same package" remains a meaningful
+friendship for package-private types.
+
+10
+00:01:48,459 --> 00:02:00,339
+If everything sits in one package,
+package-private collapses into "visible to
+the whole app," and Episode Eleven's
+careful ladder loses a rung. That
+directory rule is the one that burns
+beginners.
+
+11
+00:02:00,459 --> 00:02:14,579
+The package declaration must match the
+directory tree. If the file says
+com.shop.order but sits in com/shop/orders
+or directly under src, tools will fail to
+resolve types, or you will compile one
+layout and run another.
+
+12
+00:02:14,699 --> 00:02:22,299
+Build tools like Maven and Gradle assume
+this layout; fighting it means fighting
+every tutorial and every teammate's muscle
+memory.
+
+13
+00:02:22,419 --> 00:02:33,019
+Once packages exist, you choose how to
+name foreign types: import the short name,
+or write the fully qualified name at the
+use site. Look at this java for a moment.
+
+14
+00:02:33,139 --> 00:02:52,379
+Fully qualified names are clear when two
+types share a simple name — java.util.Date
+versus java.sql.Date. Imports keep
+ordinary code readable. Star imports —
+import com.shop.user.*; — hide
+dependencies.
+
+15
+00:02:52,500 --> 00:03:03,860
+A reader cannot see which types you
+actually use, and a new class added to
+that package can create ambiguous
+references later. Prefer explicit imports;
+let the IDE manage the list.
+
+16
+00:03:03,979 --> 00:03:17,379
+What if the project ignores packaging
+discipline? Giant catch-all packages
+appear — com.shop.util, com.shop.misc —
+where everything is package-private
+friends with everything else.
+
+17
+00:03:17,500 --> 00:03:25,219
+Access modifiers stop meaning "module
+interior." Folder structure drifts from
+declarations. Onboarding becomes
+archaeology.
+
+18
+00:03:25,340 --> 00:03:40,020
+A healthier shape groups types that change
+together and hide together: Look at this
+java for a moment. Outside com.shop.order,
+callers see Order and its public methods.
+They do not see OrderLine.
+
+19
+00:03:40,140 --> 00:03:51,740
+That split is packages doing product work
+— the same access ideas from Episode
+Eleven, now with neighborhoods that make
+those ideas enforceable. Access control
+needed neighborhoods.
+
+20
+00:03:51,860 --> 00:04:05,020
+Packages provide namespaces, map them to
+directories, and give imports a way to
+name foreign types. Combined with
+modifiers, packages become boundaries —
+and catch-all packages dissolve those
+boundaries again.
+
+21
+00:04:05,140 --> 00:04:15,380
+Once types are organized, another modeling
+need shows up for values that are not
+free-form strings but a known set of named
+constants — order status, ticket priority,
+direction of a move.
+
+22
+00:04:15,500 --> 00:04:25,740
+You can fake that with magic ints and
+string literals, and then every typo
+becomes a runtime surprise the compiler
+never saw. That pressure leads to enums.

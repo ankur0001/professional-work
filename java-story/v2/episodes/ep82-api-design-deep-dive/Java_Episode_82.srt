@@ -1,0 +1,152 @@
+1
+00:00:00,000 --> 00:00:12,519
+Caches and services only help if clients
+can depend on your HTTP contract for
+years. APIs are long-term contracts —
+idempotency and errors matter as much as
+happy paths.
+
+2
+00:00:12,639 --> 00:00:18,559
+A beautiful endpoint that double-charges
+on retry is not beautiful. Resource
+modeling comes first.
+
+3
+00:00:18,679 --> 00:00:41,399
+Prefer nouns and HTTP verbs that match:
+POST /orders creates, GET /orders/{id}
+reads, POST /orders/{id}/cancel may be
+justified when cancel is a real action.
+Prefer /users/{id}/orders over
+/getUserOrders.
+
+4
+00:00:41,519 --> 00:00:48,519
+An endpoint named /doCreateOrder that
+always returns 200 is a remote procedure
+call wearing a thin disguise.
+
+5
+00:00:48,639 --> 00:01:02,879
+Breaking changes casually — renaming
+fields, changing meaning, removing
+properties without versioning — punish
+every client. Prefer additive evolution
+when you can; reserve hard versions for
+true breaks.
+
+6
+00:01:02,999 --> 00:01:17,000
+Deprecate before removal. Look at this
+java for a moment. Validation at the edge
+keeps the domain cleaner. Consistent error
+shapes let clients automate handling —
+code, message, fields, traceId.
+
+7
+00:01:17,119 --> 00:01:31,639
+Clients branch on code; humans read
+message; support uses traceId. Changing
+that shape later is itself a breaking
+change. Prefer problem-details or a
+documented JSON envelope over free-text.
+
+8
+00:01:31,759 --> 00:01:43,879
+Recycling an error code to mean something
+new is a silent break. Pagination and
+filtering prevent "return the entire
+table" accidents. Cursor pagination often
+ages better than deep offset pages.
+
+9
+00:01:43,999 --> 00:01:53,999
+State max page size server-side; clients
+asking for a million rows should fail
+loudly. Filter parameters should be
+documented, capped, and preferably
+indexed.
+
+10
+00:01:54,119 --> 00:02:06,639
+Idempotency keys on POSTs that matter mean
+a client can retry safely after a timeout
+without creating two orders. Why
+idempotency? Clients retry; servers must
+not double-apply side effects.
+
+11
+00:02:06,759 --> 00:02:20,159
+Walk a payment POST: client sends
+Idempotency-Key; server charges once and
+stores the response; network drops; client
+retries with the same key; server returns
+the stored response without charging
+again.
+
+12
+00:02:20,280 --> 00:02:35,560
+Without TTL, the idempotency table grows
+forever. Without uniqueness scoped
+correctly, different users collide. Money,
+bookings, and side-effecting POSTs earn
+this machinery; pure GETs do not.
+
+13
+00:02:35,680 --> 00:02:42,240
+Document keys in public API docs with
+examples — server support without client
+education is half a solution.
+
+14
+00:02:42,360 --> 00:02:52,760
+Leaky entities as DTOs couple clients to
+persistence and leak lazy-loading problems
+from Episode Seventy-Five into public
+JSON. Keep entities inward.
+
+15
+00:02:52,880 --> 00:03:07,320
+Public API docs should show happy paths
+and failure paths side by side — an
+OpenAPI file that only lists 200 responses
+lies by omission. Include validation
+failures, auth failures, and idempotent
+replays.
+
+16
+00:03:07,440 --> 00:03:18,080
+Mature POST behavior: validate, apply
+once, return consistent bodies on replay,
+and never return 500 with a half-applied
+side effect without a recovery story.
+
+17
+00:03:18,200 --> 00:03:28,280
+Status codes are part of the contract: 201
+or 200 on success, 409 when a key reuses
+different bodies, 400 when validation
+fails before charge.
+
+18
+00:03:28,400 --> 00:03:39,439
+Breaking changes casually — renaming
+amount fields from cents to dollars
+without versioning — cause real financial
+events. Treat API changes with the
+seriousness of schema migrations.
+
+19
+00:03:39,560 --> 00:03:46,960
+Interview answers should stress contracts,
+idempotency, and error consistency — not
+only annotation trivia.
+
+20
+00:03:47,080 --> 00:03:57,000
+When APIs need to fan work out
+asynchronously, events enter — and with
+them a new failure mode: at-least-once
+delivery without double-applying side
+effects.

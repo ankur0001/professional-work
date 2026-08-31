@@ -1,0 +1,153 @@
+1
+00:00:00,000 --> 00:00:09,359
+Episode Ten put data and behavior inside
+classes and drew a boundary with
+encapsulation. That boundary only works if
+the language can enforce who may cross it.
+
+2
+00:00:09,479 --> 00:00:18,479
+Otherwise private is a comment, and every
+teammate can reach into the wiring "just
+for now." Imagine you finish a BankAccount
+with a careful withdraw method.
+
+3
+00:00:18,599 --> 00:00:33,199
+A colleague adds account.balance -= 50
+from a UI class because the field was left
+public. Your invariant — never go below
+zero without a check — evaporates. The bug
+is not cleverness. It is missing
+permission language.
+
+4
+00:00:33,319 --> 00:00:46,519
+So the natural question is: what
+vocabulary does Java give us for "allowed
+to touch"? Access modifiers answer that.
+They are API design in miniature — rules
+about visibility for types and members.
+
+5
+00:00:46,639 --> 00:00:56,399
+Java's everyday ladder has four rungs:
+private, package-private (no modifier),
+protected, and public. Memorizing the
+ladder is easy.
+
+6
+00:00:56,519 --> 00:01:07,479
+Choosing a rung under product pressure is
+the real skill — every widen is a promise,
+every narrow is freedom to change. Look at
+this java for a moment. Walk each choice
+as a decision.
+
+7
+00:01:07,599 --> 00:01:17,239
+secret is private: only code inside Api
+should see it. pack has no modifier:
+package-private, visible to other classes
+in the same package.
+
+8
+00:01:17,359 --> 00:01:30,359
+hook is protected: same package, plus
+subclasses — including subclasses in other
+packages. open is public: part of the
+advertised surface. Think of shipping a
+library jar to another team.
+
+9
+00:01:30,480 --> 00:01:43,880
+Everything you mark public becomes a
+promise. Rename it later and you break
+callers you do not control. That is why
+"default to the tightest access that
+works" shows up in reviews: widen on
+purpose, not by habit.
+
+10
+00:01:44,000 --> 00:01:54,840
+Encapsulation is a boundary, not a
+checkbox. Marking a field private and then
+returning the mutable list inside it from
+a public method still leaks the inside.
+Look at this java for a moment.
+
+11
+00:01:54,959 --> 00:02:08,199
+A safer return might be an unmodifiable
+view or a defensive copy. The modifier on
+the field did its job. The method
+signature undid the boundary. Tight access
+and careful returns travel together.
+
+12
+00:02:08,319 --> 00:02:20,519
+protected deserves an extra beat because
+it is the most misunderstood middle
+ground. Look at this java for a moment.
+Subclass access across packages is
+intentional for frameworks and extension
+hooks.
+
+13
+00:02:20,639 --> 00:02:34,159
+It is also easy to overuse. If everything
+interesting is protected, you have built
+an inheritance API whether you meant to or
+not. Prefer private or package-private
+until a genuine extension point appears.
+
+14
+00:02:34,279 --> 00:02:43,799
+Modern Java adds another tightening layer:
+modules. The module system can hide
+packages from code outside the module even
+if a type is public.
+
+15
+00:02:43,919 --> 00:02:58,079
+Think of modifiers as the first wall and
+modules as a second wall for larger
+codebases. "Public" does not always mean
+"visible to the entire universe forever."
+What if we make everything public so demos
+compile faster?
+
+16
+00:02:58,259 --> 00:03:11,019
+The cost arrives when internals become de
+facto API. Callers depend on fields you
+wanted to rename. Refactors turn into
+negotiations. Access that is wider than
+necessary is debt with compound interest.
+
+17
+00:03:11,139 --> 00:03:16,059
+OOP introduced insides and outsides.
+Access modifiers name who may cross.
+
+18
+00:03:16,179 --> 00:03:28,699
+Private for implementation, package-
+private for collaborating types in one
+package, protected for deliberate subclass
+hooks, public for the supported surface.
+Default tight; widen on purpose.
+
+19
+00:03:28,819 --> 00:03:37,779
+Once visibility rules exist, another
+organizational pressure grows with the
+codebase itself. Class names collide.
+Folders drift from declarations.
+
+20
+00:03:37,899 --> 00:03:47,499
+Collaborating types need a shared
+neighborhood so package-private access
+means something real. The project needs
+geography. That geography is packages.

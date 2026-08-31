@@ -1,0 +1,186 @@
+1
+00:00:00,000 --> 00:00:11,759
+In the previous episode we learned how to
+remember values with types. A student can
+have an age, a name, a percentage, a pass
+flag. That solves storage. It does not yet
+solve work.
+
+2
+00:00:11,879 --> 00:00:21,239
+Suppose the gradebook already holds marks
+and passingScore. We need to know whether
+the student passed, compute a weighted
+total, maybe bump a counter.
+
+3
+00:00:21,359 --> 00:00:34,640
+We are no longer asking "what is this
+value?" We are asking "what do we do with
+these values together?" That is where
+operators arrive. An operator is a compact
+way to combine, compare, or transform
+values.
+
+4
+00:00:34,759 --> 00:00:44,119
+The danger is not that operators are hard
+to spell. The danger is that a single
+character can change the meaning of a
+whole expression — and the code can still
+compile.
+
+5
+00:00:44,239 --> 00:00:53,279
+Before lists of symbols, learn the rules
+that actually decide outcomes: precedence
+and associativity. Precedence answers
+which operator binds first.
+
+6
+00:00:53,399 --> 00:00:58,599
+Associativity answers how equal-precedence
+operators group when they sit side by
+side.
+
+7
+00:00:58,719 --> 00:01:08,359
+Memorizing every trivia table is less
+useful than knowing when to add
+parentheses because the default reading is
+not the reading you meant. Look at this
+java for a moment.
+
+8
+00:01:08,479 --> 00:01:24,759
+10 + 2 * 5 is twenty because
+multiplication binds tighter than
+addition. If you wanted sixty, you needed
+parentheses. x >= 0 && x < 100 is a common
+range check; the comparisons happen, then
+&& combines the booleans.
+
+9
+00:01:24,879 --> 00:01:36,519
+Parentheses are how you document intent
+for the next reader, including future you.
+Assignment versus equality is another one-
+character fork. = stores. == compares.
+
+10
+00:01:36,640 --> 00:01:45,480
+Mixing them in a condition is rarer in
+modern Java than in C — but the mental
+mix-up still shows up when people read
+code aloud and say "equals" for both.
+
+11
+00:01:45,599 --> 00:02:00,119
+Once arithmetic and comparison feel
+familiar, side effects show up —
+especially ++ and --. Look at this java
+for a moment. Walk it carefully. x++
+yields the current value of x, then
+increments.
+
+12
+00:02:00,239 --> 00:02:15,680
+++x increments first, then yields the new
+value. Starting at five, the left side
+contributes five and leaves x at six; the
+right side bumps x to seven and
+contributes seven; y becomes twelve. The
+expression is legal.
+
+13
+00:02:15,799 --> 00:02:30,199
+It is also a terrible place to hide
+business logic. Prefer clarity over clever
+increments. Another operator trap looks
+quieter: boolean operators that short-
+circuit versus ones that do not. && stops
+early.
+
+14
+00:02:30,319 --> 00:02:42,959
+If the left side is false, the right side
+never runs. & on booleans evaluates both
+sides. That difference matters when the
+right side has a cost — or a crash. Look
+at this java for a moment.
+
+15
+00:02:43,079 --> 00:02:52,639
+With &, both sides run, so name.length()
+executes even when name is null. With &&,
+the null check protects the second call.
+
+16
+00:02:52,759 --> 00:02:59,719
+The same short-circuit idea applies to ||:
+if the left side is already true, the
+right side is skipped.
+
+17
+00:02:59,840 --> 00:03:10,599
+Then comes the comparison question that
+follows from Episode Four's primitive-
+versus-reference split: when you write ==,
+what are you comparing? For primitives, ==
+compares values.
+
+18
+00:03:10,719 --> 00:03:20,719
+For objects, == compares identity —
+whether two references point at the same
+object. Content equality usually means
+equals. Look at this java for a moment.
+
+19
+00:03:20,840 --> 00:03:31,640
+If you accidentally use == for string
+content, you may get true in a demo
+because of interning, then false in
+production when the strings were built
+differently. Prefer equals when you mean
+content.
+
+20
+00:03:31,759 --> 00:03:43,560
+Save == for identity, null checks, and
+enums where identity is the point. You can
+recite an operator table and still ship a
+bug the first time precedence, short-
+circuiting, and == collide in one
+condition.
+
+21
+00:03:43,679 --> 00:03:56,599
+The durable skill is slower: read an
+expression the way the compiler does, then
+rewrite it until a human can too. (Bitwise
+operators — masks and packed flags — exist
+for another job entirely.
+
+22
+00:03:56,719 --> 00:04:09,279
+You will meet them when a problem actually
+needs bits. Today, do not confuse them
+with boolean && and ||.) Variables gave us
+named values. Operators let us compute and
+decide with those values.
+
+23
+00:04:09,399 --> 00:04:23,359
+But once you can produce a boolean, a new
+pressure appears. Knowing that passed is
+true is not enough. The program must take
+different paths — print a pass message,
+retry a download, loop through every
+student.
+
+24
+00:04:23,479 --> 00:04:29,279
+Computation alone does not choose a route.
+That pressure is what control flow exists
+to answer.

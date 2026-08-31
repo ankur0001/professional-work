@@ -1,29 +1,24 @@
 # professional-work
 
-Personal professional hub for **Ankur Kumar** — freelance profiles, career assets, learning resources, and agent-session outputs.
+Personal professional hub for **Ankur Kumar**.
 
 **Repository:** https://github.com/ankur0001/professional-work
 
 ## Structure
 
 ```
+java-story/
+├── v1/episodes/epNN-<slug>/   ← original cut (thumbnail, README, videos, srt)
+└── v2/episodes/epNN-<slug>/   ← current cut (+ SOURCE, narration)
+
 all-work/
-├── README.md
-└── freelance-profile/        ← LinkedIn, Upwork, portfolio grooming
-    ├── 10-ANKUR-KUMAR-PROFILE-PACK.md   ← start here (personalized from resume)
-    ├── portfolio/index.html
-    └── ...
+└── freelance-profile/
 ```
 
-## Freelance profile grooming
+## The Java Story
 
-- **Laptop setup:** [`all-work/LAPTOP-SETUP.md`](all-work/LAPTOP-SETUP.md)
-- Guide: [`all-work/freelance-profile/README.md`](all-work/freelance-profile/README.md)
-- Your copy-paste pack: [`all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md`](all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md)
-
-## Cloud Agent environment
-
-`.cursor/environment.json` configures future agent runs (Chrome for profile/browser workflows).
+- [v1 index](java-story/v1/INDEX.md)
+- [v2 index](java-story/v2/INDEX.md)
 
 ## Author
 

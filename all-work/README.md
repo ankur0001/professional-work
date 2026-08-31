@@ -2,24 +2,22 @@
 
 Personal work hub for **Ankur Kumar** — career assets, freelance profile grooming, and related resources from agent sessions.
 
-This folder holds everything created during the **freelance profile / Solution Architect positioning** conversation (Aug 2026).
-
 ## Contents
 
 | Path | Description |
 |------|-------------|
 | [`freelance-profile/`](freelance-profile/) | Full digital profile grooming kit |
-| [`freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md`](freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md) | **Start here** — LinkedIn, Upwork, GitHub copy (from resume) |
-| [`freelance-profile/portfolio/index.html`](freelance-profile/portfolio/index.html) | One-page portfolio (GitHub Pages ready) |
-| [`freelance-profile/08-PROFILE_INTAKE-SEND-THIS.md`](freelance-profile/08-PROFILE_INTAKE-SEND-THIS.md) | Intake form for future updates |
-| [`freelance-profile/09-PLATFORM-SETUP-GUIDE.md`](freelance-profile/09-PLATFORM-SETUP-GUIDE.md) | Platform login & paste workflow |
+| [`freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md`](freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md) | **Start here** — LinkedIn, Upwork, GitHub copy |
+| [`freelance-profile/portfolio/index.html`](freelance-profile/portfolio/index.html) | One-page portfolio (canonical edit source) |
+| [`freelance-profile/docs/`](freelance-profile/docs/) | Portfolio publish copy (was repo-root `/docs`) |
 
-## Quick start
+## The Java Story
 
-1. **On your laptop:** [`freelance-profile/SETUP-ON-YOUR-LAPTOP.md`](freelance-profile/SETUP-ON-YOUR-LAPTOP.md) — clone repo, use your own browser
-2. Open `freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md` and paste into LinkedIn → Upwork
-3. Publish `freelance-profile/portfolio/index.html` via GitHub Pages
+Lives at repo-root [`../java-story/`](../java-story/) — [`v1/`](../java-story/v1/) original cut, [`v2/`](../java-story/v2/) current videos + narrations + tooling.
 
-## Future sessions
 
-Add new topic folders under `all-work/` (e.g. `interview-prep/`, `project-demos/`) to keep the repo organized.
+## Quick start (freelance)
+
+1. [`freelance-profile/SETUP-ON-YOUR-LAPTOP.md`](freelance-profile/SETUP-ON-YOUR-LAPTOP.md)
+2. Open `freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md`
+3. Keep `freelance-profile/docs/` in sync with `portfolio/` for Pages
