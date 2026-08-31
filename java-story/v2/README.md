@@ -1,12 +1,20 @@
-# The Java Story — v2 video deliverables
+# The Java Story — v2 (current cut)
 
-All 85 episodes (end-cut fixed, animated visuals):
+Each episode lives in its own folder under [`episodes/`](episodes/):
 
-Per episode:
-- `Java_Episode_XX_<Slug>.mp4` — clean video
-- `Java_Episode_XX_<Slug>_CAPTIONED.mp4` — burned-in captions
-- `Java_Episode_XX.srt` — captions
-- `Java_Episode_XX_SOURCE.md` — build provenance
-- `narration.md` — narration snapshot used for that render (when present; may share name across copies)
+```
+episodes/ep01-why-java-exists-introduction-to-java/
+├── README.md
+├── thumbnail.jpg
+├── Java_Episode_01_….mp4
+├── Java_Episode_01_…_CAPTIONED.mp4
+├── Java_Episode_01.srt
+├── Java_Episode_01_SOURCE.md
+└── narration.md
+```
 
-Render tooling: `java-story/v2/video_build/`
+Also here:
+- [`narrative_review/`](narrative_review/) — coherent narration sources
+- [`video_build/`](video_build/) — render / TTS / distribute tooling
+
+See [`INDEX.md`](INDEX.md) for the full list.

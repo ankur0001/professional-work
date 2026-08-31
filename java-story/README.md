@@ -6,25 +6,23 @@
 
 ```
 java-story/
-├── v1/                      ← original cut (all episode files here)
-│   ├── Java_Episode_XX_*.mp4 / _CAPTIONED.mp4 / .srt
-│   ├── episodes/            ← episode README notes
-│   ├── EPISODE_CATALOG.md
-│   └── manifest.json
-└── v2/                      ← current cut (all episode files here)
-    ├── Java_Episode_XX_*.mp4 / _CAPTIONED.mp4 / .srt / _SOURCE.md
-    ├── narrative_review/    ← coherent narrations
-    └── video_build/         ← render tooling
+├── v1/episodes/epNN-<slug>/     ← original cut (per episode)
+│   ├── thumbnail.jpg
+│   ├── README.md
+│   ├── Java_Episode_NN_*.mp4
+│   ├── Java_Episode_NN_*_CAPTIONED.mp4
+│   └── Java_Episode_NN.srt
+└── v2/episodes/epNN-<slug>/     ← current cut (per episode)
+    ├── thumbnail.jpg
+    ├── README.md
+    ├── Java_Episode_NN_*.mp4 / _CAPTIONED.mp4 / .srt
+    ├── Java_Episode_NN_SOURCE.md
+    └── narration.md
 ```
+
+Shared under `v2/`: `narrative_review/` (source narrations), `video_build/` (render tooling).
 
 ## Browse
 
-- **v1 files:** [`v1/`](v1/)
-- **v2 files (current):** [`v2/`](v2/)
-
-## Render v2
-
-```bash
-python3 java-story/v2/video_build/render_v2_from_narrative.py --ep 1
-python3 java-story/v2/video_build/distribute_v2_to_episode_prs.py --ep 1
-```
+- [v1 index](v1/INDEX.md) · [v1 episodes](v1/episodes/)
+- [v2 index](v2/INDEX.md) · [v2 episodes](v2/episodes/)

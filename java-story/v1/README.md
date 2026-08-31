@@ -1,19 +1,14 @@
 # The Java Story — v1 (original cut)
 
-All v1 deliverables live **in this folder**.
+Each episode lives in its own folder under [`episodes/`](episodes/):
 
-## Files (per episode)
+```
+episodes/ep01-why-java-exists-introduction-to-java/
+├── README.md
+├── thumbnail.jpg
+├── Java_Episode_01_….mp4
+├── Java_Episode_01_…_CAPTIONED.mp4
+└── Java_Episode_01.srt
+```
 
-- `Java_Episode_XX_<Slug>.mp4` — clean video
-- `Java_Episode_XX_<Slug>_CAPTIONED.mp4` — captioned video
-- `Java_Episode_XX.srt` — captions
-- thumbnails where available
-
-## Also here
-
-| Path | Description |
-|------|-------------|
-| [`episodes/`](episodes/) | Per-episode README notes from episode PRs |
-| [`EPISODE_CATALOG.md`](EPISODE_CATALOG.md) | Series catalog |
-| [`manifest.json`](manifest.json) | Per-episode file inventory |
-| `Java_Episode_01_production_bible.md` | EP01 production bible |
+See [`INDEX.md`](INDEX.md) for the full list.

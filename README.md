@@ -8,8 +8,8 @@ Personal professional hub for **Ankur Kumar**.
 
 ```
 java-story/
-├── v1/     ← original episode videos + notes (files in this folder)
-└── v2/     ← current videos + narrations + tooling (files in this folder)
+├── v1/episodes/epNN-<slug>/   ← original cut (thumbnail, README, videos, srt)
+└── v2/episodes/epNN-<slug>/   ← current cut (+ SOURCE, narration)
 
 all-work/
 └── freelance-profile/
@@ -17,12 +17,8 @@ all-work/
 
 ## The Java Story
 
-- [`java-story/v1/`](java-story/v1/) — original cut (all files)
-- [`java-story/v2/`](java-story/v2/) — current cut (all files)
-
-## Freelance profile
-
-- [`all-work/freelance-profile/`](all-work/freelance-profile/)
+- [v1 index](java-story/v1/INDEX.md)
+- [v2 index](java-story/v2/INDEX.md)
 
 ## Author
 

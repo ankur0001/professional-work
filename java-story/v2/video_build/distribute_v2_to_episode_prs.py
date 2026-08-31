@@ -122,7 +122,10 @@ def title_for(ep: int) -> str:
 
 
 def v2_files_for(ep: int) -> list[Path]:
-    files = sorted(V2.glob(f"Java_Episode_{ep:02d}*"))
+    # Prefer structured episode folders; fall back to flat v2 root
+    files = sorted(V2.glob(f"episodes/ep{ep:02d}-*/Java_Episode_{ep:02d}*"))
+    if not files:
+        files = sorted(V2.glob(f"Java_Episode_{ep:02d}*"))
     return [f for f in files if f.is_file()]
 
 
@@ -144,11 +147,11 @@ def push_episode(ep: int) -> None:
             shutil_rm(wt, ignore_errors=True)
         run(["git", "worktree", "prune"], check=False)
     run(["git", "worktree", "add", "-f", str(wt), f"origin/{branch}"])
-    dest = wt / "java-story" / "v2"
-    # fall back to legacy episode-PR paths
-    if (wt / "java-story" / "v2").exists() and not (wt / "java-story" / "v2").exists():
-        dest = wt / "java-story" / "v2"
-    elif (wt / "java" / "output" / "v2").exists() and not (wt / "java-story").exists():
+    # Structured path on this monorepo layout; legacy fallbacks for old episode PRs
+    ep_dirs = sorted(V2.glob(f"episodes/ep{ep:02d}-*"))
+    slug_dir = ep_dirs[0].name if ep_dirs else f"ep{ep:02d}"
+    dest = wt / "java-story" / "v2" / "episodes" / slug_dir
+    if (wt / "java" / "output" / "v2").exists() and not (wt / "java-story").exists():
         dest = wt / "java" / "output" / "v2"
     elif not (wt / "java-story").exists() and not (wt / "java").exists() and (wt / "output").exists():
         dest = wt / "output" / "v2"
