@@ -1,0 +1,44 @@
+The Java Story — Episode 29: Parallel Streams
+Current cut (coherent narration + animated visuals).
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Sequential streams made bulk work declarative
+• Suppose you transform a large list of in- memory records with a…
+• That is the profile where parallel streams can help
+• Under the hood it uses the common ForkJoinPool
+• Best for CPU-heavy independent work on sizable data
+• You can make a sort slower by parallelizing it
+• …and more
+
+Timestamps
+0:00 Sequential streams made bulk work declarative
+0:13 Suppose you transform a large list of in- memory records…
+0:28 That is the profile where parallel streams can help
+0:39 Under the hood it uses the common ForkJoinPool
+0:51 Best for CPU-heavy independent work on sizable data
+1:01 You can make a sort slower by parallelizing it
+1:14 If you mutate an external ArrayList from parallel threads,…
+1:25 IO-bound work wants explicit executors or virtual threads,…
+1:31 A parallel stream that blocks on network calls inside map…
+1:42 A fair check: when would you refuse parallel streams? Tiny…
+1:55 Large in-memory data, pure CPU work, associative…
+2:10 Keep sequential as the default; go parallel when evidence…
+2:19 Prefer Collectors.joining or concurrent collectors…
+2:32 Also know the pool: the common ForkJoinPool size defaults…
+2:46 Parallel streams over freshly built ArrayLists of…
+3:01 Independent CPU work suggested parallelism
+3:16 Measurement closed the argument
+3:26 findFirst on an empty stream, a lookup inside a map…
+3:37 How do we make "maybe none" part of the type at the…
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v2/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode29

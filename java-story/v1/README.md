@@ -1,14 +1,7 @@
 # The Java Story — v1 (original cut)
 
-Each episode lives in its own folder under [`episodes/`](episodes/):
+YouTube upload packs for all 85 episodes.
 
-```
-episodes/ep01-why-java-exists-introduction-to-java/
-├── README.md
-├── thumbnail.jpg
-├── Java_Episode_01_….mp4
-├── Java_Episode_01_…_CAPTIONED.mp4
-└── Java_Episode_01.srt
-```
+Each folder under [`episodes/`](episodes/) contains title, description with timestamps, tags, thumbnail, videos, SRT, and narration/transcript.
 
-See [`INDEX.md`](INDEX.md) for the full list.
+See [`INDEX.md`](INDEX.md).

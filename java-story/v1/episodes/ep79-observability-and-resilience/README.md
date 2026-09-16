@@ -1,18 +1,33 @@
 # Episode 79 — Observability and Resilience
 
-**Cut:** `v1` · **Series:** The Java Story
+**Cut:** `v1` · **YouTube upload pack**
 
 ![Episode 79 thumbnail](thumbnail.jpg)
 
-## Files
+## YouTube upload checklist
 
-- [`thumbnail.jpg`](thumbnail.jpg) — episode thumbnail
-- [`Java_Episode_79_Observability_Resilience.mp4`](Java_Episode_79_Observability_Resilience.mp4) — clean video
-- [`Java_Episode_79_Observability_Resilience_CAPTIONED.mp4`](Java_Episode_79_Observability_Resilience_CAPTIONED.mp4) — captioned video
-- [`Java_Episode_79.srt`](Java_Episode_79.srt) — captions (SRT)
+| Asset | File |
+|---|---|
+| Title | [`title.txt`](title.txt) |
+| Description + timestamps | [`youtube_description.txt`](youtube_description.txt) |
+| Tags | [`tags.txt`](tags.txt) |
+| Thumbnail | [`thumbnail.jpg`](thumbnail.jpg) |
+| Video (clean) | [`Java_Episode_79_Observability_Resilience.mp4`](Java_Episode_79_Observability_Resilience.mp4) |
+| Video (captioned) | [`Java_Episode_79_Observability_Resilience_CAPTIONED.mp4`](Java_Episode_79_Observability_Resilience_CAPTIONED.mp4) |
+| Captions (SRT) | [`Java_Episode_79.srt`](Java_Episode_79.srt) |
+| Narration / transcript | [`narration.md`](narration.md) |
+
+## Suggested upload
+
+1. Upload **clean** video (or captioned if you want burned-in subs).
+2. Set title from `title.txt`.
+3. Paste `youtube_description.txt` into YouTube description.
+4. Upload `thumbnail.jpg`.
+5. Upload `*.srt` as captions (if using clean video).
+6. Add tags from `tags.txt`.
 
 ## Navigation
 
-- Previous: [Episode 78 — Microservices Basics](../ep78-microservices-basics/)
-- Next: [Episode 80 — Architecture Interview Wrap](../ep80-architecture-interview-wrap/)
+- Previous: [ep78-microservices-basics](../ep78-microservices-basics/)
+- Next: [ep80-architecture-interview-wrap](../ep80-architecture-interview-wrap/)
 - Index: [`../../INDEX.md`](../../INDEX.md)

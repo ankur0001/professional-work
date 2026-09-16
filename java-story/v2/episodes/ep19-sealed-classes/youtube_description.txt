@@ -1,0 +1,44 @@
+The Java Story — Episode 19: Sealed Classes
+Current cut (coherent narration + animated visuals).
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Records made transparent data cheap to declare
+• Suppose we model shapes with an interface and let anyone implement it
+• The switch still compiles
+• So the question becomes: can a hierarchy say, honestly, "these are…
+• That is the leap: from a flat vocabulary to a closed family of shapes
+• The permits clause lists the allowed subtypes
+• …and more
+
+Timestamps
+0:00 Records made transparent data cheap to declare
+0:11 Suppose we model shapes with an interface and let anyone…
+0:24 The switch still compiles
+0:35 So the question becomes: can a hierarchy say, honestly,…
+0:49 That is the leap: from a flat vocabulary to a closed…
+1:02 The permits clause lists the allowed subtypes
+1:10 Only Circle and Rect may implement it — within the…
+1:16 Each permitted type is a record here, which pairs cleanly…
+1:27 Exhaustive switch checking becomes possible because the…
+1:37 Pattern matching binds c or r so you can read components…
+1:50 Then do not seal it
+2:03 Using it on an extension point fights the product.
+2:05 Sealed types and records together encourage a style of…
+2:16 A common misunderstanding is to seal a type and then keep…
+2:28 The same sealing idea shows up in results, not only shapes
+2:41 Sealing says that out loud
+2:54 Sealed types close a set of subtypes that may themselves…
+3:03 Once types and packages multiply across a large codebase,…
+3:15 Packages alone proved too weak for that
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v2/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode19

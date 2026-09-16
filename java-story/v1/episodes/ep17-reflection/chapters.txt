@@ -1,0 +1,54 @@
+0:00 Annotations are metadata
+0:06 Ask a class for its methods
+0:11 Frameworks do this constantly — Spring, serializers, test…
+0:15 Powerful
+0:18 Today we open the hood — carefully.
+0:20 Know the tool
+0:23 Episode Seventeen.
+0:24 Reflection — inspect and invoke types at runtime.
+0:28 Start with Class.
+0:29 Order.class or order.getClass — you get a Class object.
+0:33 From there — getMethods, getFields, getConstructors.
+0:36 You can discover what a type offers without hardcoding…
+0:41 That discovery is the heart of reflective programming.
+0:44 Dynamic systems are built on this doorway.
+0:47 Reflection can call methods too.
+0:49 Lookup a Method
+0:52 You can even reach private members — with setAccessible.
+0:55 That breaks encapsulation walls — use it only with clear…
+0:59 Libraries may need it
+1:03 If you reach for private access daily — redesign the API.
+1:07 Why frameworks love reflection.
+1:09 Dependency injection scans annotations and constructs beans.
+1:12 JSON mappers bind properties without hand-written glue for…
+1:17 ORMs inspect entities and map tables.
+1:19 You get productivity — the platform pays with complexity.
+1:23 Understanding reflection makes those magic layers less…
+1:27 Reflection is not free.
+1:28 Lookups are slower than direct calls.
+1:31 Security managers and modules can restrict access.
+1:34 Native images and Graal may need extra config for…
+1:39 Cache Method handles if you must reflect in a hot path.
+1:42 Prefer normal calls when the type is known at compile time.
+1:46 Safety rules of thumb.
+1:48 Validate names and inputs — reflective calls can become…
+1:52 Do not suppress access checks casually in application code.
+1:56 Log clearly when reflective fallbacks run — they hide bugs.
+2:00 If a feature needs reflection, quarantine it behind a…
+2:04 Power without boundaries becomes an incident.
+2:07 Three common mistakes.
+2:09 One — using reflection where an interface would do.
+2:12 Two — calling setAccessible everywhere and calling it fine.
+2:16 Three — ignoring performance until the profiler screams.
+2:20 Also — assuming field names are a stable public API.
+2:24 Reflect on purpose — not as a default style.
+2:27 Interview question — what is reflection in Java?
+2:30 Runtime inspection and interaction with classes, methods,…
+2:34 Used heavily by frameworks for wiring and mapping.
+2:38 Tradeoffs — flexibility versus speed, safety, and clarity.
+2:41 Mention modules and native-image constraints for senior…
+2:45 That answer balances power and caution.
+2:48 We can inspect types
+2:52 Episode Eighteen — records.
+2:54 Transparent data carriers with less boilerplate.
+2:58 See you there.

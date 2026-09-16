@@ -2,24 +2,23 @@
 
 Personal professional hub for **Ankur Kumar**.
 
-**Repository:** https://github.com/ankur0001/professional-work
-
-## Structure
+## The Java Story (YouTube upload packs)
 
 ```
 java-story/
-├── v1/episodes/epNN-<slug>/   ← original cut (thumbnail, README, videos, srt)
-└── v2/episodes/epNN-<slug>/   ← current cut (+ SOURCE, narration)
-
-all-work/
-└── freelance-profile/
+├── v1/episodes/epNN-<slug>/   ← original cut — full YouTube pack
+└── v2/episodes/epNN-<slug>/   ← current cut — full YouTube pack
 ```
 
-## The Java Story
+Each episode folder includes:
+- `title.txt`, `youtube_description.txt` (with timestamps), `chapters.txt`, `tags.txt`
+- `thumbnail.jpg`
+- clean + captioned `.mp4`
+- `.srt` captions
+- `narration.md`
 
-- [v1 index](java-story/v1/INDEX.md)
-- [v2 index](java-story/v2/INDEX.md)
+Indexes: [v1](java-story/v1/INDEX.md) · [v2](java-story/v2/INDEX.md)
 
-## Author
+## Freelance profile
 
-Ankur Kumar — [LinkedIn](https://www.linkedin.com/in/ankur-kumar-4801078a/)
+[`all-work/freelance-profile/`](all-work/freelance-profile/)

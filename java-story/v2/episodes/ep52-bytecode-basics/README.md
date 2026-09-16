@@ -1,20 +1,34 @@
 # Episode 52 — Bytecode Basics
 
-**Cut:** `v2` · **Series:** The Java Story
+**Cut:** `v2` · **YouTube upload pack**
 
 ![Episode 52 thumbnail](thumbnail.jpg)
 
-## Files
+## YouTube upload checklist
 
-- [`thumbnail.jpg`](thumbnail.jpg) — episode thumbnail
-- [`Java_Episode_52_Bytecode_Basics.mp4`](Java_Episode_52_Bytecode_Basics.mp4) — clean video
-- [`Java_Episode_52_Bytecode_Basics_CAPTIONED.mp4`](Java_Episode_52_Bytecode_Basics_CAPTIONED.mp4) — captioned video
-- [`Java_Episode_52.srt`](Java_Episode_52.srt) — captions (SRT)
-- [`Java_Episode_52_SOURCE.md`](Java_Episode_52_SOURCE.md) — build provenance
-- [`narration.md`](narration.md) — narration used for this render
+| Asset | File |
+|---|---|
+| Title | [`title.txt`](title.txt) |
+| Description + timestamps | [`youtube_description.txt`](youtube_description.txt) |
+| Tags | [`tags.txt`](tags.txt) |
+| Thumbnail | [`thumbnail.jpg`](thumbnail.jpg) |
+| Video (clean) | [`Java_Episode_52_Bytecode_Basics.mp4`](Java_Episode_52_Bytecode_Basics.mp4) |
+| Video (captioned) | [`Java_Episode_52_Bytecode_Basics_CAPTIONED.mp4`](Java_Episode_52_Bytecode_Basics_CAPTIONED.mp4) |
+| Captions (SRT) | [`Java_Episode_52.srt`](Java_Episode_52.srt) |
+| Narration / transcript | [`narration.md`](narration.md) |
+| Build provenance | [`Java_Episode_52_SOURCE.md`](Java_Episode_52_SOURCE.md) |
+
+## Suggested upload
+
+1. Upload **clean** video (or captioned if you want burned-in subs).
+2. Set title from `title.txt`.
+3. Paste `youtube_description.txt` into YouTube description.
+4. Upload `thumbnail.jpg`.
+5. Upload `*.srt` as captions (if using clean video).
+6. Add tags from `tags.txt`.
 
 ## Navigation
 
-- Previous: [Episode 51 — Class Loading](../ep51-class-loading/)
-- Next: [Episode 53 — Heap and Stack](../ep53-heap-and-stack/)
+- Previous: [ep51-class-loading](../ep51-class-loading/)
+- Next: [ep53-heap-and-stack](../ep53-heap-and-stack/)
 - Index: [`../../INDEX.md`](../../INDEX.md)

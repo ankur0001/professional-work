@@ -1,0 +1,47 @@
+The Java Story — Episode 08: Arrays
+Current cut (coherent narration + animated visuals).
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Episode Seven gave behavior a name
+• It does not solve another kind of duplication that shows up the…
+• Then a fourth quiz appears
+• You need many values under one name, reachable by position
+• Indexes start at zero
+• scores is one variable
+• …and more
+
+Timestamps
+0:00 Episode Seven gave behavior a name
+0:10 It does not solve another kind of duplication that shows…
+0:23 Then a fourth quiz appears
+0:34 You need many values under one name, reachable by position
+0:50 Indexes start at zero
+1:05 scores is one variable
+1:17 Asking for scores[3] throws, because three is past the end
+1:28 Try averaging without an array and you feel the pain…
+1:39 Notice the cast to double — Episode Four's…
+1:50 Once the happy path is clear, helpers save you from…
+2:04 If you call System.out.println(nums) directly, you usually…
+2:17 What if the data is not a single line of scores but a grid…
+2:29 week[1] is the second row
+2:42 When you loop a grid, nest carefully: outer loop over…
+2:47 Now the design question arrays force: what happens when…
+2:58 To "add" an element you allocate a larger array and copy
+3:09 Arrays remain the fixed-length backbone under many…
+3:19 Someone writes nums[nums.length] = 99 hoping to extend the…
+3:32 Interviewers often ask array.length versus List.size():…
+3:45 Methods packaged repeated behavior
+3:58 They are full of text — names, messages, ids, error lines
+4:10 Java's String type looks friendly until modification and…
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v2/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode08

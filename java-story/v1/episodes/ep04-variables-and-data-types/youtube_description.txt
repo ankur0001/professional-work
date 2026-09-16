@@ -1,0 +1,73 @@
+The Java Story — Episode 04: Variables and Data Types
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• In Episode Three, we mapped packages and classes.
+• Now — what actually lives inside those fields and methods?
+• Variables name values
+• Pick the wrong type… and production pays for it — overflow, nulls,…
+• Episode Four.
+• Variables and Data Types — primitives, references, and real choices.
+• …and more
+
+Timestamps
+0:00 In Episode Three, we mapped packages and classes.
+0:03 Now — what actually lives inside those fields and methods?
+0:07 Variables name values
+0:11 Pick the wrong type… and production pays for it —…
+0:17 Episode Four.
+0:18 Variables and Data Types — primitives, references, and…
+0:23 Java has two families of types
+0:27 On the left — primitives
+0:31 On the right — references
+0:35 Assignment behaves differently in each family — that is…
+0:41 That mental model everything else builds on.
+0:44 Eight primitives — memorize the common ones first.
+0:47 int for whole numbers
+0:51 boolean for true or false
+0:55 byte, short, char, float exist too — useful, but rarer in…
+1:01 Primitives hold the value itself — not a pointer.
+1:04 And they cannot be null
+1:09 Picture memory.
+1:10 int count equals ten — the value sits in the local frame.
+1:13 Order order equals new Order — the variable holds a…
+1:17 The real object lives on the heap.
+1:19 Assignment copies the primitive… or copies the reference —…
+1:24 final blocks reassignment of that variable — it does not…
+1:29 Production gotcha — money.
+1:31 Never store currency in double.
+1:33 Binary floating point cannot represent many decimals…
+1:37 Prefer long minor units — cents — or a Money value type.
+1:41 Use BigDecimal when you need precise decimal math and…
+1:46 Architects standardize this early — because fixing money…
+1:51 Wrappers look similar — Integer, Long, Boolean.
+1:54 They are objects
+1:58 Autoboxing hides conversions — and can hide…
+2:03 A List of Integer can thrash the heap versus an int array.
+2:07 Prefer primitives in hot paths
+2:12 Three common mistakes.
+2:13 One — double for money
+2:17 Two — ignoring integer overflow on big counters.
+2:20 Three — assuming final means deep immutability
+2:25 Bonus trap — overusing String for every domain idea
+2:32 Interview question — primitive versus wrapper?
+2:36 Answer on screen.
+2:37 Primitive — value, non-null, compact.
+2:40 Wrapper — object, nullable, overhead, autoboxing risk.
+2:44 Then mention — why avoid double for money
+2:50 You now know how Java stores meaning.
+2:53 Next — operators.
+2:55 Plus, compare, and, or — and the traps that break equality…
+3:00 Episode Five
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode04

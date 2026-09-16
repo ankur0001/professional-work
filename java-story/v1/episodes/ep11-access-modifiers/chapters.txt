@@ -1,0 +1,48 @@
+0:00 Objects need boundaries
+0:04 Who can see this field?
+0:07 Visibility is ownership encoded in syntax.
+0:10 Today we map private, package-private, protected, and…
+0:14 Visibility is a design decision — not an afterthought.
+0:17 Episode Eleven.
+0:19 Access Modifiers — private, public, protected,…
+0:24 Four levels
+0:26 private — only this class.
+0:28 No modifier — package-private — same package only.
+0:31 protected — package plus subclasses.
+0:34 public — anyone
+0:37 Default to the narrowest visibility that still works.
+0:41 Widen only when a real collaborator needs access.
+0:45 private is your first encapsulation tool.
+0:48 Fields start private unless you have a reason.
+0:51 Helpers that are not part of the API stay private too.
+0:54 If everything is public, you have no boundary — only hope.
+0:58 Hope is not an architecture.
+1:00 Start private
+1:02 Package-private is underrated.
+1:04 Same package collaboration without publishing an API.
+1:07 Great for internal helpers shared by a few types.
+1:10 When a type must leave the package — promote visibility…
+1:15 Accidental public is how APIs grow barnacles.
+1:18 Package-private keeps the neighborhood tidy.
+1:21 protected supports inheritance-aware extension.
+1:24 Subclasses can reach it — so can the same package.
+1:27 public is the stable contract
+1:32 In libraries, public surface area is a long-term cost.
+1:36 Architect tip — treat public like a published product.
+1:39 Every public method is a maintenance promise.
+1:42 Three common mistakes.
+1:44 One — public fields for convenience
+1:48 Two — making every helper public just in case.
+1:51 Three — protected used as a lazy public for subclasses…
+1:55 Also — widening visibility to fix a test instead of…
+1:59 Fix the design — do not dissolve the boundary.
+2:03 Interview question — default access versus private?
+2:06 Default — package-private — same package sees it.
+2:09 private — only the declaring class.
+2:12 Then — prefer narrowest visibility
+2:15 That answer shows API discipline.
+2:18 Visibility choices are architecture in miniature.
+2:21 Visibility needs a home
+2:24 Episode Twelve — packages.
+2:26 Namespaces, boundaries, and ownership on disk.
+2:30 See you there.

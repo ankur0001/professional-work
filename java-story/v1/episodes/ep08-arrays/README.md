@@ -1,18 +1,33 @@
 # Episode 08 — Arrays
 
-**Cut:** `v1` · **Series:** The Java Story
+**Cut:** `v1` · **YouTube upload pack**
 
 ![Episode 08 thumbnail](thumbnail.jpg)
 
-## Files
+## YouTube upload checklist
 
-- [`thumbnail.jpg`](thumbnail.jpg) — episode thumbnail
-- [`Java_Episode_08_Arrays.mp4`](Java_Episode_08_Arrays.mp4) — clean video
-- [`Java_Episode_08_Arrays_CAPTIONED.mp4`](Java_Episode_08_Arrays_CAPTIONED.mp4) — captioned video
-- [`Java_Episode_08.srt`](Java_Episode_08.srt) — captions (SRT)
+| Asset | File |
+|---|---|
+| Title | [`title.txt`](title.txt) |
+| Description + timestamps | [`youtube_description.txt`](youtube_description.txt) |
+| Tags | [`tags.txt`](tags.txt) |
+| Thumbnail | [`thumbnail.jpg`](thumbnail.jpg) |
+| Video (clean) | [`Java_Episode_08_Arrays.mp4`](Java_Episode_08_Arrays.mp4) |
+| Video (captioned) | [`Java_Episode_08_Arrays_CAPTIONED.mp4`](Java_Episode_08_Arrays_CAPTIONED.mp4) |
+| Captions (SRT) | [`Java_Episode_08.srt`](Java_Episode_08.srt) |
+| Narration / transcript | [`narration.md`](narration.md) |
+
+## Suggested upload
+
+1. Upload **clean** video (or captioned if you want burned-in subs).
+2. Set title from `title.txt`.
+3. Paste `youtube_description.txt` into YouTube description.
+4. Upload `thumbnail.jpg`.
+5. Upload `*.srt` as captions (if using clean video).
+6. Add tags from `tags.txt`.
 
 ## Navigation
 
-- Previous: [Episode 07 — Methods](../ep07-methods/)
-- Next: [Episode 09 — Strings](../ep09-strings/)
+- Previous: [ep07-methods](../ep07-methods/)
+- Next: [ep09-strings](../ep09-strings/)
 - Index: [`../../INDEX.md`](../../INDEX.md)

@@ -1,0 +1,72 @@
+The Java Story — Episode 12: Packages
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Access needs a neighborhood
+• A package is a namespace — and a boundary.
+• It prevents name collisions and shapes who collaborates.
+• On disk and at runtime, package plus class name is identity.
+• Treat package structure as architecture you can see.
+• Folders tell the truth about ownership — or they should.
+• …and more
+
+Timestamps
+0:00 Access needs a neighborhood
+0:04 A package is a namespace — and a boundary.
+0:06 It prevents name collisions and shapes who collaborates.
+0:10 On disk and at runtime, package plus class name is identity.
+0:14 Treat package structure as architecture you can see.
+0:17 Folders tell the truth about ownership — or they should.
+0:21 Episode Twelve.
+0:22 Packages — namespaces, boundaries, and ownership.
+0:26 package com.acme.orders.domain;
+0:28 That line is not decoration — it is part of the binary name.
+0:32 com.acme.OrderService is not the same as…
+0:37 Folders should match the package declaration
+0:41 Break the mapping and tools get angry fast.
+0:44 Folder path and package declaration must agree.
+0:47 Packages define package-private visibility.
+0:50 Types in the same package can collaborate quietly.
+0:53 Types outside must use the public API — if you designed one.
+0:57 Good packages make invalid dependencies hard to introduce.
+1:01 Bad packages — one giant folder — erase ownership.
+1:04 Boundaries only work if the tree reflects them.
+1:07 Organize by capability when you can.
+1:09 api
+1:12 Or by feature — orders, payments, shipping — when teams…
+1:16 Layered-only packages can become anemic and tangled.
+1:19 Pick a structure that mirrors how people own the code.
+1:23 Feature teams and domain packages often fit better than…
+1:27 Spring Boot tip — scanning starts from the main class…
+1:32 Put OrdersApplication at a sensible root.
+1:34 Bury it too deep and beans disappear mysteriously.
+1:37 Packages are not only organization — frameworks navigate…
+1:41 Design the root on purpose.
+1:43 A wrong root creates mysterious missing beans.
+1:46 Three common mistakes.
+1:47 One — every class in one package called util or common.
+1:51 Two — cyclic dependencies between packages — architecture…
+1:55 Three — main class buried so component scanning misses…
+2:00 Also — package names that lie about contents.
+2:03 Honest names reduce wrong imports and wrong ownership.
+2:07 Interview question — why do packages matter?
+2:09 Namespace uniqueness
+2:14 Runtime identity is package plus class name — plus…
+2:19 Good structure makes illegal dependencies awkward.
+2:22 That is architecture you can feel in the folder tree.
+2:25 Boundaries are set
+2:30 Episode Thirteen — enums.
+2:32 Type-safe states instead of magic strings.
+2:35 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode12

@@ -1,20 +1,34 @@
 # Episode 83 — Event-Driven Architecture
 
-**Cut:** `v2` · **Series:** The Java Story
+**Cut:** `v2` · **YouTube upload pack**
 
 ![Episode 83 thumbnail](thumbnail.jpg)
 
-## Files
+## YouTube upload checklist
 
-- [`thumbnail.jpg`](thumbnail.jpg) — episode thumbnail
-- [`Java_Episode_83_Event_Driven_Architecture.mp4`](Java_Episode_83_Event_Driven_Architecture.mp4) — clean video
-- [`Java_Episode_83_Event_Driven_Architecture_CAPTIONED.mp4`](Java_Episode_83_Event_Driven_Architecture_CAPTIONED.mp4) — captioned video
-- [`Java_Episode_83.srt`](Java_Episode_83.srt) — captions (SRT)
-- [`Java_Episode_83_SOURCE.md`](Java_Episode_83_SOURCE.md) — build provenance
-- [`narration.md`](narration.md) — narration used for this render
+| Asset | File |
+|---|---|
+| Title | [`title.txt`](title.txt) |
+| Description + timestamps | [`youtube_description.txt`](youtube_description.txt) |
+| Tags | [`tags.txt`](tags.txt) |
+| Thumbnail | [`thumbnail.jpg`](thumbnail.jpg) |
+| Video (clean) | [`Java_Episode_83_Event_Driven_Architecture.mp4`](Java_Episode_83_Event_Driven_Architecture.mp4) |
+| Video (captioned) | [`Java_Episode_83_Event_Driven_Architecture_CAPTIONED.mp4`](Java_Episode_83_Event_Driven_Architecture_CAPTIONED.mp4) |
+| Captions (SRT) | [`Java_Episode_83.srt`](Java_Episode_83.srt) |
+| Narration / transcript | [`narration.md`](narration.md) |
+| Build provenance | [`Java_Episode_83_SOURCE.md`](Java_Episode_83_SOURCE.md) |
+
+## Suggested upload
+
+1. Upload **clean** video (or captioned if you want burned-in subs).
+2. Set title from `title.txt`.
+3. Paste `youtube_description.txt` into YouTube description.
+4. Upload `thumbnail.jpg`.
+5. Upload `*.srt` as captions (if using clean video).
+6. Add tags from `tags.txt`.
 
 ## Navigation
 
-- Previous: [Episode 82 — API Design Deep Dive](../ep82-api-design-deep-dive/)
-- Next: [Episode 84 — Performance Playbook](../ep84-performance-playbook/)
+- Previous: [ep82-api-design-deep-dive](../ep82-api-design-deep-dive/)
+- Next: [ep84-performance-playbook](../ep84-performance-playbook/)
 - Index: [`../../INDEX.md`](../../INDEX.md)

@@ -1,20 +1,34 @@
 # Episode 27 — Stream Collectors
 
-**Cut:** `v2` · **Series:** The Java Story
+**Cut:** `v2` · **YouTube upload pack**
 
 ![Episode 27 thumbnail](thumbnail.jpg)
 
-## Files
+## YouTube upload checklist
 
-- [`thumbnail.jpg`](thumbnail.jpg) — episode thumbnail
-- [`Java_Episode_27_Stream_Collectors.mp4`](Java_Episode_27_Stream_Collectors.mp4) — clean video
-- [`Java_Episode_27_Stream_Collectors_CAPTIONED.mp4`](Java_Episode_27_Stream_Collectors_CAPTIONED.mp4) — captioned video
-- [`Java_Episode_27.srt`](Java_Episode_27.srt) — captions (SRT)
-- [`Java_Episode_27_SOURCE.md`](Java_Episode_27_SOURCE.md) — build provenance
-- [`narration.md`](narration.md) — narration used for this render
+| Asset | File |
+|---|---|
+| Title | [`title.txt`](title.txt) |
+| Description + timestamps | [`youtube_description.txt`](youtube_description.txt) |
+| Tags | [`tags.txt`](tags.txt) |
+| Thumbnail | [`thumbnail.jpg`](thumbnail.jpg) |
+| Video (clean) | [`Java_Episode_27_Stream_Collectors.mp4`](Java_Episode_27_Stream_Collectors.mp4) |
+| Video (captioned) | [`Java_Episode_27_Stream_Collectors_CAPTIONED.mp4`](Java_Episode_27_Stream_Collectors_CAPTIONED.mp4) |
+| Captions (SRT) | [`Java_Episode_27.srt`](Java_Episode_27.srt) |
+| Narration / transcript | [`narration.md`](narration.md) |
+| Build provenance | [`Java_Episode_27_SOURCE.md`](Java_Episode_27_SOURCE.md) |
+
+## Suggested upload
+
+1. Upload **clean** video (or captioned if you want burned-in subs).
+2. Set title from `title.txt`.
+3. Paste `youtube_description.txt` into YouTube description.
+4. Upload `thumbnail.jpg`.
+5. Upload `*.srt` as captions (if using clean video).
+6. Add tags from `tags.txt`.
 
 ## Navigation
 
-- Previous: [Episode 26 — Streams Intro](../ep26-streams-intro/)
-- Next: [Episode 28 — flatMap & Composition](../ep28-flatmap-composition/)
+- Previous: [ep26-streams-intro](../ep26-streams-intro/)
+- Next: [ep28-flatmap-composition](../ep28-flatmap-composition/)
 - Index: [`../../INDEX.md`](../../INDEX.md)

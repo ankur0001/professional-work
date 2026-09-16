@@ -1,0 +1,79 @@
+The Java Story — Episode 29: Parallel Streams
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• flatMap flattened pipelines
+• parallelStream splits work across threads automatically.
+• ForkJoinPool common pool backs most parallel streams.
+• Speedups are not free — coordination has a cost.
+• Today — parallel streams with measurement, not hope.
+• Parallel when it pays
+• …and more
+
+Timestamps
+0:00 flatMap flattened pipelines
+0:04 parallelStream splits work across threads automatically.
+0:08 ForkJoinPool common pool backs most parallel streams.
+0:11 Speedups are not free — coordination has a cost.
+0:14 Today — parallel streams with measurement, not hope.
+0:17 Parallel when it pays
+0:21 Episode Twenty-Nine.
+0:22 Parallel Streams — fork-join in practice.
+0:26 Parallel streams build on the fork-join framework.
+0:29 Work splits into chunks
+0:33 Results combine when chunks finish.
+0:35 Java uses a shared ForkJoinPool for parallel streams.
+0:39 You do not manage threads manually — the pool does.
+0:42 Understand the pool before you trust the speedup.
+0:45 Call parallel or parallelStream to enable parallelism.
+0:48 The same pipeline runs — but elements may process…
+0:53 Intermediate operations can run in parallel on sub-splits.
+0:56 Terminal operations coordinate the merge.
+0:59 Sequential is the default — parallelism is opt-in.
+1:02 One method call does not guarantee a faster program.
+1:05 Ordering changes under parallelism.
+1:08 Sequential streams preserve encounter order when required.
+1:11 Parallel streams may process out of order for speed.
+1:14 forEachOrdered restores order at a cost.
+1:17 sorted still produces a sorted result — but work may…
+1:21 If order matters for correctness, design for it explicitly.
+1:25 The common pool is shared across the JVM.
+1:28 Blocking tasks in parallel streams can starve other work.
+1:31 Custom ForkJoinPool wrapping is possible for isolation —…
+1:36 Do not nest parallel streams on the same pool blindly.
+1:39 IO-bound work usually belongs elsewhere — not parallel…
+1:43 CPU-bound, large, independent chunks are the sweet spot.
+1:47 When parallelism helps.
+1:48 Large collections
+1:52 When it hurts.
+1:53 Small collections — overhead dominates.
+1:56 Shared mutable accumulators without thread-safe collectors.
+2:00 Measure on real hardware — micro-benchmarks lie easily.
+2:04 Three common mistakes.
+2:05 One — parallel by default without profiling.
+2:08 Two — mutating shared fields inside map or forEach.
+2:12 Three — assuming encounter order in parallel forEach.
+2:16 Also — running blocking IO inside parallel streams.
+2:20 Parallel code must still be correct code first.
+2:23 Interview question — when would you use parallel streams?
+2:27 Large in-memory data, CPU-heavy pure transforms, few side…
+2:31 Mention ForkJoinPool and measurement before and after.
+2:34 Contrast with sequential — default until proven otherwise.
+2:38 Note ordering and thread-safety requirements.
+2:41 That answer shows engineering judgment, not buzzwords.
+2:44 Parallelism needs safe absence handling
+2:49 Episode Thirty — Optional.
+2:51 Present, empty, and chained without null checks everywhere.
+2:55 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode29

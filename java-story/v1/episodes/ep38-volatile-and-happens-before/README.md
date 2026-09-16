@@ -1,18 +1,33 @@
 # Episode 38 — volatile and Happens-Before
 
-**Cut:** `v1` · **Series:** The Java Story
+**Cut:** `v1` · **YouTube upload pack**
 
 ![Episode 38 thumbnail](thumbnail.jpg)
 
-## Files
+## YouTube upload checklist
 
-- [`thumbnail.jpg`](thumbnail.jpg) — episode thumbnail
-- [`Java_Episode_38_Volatile_Happens_Before.mp4`](Java_Episode_38_Volatile_Happens_Before.mp4) — clean video
-- [`Java_Episode_38_Volatile_Happens_Before_CAPTIONED.mp4`](Java_Episode_38_Volatile_Happens_Before_CAPTIONED.mp4) — captioned video
-- [`Java_Episode_38.srt`](Java_Episode_38.srt) — captions (SRT)
+| Asset | File |
+|---|---|
+| Title | [`title.txt`](title.txt) |
+| Description + timestamps | [`youtube_description.txt`](youtube_description.txt) |
+| Tags | [`tags.txt`](tags.txt) |
+| Thumbnail | [`thumbnail.jpg`](thumbnail.jpg) |
+| Video (clean) | [`Java_Episode_38_Volatile_Happens_Before.mp4`](Java_Episode_38_Volatile_Happens_Before.mp4) |
+| Video (captioned) | [`Java_Episode_38_Volatile_Happens_Before_CAPTIONED.mp4`](Java_Episode_38_Volatile_Happens_Before_CAPTIONED.mp4) |
+| Captions (SRT) | [`Java_Episode_38.srt`](Java_Episode_38.srt) |
+| Narration / transcript | [`narration.md`](narration.md) |
+
+## Suggested upload
+
+1. Upload **clean** video (or captioned if you want burned-in subs).
+2. Set title from `title.txt`.
+3. Paste `youtube_description.txt` into YouTube description.
+4. Upload `thumbnail.jpg`.
+5. Upload `*.srt` as captions (if using clean video).
+6. Add tags from `tags.txt`.
 
 ## Navigation
 
-- Previous: [Episode 37 — Synchronization](../ep37-synchronization/)
-- Next: [Episode 39 — Explicit Locks](../ep39-explicit-locks/)
+- Previous: [ep37-synchronization](../ep37-synchronization/)
+- Next: [ep39-explicit-locks](../ep39-explicit-locks/)
 - Index: [`../../INDEX.md`](../../INDEX.md)

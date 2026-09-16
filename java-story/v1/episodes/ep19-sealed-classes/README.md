@@ -1,18 +1,33 @@
 # Episode 19 — Sealed Classes
 
-**Cut:** `v1` · **Series:** The Java Story
+**Cut:** `v1` · **YouTube upload pack**
 
 ![Episode 19 thumbnail](thumbnail.jpg)
 
-## Files
+## YouTube upload checklist
 
-- [`thumbnail.jpg`](thumbnail.jpg) — episode thumbnail
-- [`Java_Episode_19_Sealed_Classes.mp4`](Java_Episode_19_Sealed_Classes.mp4) — clean video
-- [`Java_Episode_19_Sealed_Classes_CAPTIONED.mp4`](Java_Episode_19_Sealed_Classes_CAPTIONED.mp4) — captioned video
-- [`Java_Episode_19.srt`](Java_Episode_19.srt) — captions (SRT)
+| Asset | File |
+|---|---|
+| Title | [`title.txt`](title.txt) |
+| Description + timestamps | [`youtube_description.txt`](youtube_description.txt) |
+| Tags | [`tags.txt`](tags.txt) |
+| Thumbnail | [`thumbnail.jpg`](thumbnail.jpg) |
+| Video (clean) | [`Java_Episode_19_Sealed_Classes.mp4`](Java_Episode_19_Sealed_Classes.mp4) |
+| Video (captioned) | [`Java_Episode_19_Sealed_Classes_CAPTIONED.mp4`](Java_Episode_19_Sealed_Classes_CAPTIONED.mp4) |
+| Captions (SRT) | [`Java_Episode_19.srt`](Java_Episode_19.srt) |
+| Narration / transcript | [`narration.md`](narration.md) |
+
+## Suggested upload
+
+1. Upload **clean** video (or captioned if you want burned-in subs).
+2. Set title from `title.txt`.
+3. Paste `youtube_description.txt` into YouTube description.
+4. Upload `thumbnail.jpg`.
+5. Upload `*.srt` as captions (if using clean video).
+6. Add tags from `tags.txt`.
 
 ## Navigation
 
-- Previous: [Episode 18 — Records](../ep18-records/)
-- Next: [Episode 20 — Modules and JPMS](../ep20-modules-and-jpms/)
+- Previous: [ep18-records](../ep18-records/)
+- Next: [ep20-modules-and-jpms](../ep20-modules-and-jpms/)
 - Index: [`../../INDEX.md`](../../INDEX.md)

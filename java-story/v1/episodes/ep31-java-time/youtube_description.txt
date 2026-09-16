@@ -1,0 +1,79 @@
+The Java Story — Episode 31: java.time
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Optional modeled absence
+• Old java.util.Date and Calendar were mutable, confusing, and…
+• Java eight introduced java.time — immutable, clear, and ISO-based.
+• Instant for machine timestamps
+• Today — the modern date-time toolkit every Java developer needs.
+• Time is hard
+• …and more
+
+Timestamps
+0:00 Optional modeled absence
+0:05 Old java.util.Date and Calendar were mutable, confusing,…
+0:10 Java eight introduced java.time — immutable, clear, and…
+0:15 Instant for machine timestamps
+0:21 Today — the modern date-time toolkit every Java developer…
+0:26 Time is hard
+0:29 Episode Thirty-One.
+0:30 java.time — dates, times, and zones done right.
+0:34 Instant is a point on the UTC timeline.
+0:37 Machine timestamps — logs, events, database instants.
+0:41 Instant.now captures the current moment in UTC.
+0:44 Compare with isBefore and isAfter — natural ordering.
+0:47 Convert to epoch seconds or millis when legacy APIs…
+0:52 Think Instant when the zone does not matter yet.
+0:55 ZonedDateTime ties a local date-time to a time zone.
+0:58 ZoneId identifies a region — Europe/Paris, America/New_York.
+1:02 Meetings, flight departures, user-facing clocks need zones.
+1:06 withZoneSameInstant converts between zones without…
+1:11 Daylight saving transitions are handled by the rules in…
+1:15 Store Instants in databases — render ZonedDateTime for…
+1:19 LocalDate is a calendar date without time or zone.
+1:23 LocalTime is a time of day without date or zone.
+1:26 LocalDateTime combines both — still no zone attached.
+1:29 Birthdays, due dates, business hours templates use local…
+1:33 Do not attach a zone until you know which zone.
+1:36 Parse and format with consistent patterns —…
+1:40 DateTimeFormatter replaces SimpleDateFormat for new code.
+1:44 Predefined constants — ISO_LOCAL_DATE, ISO_INSTANT.
+1:48 ofPattern for custom layouts — but prefer ISO when possible.
+1:52 format and parse are symmetric — define once, reuse.
+1:55 Locale affects human-readable month and day names.
+1:59 Immutable formatters are thread-safe — share them freely.
+2:03 Arithmetic uses clear units — ChronoUnit.DAYS, HOURS,…
+2:07 plus and minus on local and zoned types read naturally.
+2:10 Period covers calendar amounts — two months, three years.
+2:14 Duration covers exact time amounts — ninety minutes.
+2:18 between measures the gap between two points.
+2:21 Pick Period versus Duration based on calendar versus clock…
+2:25 Three common mistakes.
+2:27 One — mixing legacy Date with java.time without explicit…
+2:31 Two — assuming LocalDateTime has a zone — it does not.
+2:35 Three — storing zoned strings instead of Instant in the…
+2:39 Also — ignoring daylight saving when scheduling recurring…
+2:44 Model instants in UTC
+2:47 Interview question — Instant versus LocalDateTime?
+2:50 Instant — absolute point on the UTC timeline.
+2:54 LocalDateTime — date and time without zone context.
+2:57 Mention ZonedDateTime when user zones matter.
+3:00 Note immutability and DateTimeFormatter for parsing.
+3:04 That answer shows you escaped the Date era.
+3:07 Time is typed
+3:10 Episode Thirty-Two — Exceptions.
+3:12 Checked, unchecked, and handling failure with intent.
+3:16 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode31

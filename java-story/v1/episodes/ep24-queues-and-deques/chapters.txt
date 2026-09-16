@@ -1,0 +1,54 @@
+0:00 Maps associate
+0:03 First in, first out — producers and consumers meet in the…
+0:07 Deque goes further — both ends open for stacks and queues.
+0:11 ArrayDeque
+0:16 Today — waiting lines with explicit rules.
+0:19 Order of arrival — or order of priority
+0:24 Episode Twenty-Four.
+0:25 Queues and Deques — flow structures.
+0:28 Queue models a waiting line.
+0:30 Insert at the tail
+0:33 offer and poll return special values on failure.
+0:35 add and remove throw when the operation cannot proceed.
+0:39 peek inspects without removing — element is the throwing…
+0:43 Pick the style that matches capacity constraints and…
+0:47 Remember the paired APIs.
+0:49 Special-value methods suit bounded buffers and optional…
+0:53 Exception methods suit invariants — failure should be loud.
+0:57 Mixing them casually makes empty-queue bugs harder to read.
+1:01 Document which style your module uses.
+1:04 Consistency beats cleverness at the call site.
+1:07 Deque means double-ended queue.
+1:09 Add and remove at head or tail.
+1:11 That makes Deque a clean stack — push and pop at one end.
+1:15 It also makes a clean queue — offer last, poll first.
+1:19 One interface, two classic structures, fewer legacy types.
+1:23 Prefer Deque over the old Stack class in new code.
+1:27 ArrayDeque is the usual workhorse.
+1:29 Resizable array — no capacity restriction by default.
+1:33 Faster than Stack for stack operations in typical cases.
+1:36 Often faster than LinkedList as a FIFO queue.
+1:39 Null elements are not allowed — fail fast on null offer.
+1:43 For single-threaded queues and stacks, start with…
+1:47 PriorityQueue breaks FIFO on purpose.
+1:50 The next element is the least — by natural order or…
+1:54 Under the hood it is a heap — peek is cheap, arbitrary…
+1:59 Iteration order is not sorted order — do not be fooled.
+2:03 Great for schedulers and best-next algorithms.
+2:06 Wrong when you needed a fair waiting line.
+2:09 Three common mistakes.
+2:10 One — using java.util.Stack in new code.
+2:13 Two — ignoring whether your queue is bounded when choosing…
+2:18 Three — defaulting to LinkedList as a queue without…
+2:23 Also — treating PriorityQueue iteration as sorted output.
+2:27 Queues are simple
+2:30 Interview question — Queue versus Deque, and why ArrayDeque?
+2:34 Queue — FIFO waiting line with paired success and failure…
+2:39 Deque — both ends, covers stack and queue roles.
+2:42 ArrayDeque — fast general-purpose implementation for…
+2:47 Mention PriorityQueue when ordering is by priority, not…
+2:52 That answer shows API judgment.
+2:54 Flow structures are clear
+2:58 Episode Twenty-Five — Sorting and Comparators.
+3:02 Comparable, Comparator, and stable sort expectations.
+3:05 See you there.

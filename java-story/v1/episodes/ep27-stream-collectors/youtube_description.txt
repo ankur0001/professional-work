@@ -1,0 +1,79 @@
+The Java Story — Episode 27: Stream Collectors
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Streams build pipelines
+• List, Set, Map, string, summary — same stream, different endings.
+• groupingBy and partitioningBy turn flat data into structure.
+• Downstream collectors nest work inside each group.
+• Today — finish pipelines with intent, not afterthoughts.
+• Collect is not dump
+• …and more
+
+Timestamps
+0:00 Streams build pipelines
+0:05 List, Set, Map, string, summary — same stream, different…
+0:09 groupingBy and partitioningBy turn flat data into structure.
+0:14 Downstream collectors nest work inside each group.
+0:18 Today — finish pipelines with intent, not afterthoughts.
+0:22 Collect is not dump
+0:25 Episode Twenty-Seven.
+0:27 Stream Collectors — shaping results.
+0:30 Start with the basics in Collectors.
+0:32 toList and toSet materialize elements.
+0:35 toMap needs a key function, a value function, and often a…
+0:39 Duplicate keys without a merge function throw — loudly.
+0:43 joining builds delimited strings without manual…
+0:47 Pick the collector that matches the type you need next.
+0:50 groupingBy is the workhorse for classification.
+0:54 A classifier function produces keys.
+0:56 By default each key maps to a List of matching elements.
+1:00 Orders by region
+1:04 You get a Map whose values are groups — ready for reports.
+1:08 Think pivot table — expressed as a pipeline.
+1:11 partitioningBy is groupingBy for a boolean question.
+1:14 Predicate true goes one side
+1:17 The result is Map of Boolean to the grouped values.
+1:21 Active versus inactive
+1:25 Two buckets — when two is exactly the model.
+1:28 Do not use it when you really needed many keys.
+1:31 Downstream collectors avoid second passes.
+1:34 groupingBy with counting gives sizes per key.
+1:37 summingInt and averagingDouble summarize in place.
+1:41 mapping then toSet reshapes each group.
+1:44 collectingAndThen applies a finisher — like making the map…
+1:49 Nest the work
+1:51 Beyond grouping — reducing and summarizing.
+1:54 reducing folds with an identity and an operator.
+1:58 summarizingInt returns count, sum, min, max, and average…
+2:02 teeing runs two collectors and merges their results — Java…
+2:07 Use summaries when dashboards need several stats at once.
+2:11 Collectors are a toolbox — learn the shapes, not every…
+2:16 Three common mistakes.
+2:18 One — toMap without a merge function when duplicates exist.
+2:22 Two — mutating shared accumulators and hoping parallel…
+2:27 Three — groupingBy then a manual loop that a downstream…
+2:32 Also — assuming toList is always unmodifiable — know your…
+2:37 Clear collectors beat clever post-processing.
+2:40 Interview question — groupingBy versus partitioningBy?
+2:43 groupingBy — many keys from a classifier function.
+2:47 partitioningBy — boolean predicate, always two sides.
+2:50 Mention downstream collectors for counting or summing…
+2:54 Give a domain example — orders by region versus paid…
+2:59 That answer shows practical stream fluency.
+3:02 Results have shape
+3:06 Episode Twenty-Eight — flatMap and composition.
+3:09 One-to-many transforms without nested collections mess.
+3:13 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode27

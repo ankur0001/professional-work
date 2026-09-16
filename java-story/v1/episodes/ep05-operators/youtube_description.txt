@@ -1,0 +1,73 @@
+The Java Story — Episode 05: Operators
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• In Episode Four, we chose types carefully.
+• Now those values meet operators — plus, equals, and, or.
+• Small symbols
+• Overflow, equality bugs, and null crashes often start here.
+• Episode Five.
+• Operators — arithmetic, equality, and short-circuit logic.
+• …and more
+
+Timestamps
+0:00 In Episode Four, we chose types carefully.
+0:02 Now those values meet operators — plus, equals, and, or.
+0:06 Small symbols
+0:08 Overflow, equality bugs, and null crashes often start here.
+0:12 Episode Five.
+0:14 Operators — arithmetic, equality, and short-circuit logic.
+0:19 Three families you use every day.
+0:21 Arithmetic — plus, minus, multiply, divide.
+0:24 Relational — less than, greater than, equals-equals.
+0:28 Logical — and, or, not — decisions that branch your code.
+0:32 Java evaluates left to right
+0:36 The classic trap — equality.
+0:38 For primitives, equals-equals compares values
+0:42 For objects, equals-equals compares references — same…
+0:47 For String content — use equals
+0:53 Safer pattern — put the literal first
+0:57 That avoids a null pointer if status is null.
+1:00 Short-circuit logic protects you.
+1:03 Double ampersand — and
+1:05 If the left side already decides the answer, the right…
+1:10 user not null and user is active — the second call only…
+1:15 Single ampersand does not short-circuit
+1:20 Use short-circuit when the second check is expensive — or…
+1:24 Arithmetic looks innocent.
+1:26 int can silently wrap on overflow — no exception by default.
+1:30 For money limits and counters, silent wrap is dangerous.
+1:34 Prefer Math dot addExact when overflow must fail loudly.
+1:37 Or use long — and still think about the upper bound.
+1:41 Payment systems choose exact math for a reason.
+1:44 The ternary operator — question mark colon.
+1:47 condition question result-if-true colon result-if-false.
+1:51 Great for simple choices
+1:54 If the expression needs a paragraph of comments — extract…
+1:59 Architect tip — order can be cancelled beats a pile of…
+2:04 Three common mistakes.
+2:06 One — equals-equals for String content.
+2:08 Two — ignoring integer overflow until production numbers…
+2:12 Three — side effects stuffed inside clever expressions
+2:18 Also — trusting operator precedence instead of parentheses
+2:24 Interview question — equals-equals versus equals?
+2:27 Answer cleanly.
+2:28 Equals-equals — references for objects
+2:32 Equals — logical equality defined by the type.
+2:36 Then add — short-circuit and protects null
+2:41 Operators decide
+2:44 Episode Six — control flow.
+2:46 if, else, switch, loops — how programs choose and repeat.
+2:51 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode05

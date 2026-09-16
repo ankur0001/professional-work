@@ -1,0 +1,44 @@
+The Java Story — Episode 25: Sorting and Comparators
+Current cut (coherent narration + animated visuals).
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Queues ordered things by arrival
+• Suppose you have a list of users
+• The natural question is: can the collection stay dumb while the sort…
+• Comparator means an external strategy — a separate rule you pass…
+• thenComparingInt(User::age) breaks ties by age
+• The strategy lived at the call site — exactly where the screen's…
+• …and more
+
+Timestamps
+0:00 Queues ordered things by arrival
+0:13 Suppose you have a list of users
+0:26 The natural question is: can the collection stay dumb…
+0:39 Comparator means an external strategy — a separate rule…
+0:53 thenComparingInt(User::age) breaks ties by age
+1:05 The strategy lived at the call site — exactly where the…
+1:15 Start with the primary key, chain the secondary, reverse…
+1:20 Keep each piece a pure comparison: given two elements,…
+1:29 Natural order still matters when a type truly has one…
+1:39 Now TreeSet or Collections.sort can use that order without…
+1:50 Consistency with equals matters for sorted sets and maps
+2:02 That mismatch drops data silently
+2:13 That property matters when you sort in stages or when…
+2:25 Extracting a named Comparator makes the policy reviewable…
+2:37 Look at this java for a moment
+2:52 Reverse order is a one-liner: Look at this java for a moment
+3:09 Consistency with equals protected sorted sets and maps.
+3:12 Once we can filter, transform, and sort collections,…
+3:24 That style has a name in modern Java: streams.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v2/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode25

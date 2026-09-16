@@ -1,0 +1,73 @@
+The Java Story — Episode 02: JDK, JRE, and JVM
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• In Episode One, we learned why Java survived.
+• But beginners still mix three names — JDK, JRE, and JVM.
+• They are not the same thing.
+• Today we separate them — clearly — on screen.
+• Episode Two.
+• JDK, JRE, and JVM — the three layers of the Java platform.
+• …and more
+
+Timestamps
+0:00 In Episode One, we learned why Java survived.
+0:03 But beginners still mix three names — JDK, JRE, and JVM.
+0:08 They are not the same thing.
+0:10 Today we separate them — clearly — on screen.
+0:14 Episode Two.
+0:15 JDK, JRE, and JVM — the three layers of the Java platform.
+0:21 Look at these three boxes.
+0:23 At the top — the JDK
+0:27 In the middle — the JRE
+0:32 At the bottom — the JVM
+0:36 JDK for develop
+0:41 Zoom into the JDK.
+0:42 This is where javac lives — the compiler.
+0:45 Also jar, jlink, jcmd, jmap, and Java Flight Recorder tools.
+0:50 If you write code or debug production issues — you want…
+0:54 The JRE is the runtime layer.
+0:56 Libraries, launchers, and everything needed to start a…
+1:01 It does not include the compiler.
+1:03 Modern installs often ship a JDK — but the runtime idea…
+1:08 And here is the JVM.
+1:10 It loads class files, verifies bytecode, and runs your…
+1:14 HotSpot is the common implementation — interpreter, JIT,…
+1:19 Same bytecode contract
+1:23 Follow the arrows.
+1:24 Your .java file goes into javac — that tool comes from the…
+1:29 Out comes a .class file — bytecode.
+1:32 The java launcher starts a JVM process.
+1:35 The JVM reads bytecode and runs it.
+1:38 That is the full path — develop, package, execute.
+1:42 Now the production gotcha.
+1:44 On screen — heap is only one slice of memory.
+1:47 Also metaspace, thread stacks, code cache, and native…
+1:51 If dash X m x equals your container limit — you leave no…
+1:55 Always leave room beyond the heap.
+1:58 Three common mistakes.
+1:59 One — shipping a full JDK into every tiny container when a…
+2:05 Two — compiling with Java twenty-one in CI, then running…
+2:11 Three — treating the JVM as a black box until something…
+2:15 Interview question — what's the difference between JDK,…
+2:20 Point to the diagram.
+2:22 JVM executes bytecode.
+2:24 JRE provides the runtime to launch apps.
+2:27 JDK adds compilers and diagnostics on top.
+2:30 Answer that calmly — and you sound like you've shipped Java.
+2:35 Now the three names finally line up with the picture.
+2:39 Next episode — Java program structure.
+2:41 public class, main, packages — what every line is doing.
+2:45 Episode Three
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode02

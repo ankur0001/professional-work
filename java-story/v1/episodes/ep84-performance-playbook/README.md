@@ -1,19 +1,33 @@
 # Episode 84 — Performance Playbook
 
-**Cut:** `v1` · **Series:** The Java Story
+**Cut:** `v1` · **YouTube upload pack**
 
 ![Episode 84 thumbnail](thumbnail.jpg)
 
-## Files
+## YouTube upload checklist
 
-- [`thumbnail.jpg`](thumbnail.jpg) — episode thumbnail
-- [`Java_Episode_84_Performance_Playbook.mp4`](Java_Episode_84_Performance_Playbook.mp4) — clean video
-- [`Java_Episode_84_Performance_Playbook_CAPTIONED.mp4`](Java_Episode_84_Performance_Playbook_CAPTIONED.mp4) — captioned video
-- [`Java_Episode_84.srt`](Java_Episode_84.srt) — captions (SRT)
-- [`Java_Episode_84_thumbnail.jpg`](Java_Episode_84_thumbnail.jpg)
+| Asset | File |
+|---|---|
+| Title | [`title.txt`](title.txt) |
+| Description + timestamps | [`youtube_description.txt`](youtube_description.txt) |
+| Tags | [`tags.txt`](tags.txt) |
+| Thumbnail | [`thumbnail.jpg`](thumbnail.jpg) |
+| Video (clean) | [`Java_Episode_84_Performance_Playbook.mp4`](Java_Episode_84_Performance_Playbook.mp4) |
+| Video (captioned) | [`Java_Episode_84_Performance_Playbook_CAPTIONED.mp4`](Java_Episode_84_Performance_Playbook_CAPTIONED.mp4) |
+| Captions (SRT) | [`Java_Episode_84.srt`](Java_Episode_84.srt) |
+| Narration / transcript | [`narration.md`](narration.md) |
+
+## Suggested upload
+
+1. Upload **clean** video (or captioned if you want burned-in subs).
+2. Set title from `title.txt`.
+3. Paste `youtube_description.txt` into YouTube description.
+4. Upload `thumbnail.jpg`.
+5. Upload `*.srt` as captions (if using clean video).
+6. Add tags from `tags.txt`.
 
 ## Navigation
 
-- Previous: [Episode 83 — Event-Driven Architecture](../ep83-event-driven-architecture/)
-- Next: [Episode 85 — Production Readiness Capstone](../ep85-production-readiness-capstone/)
+- Previous: [ep83-event-driven-architecture](../ep83-event-driven-architecture/)
+- Next: [ep85-production-readiness-capstone](../ep85-production-readiness-capstone/)
 - Index: [`../../INDEX.md`](../../INDEX.md)

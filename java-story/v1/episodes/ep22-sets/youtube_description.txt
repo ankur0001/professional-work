@@ -1,0 +1,79 @@
+The Java Story — Episode 22: Sets
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Lists keep order and duplicates
+• Is this value already in the collection — yes or no?
+• Uniqueness is the product
+• HashSet
+• Today we pick the right Set for the job.
+• One of each — with rules you must respect.
+• …and more
+
+Timestamps
+0:00 Lists keep order and duplicates
+0:04 Is this value already in the collection — yes or no?
+0:08 Uniqueness is the product
+0:12 HashSet
+0:17 Today we pick the right Set for the job.
+0:20 One of each — with rules you must respect.
+0:23 Episode Twenty-Two.
+0:24 Sets — uniqueness in java.util.
+0:27 Set is a Collection that forbids duplicates.
+0:30 Whether two elements collide is decided by equals — not by…
+0:34 There is no get by index
+0:37 Iteration order depends on the implementation you chose.
+0:41 Prefer the Set interface in APIs until performance forces…
+0:46 Model membership
+0:49 HashSet is the default for most uniqueness needs.
+0:52 It uses hashing for average constant-time add, remove, and…
+0:57 Do not rely on iteration order — it is not a feature.
+1:00 Your element type must honor equals and hashCode together.
+1:04 Mutable fields that participate in equals make sets…
+1:08 For fast membership tests, start with HashSet.
+1:11 When order matters, reach for a sibling.
+1:13 LinkedHashSet preserves insertion order while keeping hash…
+1:18 TreeSet keeps elements sorted — natural order or a…
+1:22 Tree operations are logarithmic — fine, until you pretend…
+1:27 Need sorted ranges or first and last — TreeSet earns its…
+1:31 Need stable encounter order — LinkedHashSet is cleaner…
+1:35 The silent dependency — equals and hashCode.
+1:38 If two objects are equal, their hash codes must match.
+1:42 Break that contract and HashSet will lose or duplicate…
+1:46 TreeSet uses compareTo or a Comparator — consistency with…
+1:51 Immutable value types make safer set elements.
+1:54 Identity is a design decision
+1:58 How to choose.
+1:59 Pure membership, order irrelevant — HashSet.
+2:02 Need predictable iteration in insertion order —…
+2:06 Need sorted traversal or range queries — TreeSet.
+2:10 Set.of gives an unmodifiable set — great for constants.
+2:13 Choose for access pattern, not for how advanced the class…
+2:18 Three common mistakes.
+2:20 One — putting mutable objects in a HashSet, then mutating…
+2:24 Two — implementing equals without hashCode — or the reverse.
+2:28 Three — using TreeSet with types that have no natural…
+2:33 Also — expecting HashSet iteration to stay stable across…
+2:37 Sets are simple
+2:40 Interview question — HashSet versus LinkedHashSet versus…
+2:44 HashSet — fastest typical membership, no order guarantees.
+2:48 LinkedHashSet — hash performance with insertion-order…
+2:53 TreeSet — sorted, logarithmic, needs ordering rules.
+2:56 Mention equals and hashCode — interviewers listen for that.
+3:00 That answer shows judgment, not memorization.
+3:03 Uniqueness is clear
+3:08 Episode Twenty-Three — Maps.
+3:10 HashMap realities, ordering variants, and null rules.
+3:14 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode22

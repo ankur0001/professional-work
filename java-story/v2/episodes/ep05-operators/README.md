@@ -1,20 +1,34 @@
 # Episode 05 — Operators
 
-**Cut:** `v2` · **Series:** The Java Story
+**Cut:** `v2` · **YouTube upload pack**
 
 ![Episode 05 thumbnail](thumbnail.jpg)
 
-## Files
+## YouTube upload checklist
 
-- [`thumbnail.jpg`](thumbnail.jpg) — episode thumbnail
-- [`Java_Episode_05_Operators.mp4`](Java_Episode_05_Operators.mp4) — clean video
-- [`Java_Episode_05_Operators_CAPTIONED.mp4`](Java_Episode_05_Operators_CAPTIONED.mp4) — captioned video
-- [`Java_Episode_05.srt`](Java_Episode_05.srt) — captions (SRT)
-- [`Java_Episode_05_SOURCE.md`](Java_Episode_05_SOURCE.md) — build provenance
-- [`narration.md`](narration.md) — narration used for this render
+| Asset | File |
+|---|---|
+| Title | [`title.txt`](title.txt) |
+| Description + timestamps | [`youtube_description.txt`](youtube_description.txt) |
+| Tags | [`tags.txt`](tags.txt) |
+| Thumbnail | [`thumbnail.jpg`](thumbnail.jpg) |
+| Video (clean) | [`Java_Episode_05_Operators.mp4`](Java_Episode_05_Operators.mp4) |
+| Video (captioned) | [`Java_Episode_05_Operators_CAPTIONED.mp4`](Java_Episode_05_Operators_CAPTIONED.mp4) |
+| Captions (SRT) | [`Java_Episode_05.srt`](Java_Episode_05.srt) |
+| Narration / transcript | [`narration.md`](narration.md) |
+| Build provenance | [`Java_Episode_05_SOURCE.md`](Java_Episode_05_SOURCE.md) |
+
+## Suggested upload
+
+1. Upload **clean** video (or captioned if you want burned-in subs).
+2. Set title from `title.txt`.
+3. Paste `youtube_description.txt` into YouTube description.
+4. Upload `thumbnail.jpg`.
+5. Upload `*.srt` as captions (if using clean video).
+6. Add tags from `tags.txt`.
 
 ## Navigation
 
-- Previous: [Episode 04 — Variables and Data Types](../ep04-variables-and-data-types/)
-- Next: [Episode 06 — Control Flow](../ep06-control-flow/)
+- Previous: [ep04-variables-and-data-types](../ep04-variables-and-data-types/)
+- Next: [ep06-control-flow](../ep06-control-flow/)
 - Index: [`../../INDEX.md`](../../INDEX.md)

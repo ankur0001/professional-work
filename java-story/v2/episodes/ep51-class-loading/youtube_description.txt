@@ -1,0 +1,53 @@
+The Java Story — Episode 51: Class Loading
+Current cut (coherent narration + animated visuals).
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Virtual threads closed a long concurrency arc
+• You write source, compile to bytecode, and somehow main runs
+• Classes appear lazily
+• Start from a deliberate load: Look at this java for a moment
+• Printing the class loader shows which loader defined it
+• The usual hierarchy is bootstrap, platform, and application loaders
+• …and more
+
+Timestamps
+0:00 Virtual threads closed a long concurrency arc
+0:10 You write source, compile to bytecode, and somehow main runs
+0:24 Classes appear lazily
+0:33 Start from a deliberate load: Look at this java for a moment
+0:45 Printing the class loader shows which loader defined it
+0:54 The usual hierarchy is bootstrap, platform, and…
+1:06 The application loader finds your classpath or module path…
+1:15 That keeps core types unique and prevents user code from…
+1:21 Custom loaders — plugin systems, containers — complicate…
+1:31 Two classes with the same binary name loaded by different…
+1:45 Loading is only one phase
+1:58 Initialization runs static initializers
+2:08 Know that Class.forName and first active use are moments…
+2:17 When you generate or load huge numbers of classes,…
+2:30 Memory" is not only -Xmx
+2:43 ClassNotFoundException often means a loader could not find…
+2:54 The names are not interchangeable
+3:05 At compile time on a developer machine everything resolved
+3:18 What if two plugins each ship a different version of the…
+3:31 Dynamic proxies and generated subclasses multiply classes…
+3:42 When a framework says "add this agent" or "open this…
+3:49 Initialization order can also bite: static fields that…
+3:58 Picture an application that fails on first request with…
+4:12 and later use reports NoClassDefFoundError.
+4:15 Reading the first failure in the log matters more than…
+4:19 Hold a practical checklist: know which loader owns your…
+4:31 make classpath contents an explicit deployment concern.
+4:35 The next natural hunger is what those bytes actually…
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v2/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode51

@@ -1,0 +1,79 @@
+The Java Story — Episode 32: Exceptions
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Programs fail
+• Exceptions are Java way of signaling that something went wrong.
+• Not every error is a crash — some are expected and recoverable.
+• Checked exceptions force you to acknowledge risk at compile time.
+• Unchecked exceptions flag programming bugs and broken assumptions.
+• Today — how Java models failure, and how to handle it with intent.
+• …and more
+
+Timestamps
+0:00 Programs fail
+0:03 Exceptions are Java way of signaling that something went…
+0:07 Not every error is a crash — some are expected and…
+0:11 Checked exceptions force you to acknowledge risk at…
+0:15 Unchecked exceptions flag programming bugs and broken…
+0:19 Today — how Java models failure, and how to handle it with…
+0:23 Episode Thirty-Two.
+0:25 Exceptions — checked, unchecked, and handling failure.
+0:29 Throwable sits at the root of the error hierarchy.
+0:32 Error is for serious JVM problems — you rarely catch these.
+0:36 Exception is what application code usually deals with.
+0:39 RuntimeException and its subclasses are unchecked.
+0:42 Everything else under Exception is checked — the compiler…
+0:47 Know the hierarchy before you catch broadly.
+0:50 try wraps code that might throw.
+0:52 catch handles a specific exception type — order matters,…
+0:57 You can catch multiple types in one block since Java seven.
+1:00 Handle what you can recover from — log, retry, or return a…
+1:05 Swallowing exceptions silently is almost always wrong.
+1:08 A narrow catch beats catch Exception everywhere.
+1:12 throws declares that a method may propagate an exception.
+1:15 Callers must handle checked exceptions — try-catch or…
+1:20 Unchecked exceptions do not require a throws clause.
+1:23 Document what can go wrong — throws is part of the contract.
+1:27 Do not use throws to push problems up without a plan.
+1:30 Sometimes wrapping a checked exception in an unchecked one…
+1:35 finally runs whether the try block succeeds or throws.
+1:38 Classic use — release resources in a finally block.
+1:41 Modern code prefers try-with-resources — we cover that…
+1:46 Do not return from finally — it can mask the real exception.
+1:49 finally is for cleanup that must happen no matter what.
+1:53 Keep finally blocks short and predictable.
+1:55 Define custom exceptions when domain errors need clear…
+1:59 Extend Exception for checked, RuntimeException for…
+2:03 Provide meaningful constructors — message, cause, both.
+2:06 BankAccountOverdrawnException beats a generic…
+2:11 Do not create an exception class for every trivial case.
+2:14 Good exception names read like answers to what went wrong.
+2:18 Three common mistakes.
+2:19 One — catching Exception or Throwable and doing nothing…
+2:23 Two — using exceptions for normal control flow — they are…
+2:27 Three — throwing generic RuntimeException without context…
+2:32 Also — empty catch blocks that hide production bugs.
+2:35 Fail loudly in development
+2:39 Interview question — checked versus unchecked exceptions?
+2:42 Checked — compiler requires handling or declaring throws.
+2:46 Unchecked — extends RuntimeException, no compile-time…
+2:50 Checked for recoverable conditions callers should know…
+2:53 Unchecked for programming errors and broken invariants.
+2:57 Mention try-with-resources for cleanup — that shows modern…
+3:00 You know how to catch failure
+3:05 Episode Thirty-Three — try-with-resources.
+3:08 AutoCloseable, suppressed exceptions, and leak-free I/O.
+3:13 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode32

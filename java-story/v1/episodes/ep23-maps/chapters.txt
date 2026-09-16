@@ -1,0 +1,54 @@
+0:00 Sets answer membership
+0:03 Given this key — what value belongs with it?
+0:06 Lookups, caches, indexes, configuration — maps are…
+0:11 HashMap is the workhorse
+0:16 Today — Map contracts, null rules, and modern helpers.
+0:20 Keys find values
+0:23 Episode Twenty-Three.
+0:25 Maps — key to value in java.util.
+0:29 Map is not a Collection — it is its own hierarchy.
+0:32 Each key maps to at most one value.
+0:35 put replaces
+0:40 Views matter — keySet, values, and entrySet share the…
+0:44 Mutating a view mutates the map
+0:49 Model associations
+0:54 HashMap is the default map for single-threaded use.
+0:57 Average constant-time put and get when hashing behaves.
+1:01 Keys need equals and hashCode — same story as HashSet.
+1:04 One null key is allowed
+1:08 Prefer computeIfAbsent and merge over get-then-put races…
+1:12 For most application maps, start here.
+1:15 Ordering and specialized maps.
+1:17 LinkedHashMap preserves insertion order — or access order…
+1:22 TreeMap keeps keys sorted — natural order or Comparator.
+1:26 EnumMap is compact and fast when keys are enum constants.
+1:30 IdentityHashMap uses reference equality — rare, sharp tool.
+1:34 Pick the variant that matches your iteration and key domain.
+1:38 Null rules are implementation-specific.
+1:41 HashMap tolerates a null key
+1:44 Hashtable rejects nulls entirely — and brings legacy…
+1:48 Never assume null policy from the Map interface alone.
+1:52 In modern code, ConcurrentHashMap also rejects nulls.
+1:55 Read the implementation before you lean on null as a signal.
+1:59 Modern Map APIs reduce boilerplate bugs.
+2:02 getOrDefault avoids null checks for simple fallbacks.
+2:05 computeIfAbsent builds values lazily and cleanly.
+2:09 merge combines values with an explicit remapping function.
+2:13 Map.of and Map.copyOf create unmodifiable maps for safer…
+2:17 Prefer these helpers over fragile get-then-mutate sequences.
+2:21 Three common mistakes.
+2:22 One — mutable keys whose equals fields change after…
+2:27 Two — modifying a map while iterating its keySet carelessly.
+2:31 Three — reaching for Hashtable in new code out of habit.
+2:35 Also — using null values as a secret third state without…
+2:40 Maps amplify clear key design — and punish sloppy identity.
+2:44 Interview question — how does HashMap work, and when…
+2:48 HashMap — hash buckets, equals for collisions, average O(1).
+2:52 TreeMap — red-black tree, sorted keys, logarithmic ops.
+2:56 Call out mutable keys and null differences.
+2:59 Mention LinkedHashMap if they ask about predictable order.
+3:03 That answer is solid for junior and mid-level interviews.
+3:07 Associations are clear
+3:12 Episode Twenty-Four — Queues and Deques.
+3:16 FIFO, stacks, and why ArrayDeque wins often.
+3:19 See you there.

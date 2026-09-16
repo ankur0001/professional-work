@@ -1,0 +1,72 @@
+The Java Story — Episode 06: Control Flow
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Operators decide values
+• Which statements run?
+• In production, unclear branching becomes missed edge cases — and…
+• Today we make the path visible — and keep it flat.
+• Episode Six.
+• Control Flow — if, switch, loops, and clean exits.
+• …and more
+
+Timestamps
+0:00 Operators decide values
+0:03 Which statements run?
+0:06 In production, unclear branching becomes missed edge cases…
+0:12 Today we make the path visible — and keep it flat.
+0:15 Episode Six.
+0:16 Control Flow — if, switch, loops, and clean exits.
+0:21 Start with if — but prefer guard clauses.
+0:24 Validate early
+0:27 Flat code beats a pyramid of nested else blocks.
+0:31 If not valid — return
+0:37 Readable
+0:40 When cases are finite — switch shines.
+0:43 Modern Java has switch expressions — they produce a value.
+0:47 Arrow labels
+0:50 Perfect for statuses — PENDING, PAID, CANCELLED.
+0:53 If you are still writing classic switch with missing…
+0:59 Finite states belong in switch
+1:03 Loops repeat work.
+1:05 for when you know the bounds
+1:09 for-each when you walk a collection cleanly.
+1:12 break exits
+1:15 Watch unbounded loops — they become production incidents.
+1:19 And avoid allocating heavy objects on every iteration in…
+1:24 Exceptions are for exceptional paths — not everyday…
+1:28 try, catch, finally — and try-with-resources for cleanup.
+1:32 Open a file or connection inside try-with-resources — Java…
+1:37 Do not throw exceptions to mean not found on every request
+1:43 Reserve exceptions for failures you cannot express as a…
+1:48 Picture a production request.
+1:50 Validate
+1:53 On failure — compensate or retry with clear rules.
+1:56 Good control flow makes normal and failure paths equally…
+2:01 Hidden branches are where incidents hide.
+2:04 Three common mistakes.
+2:06 One — deeply nested branches that hide the real intent.
+2:09 Two — missing break in legacy switch — fall-through bugs.
+2:13 Three — exceptions for common outcomes
+2:17 Also — putting whole business workflows inside controllers
+2:22 Interview question — when do you use a switch expression?
+2:26 Answer — finite, clear cases that produce a value.
+2:30 Then add — prefer guard clauses over nesting.
+2:33 And try-with-resources for deterministic cleanup.
+2:36 That package of answers sounds senior.
+2:38 Paths are clear
+2:42 Episode Seven — methods.
+2:43 Parameters, return types, overloading — how code becomes…
+2:49 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode06

@@ -1,20 +1,34 @@
 # Episode 72 — IoC and Dependency Injection
 
-**Cut:** `v2` · **Series:** The Java Story
+**Cut:** `v2` · **YouTube upload pack**
 
 ![Episode 72 thumbnail](thumbnail.jpg)
 
-## Files
+## YouTube upload checklist
 
-- [`thumbnail.jpg`](thumbnail.jpg) — episode thumbnail
-- [`Java_Episode_72_IoC_and_Dependency_Injection.mp4`](Java_Episode_72_IoC_and_Dependency_Injection.mp4) — clean video
-- [`Java_Episode_72_IoC_and_Dependency_Injection_CAPTIONED.mp4`](Java_Episode_72_IoC_and_Dependency_Injection_CAPTIONED.mp4) — captioned video
-- [`Java_Episode_72.srt`](Java_Episode_72.srt) — captions (SRT)
-- [`Java_Episode_72_SOURCE.md`](Java_Episode_72_SOURCE.md) — build provenance
-- [`narration.md`](narration.md) — narration used for this render
+| Asset | File |
+|---|---|
+| Title | [`title.txt`](title.txt) |
+| Description + timestamps | [`youtube_description.txt`](youtube_description.txt) |
+| Tags | [`tags.txt`](tags.txt) |
+| Thumbnail | [`thumbnail.jpg`](thumbnail.jpg) |
+| Video (clean) | [`Java_Episode_72_IoC_and_Dependency_Injection.mp4`](Java_Episode_72_IoC_and_Dependency_Injection.mp4) |
+| Video (captioned) | [`Java_Episode_72_IoC_and_Dependency_Injection_CAPTIONED.mp4`](Java_Episode_72_IoC_and_Dependency_Injection_CAPTIONED.mp4) |
+| Captions (SRT) | [`Java_Episode_72.srt`](Java_Episode_72.srt) |
+| Narration / transcript | [`narration.md`](narration.md) |
+| Build provenance | [`Java_Episode_72_SOURCE.md`](Java_Episode_72_SOURCE.md) |
+
+## Suggested upload
+
+1. Upload **clean** video (or captioned if you want burned-in subs).
+2. Set title from `title.txt`.
+3. Paste `youtube_description.txt` into YouTube description.
+4. Upload `thumbnail.jpg`.
+5. Upload `*.srt` as captions (if using clean video).
+6. Add tags from `tags.txt`.
 
 ## Navigation
 
-- Previous: [Episode 71 — Spring Framework Intro](../ep71-spring-framework-intro/)
-- Next: [Episode 73 — Spring Boot Basics](../ep73-spring-boot-basics/)
+- Previous: [ep71-spring-framework-intro](../ep71-spring-framework-intro/)
+- Next: [ep73-spring-boot-basics](../ep73-spring-boot-basics/)
 - Index: [`../../INDEX.md`](../../INDEX.md)
