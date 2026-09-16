@@ -13,17 +13,15 @@
 
 Unverified code is a rumor. JUnit 5 is the default language of automated proof in modern Java.
 
-Here is the pain this lesson exists to remove. Without structured tests: manual main() methods, no CI feedback, fear of refactoring, production bugs discovered late. JUnit standardizes execution and reporting.
+Here is the pain this lesson exists to remove. Problem Statement Without structured tests: manual main() methods, no CI feedback, fear of refactoring, production bugs discovered late. JUnit standardizes execution and reporting.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The answer we need is JUnit 5.
+So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is JUnit 5.
 
-JUnit 5 (Jupiter) is the modern Java unit testing framework — the foundation of all Spring testing. It replaces JUnit 4 with a modular architecture: JUnit Platform (launcher), Jupiter (programming model), and Vintage (JUnit 4 compatibility). Testing Pyramid (Spring Context)
+Concept JUnit 5 (Jupiter) is the modern Java unit testing framework — the foundation of all Spring testing. It replaces JUnit 4 with a modular architecture: JUnit Platform (launcher), Jupiter (programming model), and Vintage (JUnit 4 compatibility).
 
-A little context helps the idea stick. JUnit 4 (2006) dominated for a decade. JUnit 5 (2017) complete rewrite — modular, lambda-friendly, extension model replaces rules/runners. Spring Boot 2+ uses Jupiter by default.
+Spring's design choice here is deliberate. Why Spring Provides This Feature Spring Test builds on JUnit 5 ( @ExtendWith(SpringExtension.class) / @SpringBootTest ). Surefire/Failsafe plugins run tests in Maven/Gradle CI pipelines.
 
-Spring's design choice here is deliberate. Spring Test builds on JUnit 5 ( @ExtendWith(SpringExtension.class) / @SpringBootTest ). Surefire/Failsafe plugins run tests in Maven/Gradle CI pipelines.
-
-Once you accept the feature, the next honest question is how it works under the hood. TestEngine discovers tests via reflection. Extensions intercept (like AOP for tests). Assertions in org.junit.jupiter.api.Assertions .
+Once you accept the feature, the next honest question is how it works under the hood. Internal Working TestEngine discovers tests via reflection. Extensions intercept lifecycle (like AOP for tests). Assertions in org.junit.jupiter.api.Assertions . Container Refresh Sequence (High Level) Application startup
 
 As you practice JUnit 5, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
 

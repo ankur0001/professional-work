@@ -13,17 +13,15 @@
 
 Objects and tables speak different languages. JPA is the translation layer Spring apps usually choose.
 
-Here is the pain this lesson exists to remove. Raw JDBC causes: SQL string concatenation, manual ResultSet mapping, duplicated CRUD per table, no caching, no lazy loading, transaction boundaries scattered in code. JPA + Spring Data JPA provide declarative mapping, repository abstraction, and @Transactional integration.
+Here is the pain this lesson exists to remove. Problem Statement Raw JDBC causes: SQL string concatenation, manual ResultSet mapping, duplicated CRUD per table, no caching, no lazy loading, transaction boundaries scattered in code. JPA + Spring Data JPA provide declarative mapping, repository abstraction, and @Transactional integration.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The answer we need is JPA Fundamentals.
+So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is JPA Fundamentals.
 
-JPA (Java Persistence API) is the Java standard for object-relational mapping (ORM). Spring Data JPA builds on JPA + Hibernate to eliminate boilerplate DAO/repository code. Together they map Java objects (entities) to relational database tables and back.
+Concept JPA (Java Persistence API) is the Java standard for object-relational mapping (ORM). Spring Data JPA builds on JPA + Hibernate to eliminate boilerplate DAO/repository code. Together they map Java objects (entities) to relational database tables and back.
 
-A little context helps the idea stick. 2006: JPA 1.0 (Java EE 5) — standardizes ORM beyond proprietary Hibernate/EJB Entity Beans. 2013: JPA 2.1 — stored procedures, entity graphs. 2017: Spring Data JPA 2.x aligns with Spring Boot 2. 2022: Jakarta Persistence 3.0 (namespace jakarta.persistence ) with Spring Boot 3. Hibernate predates JPA (2001); JPA adopted Hibernate annotations as the de facto model.
+Spring's design choice here is deliberate. Why Spring Provides This Feature Spring Data JPA generates repository implementations at runtime — no OrderDaoImpl boilerplate. Integrates with Spring TX ( @Transactional ), validation, and Boot auto-config for datasource + EMF.
 
-Spring's design choice here is deliberate. Spring Data JPA generates repository implementations at runtime — no OrderDaoImpl boilerplate. Integrates with Spring TX ( @Transactional ), validation, and Boot auto-config for datasource + EMF.
-
-Once you accept the feature, the next honest question is how it works under the hood. Boot auto-config: HibernateJpaAutoConfiguration creates LocalContainerEntityManagerFactoryBean , JpaTransactionManager , and scans @Entity classes. SimpleJpaRepository is the base impl for all repos. EntityManagerFactory (singleton) creates EntityManager (per transaction or request).
+Once you accept the feature, the next honest question is how it works under the hood. Internal Working Boot auto-config: HibernateJpaAutoConfiguration creates LocalContainerEntityManagerFactoryBean , JpaTransactionManager , and scans @Entity classes. SimpleJpaRepository is the base impl for all repos. EntityManagerFactory (singleton) creates EntityManager (per transaction or request). Container Refresh Sequence (High Level) Application startup
 
 As you practice JPA Fundamentals, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
 

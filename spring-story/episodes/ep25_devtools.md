@@ -11,17 +11,17 @@
 
 ## Full narration
 
-Restarting the JVM for every tiny change slows learning. DevTools exists to shorten that feedback loop safely.
+Restarting the JVM for every tiny change slows learning. DevTools shortens that feedback loop.
 
-Here is the pain this lesson exists to remove. Without mastering DevTools , teams encounter mysterious startup failures: beans missing from context, wrong implementation wired, duplicate definitions, or environment-specific code compiled into production. Concrete scenario: a @Service appears not to inject — often the root cause lies in DevTools misconfiguration (scan path, missing @Bean , wrong profile, or scope proxy issue). Additional pain points: implicit copy-paste config, test drift from production scanning, and library conflicts from duplicate bean definitions.
+Here is the pain this lesson exists to remove. Teams lost days to version alignment, manual datasource config, WAR deployment friction, and missing health endpoints before the first useful API was live.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The answer we need is DevTools.
+So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is DevTools.
 
-DevTools — Development-only: automatic restart, LiveReload, property defaults. This lesson is part of Phase 2 — SPRING BOOT . It builds on Phase 1 lessons. By Lesson 25, you should see how DevTools fits into the container's definition → registration → instantiation → injection → initialization pipeline and the broader application architecture. Primary API Classpath monitoring triggers context refresh on change Related classes DevToolsDataSourceAutoConfiguration , LocalDevToolsAutoConfiguration Typical config Java @Configuration + annotations (Boot default) Architecture Placement BeanDefinition sources Container core Your code
+At a practical level, DevTools is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
 
-Spring's design choice here is deliberate. Spring centralizes DevTools in the container rather than scattering factory logic across the codebase. Benefits: Single composition root — all wiring visible in config layer. Consistent semantics — same rules in tests and production. Extension hooks — customize via post-processors without forking framework. Tooling — IDE support, Actuator /beans , condition reports. Classpath monitoring triggers context refresh on change. This is preferable to ad-hoc Service Locator or manual singleton registries that grow unmaintainable.
+Spring's design choice here is deliberate. Boot keeps Framework power and removes repetitive platform wiring through auto-configuration, starters, and an executable deployment model.
 
-Once you accept the feature, the next honest question is how it works under the hood. Internally, Spring delegates DevTools to well-tested components: DevToolsDataSourceAutoConfiguration , LocalDevToolsAutoConfiguration Processing order matters: BeanFactoryPostProcessor s run before bean instantiation; BeanPostProcessor s wrap creation. Misordered custom processors cause subtle bugs. Step-by-Step Internal Flow for DevTools Parse — configuration class, XML, or scan result produces BeanDefinition objects. Register — definitions stored in DefaultListableBeanFactory registry (by name + aliases). Post-process definitions — modify property values, register extra beans.
+Once you accept the feature, the next honest question is how it works under the hood. Startup follows Environment → context creation → auto-configuration import → refresh → embedded server → readiness events.
 
 As you practice DevTools, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
 

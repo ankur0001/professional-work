@@ -11,19 +11,17 @@
 
 ## Full narration
 
-You cannot improve what you do not measure. Micrometer is Spring's facade for application metrics.
+You cannot improve what you do not measure. Micrometer is Spring’s facade for application metrics.
 
-Here is the pain this lesson exists to remove. Without metrics: blind in production — "is it slow?" answered only by user complaints. Ad-hoc JMX or custom logging counters don't aggregate across 50 pods.
+Here is the pain this lesson exists to remove. Problem Statement Without metrics: blind in production — "is it slow?" answered only by user complaints. Ad-hoc JMX or custom logging counters don't aggregate across 50 pods.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The answer we need is Micrometer.
+So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Micrometer.
 
-Micrometer is the application metrics facade for Spring — a vendor-neutral API for counters, gauges, timers, and distribution summaries. Spring Boot Actuator auto-configures Micrometer and exports to Prometheus, CloudWatch, Datadog, and more. Three Pillars of Observability
+Concept Micrometer is the application metrics facade for Spring — a vendor-neutral API for counters, gauges, timers, and distribution summaries. Spring Boot Actuator auto-configures Micrometer and exports to Prometheus, CloudWatch, Datadog, and more.
 
-A little context helps the idea stick. Micrometer created by Pivotal (2017) to unify metrics across Spring projects, replacing Spring Boot 1.x direct Dropwizard metrics. Now the standard for Boot 2.x/3.x observability.
+Spring's design choice here is deliberate. Why Spring Provides This Feature Single MeterRegistry bean; @Timed / @Observed annotations; auto HTTP/JVM/DB metrics; pluggable exporters via classpath.
 
-Spring's design choice here is deliberate. Single MeterRegistry bean; @Timed / @Observed annotations; auto HTTP/JVM/DB metrics; pluggable exporters via classpath.
-
-Once you accept the feature, the next honest question is how it works under the hood. CompositeMeterRegistry holds child registries. MeterFilter common tags (app, env, pod). Actuator MetricsEndpoint exposes snapshot; Prometheus registry formats for scrape.
+Once you accept the feature, the next honest question is how it works under the hood. Internal Working CompositeMeterRegistry holds child registries. MeterFilter common tags (app, env, pod). Actuator MetricsEndpoint exposes snapshot; Prometheus registry formats for scrape. Container Refresh Sequence (High Level) Application startup
 
 As you practice Micrometer, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
 

@@ -11,19 +11,17 @@
 
 ## Full narration
 
-Multiple database steps often need one all-or-nothing outcome. @Transactional is Spring's declaration of that boundary.
+Multiple database steps often need one all-or-nothing outcome. @Transactional declares that boundary.
 
-Here is the pain this lesson exists to remove. Manual transaction code: try { conn.setAutoCommit(false); ... conn.commit(); } catch { rollback(); } Duplicated everywhere, easy to forget rollback, connection leaks, inconsistent across team.
+Here is the pain this lesson exists to remove. Problem Statement Manual transaction code: try { conn.setAutoCommit(false); ... conn.commit(); } catch { rollback(); } Duplicated everywhere, easy to forget rollback, connection leaks, inconsistent across team.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The answer we need is @Transactional.
+So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is @Transactional.
 
-@Transactional is Spring's declarative transaction management annotation. It tells Spring: "Wrap this method in a database transaction — begin before, commit on success, rollback on failure." Without it, each JPA save() might auto-commit independently — breaking atomicity across multiple operations.
+Concept @Transactional is Spring's declarative transaction management annotation. It tells Spring: "Wrap this method in a database transaction — begin before, commit on success, rollback on failure." Without it, each JPA save() might auto-commit independently — breaking atomicity across multiple operations.
 
-A little context helps the idea stick. Spring 1.2 introduced @Transactional (2007). Before that, programmatic TransactionTemplate or JTA APIs were required. Spring unified JDBC, JPA, and JTA under one annotation model.
+Spring's design choice here is deliberate. Same annotation works for JDBC, JPA, MyBatis when PlatformTransactionManager is configured. Integrates with @Rollback in tests. Design Principles Behind Spring Principle How Spring Applies It Inversion of Control Container controls object creation and wiring Dependency Injection Dependencies supplied via constructor/setter/field Separation of Concerns Config, cross-cutting (AOP), and domain logic separated Program to Interfaces Beans wired by type/name; swap impls without code change Convention over Configuration Boot defaults; sensible @Component scanning Non-invasive No framework classes required in domain model (POJOs) Spring vs Solving It Yourself Custom DI container Spring Framework
 
-Spring's design choice here is deliberate. Declarative TX keeps business code clean. Same annotation works for JDBC, JPA, MyBatis when PlatformTransactionManager is configured. Integrates with @Rollback in tests.
-
-Once you accept the feature, the next honest question is how it works under the hood. TransactionInterceptor + BeanFactoryTransactionAttributeSourceAdvisor create JDK/CGLIB proxy. Attributes parsed from @Transactional → RuleBasedTransactionAttribute . TransactionSynchronizationManager binds Connection/EntityManager to current thread.
+Once you accept the feature, the next honest question is how it works under the hood. Internal Working TransactionInterceptor + BeanFactoryTransactionAttributeSourceAdvisor create JDK/CGLIB proxy. Attributes parsed from @Transactional → RuleBasedTransactionAttribute . TransactionSynchronizationManager binds Connection/EntityManager to current thread. Container Refresh Sequence (High Level) Application startup
 
 As you practice @Transactional, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
 

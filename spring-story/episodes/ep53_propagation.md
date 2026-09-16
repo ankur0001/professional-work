@@ -11,17 +11,17 @@
 
 ## Full narration
 
-Nested service calls raise a hard question: do they share one transaction, or start another? Propagation answers it.
+Nested service calls raise a hard question: share one transaction, or start another? Propagation answers it.
 
-Here is the pain this lesson exists to remove. Without mastering Propagation , teams encounter mysterious startup failures: beans missing from context, wrong implementation wired, duplicate definitions, or environment-specific code compiled into production. Concrete scenario: a @Service appears not to inject — often the root cause lies in Propagation misconfiguration (scan path, missing @Bean , wrong profile, or scope proxy issue). Additional pain points: implicit copy-paste config, test drift from production scanning, and library conflicts from duplicate bean definitions.
+Here is the pain this lesson exists to remove. Multi-step database work without clear transaction boundaries leaves partial writes, inconsistent reads, and rollback surprises.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The answer we need is Propagation.
+So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Propagation.
 
-This lesson is part of Phase 5 — TRANSACTION MANAGEMENT . By Lesson 53, you should see how Propagation fits into the transaction and consistency boundary and the broader application architecture. Primary API Controls how TX joins or suspends existing transaction context Related classes Propagation , TransactionDefinition , AbstractPlatformTransactionManager Typical config Java @Configuration + annotations (Boot default) Architecture Placement BeanDefinition sources Container core Your code
+At a practical level, Propagation is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
 
-Spring's design choice here is deliberate. Spring centralizes Propagation in the container rather than scattering factory logic across the codebase. Benefits: Single composition root — all wiring visible in config layer. Consistent semantics — same rules in tests and production. Extension hooks — customize via post-processors without forking framework. Tooling — IDE support, Actuator /beans , condition reports. Controls how TX joins or suspends existing transaction context. This is preferable to ad-hoc Service Locator or manual singleton registries that grow unmaintainable.
+Spring's design choice here is deliberate. Spring transaction management declares boundaries once and applies them consistently through proxies, not copy-pasted begin/commit code.
 
-Once you accept the feature, the next honest question is how it works under the hood. Internally, Spring delegates Propagation to well-tested components: Propagation , TransactionDefinition , AbstractPlatformTransactionManager Processing order matters: BeanFactoryPostProcessor s run before bean instantiation; BeanPostProcessor s wrap creation. Misordered custom processors cause subtle bugs. Step-by-Step Internal Flow for Propagation Parse — configuration class, XML, or scan result produces BeanDefinition objects. Register — definitions stored in DefaultListableBeanFactory registry (by name + aliases). Post-process definitions — modify property values, register extra beans.
+Once you accept the feature, the next honest question is how it works under the hood. AOP proxies intercept annotated methods, bind a transaction to the thread, and commit or roll back based on outcome and rules.
 
 As you practice Propagation, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
 

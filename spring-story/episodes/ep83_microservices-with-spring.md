@@ -11,19 +11,17 @@
 
 ## Full narration
 
-A monolith can become many deployable services. Spring Cloud exists because distributed systems need shared patterns.
+A monolith can become many deployable services. Spring Cloud exists for shared distributed patterns.
 
-Here is the pain this lesson exists to remove. Microservices without platform: hard-coded URLs, config drift, no circuit breaking, cascading failures, impossible tracing across 50 services. Spring Cloud standardizes the plumbing.
+Here is the pain this lesson exists to remove. Problem Statement Microservices without platform: hard-coded URLs, config drift, no circuit breaking, cascading failures, impossible tracing across 50 services. Spring Cloud standardizes the plumbing.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The answer we need is Microservices with Spring.
+So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Microservices with Spring.
 
-Spring Source Code Concepts (High Level) org.springframework.cloud modules: config, netflix/eureka, gateway, openfeign, circuitbreaker Reading the Source — Suggested Entry Points AbstractApplicationContext.refresh() — orchestrates context startup; read this once to see the big picture. DefaultListableBeanFactory.preInstantiateSingletons() — eager singleton creation pass. AutowiredAnnotationBeanPostProcessor.postProcessProperties() — where injection metadata becomes field/constructor values. ConfigurationClassParser.parse() — turns @Configuration into bean definitions at runtime.
+At a practical level, Microservices with Spring is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
 
-A little context helps the idea stick. Hystrix → Resilience4j; Zuul → Spring Cloud Gateway; Eureka still used but K8s discovery growing. Spring Cloud 2023.x aligns with Boot 3.2+ and Jakarta.
+Spring's design choice here is deliberate. Why Spring Provides This Feature Same language/stack as monolith skills; BOM manages compatible Cloud + Boot versions; integrates Kafka, AWS, K8s; large enterprise adoption.
 
-Spring's design choice here is deliberate. Same language/stack as monolith skills; BOM manages compatible Cloud + Boot versions; integrates Kafka, AWS, K8s; large enterprise adoption.
-
-Once you accept the feature, the next honest question is how it works under the hood. @EnableDiscoveryClient , @FeignClient , spring.cloud.gateway routes — all Spring beans. Cloud Bootstrap (legacy) vs Spring Boot 2.4+ spring.config.import=optional:configserver: .
+Once you accept the feature, the next honest question is how it works under the hood. Internal Working @EnableDiscoveryClient , @FeignClient , spring.cloud.gateway routes — all Spring beans. Cloud Bootstrap (legacy) vs Spring Boot 2.4+ spring.config.import=optional:configserver: . Container Refresh Sequence (High Level) Application startup
 
 Let's make this concrete with a small example you can read aloud and still follow.
 

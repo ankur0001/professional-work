@@ -13,17 +13,15 @@
 
 Every HTTP request needs a front door. In Spring MVC, that front door is DispatcherServlet.
 
-Here is the pain this lesson exists to remove. Multiple servlets duplicate: encoding, security, exception handling, content negotiation. DispatcherServlet centralizes the pipeline so controllers focus on business logic only.
+Here is the pain this lesson exists to remove. Problem Statement Multiple servlets duplicate: encoding, security, exception handling, content negotiation. DispatcherServlet centralizes the pipeline so controllers focus on business logic only.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The answer we need is DispatcherServlet.
+So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is DispatcherServlet.
 
-Key methods: doDispatch , getHandler , processHandlerException . Boot: DispatcherServletAutoConfiguration registers servlet with order and path. Reading the Source — Suggested Entry Points AbstractApplicationContext.refresh() — orchestrates context startup; read this once to see the big picture. DefaultListableBeanFactory.preInstantiateSingletons() — eager singleton creation pass. AutowiredAnnotationBeanPostProcessor.postProcessProperties() — where injection metadata becomes field/constructor values. ConfigurationClassParser.parse() — turns @Configuration into bean definitions at runtime.
+Key methods: doDispatch , getHandler , processHandlerException . Boot: DispatcherServletAutoConfiguration registers servlet with order and path. Reading the Source — Suggested Entry Points AbstractApplicationContext.refresh() — orchestrates context startup; read this once to see the big picture. DefaultListableBeanFactory.preInstantiateSingletons() — eager singleton creation pass. AutowiredAnnotationBeanPostProcessor.postProcessProperties() — where injection metadata becomes field/constructor values.
 
-A little context helps the idea stick. Spring MVC 1.0 (2003) introduced DispatcherServlet as evolution of Struts/Tapestry front-controller models. Spring 3.0 added annotation-driven @RequestMapping . Spring 4.0 improved REST support. Boot embeds Tomcat and registers DispatcherServlet automatically — no web.xml required.
+Spring's design choice here is deliberate. Why Spring Provides This Feature Pluggable strategy interfaces (HandlerMapping, HandlerAdapter) allow extension without modifying core servlet. Same DispatcherServlet powers traditional MVC (JSP/Thymeleaf) and REST (@RestController returns body directly).
 
-Spring's design choice here is deliberate. Pluggable strategy interfaces (HandlerMapping, HandlerAdapter) allow extension without modifying core servlet. Same DispatcherServlet powers traditional MVC (JSP/Thymeleaf) and REST (@RestController returns body directly).
-
-Once you accept the feature, the next honest question is how it works under the hood. Check multipart → MultipartResolver 2. getHandler() → HandlerExecutionChain (handler + interceptors) 3. getHandlerAdapter() → supports(handler)? applyPreHandle() on interceptors 5. ha.handle() → invoke controller method 6. processDispatchResult() → view or @ResponseBody 7. applyPostHandle / triggerAfterCompletion Application startup
+Once you accept the feature, the next honest question is how it works under the hood. Internal Working doDispatch() sequence: 1. Check multipart → MultipartResolver 2. getHandler() → HandlerExecutionChain (handler + interceptors) 3. getHandlerAdapter() → supports(handler)? applyPreHandle() on interceptors 5. ha.handle() → invoke controller method 6. processDispatchResult() → view or @ResponseBody 7. applyPostHandle / triggerAfterCompletion Container Refresh Sequence (High Level) Application startup
 
 Let's make this concrete with a small example you can read aloud and still follow.
 

@@ -13,15 +13,15 @@
 
 Once you know why Spring exists, the next question is almost unavoidable: what pieces make up Spring itself?
 
-Here is the pain this lesson exists to remove. Monolithic "framework JAR" dependencies cause classpath bloat and version skew. Without modular architecture, a REST API might accidentally pull ORM, JMS, and SOAP stacks. Spring's layered modules let libraries depend only on spring-context , not the entire web stack.
+Here is the pain this lesson exists to remove. Problem Statement Monolithic "framework JAR" dependencies cause classpath bloat and version skew. Without modular architecture, a REST API might accidentally pull ORM, JMS, and SOAP stacks. Spring's layered modules let libraries depend only on spring-context , not the entire web stack.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The answer we need is Spring Architecture.
+So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Spring Architecture.
 
-Spring Source Code Concepts (High Level) GitHub: spring-projects/spring-framework — multi-module Gradle build ( settings.gradle lists modules). Trace dependency: spring-webmvc → spring-context → spring-beans → spring-core . Reading the Source — Suggested Entry Points AbstractApplicationContext.refresh() — orchestrates context startup; read this once to see the big picture. DefaultListableBeanFactory.preInstantiateSingletons() — eager singleton creation pass. AutowiredAnnotationBeanPostProcessor.postProcessProperties() — where injection metadata becomes field/constructor values.
+At a practical level, Spring Architecture is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
 
-Spring's design choice here is deliberate. Modular architecture enables: Minimal transitive dependencies for libraries. Clear extension points ( BeanFactoryPostProcessor , ApplicationListener ). Replaceable implementations (Tomcat vs Jetty via Boot, JPA vs JDBC).
+Spring's design choice here is deliberate. Architectural styles give teams a shared language for boundaries, dependencies, and change.
 
-Once you accept the feature, the next honest question is how it works under the hood. Spring 1.0 shipped as a single dist with optional modules. Over time, Maven modularization enforced clear boundaries. Spring 2.5/3.0 moved configuration from XML namespaces toward annotations. Spring Boot repackaged modules into starters without changing the underlying architecture.
+Once you accept the feature, the next honest question is how it works under the hood. Dependency direction and boundary rules decide what can know about what — and what stays replaceable.
 
 Let's make this concrete with a small example you can read aloud and still follow.
 

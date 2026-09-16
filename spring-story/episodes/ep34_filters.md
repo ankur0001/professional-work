@@ -11,17 +11,17 @@
 
 ## Full narration
 
-Some work must run before controllers even wake up. Filters sit on the servlet chain for that reason.
+Some work must run before controllers wake up. Filters sit on the servlet chain for that reason.
 
-Here is the pain this lesson exists to remove. Without mastering Filters , teams encounter mysterious startup failures: beans missing from context, wrong implementation wired, duplicate definitions, or environment-specific code compiled into production. Concrete scenario: a @Service appears not to inject — often the root cause lies in Filters misconfiguration (scan path, missing @Bean , wrong profile, or scope proxy issue). Additional pain points: implicit copy-paste config, test drift from production scanning, and library conflicts from duplicate bean definitions.
+Here is the pain this lesson exists to remove. Without a clear request pipeline, encoding, security, exception handling, and routing get duplicated across servlets and controllers.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The answer we need is Filters.
+So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Filters.
 
-Filters — Servlet Filter chain before DispatcherServlet (Servlet spec). This lesson is part of Phase 3 — SPRING MVC . It builds on Phase 1–2 (IoC, Boot). By Lesson 34, you should see how Filters fits into the Spring web request pipeline and the broader application architecture. Primary API FilterRegistrationBean Related classes DelegatingFilterProxy , FilterChain , OncePerRequestFilter Typical config Java @Configuration + annotations (Boot default) Architecture Placement BeanDefinition sources Container core Your code
+At a practical level, Filters is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
 
-Spring's design choice here is deliberate. Spring centralizes Filters in the container rather than scattering factory logic across the codebase. Benefits: Single composition root — all wiring visible in config layer. Consistent semantics — same rules in tests and production. Extension hooks — customize via post-processors without forking framework. Tooling — IDE support, Actuator /beans , condition reports. FilterRegistrationBean , @WebFilter , order via @Order . This is preferable to ad-hoc Service Locator or manual singleton registries that grow unmaintainable.
+Spring's design choice here is deliberate. Spring MVC centralizes the HTTP pipeline so controllers stay thin and cross-cutting request concerns stay consistent.
 
-Once you accept the feature, the next honest question is how it works under the hood. Internally, Spring delegates Filters to well-tested components: DelegatingFilterProxy , FilterChain , OncePerRequestFilter Processing order matters: BeanFactoryPostProcessor s run before bean instantiation; BeanPostProcessor s wrap creation. Misordered custom processors cause subtle bugs. Step-by-Step Internal Flow for Filters Parse — configuration class, XML, or scan result produces BeanDefinition objects. Register — definitions stored in DefaultListableBeanFactory registry (by name + aliases). Post-process definitions — modify property values, register extra beans.
+Once you accept the feature, the next honest question is how it works under the hood. DispatcherServlet receives the request, resolves a handler, runs interceptors/advice, invokes the controller, and renders the response.
 
 As you practice Filters, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
 

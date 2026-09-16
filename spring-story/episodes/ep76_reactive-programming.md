@@ -13,17 +13,15 @@
 
 Threads waiting on I/O do not scale forever. Reactive programming rethinks how work is scheduled.
 
-Here is the pain this lesson exists to remove. Thread-per-request model breaks at ~10K concurrent connections — memory for stacks, context switching. Reactive model scales I/O-bound apps with fixed thread pools. Complexity cost: debugging, stack traces, learning curve.
+Here is the pain this lesson exists to remove. Problem Statement Thread-per-request model breaks at ~10K concurrent connections — memory for stacks, context switching. Reactive model scales I/O-bound apps with fixed thread pools. Complexity cost: debugging, stack traces, learning curve.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The answer we need is Reactive Programming.
+So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Reactive Programming.
 
-Reactive Programming is a programming paradigm oriented around asynchronous data streams and non-blocking execution. Instead of one thread blocked per request waiting for I/O, a small pool of threads handles many concurrent operations via event loops and callbacks/pipelines.
+Concept Reactive Programming is a programming paradigm oriented around asynchronous data streams and non-blocking execution. Instead of one thread blocked per request waiting for I/O, a small pool of threads handles many concurrent operations via event loops and callbacks/pipelines.
 
-A little context helps the idea stick. Reactive Streams spec (2013). Spring Boot 2 reactive support. Virtual threads (Java 21) now offer alternative for blocking code at scale — architect trade-off.
+Spring's design choice here is deliberate. Interop with blocking via subscribeOn(Schedulers.boundedElastic()) when needed. Design Principles Behind Spring Principle How Spring Applies It Inversion of Control Container controls object creation and wiring Dependency Injection Dependencies supplied via constructor/setter/field Separation of Concerns Config, cross-cutting (AOP), and domain logic separated Program to Interfaces Beans wired by type/name; swap impls without code change Convention over Configuration Boot defaults; sensible @Component scanning Non-invasive No framework classes required in domain model (POJOs) Spring vs Solving It Yourself Custom DI container Spring Framework
 
-Spring's design choice here is deliberate. Unified programming model: same DI, same Boot, WebClient for reactive HTTP, R2DBC for reactive SQL. Interop with blocking via subscribeOn(Schedulers.boundedElastic()) when needed.
-
-Once you accept the feature, the next honest question is how it works under the hood. Reactor operators build operator chains (lazy until subscribe). Netty under WebFlux — no Servlet API. DispatcherHandler replaces DispatcherServlet for routing.
+Once you accept the feature, the next honest question is how it works under the hood. Internal Working Reactor operators build operator chains (lazy until subscribe). Netty under WebFlux — no Servlet API. DispatcherHandler replaces DispatcherServlet for routing. Container Refresh Sequence (High Level) Application startup
 
 As you practice Reactive Programming, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
 
