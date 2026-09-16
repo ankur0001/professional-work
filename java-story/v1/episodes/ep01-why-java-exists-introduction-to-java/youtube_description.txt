@@ -1,0 +1,81 @@
+The Java Story — Episode 01: Why Java Exists / Introduction to Java
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Okay… imagine this.
+• Banks
+• Nearly all of them depend on one programming language.
+• That language is Java.
+• But here's what I find fascinating.
+• Java was born in the nineteen nineties.
+• …and more
+
+Timestamps
+0:00 Okay… imagine this.
+0:02 Banks
+0:09 Nearly all of them depend on one programming language.
+0:15 That language is Java.
+0:17 But here's what I find fascinating.
+0:20 Java was born in the nineteen nineties.
+0:24 Hundreds of languages came and went.
+0:27 Java stayed.
+0:29 So why?
+0:33 Go back to the early nineties.
+0:36 At Sun Microsystems, James Gosling's team started with C++.
+0:41 C++ was powerful — no doubt.
+0:44 But it came with pain.
+0:46 Manual memory management
+0:51 And platform dependency
+0:57 For software meant to run on many devices, that was a…
+1:03 So they built something new.
+1:05 First called Oak
+1:11 The mission was clear: safer than C++, simpler to…
+1:19 In nineteen ninety-five, Java arrived with a bold promise.
+1:24 Write once
+1:27 And for an industry tired of rewriting the same code again…
+1:35 Here's the secret
+1:39 Java doesn't run directly on Windows or Mac.
+1:43 First, the compiler turns your source into bytecode — like…
+1:51 Then the JVM — the Java Virtual Machine — translates that…
+1:59 Windows has a JVM
+2:03 Same bytecode
+2:08 That's Write Once, Run Anywhere — for real.
+2:12 And that's why Java became infrastructure.
+2:16 Banks need stability, not hype.
+2:18 Android needed a language millions already knew.
+2:22 Large backends needed scale that was battle-tested.
+2:27 Enterprise teams don't switch for trends
+2:34 Java earned trust — one production system at a time.
+2:38 Alright — your first program.
+2:41 You write a public class
+2:45 Inside it, public static void main — the entry point
+2:51 Then System.out.println — print a line to the console.
+2:56 Filename must match the class name
+3:03 Hit Run.
+3:04 Compiler to bytecode
+3:10 Hello, World.
+3:11 Behind the scenes, the JVM did the heavy lifting — not…
+3:19 Quick interview question.
+3:21 Why is Java platform independent?
+3:24 Answer like this: we compile to bytecode, not machine code.
+3:29 Bytecode is platform-neutral.
+3:32 The JVM on each OS turns it into native instructions.
+3:37 Same class files
+3:44 So now you know why Java still runs the world.
+3:48 Safer
+3:52 But one mystery remains.
+3:54 When people say install Java… what are they actually…
+4:00 JDK
+4:05 That's Episode Two
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode01

@@ -1,0 +1,155 @@
+1
+00:00:00,000 --> 00:00:11,439
+You have Boot, MVC, Data, and Security in
+play. A change breaks something subtle.
+The practical question is how to test
+without booting the universe for every
+class.
+
+2
+00:00:11,559 --> 00:00:24,559
+Tests should be fast where possible —
+slices before full context — and realistic
+where reality is the point. Constructor-
+injected services can be unit-tested with
+plain JUnit and fakes — no Spring
+required.
+
+3
+00:00:24,679 --> 00:00:37,280
+When you need MVC wiring, @WebMvcTest
+loads a web slice: Look at this java for a
+moment. MockMvc exercises HTTP mappings
+without a full server.
+
+4
+00:00:37,399 --> 00:00:49,560
+Assertions should read like a
+specification: expect status, expect JSON
+path, expect a header. A test that only
+checks that the call did not throw is not
+protecting the contract.
+
+5
+00:00:49,679 --> 00:01:00,799
+@DataJpaTest focuses on persistence slices
+— flush and clear the persistence context
+between act and assert so you are not
+reading only the first-level cache.
+
+6
+00:01:00,920 --> 00:01:14,120
+@SpringBootTest boots a fuller context —
+use it when you truly need that graph, not
+as a default for every class. Choose the
+lightest test that can fail for the right
+reason. Domain pure logic: unit test, no
+Spring.
+
+7
+00:01:14,239 --> 00:01:27,560
+Controller routing and validation:
+@WebMvcTest with MockMvc and mocked
+collaborators. Repository queries against
+a real dialect: @DataJpaTest plus
+Testcontainers when H2 lies.
+
+8
+00:01:27,679 --> 00:01:39,919
+Security filter behavior: dedicated
+security tests — anonymous access and
+forbidden-role cases beside happy paths.
+Full vertical slice: @SpringBootTest
+sparingly for critical paths.
+
+9
+00:01:40,039 --> 00:01:51,799
+When @SpringBootTest is a habit, suites
+rot. Prefer slices for speed is not anti-
+integration; it is triage. Testcontainers
+cost time and buy truth.
+
+10
+00:01:51,919 --> 00:02:05,399
+Use them where contract with
+infrastructure matters — JSONB queries,
+lock behavior, Kafka consumer offsets. Do
+not require a container to assert that a
+pure tax function rounds correctly. Flakes
+teach the wrong lesson.
+
+11
+00:02:05,519 --> 00:02:18,719
+If tests depend on wall-clock time, inject
+a clock. If tests depend on row order
+without ORDER BY, fix the query or the
+assertion. If tests share mutable static
+state, isolate data.
+
+12
+00:02:18,839 --> 00:02:33,479
+Deterministic data — fixed clocks,
+explicit fixtures, no order-dependent
+tests — keeps CI green. Assert failures,
+not only successes. A validation test that
+never sends a blank field is incomplete.
+
+13
+00:02:33,599 --> 00:02:41,799
+Spring's test support makes the happy path
+easy; professionalism lives in the
+negative paths. Slice tests also document
+architecture.
+
+14
+00:02:41,919 --> 00:02:52,679
+If you cannot @WebMvcTest a controller
+without pulling the entire JPA world, the
+controller may be doing too much. Painful
+tests are often design feedback.
+
+15
+00:02:52,799 --> 00:03:04,479
+Listen before you force a full
+@SpringBootTest to silence the pain. Close
+with a team policy you can actually run.
+Every service class with pure logic gets
+unit tests without Spring.
+
+16
+00:03:04,599 --> 00:03:14,759
+Every controller gets a web slice test for
+routing, validation, and error mapping.
+Critical repository queries get a
+persistence slice against a containerized
+database.
+
+17
+00:03:14,879 --> 00:03:29,639
+A small set of @SpringBootTest scenarios
+cover security wiring and main happy
+paths. Failures are asserted. Time is
+faked. Data is isolated. That policy keeps
+the suite fast enough to run and realistic
+enough to trust.
+
+18
+00:03:29,759 --> 00:03:41,599
+When @SpringBootTest? When you truly need
+the full context; prefer slices for speed.
+Then mention Testcontainers for the
+integration layer where contracts with
+real infrastructure matter.
+
+19
+00:03:41,719 --> 00:03:52,919
+If a suite cannot fail for the right
+reason, it cannot protect production. This
+closes the Spring core arc: container,
+Boot, web, data, security, tests.
+
+20
+00:03:53,039 --> 00:03:59,359
+Next we zoom out to systems of services —
+where network failure becomes a design
+input, not an exception.

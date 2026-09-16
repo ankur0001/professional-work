@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:03,322
+Episode Fifty showed virtual threads running your code.
+
+2
+00:00:03,322 --> 00:00:07,187
+But how does the JVM find and load that code in the first place?
+
+3
+00:00:07,187 --> 00:00:11,415
+Every class file travels through loading, linking, and initialization.
+
+4
+00:00:11,415 --> 00:00:16,005
+ClassLoader hierarchy — bootstrap, platform, application — delegates upward.
+
+5
+00:00:16,005 --> 00:00:19,206
+Linkage verifies bytecode and prepares static fields.
+
+6
+00:00:19,206 --> 00:00:23,554
+Today — class loading basics, the loader tree, and initialization traps.
+
+7
+00:00:23,554 --> 00:00:25,242
+Episode Fifty-One.
+
+8
+00:00:25,242 --> 00:00:27,212
+Class Loading Basics.
+
+9
+00:00:27,212 --> 00:00:31,145
+Three built-in loaders in the JDK class-loading hierarchy.
+
+10
+00:00:31,145 --> 00:00:36,434
+Bootstrap ClassLoader — loads core JDK classes from modules and rt.jar legacy.
+
+11
+00:00:36,434 --> 00:00:41,383
+Written in native code — returns null from getClassLoader on its classes.
+
+12
+00:00:41,383 --> 00:00:45,180
+Platform ClassLoader — JDK modules not on the boot path.
+
+13
+00:00:45,180 --> 00:00:50,266
+Application ClassLoader — loads classes from the classpath and module path.
+
+14
+00:00:50,266 --> 00:00:55,758
+Default context loader for app code — Thread.currentThread getContextClassLoader.
+
+15
+00:00:55,758 --> 00:00:59,143
+Loading — find the bytecode and define the Class object.
+
+16
+00:00:59,143 --> 00:01:03,434
+findClass reads bytes — defineClass creates the runtime Class metadata.
+
+17
+00:01:03,434 --> 00:01:07,423
+Parent delegation — child asks parent first before loading itself.
+
+18
+00:01:07,423 --> 00:01:10,565
+Prevents duplicate class definitions across loaders.
+
+19
+00:01:10,565 --> 00:01:14,796
+Custom ClassLoader — override findClass for hot reload or plugin jars.
+
+20
+00:01:14,796 --> 00:01:18,664
+Class.forName triggers loading — does not initialize by default.
+
+21
+00:01:18,664 --> 00:01:23,442
+Linking has three sub-phases — verification, preparation, resolution.
+
+22
+00:01:23,442 --> 00:01:28,221
+Verification — bytecode safety checks — stack map tables, type rules.
+
+23
+00:01:28,221 --> 00:01:33,830
+Preparation — allocate static field memory, set primitives to zero, refs to null.
+
+24
+00:01:33,830 --> 00:01:39,163
+Resolution — replace symbolic references with direct references — often lazy.
+
+25
+00:01:39,163 --> 00:01:42,833
+Linking happens after loading, before initialization.
+
+26
+00:01:42,833 --> 00:01:46,850
+Failed verification throws VerifyError — class never runs.
+
+27
+00:01:46,850 --> 00:01:51,588
+Initialization — run the static initializer and assign static fields.
+
+28
+00:01:51,588 --> 00:01:56,875
+Triggered on first active use — new, static field access, static method call.
+
+29
+00:01:56,875 --> 00:02:00,102
+Class.forName with initialize true runs clinit.
+
+30
+00:02:00,102 --> 00:02:04,291
+JVM guarantees clinit runs exactly once per class per loader.
+
+31
+00:02:04,291 --> 00:02:07,175
+Parent classes initialize before children.
+
+32
+00:02:07,175 --> 00:02:11,844
+Deadlocks possible if static blocks acquire locks in circular order.
+
+33
+00:02:11,844 --> 00:02:13,987
+The delegation model in practice.
+
+34
+00:02:13,987 --> 00:02:17,819
+Application loader asks platform — platform asks bootstrap.
+
+35
+00:02:17,819 --> 00:02:22,365
+Only if parent cannot find the class does the child attempt loadClass.
+
+36
+00:02:22,365 --> 00:02:26,261
+SPI pattern breaks delegation — Thread context class loader.
+
+37
+00:02:26,261 --> 00:02:30,612
+ServiceLoader uses context loader to find provider implementations.
+
+38
+00:02:30,612 --> 00:02:35,158
+Understand which loader owns a class — affects visibility and casting.
+
+39
+00:02:35,158 --> 00:02:36,540
+Three common mistakes.
+
+40
+00:02:36,540 --> 00:02:40,751
+One — Class.forName in static blocks causing initialization cycles.
+
+41
+00:02:40,751 --> 00:02:45,275
+Two — assuming custom loaders without parent delegation — security risk.
+
+42
+00:02:45,275 --> 00:02:50,176
+Three — mixing classes from different loaders — ClassCastException at runtime.
+
+43
+00:02:50,176 --> 00:02:55,141
+Also — leaking ClassLoader references — PermGen or metaspace leaks in old apps.
+
+44
+00:02:55,141 --> 00:02:59,288
+Class loading is infrastructure — get the loader boundaries right.
+
+45
+00:02:59,288 --> 00:03:02,892
+Interview question — explain class loading phases?
+
+46
+00:03:02,892 --> 00:03:08,011
+Loading — find bytes, define Class. Linking — verify, prepare, resolve.
+
+47
+00:03:08,011 --> 00:03:12,336
+Initialization — run static initializer on first active use.
+
+48
+00:03:12,336 --> 00:03:16,590
+Bootstrap, platform, application — parent delegation model.
+
+49
+00:03:16,590 --> 00:03:21,780
+Custom ClassLoader for plugins — override findClass, delegate to parent.
+
+50
+00:03:21,780 --> 00:03:26,610
+Mention Class.forName versus ClassLoader loadClass initialize flag.
+
+51
+00:03:26,610 --> 00:03:31,529
+Classes load from bytecode — but what is inside those class files?
+
+52
+00:03:31,529 --> 00:03:34,212
+Episode Fifty-Two — Bytecode Basics.
+
+53
+00:03:34,212 --> 00:03:37,865
+Opcodes, constant pool, and reading javap output.
+
+54
+00:03:37,865 --> 00:03:38,908
+See you there.

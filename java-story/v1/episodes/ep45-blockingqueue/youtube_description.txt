@@ -1,0 +1,79 @@
+The Java Story — Episode 45: BlockingQueue
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Producers generate work
+• A shared list without bounds lets producers outpace consumers —…
+• BlockingQueue adds capacity limits and blocking put and take…
+• When full, put waits
+• The producer-consumer pattern is the backbone of thread pools and…
+• Today — BlockingQueue, the pattern, and choosing the right…
+• …and more
+
+Timestamps
+0:00 Producers generate work
+0:04 A shared list without bounds lets producers outpace…
+0:09 BlockingQueue adds capacity limits and blocking put and…
+0:14 When full, put waits
+0:18 The producer-consumer pattern is the backbone of thread…
+0:23 Today — BlockingQueue, the pattern, and choosing the right…
+0:27 Episode Forty-Five.
+0:29 BlockingQueue and Producer-Consumer.
+0:32 BlockingQueue extends Queue with blocking operations.
+0:35 put inserts an element — blocks if the queue is full.
+0:38 take removes an element — blocks if the queue is empty.
+0:41 offer and poll provide timed or non-blocking alternatives.
+0:44 Thread-safe — multiple producers and consumers without…
+0:48 The queue itself coordinates waiting and waking threads.
+0:52 Producer-consumer decouples creation from processing.
+0:55 Producers enqueue tasks — consumers dequeue and execute.
+0:59 Bounded queue caps in-flight work — protects memory and…
+1:03 ExecutorService thread pools use internal work queues this…
+1:08 Pipeline stages connect via queues — each stage runs at…
+1:12 Backpressure emerges naturally when the queue fills.
+1:15 ArrayBlockingQueue uses a fixed-capacity circular array.
+1:19 One lock for both put and take — simple and predictable.
+1:22 Fair ordering optional — FIFO for waiting threads.
+1:26 Bounded capacity set at construction — cannot grow.
+1:29 Low overhead for steady workloads with known bounds.
+1:32 Choose when you need a fixed-size buffer with array backing.
+1:36 LinkedBlockingQueue uses linked nodes — optionally bounded.
+1:40 Two locks — one for put, one for take — better under mixed…
+1:44 Default capacity is Integer.MAX_VALUE — effectively…
+1:48 Always pass an explicit capacity in production — unbounded…
+1:52 Higher memory per element than array — but no upfront…
+1:57 Common in executor frameworks when capacity is configured…
+2:01 When to use BlockingQueue.
+2:03 Thread pool work queues — bounded backpressure.
+2:06 Log or event pipelines — producers spike, consumers steady.
+2:10 Handoff between stages — parse, transform, persist.
+2:14 Replace wait-notify handoffs with a cleaner API.
+2:17 When not — single-threaded batch — a simple List suffices.
+2:21 Three common mistakes.
+2:23 One — unbounded LinkedBlockingQueue — memory grows under…
+2:27 Two — put without handling InterruptedException — shutdown…
+2:32 Three — multiple consumers on one queue without…
+2:38 Also — blocking take on the only thread that should stop…
+2:43 Size the queue — too small starves workers, too large…
+2:47 Interview question — why BlockingQueue over synchronized…
+2:51 Built-in blocking put and take — no manual wait-notify…
+2:55 Bounded capacity provides backpressure automatically.
+2:59 Thread-safe for multiple producers and consumers.
+3:02 ArrayBlockingQueue — fixed array, one lock
+3:06 Mention producer-consumer and ExecutorService work queues.
+3:10 Queues pass work between threads
+3:15 Episode Forty-Six — CompletableFuture Deep Dive.
+3:19 thenApply, thenCompose, allOf, and exception handling.
+3:23 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode45

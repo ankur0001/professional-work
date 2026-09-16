@@ -1,0 +1,190 @@
+1
+00:00:00,000 --> 00:00:11,960
+Heap and stack showed where objects live
+and where locals keep references. The next
+pressure is automatic: we are not calling
+free(). So who reclaims memory, and what
+makes an object reclaimable?
+
+2
+00:00:12,140 --> 00:00:17,260
+Garbage collection reclaims unreachable
+objects. Your allocation rate sets the
+pace.
+
+3
+00:00:17,380 --> 00:00:28,140
+Treat GC as a partner that responds to how
+fast you allocate and how long you retain
+— not as an enemy that randomly pauses
+your app for sport. Look at this java for
+a moment.
+
+4
+00:00:28,260 --> 00:00:36,100
+While tmp points at the list, and the list
+points at the big array, those objects are
+reachable from a stack local — a GC root.
+
+5
+00:00:36,219 --> 00:00:47,179
+When you set tmp = null (or the frame
+ends), if nothing else references that
+list, the list and its array become
+unreachable. They are then eligible for
+collection.
+
+6
+00:00:47,299 --> 00:00:58,339
+"Eligible" is not "collected this
+millisecond." The collector runs according
+to its strategy and heap pressure.
+Correctness is reachability; timing is
+policy.
+
+7
+00:00:58,459 --> 00:01:09,099
+GC roots include stack references, static
+fields, JNI references, and a few other
+anchors. Mentally graph from roots
+downward. Anything not in that graph can
+go.
+
+8
+00:01:09,219 --> 00:01:21,539
+Caching forever — static maps that only
+ever grow — keeps objects reachable on
+purpose and then surprises you when the
+heap fills. The GC is not leaking. Your
+retention policy is.
+
+9
+00:01:21,659 --> 00:01:33,019
+The generational hypothesis says most
+objects die young. Collectors exploit
+that: concentrate effort on young
+generations where most garbage appears,
+and promote survivors to older spaces.
+
+10
+00:01:33,140 --> 00:01:45,019
+Allocation patterns that create many
+short-lived objects play to generational
+strengths; gigantic mid-life retention
+patterns stress them differently. Pauses
+versus concurrent work is the latency
+story.
+
+11
+00:01:45,140 --> 00:01:56,939
+Some collection work stops application
+threads briefly; some runs concurrently
+with them. Different collectors balance
+throughput, pause goals, and footprint
+differently. Tuning without metrics is
+superstition.
+
+12
+00:01:57,060 --> 00:02:05,180
+Before you flip flags, measure allocation
+rate, pause times, heap occupancy, and
+promotion. Look at this text for a moment.
+
+13
+00:02:05,299 --> 00:02:18,979
+What if we allocate insanely in tight
+loops — building strings with + in a hot
+path, creating temporary objects per
+packet — and then blame GC for "too many
+pauses"? GC is responding to the trash you
+produce.
+
+14
+00:02:19,099 --> 00:02:30,740
+Reduce allocation, reuse buffers
+carefully, or change the algorithm.
+Treating GC as the villain while ignoring
+allocation rate is backwards. Allocation
+rate is the heartbeat GC hears.
+
+15
+00:02:30,859 --> 00:02:36,579
+A service allocating hundreds of megabytes
+per second will collect frequently even
+with a huge heap.
+
+16
+00:02:36,699 --> 00:02:43,899
+A service allocating modestly but
+retaining everything in a static cache
+will promote and fill old space until a
+painful collection or OOM.
+
+17
+00:02:44,019 --> 00:02:57,859
+Two different pathologies; both show up as
+"GC problem" in chat until you measure.
+Young collections being frequent is not
+automatically bad if pauses are tiny and
+throughput is fine. Full collections
+thrashing is bad.
+
+18
+00:02:57,979 --> 00:03:08,060
+Learn to read the difference in logs
+before you retune. What if we "fix" a leak
+by increasing -Xmx every week? We delay
+the incident and grow the blast radius.
+
+19
+00:03:08,179 --> 00:03:16,859
+Retention bugs deserve graphs and heap
+dumps, not larger handbags for the same
+junk. Picture two services with identical
+heap sizes.
+
+20
+00:03:16,979 --> 00:03:30,780
+One allocates temporary buffers per
+request and discards them; young GC is
+busy and pauses stay small. The other
+accumulates session state forever; old
+generation grows until a long pause or
+OOM.
+
+21
+00:03:30,899 --> 00:03:44,259
+Same -Xmx, opposite outcomes. GC policy
+cannot save a retention strategy that
+never forgets. When you open logs, look
+for frequency of collections, pause times,
+and whether the heap recovers after a
+collection.
+
+22
+00:03:44,379 --> 00:03:56,379
+A heap that never frees after full GC is a
+retention problem wearing a collector
+costume. When product asks for a bigger
+heap as the first move, ask for allocation
+and occupancy charts first.
+
+23
+00:03:56,499 --> 00:04:09,739
+Hold a practical checklist: collectibility
+is reachability; retention is a product
+decision; allocation rate drives pace;
+generational behavior explains young vs
+old pressure; measure before tuning.
+
+24
+00:04:09,859 --> 00:04:14,059
+Prefer reducing retention and allocation
+waste before exotic collector flags.
+
+25
+00:04:14,179 --> 00:04:24,059
+The next runtime curiosity is how hot code
+stops being interpreted and becomes
+optimized native code — and why the first
+requests after startup feel slower.

@@ -1,0 +1,54 @@
+0:00 Generics typed our containers
+0:04 An annotation is metadata — information about the code,…
+0:09 Override
+0:13 Tiny symbols
+0:15 Today we learn what annotations are — and what they are not.
+0:19 Angle brackets were contracts
+0:23 Episode Sixteen.
+0:24 Annotations — metadata that frameworks and compilers read.
+0:29 An annotation starts with an at-sign.
+0:32 It can mark a class, a method, a field, a parameter — even…
+0:37 By itself, most annotations do nothing magical at runtime.
+0:41 Something must read them — the compiler, a tool, or a…
+0:46 Think of them as sticky notes with structure.
+0:49 The note matters only if someone looks.
+0:51 Start with built-ins you already use.
+0:54 Override — catch signature mistakes when you think you are…
+0:58 Deprecated — warn callers that an API is going away.
+1:02 SuppressWarnings — silence a warning you have consciously…
+1:06 FunctionalInterface — document a single abstract method…
+1:10 These are small, precise, and compile-time friendly.
+1:13 Retention answers — how long does this annotation live?
+1:17 Source — only in source
+1:19 Class — in the class file
+1:23 Runtime — readable through reflection while the program…
+1:27 Spring and many frameworks need runtime retention.
+1:30 If retention is wrong, your marker is invisible when it…
+1:34 In Spring, annotations drive wiring.
+1:37 SpringBootApplication
+1:41 They tell the framework what to scan, create, and inject.
+1:45 That is powerful — and easy to overuse.
+1:48 Prefer clear boundaries
+1:53 Annotations should clarify intent — not hide architecture.
+1:57 You can define your own annotations.
+1:59 Declare an interface with an at-sign — interface…
+2:03 Add retention and target so tools know where it applies.
+2:06 Then write a processor or runtime check that enforces it.
+2:10 Without a reader, a custom annotation is just…
+2:14 Design the annotation and the enforcement together.
+2:17 Three common mistakes.
+2:19 One — assuming an annotation does work with no processor…
+2:23 Two — wrong retention — runtime framework never sees your…
+2:28 Three — annotation soup — so many markers the real flow…
+2:33 Also — using SuppressWarnings to hide problems instead of…
+2:38 Annotations amplify discipline
+2:41 Interview question — what is an annotation in Java?
+2:45 Structured metadata attached to code elements.
+2:48 Useful when compilers, tools, or frameworks read it.
+2:52 Mention retention — source, class, runtime.
+2:55 Then give Override versus a Spring stereotype as examples.
+2:59 That answer covers language and ecosystem.
+3:01 Metadata is clear
+3:06 Episode Seventeen — reflection.
+3:08 Inspect classes, call methods, and know the costs.
+3:12 See you there.

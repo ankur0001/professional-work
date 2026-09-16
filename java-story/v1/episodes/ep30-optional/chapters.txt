@@ -1,0 +1,55 @@
+0:00 Parallel streams need thread-safe design
+0:04 Null references cause bugs that compile fine and fail in…
+0:09 Optional is a container that may hold a value — or be empty.
+0:13 It forces callers to acknowledge missing data explicitly.
+0:16 Today — Optional as a design tool, not a silver bullet.
+0:20 Present or empty — choose with intent.
+0:22 Episode Thirty.
+0:24 Optional — modeling absence without null.
+0:27 Optional.of wraps a non-null value.
+0:29 Optional.ofNullable accepts null — producing an empty…
+0:33 Optional.empty is the canonical empty instance.
+0:36 isPresent and isEmpty test state without unwrapping.
+0:40 Never call of with a value that might be null — use…
+0:44 Creation methods set expectations from the first line.
+0:48 An empty Optional is not null — it is an explicit absence.
+0:51 get throws NoSuchElementException on empty — avoid in…
+0:56 orElse supplies a default when empty.
+0:59 orElseGet takes a supplier — lazy default computation.
+1:03 orElseThrow maps absence to a meaningful exception.
+1:06 Pick the fallback that matches your domain semantics.
+1:10 Optional chains avoid nested if-not-null checks.
+1:13 ifPresent runs a consumer only when a value exists.
+1:17 filter keeps the value only if a predicate passes.
+1:20 map transforms the inner value if present.
+1:23 flatMap transforms into another Optional — no nested…
+1:28 Chain fluently — stop when empty at any step.
+1:31 map is for simple transformations — String to Integer.
+1:35 flatMap is for operations that themselves return Optional.
+1:38 Lookup then parse
+1:41 flatMap flattens Optional of Optional into one level.
+1:45 Combine with stream flatMap for filtering present values.
+1:49 Readable pipelines replace defensive null ladders.
+1:52 When Optional shines.
+1:53 Return types where absence is normal — findById, parse…
+1:57 Chaining transformations without null checks at every step.
+2:01 When not to use it.
+2:03 Fields on entities — prefer plain nullability discipline…
+2:07 Method parameters — often clearer as overloads or…
+2:11 Optional is for APIs and return types — not everywhere.
+2:15 Three common mistakes.
+2:16 One — Optional.of with a possibly null value.
+2:19 Two — using get without checking — same as ignoring null.
+2:24 Three — Optional fields in JSON entities — serialization…
+2:28 Also — orElse with expensive work — use orElseGet instead.
+2:32 Optional clarifies intent — misuse adds noise.
+2:35 Interview question — why Optional instead of null?
+2:39 Forces explicit handling — isPresent, orElse, map chains.
+2:42 Documents that absence is expected in the return type.
+2:46 Mention ofNullable versus of — null safety at creation.
+2:49 Note it is mainly for return values, not fields.
+2:53 That answer shows modern Java API design awareness.
+2:56 Absence handled
+3:00 Episode Thirty-One — java.time.
+3:02 Instant, LocalDate, ZonedDateTime — without Calendar pain.
+3:06 See you there.

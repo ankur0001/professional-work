@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,736
+Synchronization prevents races. But can another thread even see your write?
+
+2
+00:00:04,736 --> 00:00:09,661
+Without visibility guarantees, a thread may read a stale cached value forever.
+
+3
+00:00:09,661 --> 00:00:14,208
+The Java Memory Model defines when writes become visible across threads.
+
+4
+00:00:14,208 --> 00:00:18,312
+volatile and happens-before are the vocabulary for that contract.
+
+5
+00:00:18,312 --> 00:00:21,217
+Locks help — but visibility has its own rules.
+
+6
+00:00:21,217 --> 00:00:25,258
+Today — volatile, happens-before, and memory visibility in Java.
+
+7
+00:00:25,258 --> 00:00:26,985
+Episode Thirty-Eight.
+
+8
+00:00:26,985 --> 00:00:30,932
+volatile and Happens-Before — memory visibility.
+
+9
+00:00:30,932 --> 00:00:35,067
+Each thread may cache field values in CPU registers or local caches.
+
+10
+00:00:35,067 --> 00:00:39,020
+A write by thread A might sit in a cache — invisible to thread B.
+
+11
+00:00:39,020 --> 00:00:43,338
+Synchronization flushes caches — but you cannot synchronize everything.
+
+12
+00:00:43,338 --> 00:00:47,838
+You need lighter-weight visibility guarantees for flags and status fields.
+
+13
+00:00:47,838 --> 00:00:51,669
+Reading a stale boolean can keep a worker loop running forever.
+
+14
+00:00:51,669 --> 00:00:55,926
+Visibility bugs look like logic errors — the code path never triggers.
+
+15
+00:00:55,926 --> 00:01:00,302
+volatile tells the JVM — reads and writes go directly to main memory.
+
+16
+00:01:00,302 --> 00:01:03,917
+No caching of the volatile field in thread-local storage.
+
+17
+00:01:03,917 --> 00:01:07,976
+A read of a volatile always sees the latest write by any thread.
+
+18
+00:01:07,976 --> 00:01:13,050
+volatile does not make compound operations atomic — count plus plus still races.
+
+19
+00:01:13,050 --> 00:01:17,046
+Use volatile for single-field flags — running, ready, shutdown.
+
+20
+00:01:17,046 --> 00:01:20,344
+volatile is about visibility — not mutual exclusion.
+
+21
+00:01:20,344 --> 00:01:23,644
+Happens-before is the formal ordering rule in the JMM.
+
+22
+00:01:23,644 --> 00:01:27,249
+If action A happens-before B, then B sees everything A did.
+
+23
+00:01:27,249 --> 00:01:31,221
+Unlocking a monitor happens-before the next lock on that monitor.
+
+24
+00:01:31,221 --> 00:01:35,437
+Writing a volatile happens-before a subsequent read of that volatile.
+
+25
+00:01:35,437 --> 00:01:38,920
+Thread start and join establish happens-before edges too.
+
+26
+00:01:38,920 --> 00:01:42,770
+Chain these edges to reason about what each thread can observe.
+
+27
+00:01:42,770 --> 00:01:47,376
+The Java Memory Model — the contract between compiler, CPU, and programmer.
+
+28
+00:01:47,376 --> 00:01:51,737
+Without reordering, CPUs could not pipeline — performance would suffer.
+
+29
+00:01:51,737 --> 00:01:55,545
+The JMM allows optimizations within happens-before boundaries.
+
+30
+00:01:55,545 --> 00:01:59,537
+Program order within a single thread is preserved — as-if serial.
+
+31
+00:01:59,537 --> 00:02:03,775
+Across threads — only guaranteed ordering comes from synchronization.
+
+32
+00:02:03,775 --> 00:02:07,644
+Understand the JMM — or your concurrent code will surprise you.
+
+33
+00:02:07,644 --> 00:02:08,977
+When to use volatile.
+
+34
+00:02:08,977 --> 00:02:13,231
+One writer, many readers — status flags and configuration switches.
+
+35
+00:02:13,231 --> 00:02:18,120
+Publishing an immutable object reference — safe if object is truly immutable.
+
+36
+00:02:18,120 --> 00:02:22,184
+Double-checked locking requires volatile on the reference field.
+
+37
+00:02:22,184 --> 00:02:25,930
+When not — counters, compound updates, or multiple writers.
+
+38
+00:02:25,930 --> 00:02:29,422
+For those — use synchronized or atomic classes instead.
+
+39
+00:02:29,422 --> 00:02:30,942
+Three common mistakes.
+
+40
+00:02:30,942 --> 00:02:36,194
+One — using volatile on a non-volatile field inside a volatile read context.
+
+41
+00:02:36,194 --> 00:02:40,409
+Two — assuming volatile makes increment atomic — it does not.
+
+42
+00:02:40,409 --> 00:02:44,969
+Three — relying on visibility without establishing happens-before.
+
+43
+00:02:44,969 --> 00:02:49,737
+Also — double-checked locking without volatile — broken on some JVMs.
+
+44
+00:02:49,737 --> 00:02:53,192
+Match the tool to the guarantee you actually need.
+
+45
+00:02:53,192 --> 00:02:56,298
+Interview question — what does volatile guarantee?
+
+46
+00:02:56,298 --> 00:03:00,025
+Visibility — every read sees the latest write to that field.
+
+47
+00:03:00,025 --> 00:03:04,248
+Ordering — writes before a volatile read are visible to that reader.
+
+48
+00:03:04,248 --> 00:03:08,162
+Not atomicity — compound operations still need synchronization.
+
+49
+00:03:08,162 --> 00:03:12,758
+Contrast with synchronized — which provides both exclusion and visibility.
+
+50
+00:03:12,758 --> 00:03:16,050
+Mention happens-before as the formal backing concept.
+
+51
+00:03:16,050 --> 00:03:19,874
+Intrinsic locks work. Sometimes you need more control.
+
+52
+00:03:19,874 --> 00:03:22,494
+Episode Thirty-Nine — Explicit Locks.
+
+53
+00:03:22,494 --> 00:03:25,893
+ReentrantLock, tryLock, and Condition variables.
+
+54
+00:03:25,893 --> 00:03:26,884
+See you there.

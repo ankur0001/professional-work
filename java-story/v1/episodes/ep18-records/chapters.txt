@@ -1,0 +1,54 @@
+0:00 Reflection can dig into types
+0:04 So much Java was getters, setters, equals, hashCode,…
+0:10 Records say — this is a transparent data carrier.
+0:14 Less boilerplate
+0:16 Today we use records where they shine — and avoid where…
+0:21 Data with a contract — not a ceremony factory.
+0:24 Episode Eighteen.
+0:25 Records — compact, immutable data carriers.
+0:29 A record declaration is short on purpose.
+0:32 record Money of currency and minorUnits.
+0:35 The compiler generates the canonical constructor.
+0:38 Also accessors, equals, hashCode, and toString.
+0:41 Components are final — immutability is the default story.
+0:45 You describe the data
+0:48 Accessors are named after components — currency, minorUnits.
+0:53 Not getCurrency — unless you add that yourself.
+0:56 That style is intentional — records are not classic…
+1:00 Serialization libraries increasingly understand both styles.
+1:04 Read the accessor names as part of the API.
+1:08 Keep component names domain-clear.
+1:10 Records can still validate.
+1:12 Use a compact constructor to enforce invariants.
+1:15 Reject null currency
+1:19 You get immutability and guardrails together.
+1:22 That is why records work well for value objects.
+1:25 Invalid data should fail at creation — not later.
+1:28 When to choose a record.
+1:30 DTOs
+1:34 When identity is the data — not a mutable lifecycle entity.
+1:39 When not — JPA entities with mutable state and proxies…
+1:44 Do not force records into every hierarchy.
+1:47 Use them where transparency is the point.
+1:50 Know the limits.
+1:51 Records are implicitly final — no subclassing the record…
+1:56 You can implement interfaces.
+1:58 You can add methods — but do not turn a record into a…
+2:02 If behavior grows complex, extract a real domain type with…
+2:06 Records carry data
+2:10 Three common mistakes.
+2:12 One — mutable components like lists without defensive…
+2:16 Two — using records as entities while expecting mutable…
+2:20 Three — huge records that should have been structured types.
+2:24 Also — ignoring compact-constructor validation.
+2:27 Immutability is only as strong as the components you expose.
+2:31 Interview question — what is a Java record?
+2:34 A transparent, immutable data carrier with generated…
+2:39 Canonical constructor, accessors, equals, hashCode,…
+2:43 Great for DTOs and value objects — not a replacement for…
+2:48 Mention compact constructors for invariants.
+2:51 That answer is crisp and practical.
+2:54 Data carriers are clean
+2:58 Episode Nineteen — sealed classes.
+3:00 Controlled subclasses and exhaustive switches.
+3:03 See you there.

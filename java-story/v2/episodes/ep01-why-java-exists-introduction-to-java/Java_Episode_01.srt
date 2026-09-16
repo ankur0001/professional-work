@@ -1,0 +1,257 @@
+1
+00:00:00,000 --> 00:00:09,960
+Before we talk about syntax, let's start
+with a situation. Imagine you are building
+software in the early nineteen nineties.
+The internet is about to explode.
+
+2
+00:00:10,080 --> 00:00:20,960
+Your team wants one application to run on
+Windows machines, Unix servers, and a
+growing set of devices. You already have
+C++. It is powerful. It can be fast.
+
+3
+00:00:21,079 --> 00:00:25,199
+So a natural question appears: why invent
+another language at all?
+
+4
+00:00:25,379 --> 00:00:39,619
+The answer is not "because new languages
+are fashionable." The answer is that C++
+made some kinds of large-scale software
+expensive in ways teams felt every week.
+In C++, you manage memory yourself.
+
+5
+00:00:39,739 --> 00:00:51,139
+That power is real — and so is the cost.
+One small mistake can become a leak, a
+crash, or a security hole that only
+appears under load. Platform dependency is
+another tax.
+
+6
+00:00:51,259 --> 00:01:01,699
+Code that works on one operating system
+can break on another. If your product must
+run in many places, you may end up
+rewriting and retesting the same business
+logic again and again.
+
+7
+00:01:01,819 --> 00:01:12,259
+Those two costs — memory risk and platform
+rewrite — stacked on top of each other. A
+team could survive one of them for a
+while. Both at once slowed shipping to a
+crawl.
+
+8
+00:01:12,379 --> 00:01:24,939
+So the industry was facing a very
+practical question: can we keep strong
+application development, but reduce the
+pain of memory mistakes and platform-
+specific rewrites? That question is why
+Java exists.
+
+9
+00:01:25,060 --> 00:01:37,700
+Java was created to be safer for many
+application teams than raw C++ work,
+easier to maintain across large codebases,
+and portable across platforms without
+starting over for every operating system.
+
+10
+00:01:37,820 --> 00:01:50,420
+First it was called Oak. Later it became
+Java. The mission stayed practical: solve
+an engineering headache, not invent a
+slogan. And yet Java did arrive with a
+slogan — Write Once, Run Anywhere.
+
+11
+00:01:50,540 --> 00:02:03,260
+That line can sound like marketing until
+you have paid the cost of shipping the
+same product three times. For banks,
+telecom systems, and enterprise backends,
+rewrite cost is months, money, and risk.
+
+12
+00:02:03,380 --> 00:02:14,659
+So the slogan mattered as a business
+promise. But a promise is not a mechanism.
+So the next natural question is: what does
+Java actually do differently so the same
+program can travel across machines?
+
+13
+00:02:14,840 --> 00:02:23,439
+Here is the idea in simple language. Java
+does not take your source and immediately
+turn it into Windows-only machine code or
+Mac-only machine code.
+
+14
+00:02:23,560 --> 00:02:34,800
+First, the compiler turns your .java file
+into bytecode, stored in a .class file.
+Bytecode is a platform-neutral instruction
+format — an international language for
+programs.
+
+15
+00:02:34,920 --> 00:02:47,880
+Then the JVM, the Java Virtual Machine,
+reads that bytecode and translates it for
+the local machine. Look at this bash for a
+moment. Watch what each command is doing.
+javac is the compiler.
+
+16
+00:02:48,000 --> 00:03:06,040
+It checks your source and produces
+bytecode. java does not mean "Windows ran
+the class file as a native executable." It
+means "start a JVM process, load this
+class, and execute it." Windows has a JVM.
+macOS has a JVM.
+
+17
+00:03:06,160 --> 00:03:22,400
+Linux has a JVM. Containers have JVMs.
+Same .class files. Different translators.
+Same program behavior — as long as the JVM
+is compatible. That pipeline is the real
+meaning of Write Once, Run Anywhere.
+
+18
+00:03:22,520 --> 00:03:32,160
+Once you see that, a quieter question
+appears: is this only about portability,
+or does the runtime change how we write
+programs day to day? It changes both.
+
+19
+00:03:32,280 --> 00:03:37,600
+Because the JVM sits between your program
+and the machine, Java can also manage
+memory for you.
+
+20
+00:03:37,720 --> 00:03:45,240
+You still care about allocation and leaks
+caused by lingering references — but you
+are not calling free() by hand after every
+object.
+
+21
+00:03:45,360 --> 00:03:55,000
+That trade-off is a big reason large teams
+could move faster without constantly
+stepping on memory landmines. Let's make
+the whole story concrete with the smallest
+useful program.
+
+22
+00:03:55,120 --> 00:04:11,680
+Suppose we only want the computer to print
+a greeting. Even that tiny goal still
+shows Java's structure: a class, an entry
+point, and a library call. Look at this
+java for a moment. Save this as
+HelloWorld.java.
+
+23
+00:04:11,800 --> 00:04:17,639
+The filename matters. A public top-level
+class name and the filename must match,
+including case.
+
+24
+00:04:17,759 --> 00:04:29,319
+If the class is HelloWorld and the file is
+helloworld.java, the compiler will fight
+you — and that fight is teaching you
+something about how Java finds and loads
+types. Now walk the code with me.
+
+25
+00:04:29,439 --> 00:04:40,519
+public class HelloWorld declares a named
+blueprint. Almost everything in Java lives
+inside a class. Inside it, public static
+void main(String[] args) is the entry
+point.
+
+26
+00:04:40,639 --> 00:04:52,719
+When you launch the program, the JVM looks
+for this kind of method. public means it
+can be seen from outside. static means the
+JVM can call it without first creating a
+HelloWorld object.
+
+27
+00:04:52,839 --> 00:05:08,000
+void means it does not return a value.
+String[] args is how command-line
+arguments arrive. Then
+System.out.println("Hello, World!");
+prints a line to the console. Compile it.
+Run it. The screen shows Hello, World!.
+
+28
+00:05:08,119 --> 00:05:23,039
+Behind that simple result is the full
+thesis of this episode: source becomes
+bytecode, the JVM loads it, finds main,
+and executes the print. The operating
+system is not reading your .java file as
+if it were a native app.
+
+29
+00:05:23,159 --> 00:05:33,839
+The JVM is doing the heavy lifting. This
+is also where a common misunderstanding
+begins. People say, "Java runs on
+Windows." That sentence is incomplete.
+
+30
+00:05:33,959 --> 00:05:38,919
+What usually runs on Windows is a JVM for
+Windows, executing portable bytecode.
+
+31
+00:05:39,039 --> 00:05:52,919
+Another mix-up arrives the moment someone
+says "install Java." They may mean the
+JDK, the JRE idea, or the JVM engine —
+three related layers with different jobs.
+And that mix-up is not a side note.
+
+32
+00:05:53,039 --> 00:06:03,479
+It is the next problem waiting for us.
+Today we answered why Java exists, how
+portability actually works, and what
+happens when a tiny program runs.
+
+33
+00:06:03,599 --> 00:06:14,439
+The natural next question is still waiting
+in plain language: when people say
+"install Java," what are they actually
+installing — and why do three different
+acronyms show up as if they were the same
+thing?
+
+34
+00:06:14,619 --> 00:06:18,299
+Once those layers are clear, the confusion
+starts to disappear.

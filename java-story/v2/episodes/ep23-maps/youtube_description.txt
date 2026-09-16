@@ -1,0 +1,43 @@
+The Java Story — Episode 23: Maps
+Current cut (coherent narration + animated visuals).
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Sets answered uniqueness
+• You can fake it with two lists — keys in one, values in the other —…
+• Maps are that engine
+• Look at this java for a moment
+• That single method prevents a pile of null checks when missing keys…
+• computeIfAbsent builds a value only when the key is missing —…
+• …and more
+
+Timestamps
+0:00 Sets answered uniqueness
+0:14 You can fake it with two lists — keys in one, values in…
+0:27 Maps are that engine
+0:42 Look at this java for a moment
+0:53 That single method prevents a pile of null checks when…
+1:05 computeIfAbsent builds a value only when the key is…
+1:11 merge combines a new contribution with an existing value…
+1:24 HashMap allows one null key and null values
+1:35 Order is another axis: Look at this java for a moment
+1:47 Pick the map that matches the question you ask: fast…
+1:59 The sku is the key
+2:10 If two threads resize or update together, you can corrupt…
+2:23 Look at this java for a moment
+2:35 A second put with the same key replaces the value
+2:50 keySet, values, and entrySet are views backed by the map —…
+3:03 getOrDefault, computeIfAbsent, and merge removed boilerplate
+3:10 Sometimes the problem is not lookup by key, but flow: work…
+3:23 That shape is queues and deques.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v2/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode23

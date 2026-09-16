@@ -1,0 +1,191 @@
+1
+00:00:00,000 --> 00:00:03,610
+In Episode Three, we mapped packages and classes.
+
+2
+00:00:03,610 --> 00:00:07,883
+Now — what actually lives inside those fields and methods?
+
+3
+00:00:07,883 --> 00:00:11,567
+Variables name values. Types decide what is valid.
+
+4
+00:00:11,567 --> 00:00:17,314
+Pick the wrong type… and production pays for it — overflow, nulls, money bugs.
+
+5
+00:00:17,314 --> 00:00:18,306
+Episode Four.
+
+6
+00:00:18,306 --> 00:00:23,492
+Variables and Data Types — primitives, references, and real choices.
+
+7
+00:00:23,492 --> 00:00:27,094
+Java has two families of types. Keep this picture.
+
+8
+00:00:27,094 --> 00:00:31,056
+On the left — primitives. Raw values. Fast. Never null.
+
+9
+00:00:31,056 --> 00:00:35,450
+On the right — references. They point to objects on the heap.
+
+10
+00:00:35,450 --> 00:00:41,140
+Assignment behaves differently in each family — that is why this split matters.
+
+11
+00:00:41,140 --> 00:00:44,310
+That mental model everything else builds on.
+
+12
+00:00:44,310 --> 00:00:47,771
+Eight primitives — memorize the common ones first.
+
+13
+00:00:47,771 --> 00:00:51,785
+int for whole numbers. long for bigger IDs and timestamps.
+
+14
+00:00:51,785 --> 00:00:55,938
+boolean for true or false. double for binary floating point.
+
+15
+00:00:55,938 --> 00:01:01,059
+byte, short, char, float exist too — useful, but rarer in day-to-day code.
+
+16
+00:01:01,059 --> 00:01:04,451
+Primitives hold the value itself — not a pointer.
+
+17
+00:01:04,451 --> 00:01:09,088
+And they cannot be null. That alone prevents a whole class of bugs.
+
+18
+00:01:09,088 --> 00:01:10,036
+Picture memory.
+
+19
+00:01:10,036 --> 00:01:13,641
+int count equals ten — the value sits in the local frame.
+
+20
+00:01:13,641 --> 00:01:17,561
+Order order equals new Order — the variable holds a reference.
+
+21
+00:01:17,561 --> 00:01:19,711
+The real object lives on the heap.
+
+22
+00:01:19,711 --> 00:01:24,769
+Assignment copies the primitive… or copies the reference — not the whole object.
+
+23
+00:01:24,769 --> 00:01:29,954
+final blocks reassignment of that variable — it does not freeze the object inside.
+
+24
+00:01:29,954 --> 00:01:31,692
+Production gotcha — money.
+
+25
+00:01:31,692 --> 00:01:33,765
+Never store currency in double.
+
+26
+00:01:33,765 --> 00:01:37,844
+Binary floating point cannot represent many decimals exactly.
+
+27
+00:01:37,844 --> 00:01:41,588
+Prefer long minor units — cents — or a Money value type.
+
+28
+00:01:41,588 --> 00:01:46,201
+Use BigDecimal when you need precise decimal math and rounding rules.
+
+29
+00:01:46,201 --> 00:01:51,684
+Architects standardize this early — because fixing money types later is expensive.
+
+30
+00:01:51,684 --> 00:01:54,862
+Wrappers look similar — Integer, Long, Boolean.
+
+31
+00:01:54,862 --> 00:01:58,785
+They are objects. They can be null. They cost more memory.
+
+32
+00:01:58,785 --> 00:02:03,519
+Autoboxing hides conversions — and can hide NullPointerExceptions too.
+
+33
+00:02:03,519 --> 00:02:07,441
+A List of Integer can thrash the heap versus an int array.
+
+34
+00:02:07,441 --> 00:02:12,310
+Prefer primitives in hot paths. Use wrappers when null is a real signal.
+
+35
+00:02:12,310 --> 00:02:13,839
+Three common mistakes.
+
+36
+00:02:13,839 --> 00:02:17,382
+One — double for money. Rounding bugs wait quietly.
+
+37
+00:02:17,382 --> 00:02:20,717
+Two — ignoring integer overflow on big counters.
+
+38
+00:02:20,717 --> 00:02:25,997
+Three — assuming final means deep immutability. It only blocks reassignment.
+
+39
+00:02:25,997 --> 00:02:32,528
+Bonus trap — overusing String for every domain idea. Prefer typed values when meaning matters.
+
+40
+00:02:32,528 --> 00:02:36,124
+Interview question — primitive versus wrapper?
+
+41
+00:02:36,124 --> 00:02:37,453
+Answer on screen.
+
+42
+00:02:37,453 --> 00:02:40,345
+Primitive — value, non-null, compact.
+
+43
+00:02:40,345 --> 00:02:44,567
+Wrapper — object, nullable, overhead, autoboxing risk.
+
+44
+00:02:44,567 --> 00:02:50,586
+Then mention — why avoid double for money. That lands the offer-level detail.
+
+45
+00:02:50,586 --> 00:02:53,702
+You now know how Java stores meaning.
+
+46
+00:02:53,702 --> 00:02:55,134
+Next — operators.
+
+47
+00:02:55,134 --> 00:03:00,694
+Plus, compare, and, or — and the traps that break equality checks.
+
+48
+00:03:00,694 --> 00:03:03,052
+Episode Five. See you there.

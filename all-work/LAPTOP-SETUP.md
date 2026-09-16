@@ -93,7 +93,7 @@ Do this in your **local browser** — no Cloud Agent needed.
 
 1. On GitHub: **professional-work** → **Settings** → **Pages**
 2. Source: **Deploy from branch** → branch `main`
-3. Folder: `/all-work/freelance-profile/portfolio` (or copy `index.html` to `/docs` if Pages only allows root/docs)
+3. Folder: GitHub Pages only supports repo-root `/` or `/docs`. Publish copy lives at `all-work/freelance-profile/docs/` — use Actions, or temporarily copy that folder to repo-root `docs/` for the simple Pages setting.
 4. Your site: `https://ankur0001.github.io/professional-work/` (path may vary)
 
 **Option 2 — Open locally**

@@ -1,0 +1,118 @@
+1
+00:00:00,000 --> 00:00:13,679
+Streams taught us to describe bulk work as
+a pipeline. The last step still has to
+answer a practical question: what
+structure do we actually return to the
+rest of the program? Sometimes a list is
+enough.
+
+2
+00:00:13,799 --> 00:00:26,879
+Often you need a set of unique ids, a map
+of name to user, or a map of department to
+employees. Collectors turn streams into
+the structures you actually return. Look
+at this java for a moment. Walk it.
+
+3
+00:00:27,000 --> 00:00:42,640
+groupingBy builds a map keyed by the
+classifier — here the string itself. The
+downstream collector counting() tallies
+how many elements fell into each group.
+Result: ada → 2, grace → 1.
+
+4
+00:00:42,759 --> 00:00:51,920
+That is a whole nested loop and map-merge
+story expressed as one terminal thought.
+The basic collectors cover everyday
+destinations: Look at this java for a
+moment.
+
+5
+00:00:52,039 --> 00:01:06,879
+toList, toSet, and toMap are the first
+tools to reach for. Modern stream.toList()
+overlaps the list case with an
+unmodifiable result; Collectors.toList()
+remains common when you want a mutable
+list explicitly.
+
+6
+00:01:07,000 --> 00:01:14,719
+toMap needs a merge function when keys can
+collide: Look at this java for a moment.
+Without a merge function, duplicate keys
+throw.
+
+7
+00:01:14,840 --> 00:01:27,879
+With one, collisions become a deliberate
+policy — sum, max, first-wins, or combine
+objects. Grouping and partitioning split
+streams into buckets: Look at this java
+for a moment.
+
+8
+00:01:28,000 --> 00:01:38,920
+partitioningBy is grouping on a boolean —
+two buckets, true and false. groupingBy
+takes any classifier. Downstream
+collectors deepen both: Look at this java
+for a moment.
+
+9
+00:01:39,039 --> 00:01:50,719
+Downstream collectors are how you avoid
+building a map of lists and then post-
+processing. You say the final shape in the
+terminal operation: counts, sets of names,
+summed salaries.
+
+10
+00:01:50,839 --> 00:01:59,159
+Immutable collection collectors matter
+when you return values from APIs: Look at
+this java for a moment. Callers cannot add
+later.
+
+11
+00:01:59,279 --> 00:02:12,799
+That failure is a feature when the
+method's contract is "here is a snapshot."
+What if we finish every stream as a list
+and rebuild maps afterward? It works. It
+also stages an intermediate structure you
+may not need.
+
+12
+00:02:12,919 --> 00:02:25,639
+Collectors let the terminal step be the
+real answer. Collectors.joining is another
+everyday terminal for readable output:
+Look at this java for a moment. Pipelines
+needed richer endings.
+
+13
+00:02:25,759 --> 00:02:36,719
+Collectors answered with
+toList/toSet/toMap, grouping and
+partitioning, downstream composition,
+merge functions for collisions, and
+unmodifiable results for safe returns.
+
+14
+00:02:36,840 --> 00:02:47,080
+Sometimes the stream elements contain
+collections of their own — a user with
+orders, an order with lines. Mapping then
+gives you a stream of lists, which is
+rarely what you wanted.
+
+15
+00:02:47,199 --> 00:02:52,799
+How do you flatten nested structure inside
+a pipeline? That is the pressure that
+brings flatMap.

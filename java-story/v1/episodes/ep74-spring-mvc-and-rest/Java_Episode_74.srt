@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,828
+Episode Seventy-Three covered Spring Boot starters and auto-configuration.
+
+2
+00:00:04,828 --> 00:00:09,525
+Most Boot services speak HTTP — Spring MVC is the classic request stack.
+
+3
+00:00:09,525 --> 00:00:14,809
+REST controllers map URLs to methods and convert JSON with HttpMessageConverters.
+
+4
+00:00:14,809 --> 00:00:18,528
+Clean API design separates transport from business rules.
+
+5
+00:00:18,528 --> 00:00:23,290
+Interviews love status codes, validation, and exception handling details.
+
+6
+00:00:23,290 --> 00:00:27,922
+Today — controllers, mapping, validation, advice, and REST design tips.
+
+7
+00:00:27,922 --> 00:00:30,214
+Episode Seventy-Four.
+
+8
+00:00:30,214 --> 00:00:32,396
+Spring MVC and REST.
+
+9
+00:00:32,396 --> 00:00:35,913
+RestController combines Controller and ResponseBody.
+
+10
+00:00:35,913 --> 00:00:39,972
+Methods return objects — Spring writes JSON to the response.
+
+11
+00:00:39,972 --> 00:00:45,045
+RequestMapping family — GetMapping, PostMapping, PutMapping, DeleteMapping.
+
+12
+00:00:45,045 --> 00:00:49,509
+Path variables, request params, and headers bind method arguments.
+
+13
+00:00:49,509 --> 00:00:54,311
+Keep controllers thin — validate input, call a service, map the result.
+
+14
+00:00:54,311 --> 00:00:58,302
+Business rules belong in services — not in mapping methods.
+
+15
+00:00:58,302 --> 00:01:00,314
+The request-response pipeline.
+
+16
+00:01:00,314 --> 00:01:04,136
+DispatcherServlet is the front controller for Spring MVC.
+
+17
+00:01:04,136 --> 00:01:08,159
+Handler mapping finds the controller method for the request.
+
+18
+00:01:08,159 --> 00:01:12,585
+Argument resolvers bind parameters — body, path, query, principal.
+
+19
+00:01:12,585 --> 00:01:16,407
+Return value handlers write the body or negotiate a view.
+
+20
+00:01:16,407 --> 00:01:20,296
+Filters and interceptors wrap cross-cutting HTTP concerns.
+
+21
+00:01:20,296 --> 00:01:23,086
+Validation belongs at the edge of the API.
+
+22
+00:01:23,086 --> 00:01:27,337
+Jakarta Validation annotations — NotNull, Size, Email — on DTOs.
+
+23
+00:01:27,337 --> 00:01:31,855
+Valid on a request body triggers validation before your method runs.
+
+24
+00:01:31,855 --> 00:01:36,372
+BindException or MethodArgumentNotValidException carry field errors.
+
+25
+00:01:36,372 --> 00:01:40,358
+Return structured four-hundred responses — not stack traces.
+
+26
+00:01:40,358 --> 00:01:45,074
+Validate again in the domain when rules are more than bean annotations.
+
+27
+00:01:45,074 --> 00:01:47,988
+Consistent error handling builds client trust.
+
+28
+00:01:47,988 --> 00:01:51,724
+ControllerAdvice centralizes exception-to-response mapping.
+
+29
+00:01:51,724 --> 00:01:55,841
+Map domain not-found to four-oh-four — conflicts to four-oh-nine.
+
+30
+00:01:55,841 --> 00:01:59,452
+Never leak internal exception messages to public clients.
+
+31
+00:01:59,452 --> 00:02:03,632
+Problem Details or a small error JSON schema keeps clients stable.
+
+32
+00:02:03,632 --> 00:02:07,812
+Log with correlation IDs — respond with safe, actionable messages.
+
+33
+00:02:07,812 --> 00:02:11,095
+REST design habits that interviewers look for.
+
+34
+00:02:11,095 --> 00:02:15,378
+Nouns for resources — verbs for HTTP methods, not URL paths.
+
+35
+00:02:15,378 --> 00:02:19,018
+Idempotent PUT and DELETE — careful POST semantics.
+
+36
+00:02:19,018 --> 00:02:24,085
+Use proper status codes — two-oh-one for create, two-oh-four for empty.
+
+37
+00:02:24,085 --> 00:02:29,010
+Version deliberately — URL or header — do not break clients silently.
+
+38
+00:02:29,010 --> 00:02:34,006
+Pagination and filtering for collections — never dump unbounded lists.
+
+39
+00:02:34,006 --> 00:02:35,410
+Three common mistakes.
+
+40
+00:02:35,410 --> 00:02:39,941
+One — fat controllers with transactions and SQL inside mapping methods.
+
+41
+00:02:39,941 --> 00:02:44,216
+Two — returning entities directly — overexposes persistence fields.
+
+42
+00:02:44,216 --> 00:02:48,428
+Three — swallowing exceptions and always returning two-hundred OK.
+
+43
+00:02:48,428 --> 00:02:53,533
+Also — ignoring Content-Type and Accept — surprising clients with wrong formats.
+
+44
+00:02:53,533 --> 00:02:58,064
+Treat the HTTP layer as a translation boundary — not the business core.
+
+45
+00:02:58,064 --> 00:03:02,525
+Interview question — how does a request reach your RestController?
+
+46
+00:03:02,525 --> 00:03:06,243
+Embedded server hands the request to DispatcherServlet.
+
+47
+00:03:06,243 --> 00:03:10,501
+Handler mapping selects the controller method by path and verb.
+
+48
+00:03:10,501 --> 00:03:14,624
+Argument resolvers bind body and params — validation may run.
+
+49
+00:03:14,624 --> 00:03:19,288
+Service executes business logic — return value becomes the HTTP body.
+
+50
+00:03:19,288 --> 00:03:23,682
+Advice and filters can reshape errors and cross-cutting concerns.
+
+51
+00:03:23,682 --> 00:03:26,718
+HTTP is handled — next we persist data.
+
+52
+00:03:26,718 --> 00:03:30,688
+Episode Seventy-Five — Spring Data and Persistence.
+
+53
+00:03:30,688 --> 00:03:35,826
+Repositories, JPA mapping, transactions, and N-plus-one awareness.
+
+54
+00:03:35,826 --> 00:03:36,916
+See you there.

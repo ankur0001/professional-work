@@ -1,0 +1,54 @@
+0:00 Sorting orders a collection
+0:04 Instead of nested loops everywhere — declare a pipeline.
+0:08 Source, intermediate operations, terminal operation.
+0:11 Lazy until it needs to run
+0:15 Today — the mental model that makes Streams useful.
+0:19 Data as a pipeline — not a pile of index variables.
+0:22 Episode Twenty-Six.
+0:24 Streams introduction — pipelines over data.
+0:27 A Stream is not a new collection type.
+0:29 It is a sequence of elements supporting aggregate…
+0:33 You build a pipeline — then a terminal operation triggers…
+0:38 Streams are single-use
+0:41 They can come from collections, arrays, generators, or I/O…
+0:45 Think recipe first — result second.
+0:47 Operations split into two families.
+0:50 Intermediate — filter, map, flatMap, sorted, distinct —…
+0:55 Terminal — collect, reduce, forEach, count, anyMatch —…
+1:01 Without a terminal operation, nothing useful happens.
+1:05 Keep intermediate steps free of surprising mutation.
+1:08 Readable pipelines beat clever one-liners.
+1:11 Laziness is the key performance idea.
+1:14 Intermediate operations record what to do — they do not…
+1:18 A terminal operation pulls data through the pipeline.
+1:21 anyMatch can stop early
+1:25 That is why filter then findFirst can skip unused elements.
+1:28 Use laziness — do not fight it with eager side effects…
+1:33 collect is how most pipelines finish.
+1:35 Collectors.toList and toSet materialize results.
+1:39 toMap builds maps carefully — watch duplicate keys.
+1:42 groupingBy clusters elements by a classifier.
+1:45 joining builds strings without manual StringBuilder noise.
+1:49 Choose a collector that matches the shape you need next.
+1:53 When Streams shine.
+1:54 Transform and filter chains that would be noisy loops.
+1:57 Pipelines that read like the business rule.
+2:00 Optional parallelism later — after you measure.
+2:03 When not — heavy mutable accumulation that is clearer as a…
+2:08 Clarity first
+2:11 Three common mistakes.
+2:13 One — reusing a stream after it was consumed.
+2:16 Two — sneaking side effects into map instead of keeping…
+2:21 Three — sprinkling parallel without evidence it helps.
+2:24 Also — giant pipelines nobody can debug at a breakpoint.
+2:28 Good stream code is still boringly clear.
+2:30 Interview question — what is a Stream, and why does…
+2:35 A pipeline over elements with intermediate and terminal…
+2:39 Laziness delays work until a terminal operation — enabling…
+2:44 Mention collect as the common way to materialize results.
+2:47 Contrast with collections — streams do not store elements…
+2:52 That answer shows conceptual understanding.
+2:55 Pipelines are in place
+2:59 Episode Twenty-Seven — Stream Collectors.
+3:02 Grouping, partitioning, and downstream collectors.
+3:05 See you there.

@@ -1,0 +1,211 @@
+1
+00:00:00,000 --> 00:00:17,359
+We have walked a long JVM corridor:
+bytecode and classloading, heap and stack,
+GC and collectors, leaks and dumps,
+diagnostics, escape analysis, metaspace,
+references, flags, layout, safepoints,
+startup.
+
+2
+00:00:17,480 --> 00:00:27,800
+Interviews do not want you to recite that
+corridor as a glossary. They want a
+coherent story — from load to steady-state
+to diagnosis — that proves you can think
+when production hurts.
+
+3
+00:00:27,920 --> 00:00:35,640
+Vocabulary without a story collapses under
+the first follow-up. A story without
+mechanisms collapses under the second.
+
+4
+00:00:35,760 --> 00:00:51,560
+Imagine the interviewer says, "Walk me
+through what happens when a Java service
+runs hot and then slows down." A weak
+answer sprays buzzwords: G1, ZGC, JIT,
+safepoint, metaspace, compressed oops.
+
+5
+00:00:51,680 --> 00:00:54,360
+A strong answer tells a pipeline story.
+
+6
+00:00:54,480 --> 00:01:09,800
+Classes load and initialize; the
+interpreter runs; the JIT warms hot paths;
+objects allocate onto the heap; collectors
+reclaim unreachable memory according to a
+chosen trade-off; pauses and safepoints
+shape latency;
+
+7
+00:01:09,920 --> 00:01:15,920
+native memory and metaspace sit outside
+-Xmx and can kill a process that still has
+free heap.
+
+8
+00:01:16,040 --> 00:01:31,480
+Then you fork on the symptom they gave
+you. Stuck threads? Thread dump and lock
+stories. Climbing old gen with short
+pauses? Heap dump, dominators, reference
+leaks. CPU hot? JFR or async-profiler.
+
+9
+00:01:31,600 --> 00:01:40,720
+RSS disagrees with heap? Native memory and
+metaspace. Slow after deploy but fine
+later? Startup and warmup, not only GC.
+
+10
+00:01:40,840 --> 00:01:51,120
+That scaffold is worth practicing aloud
+until it feels like speech, not a slide:
+Look at this text for a moment. Define the
+term in one plain sentence a teammate
+could reuse.
+
+11
+00:01:51,240 --> 00:02:06,320
+Explain the mechanism — what the runtime
+actually does. Name a failure mode —
+unbounded cache, time-to-safepoint spike,
+container OOM with free heap, cargo-cult
+flags, cold start hidden in a steady-state
+graph.
+
+12
+00:02:06,440 --> 00:02:14,920
+Say how you would diagnose it with tools
+you can describe honestly. Interviews
+reward that shape because it sounds like
+incident language, not flashcard language.
+
+13
+00:02:15,040 --> 00:02:22,840
+Silently knowing the list is not the same
+skill as telling the story while someone
+watches. Try one question with the
+scaffold live.
+
+14
+00:02:22,960 --> 00:02:37,280
+"What is a memory leak in Java?" Define:
+retained reachable objects the program no
+longer intends to use. Mechanism: GC roots
+and reference chains keep objects alive;
+collectors only reclaim the unreachable.
+
+15
+00:02:37,400 --> 00:02:48,759
+Failure mode: unbounded caches, listener
+registries, ThreadLocals on pools,
+classloader pins. Diagnose: heap dump
+under load, dominator tree, path to roots.
+
+16
+00:02:48,879 --> 00:03:02,159
+That beats listing four buzzwords — and
+proves you can move from definition to
+action. Another: "How do you choose GC
+settings?" Define the trade space.
+Mechanism of the collectors you actually
+know.
+
+17
+00:03:02,280 --> 00:03:13,520
+Failure mode of cargo-cult flags. Diagnose
+with GC logs and load tests. You are not
+required to know every collector flag —
+you are required to know how to think.
+Admit trade-offs out loud.
+
+18
+00:03:13,639 --> 00:03:20,519
+G1 versus ZGC is not a loyalty test; it is
+pause versus CPU and footprint under an
+SLO.
+
+19
+00:03:20,639 --> 00:03:34,719
+Escape analysis is not "allocations are
+free"; it is "some allocations may
+disappear after the JIT proves non-
+escape." -Xmx is not process size. Soft
+references are not a complete cache
+product.
+
+20
+00:03:34,839 --> 00:03:46,919
+Startup optimizations that help scale-to-
+zero may be irrelevant for an always-on
+monolith. Saying the trade-off is
+maturity. Pretending there is one best
+flag list is how candidates sound
+dangerous.
+
+21
+00:03:47,039 --> 00:03:58,159
+Watch the failure modes of interview
+answers themselves. Buzzwords without
+mechanisms collapse under "how does that
+work?" Flags without symptoms sound like
+someone else's startup script.
+
+22
+00:03:58,279 --> 00:04:01,759
+No tooling story means you have never been
+on call in spirit.
+
+23
+00:04:01,879 --> 00:04:15,759
+Use incident language: "We saw old gen
+climb while young pauses stayed short,
+took a heap dump under load, the dominator
+tree pointed at a static cache" beats "I
+know what a dominator tree is." Rehearse
+humility too.
+
+24
+00:04:15,879 --> 00:04:26,799
+"I have not used NMT in production, but
+here is when I would turn it on" is a
+stronger senior answer than inventing
+experience. Interviews and incidents both
+punish confident fiction.
+
+25
+00:04:26,919 --> 00:04:39,759
+They reward coherent reasoning under
+uncertainty — which is exactly what this
+JVM arc has been training. How to
+structure a JVM answer? Define, mechanism,
+failure mode, diagnostic tools.
+
+26
+00:04:39,879 --> 00:04:44,639
+That wrap only works if the earlier
+episodes gave you real mechanisms to hang
+on those hooks.
+
+27
+00:04:44,759 --> 00:04:56,119
+If you can tell the pipeline story in
+under two minutes and then take a
+diagnostic fork, you are ready for the JVM
+portion of a senior conversation. This
+closes the JVM deep-dive arc.
+
+28
+00:04:56,239 --> 00:05:07,879
+The next hunger steps up from runtime
+machinery to design vocabulary: recurring
+structures teams name so they can talk
+about trade-offs faster — without turning
+patterns into stamps you smash onto every
+class.

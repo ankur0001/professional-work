@@ -1,0 +1,46 @@
+0:00 Arrays hold many values
+0:04 APIs, logs, JSON, HTTP, configuration, identifiers.
+0:08 String is immutable
+0:12 Today we treat String like the production type it is.
+0:16 Small mistakes here show up in security and performance.
+0:20 Episode Nine.
+0:21 Strings — immutability, equality, and careful construction.
+0:26 Immutability means the characters never change after…
+0:30 s equals s plus world does not edit s — it creates a new…
+0:34 That sharing and safety help concurrency and caching.
+0:37 But careless concatenation can allocate again and again.
+0:41 Understand create versus modify — String only creates.
+0:44 That one idea prevents a whole class of confusion.
+0:47 Equality is the classic trap.
+0:50 Equals-equals compares references — same String object?
+0:54 For text content — use equals.
+0:56 Safer pattern — literal first
+1:01 Null-safe and clear
+1:05 Make equals your default reflex for text.
+1:08 Building strings in a loop?
+1:10 Do not use plus repeatedly in hot loops.
+1:13 Use StringBuilder — append in place, then toString once.
+1:16 Modern compilers help simple cases — but builders win when…
+1:21 Measure hot paths
+1:25 Builders are the boring correct tool — use them.
+1:28 Bytes are not characters without a charset.
+1:31 Prefer UTF-8 explicitly when encoding or decoding.
+1:35 toLowerCase without a locale can surprise you in Turkish…
+1:39 For identifiers, be explicit about case rules.
+1:42 Never assume the platform default will match production.
+1:46 Be explicit — always.
+1:48 Three common mistakes.
+1:49 One — equals-equals for text content.
+1:52 Two — logging secrets inside strings — tokens, passwords,…
+1:56 Three — accepting unbounded string input until memory cries.
+2:00 Also — pushing raw strings deep into domain code
+2:05 A CustomerId type beats a naked string passed twelve…
+2:10 Interview question — why is String immutable?
+2:13 Safety, sharing, hash stability for maps, and simpler…
+2:18 Then add — use StringBuilder when you mutate often.
+2:21 And never compare text with equals-equals.
+2:24 That trio covers language design and daily practice.
+2:27 Text is under control
+2:31 Episode Ten — object-oriented programming.
+2:34 Classes, objects, encapsulation — how Java scales design.
+2:38 See you there.

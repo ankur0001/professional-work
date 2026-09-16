@@ -1,0 +1,79 @@
+The Java Story — Episode 33: try-with-resources
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Open a file
+• Resource leaks are silent killers — connections, streams, locks.
+• Manual finally blocks help, but they are easy to get wrong.
+• Java seven introduced try-with-resources — automatic cleanup.
+• Declare resources in the try header — close happens on the way out.
+• Today — leak-free I/O and the AutoCloseable contract.
+• …and more
+
+Timestamps
+0:00 Open a file
+0:04 Resource leaks are silent killers — connections, streams,…
+0:08 Manual finally blocks help, but they are easy to get wrong.
+0:12 Java seven introduced try-with-resources — automatic…
+0:16 Declare resources in the try header — close happens on the…
+0:21 Today — leak-free I/O and the AutoCloseable contract.
+0:25 Episode Thirty-Three.
+0:26 try-with-resources — automatic resource management.
+0:30 A resource is anything that must be released — files,…
+0:35 Forgetting close under an exception path leaks OS handles.
+0:39 Leaks accumulate until the system runs out — then…
+0:43 finally was the old answer — always call close in finally.
+0:47 But what if close itself throws?
+0:51 try-with-resources exists to make the right thing the easy…
+0:55 The syntax is try with resources in parentheses.
+0:58 Each resource must implement AutoCloseable or Closeable.
+1:02 Resources are closed in reverse order of declaration.
+1:05 Close runs after the try block — success or exception.
+1:09 You can still use catch and finally alongside the try…
+1:12 One line of syntax replaces fragile cleanup boilerplate.
+1:16 AutoCloseable defines void close throws Exception.
+1:19 Most I/O classes already implement it — FileInputStream,…
+1:24 Your own types can implement AutoCloseable for RAII-style…
+1:29 close should be idempotent — safe to call more than once.
+1:32 Document whether your close is thread-safe.
+1:35 Implement AutoCloseable when your object owns a scarce…
+1:39 What if the try block throws and close also throws?
+1:42 The primary exception is thrown — close exception is…
+1:46 Call getSuppressed on the thrown exception to inspect it.
+1:49 This preserves the original failure while recording…
+1:53 Before Java seven, the close exception often masked the…
+1:57 Suppressed exceptions are a quiet but important design…
+2:01 Declare multiple resources separated by semicolons in one…
+2:05 They initialize left to right — close happens right to left.
+2:09 Typical pattern — open an InputStream and a Reader together.
+2:12 Each resource must be final or effectively final.
+2:15 Nested try-with-resources works but one header is usually…
+2:19 Multiple resources — one cleanup block, zero leaks.
+2:23 Three common mistakes.
+2:24 One — opening a resource outside try-with-resources and…
+2:29 Two — implementing close that swallows errors without…
+2:32 Three — returning from inside the try block before…
+2:37 Also — forgetting that resources close in reverse…
+2:41 Let the language close for you — do not fight the pattern.
+2:45 Interview question — how does try-with-resources work?
+2:48 Resources declared in try are closed automatically via…
+2:52 Close runs in reverse order after the try block exits.
+2:56 If both try and close throw, primary wins — close is…
+3:00 Mention it replaced most hand-written finally cleanup.
+3:03 That answer shows you write leak-resistant Java.
+3:06 Resources close themselves
+3:10 Episode Thirty-Four — Files and NIO point two.
+3:14 Paths, walking trees, and reading bytes without the old…
+3:19 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode33

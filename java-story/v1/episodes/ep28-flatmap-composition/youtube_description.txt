@@ -1,0 +1,79 @@
+The Java Story — Episode 28: flatMap & Composition
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Collectors gave results shape
+• One input can become many outputs — without nested loops.
+• flatMap is map plus flatten — the one-to-many transform.
+• Composition chains small steps into readable pipelines.
+• Today — flatten complexity instead of hiding it in loops.
+• Streams express structure
+• …and more
+
+Timestamps
+0:00 Collectors gave results shape
+0:04 One input can become many outputs — without nested loops.
+0:08 flatMap is map plus flatten — the one-to-many transform.
+0:12 Composition chains small steps into readable pipelines.
+0:15 Today — flatten complexity instead of hiding it in loops.
+0:19 Streams express structure
+0:22 Episode Twenty-Eight.
+0:24 flatMap and composition — one-to-many pipelines.
+0:29 map transforms one element into one result.
+0:32 flatMap transforms one element into a stream of results.
+0:35 The stream is flattened into the parent pipeline.
+0:39 List of lists becomes a single flat sequence.
+0:42 Optional values become present elements — absent ones drop…
+0:46 Think expand, then merge — not nested for-each.
+0:50 Composition means chaining focused operations.
+0:53 Each step does one job — filter, map, flatMap, collect.
+0:57 Read pipelines top to bottom like a sentence.
+1:00 Extract a method when a chain grows hard to name.
+1:03 Good composition favors clarity over cleverness.
+1:07 Small steps compose into big behavior.
+1:10 Without flatMap, nested structures invite nested loops.
+1:13 Orders with line items
+1:17 A map gives you a stream of collections — still nested.
+1:21 flatMap unwraps each inner collection into the outer flow.
+1:25 One pipeline replaces index juggling.
+1:27 Flatten at the right level — not too early, not too late.
+1:31 One-to-many shows up everywhere in real domains.
+1:34 Split a sentence into words
+1:38 Expand a user into their roles or permissions.
+1:41 flatMap with Arrays.stream or Collection.stream is…
+1:45 Choose flatMap when the natural result is many, not one.
+1:49 If you only need one, map is simpler.
+1:52 Common patterns worth memorizing.
+1:54 flatMap(Optional::stream) drops empty optionals cleanly.
+1:59 flatMap(Collection::stream) flattens nested collections.
+2:03 flatMap(s -> s.lines()) splits text into lines.
+2:06 distinct and sorted still apply after flattening.
+2:10 Compose terminal collectors at the end — shape stays last.
+2:14 Three common mistakes.
+2:15 One — using map when flatMap is required — you get Stream…
+2:20 Two — flattening too eagerly and losing grouping context.
+2:23 Three — giant flatMap lambdas that should be named methods.
+2:27 Also — forgetting that order is preserved in sequential…
+2:31 Readable steps beat one opaque flatMap block.
+2:34 Interview question — map versus flatMap?
+2:37 map — one input, one output element in the stream.
+2:41 flatMap — one input, zero or more outputs, flattened.
+2:44 Give examples — words from a line, items from an order.
+2:48 Mention Optional::stream for filtering absent values.
+2:52 That answer shows you understand stream geometry.
+2:55 Pipelines flatten nicely
+3:00 Episode Twenty-Nine — Parallel Streams.
+3:03 When fork-join helps — and when it hurts.
+3:06 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode28

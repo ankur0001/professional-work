@@ -1,0 +1,139 @@
+1
+00:00:00,000 --> 00:00:12,279
+Optional made absence explicit at API
+boundaries. Time is the next place older
+Java APIs hid too much — and punished you
+for guessing. Imagine a deadline feature:
+a task is due seven days from today.
+
+2
+00:00:12,399 --> 00:00:25,320
+Older tutorials still reach for
+java.util.Date or Calendar. They compile.
+Then a teammate in another city sees a
+different calendar day, or a daylight-
+saving shift moves what you thought was
+Tuesday afternoon.
+
+3
+00:00:25,439 --> 00:00:29,199
+The arithmetic looked fine. The type was
+lying about what it meant.
+
+4
+00:00:29,319 --> 00:00:42,599
+So the question is not "how do I add
+seven?" It is: what types keep "a calendar
+day," "a local date-time," and "a moment
+on the timeline" from sharing one blurry
+class? That is why java.time exists.
+
+5
+00:00:42,719 --> 00:00:54,200
+Date and Calendar are legacy. Modern Java
+splits the meanings that used to collide.
+Start with a calendar date that does not
+pretend to be a universal instant: Look at
+this java for a moment.
+
+6
+00:00:54,320 --> 00:01:10,159
+LocalDate is year, month, day — no time-
+of-day, no zone. Adding seven days is
+calendar arithmetic. Notice also: plusDays
+does not mutate today; it returns a new
+value. Immutability is not decoration.
+
+7
+00:01:10,280 --> 00:01:16,120
+Shared date values stop surprising you
+because some other method called setMonth
+on an object you thought you still owned.
+
+8
+00:01:16,239 --> 00:01:29,640
+Sometimes you need "two-thirty this
+afternoon" without claiming which city
+that afternoon belongs to — that is
+LocalDateTime. Useful for zone-free civil
+date-times; dangerous if you treat it as a
+portable moment.
+
+9
+00:01:29,759 --> 00:01:40,279
+When you need a true point on the timeline
+— audit logs, cross-system records — use
+Instant: Look at this java for a moment.
+Instant.now() captures a UTC timeline
+moment.
+
+10
+00:01:40,399 --> 00:01:53,359
+A forty-eight-hour Duration moves along
+that timeline. LocalDateTime has no zone;
+treat it as a wall-clock reading without a
+city, not as something you can safely
+compare across machines without more
+context.
+
+11
+00:01:53,479 --> 00:02:02,559
+Zones are where production bugs live.
+ZonedDateTime attaches a zone — and zones
+change with politics and daylight saving:
+Look at this java for a moment.
+
+12
+00:02:02,679 --> 00:02:13,359
+The same instant prints as different local
+clock times in New York and Tokyo.
+Hardcoding a zone because "the server is
+here" works until the product expands or
+the cloud region moves.
+
+13
+00:02:13,479 --> 00:02:22,919
+Store an Instant for moments; convert with
+a zone only for display. Formatting closes
+the loop for humans and files: Look at
+this java for a moment.
+
+14
+00:02:23,039 --> 00:02:35,799
+Prefer explicit formatters over hoping
+toString stays stable across versions and
+locales. Put it together the way a booking
+system might. Check-in and check-out are
+LocalDate values in the property's civil
+calendar.
+
+15
+00:02:35,919 --> 00:02:44,879
+Confirmation time is an Instant in the
+database. Email formats those local dates
+for the guest and converts the
+confirmation instant into their zone only
+at display time.
+
+16
+00:02:45,000 --> 00:02:59,199
+Each type earns its keep by refusing to
+pretend it is the others. Collapse that
+into one Date field "for simplicity," and
+every feature inherits ambiguity. Is this
+a day? A local afternoon? A moment?
+
+17
+00:02:59,379 --> 00:03:05,340
+The next developer will guess — and
+guessing is how daylight-saving bugs and
+off-by-one checkouts are born.
+
+18
+00:03:05,460 --> 00:03:19,340
+Once we can represent time cleanly,
+another pressure appears: what happens
+when an operation cannot finish
+successfully? A missing file, garbage
+text, a downed service — success is not
+the only path a method can take.

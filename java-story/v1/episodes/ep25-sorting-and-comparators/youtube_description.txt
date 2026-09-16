@@ -1,0 +1,79 @@
+The Java Story — Episode 25: Sorting and Comparators
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Queues move work
+• Order is not decoration — it is a policy your types must support.
+• Comparable for natural order
+• Stability, equals consistency, and the APIs that actually sort.
+• Today — making order explicit and safe.
+• Sorted data is a contract — not a happy accident.
+• …and more
+
+Timestamps
+0:00 Queues move work
+0:03 Order is not decoration — it is a policy your types must…
+0:08 Comparable for natural order
+0:11 Stability, equals consistency, and the APIs that actually…
+0:16 Today — making order explicit and safe.
+0:18 Sorted data is a contract — not a happy accident.
+0:21 Episode Twenty-Five.
+0:23 Sorting and Comparators.
+0:26 Comparable defines a type's natural order.
+0:29 compareTo returns negative, zero, or positive.
+0:32 Strings and numbers already have natural orders.
+0:35 Domain types should only implement Comparable when one…
+0:40 TreeSet and TreeMap rely on that ordering for structure.
+0:43 Natural order is a product decision — treat it that way.
+0:47 Comparator lives outside the type.
+0:49 Use it when many sort orders are valid — by name, by date,…
+0:54 Comparator.comparing and thenComparing compose cleanly.
+0:57 reversed flips direction without rewriting logic.
+1:01 Pass comparators into sort, TreeMap, and PriorityQueue.
+1:04 Strategy beats stuffing every order into compareTo.
+1:08 Know the sort entry points.
+1:09 List.sort and Collections.sort sort lists in place.
+1:13 Arrays.sort handles object arrays and primitives.
+1:16 Stream.sorted sorts inside a pipeline — useful, not always…
+1:21 Object sorts use TimSort — stable for equal elements.
+1:25 Pick the API that matches where your data already lives.
+1:28 Stability matters when you sort by secondary keys.
+1:32 A stable sort keeps equal elements in their prior relative…
+1:36 That lets you sort by last name, then by first name, in…
+1:40 Object sorts in the JDK are stable
+1:44 Do not assume stability without knowing the algorithm.
+1:47 Multi-key Comparator.comparing chains make intent clearer…
+1:51 compareTo should be consistent with equals when used in…
+1:56 If compareTo says zero, equals should usually say true.
+2:00 Break that and TreeSet may treat unequal business objects…
+2:04 If you must diverge, document it loudly and avoid sorted…
+2:08 Hash-based collections still need equals and hashCode —…
+2:14 Contracts stack
+2:16 Three common mistakes.
+2:18 One — compareTo that disagrees with equals without…
+2:22 Two — sorting by mutable fields that change after…
+2:27 Three — giant compareTo methods instead of composed…
+2:32 Also — assuming Stream.sorted is free on huge collections.
+2:35 Clear ordering code is easier to trust than clever…
+2:40 Interview question — Comparable versus Comparator?
+2:43 Comparable — natural order implemented by the class itself.
+2:47 Comparator — external ordering strategy, often multiple…
+2:52 Mention stability and equals consistency for bonus points.
+2:56 Give a domain example — sort users by name versus by…
+3:00 That answer is interview-ready.
+3:02 Ordering is explicit
+3:07 Episode Twenty-Six — Streams introduction.
+3:10 Map, filter, reduce — and laziness that matters.
+3:14 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode25

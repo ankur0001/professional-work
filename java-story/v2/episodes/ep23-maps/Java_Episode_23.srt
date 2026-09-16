@@ -1,0 +1,139 @@
+1
+00:00:00,000 --> 00:00:13,880
+Sets answered uniqueness. They do not
+answer the everyday business question:
+given this key, what value sits beside it?
+Imagine a phone book, a cache of user ids
+to profiles, a dictionary of sku to
+quantity.
+
+2
+00:00:14,000 --> 00:00:27,759
+You can fake it with two lists — keys in
+one, values in the other — and pray the
+indexes stay aligned. Or you can search a
+list of pairs. Both get painful. The
+natural question is: where is the lookup
+engine?
+
+3
+00:00:27,939 --> 00:00:42,019
+Maps are that engine. A map stores key-to-
+value associations. Keys hash into buckets
+in a HashMap. A good key's equals and
+hashCode decide both placement and
+retrieval, just as they did for sets.
+
+4
+00:00:42,140 --> 00:00:53,140
+Look at this java for a moment. Walk it.
+put associates "Ada" with 36. getOrDefault
+returns the value if present, otherwise
+the default you supply — here 0.
+
+5
+00:00:53,259 --> 00:01:05,780
+That single method prevents a pile of null
+checks when missing keys are normal. Three
+workhorse methods show up constantly:
+getOrDefault, computeIfAbsent, and merge.
+Look at this java for a moment.
+
+6
+00:01:05,899 --> 00:01:11,619
+computeIfAbsent builds a value only when
+the key is missing — perfect for multimap-
+style indexes.
+
+7
+00:01:11,739 --> 00:01:24,619
+merge combines a new contribution with an
+existing value through a function;
+counting and aggregating become one
+readable line instead of get-null-check-
+put boilerplate. Null rules depend on the
+implementation.
+
+8
+00:01:24,739 --> 00:01:35,859
+HashMap allows one null key and null
+values. ConcurrentHashMap does not.
+TreeMap rejects null keys under natural
+ordering. Do not assume "maps allow null"
+as a universal law.
+
+9
+00:01:35,979 --> 00:01:46,939
+Order is another axis: Look at this java
+for a moment. LinkedHashMap preserves
+order — useful for stable iteration and
+LRU-style caches. TreeMap sorts by key.
+
+10
+00:01:47,059 --> 00:01:59,379
+Pick the map that matches the question you
+ask: fast unordered lookup, ordered
+iteration, or sorted keys. A small
+inventory fragment shows why maps replace
+parallel lists: Look at this java for a
+moment.
+
+11
+00:01:59,499 --> 00:02:10,819
+The sku is the key. Quantity is the value.
+There is no second list to keep in sync.
+Missing skus default safely. A plain
+HashMap is not safe for multi-threaded
+writes.
+
+12
+00:02:10,939 --> 00:02:22,819
+If two threads resize or update together,
+you can corrupt the structure. Treat maps
+as single-threaded unless you reach for a
+concurrent variant on purpose. What if we
+skip maps and search lists?
+
+13
+00:02:23,000 --> 00:02:35,479
+Look at this java for a moment. Fine at
+dozens. Painful at hundreds of thousands.
+Maps exist so average lookup cost stays
+sensible when the key is known. Keys are
+unique.
+
+14
+00:02:35,599 --> 00:02:50,079
+A second put with the same key replaces
+the value. If you need multi-values per
+key, use computeIfAbsent with a collection
+value — a multimap pattern. When
+iterating, prefer entrySet() when you need
+both key and value.
+
+15
+00:02:50,199 --> 00:03:03,280
+keySet, values, and entrySet are views
+backed by the map — remove from the key
+set and the map loses the entry. Keyed
+lookup outgrew lists and sets. Maps
+answered with hashed associations.
+
+16
+00:03:03,399 --> 00:03:10,199
+getOrDefault, computeIfAbsent, and merge
+removed boilerplate. Null and ordering
+rules depended on the implementation.
+
+17
+00:03:10,319 --> 00:03:23,559
+Sometimes the problem is not lookup by
+key, but flow: work waiting to be
+processed, messages waiting to be handled,
+undo history waiting to rewind. That is a
+different shape — first-in-first-out, or
+double-ended access.
+
+18
+00:03:23,679 --> 00:03:26,319
+That shape is queues and deques.

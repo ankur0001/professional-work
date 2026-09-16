@@ -1,0 +1,197 @@
+1
+00:00:00,000 --> 00:00:16,399
+You are joining a team that ships a Java
+backend. On day one someone says, "We use
+Spring." It sounds like a product name.
+Then you see annotations, XML legends from
+older services, starters, Boot, Data,
+Security, Batch.
+
+2
+00:00:16,519 --> 00:00:18,280
+Spring is not one jar.
+
+3
+00:00:18,399 --> 00:00:31,280
+Spring is an ecosystem centered on
+dependency injection and portable
+abstractions — a way to wire applications
+so your code depends on interfaces and
+policies, while the container constructs
+and injects collaborators.
+
+4
+00:00:31,399 --> 00:00:40,719
+Look at this java for a moment. The
+practical situation that makes Spring
+necessary is the same pain Episode Sixty-
+Eight named: construction sprawl.
+
+5
+00:00:40,839 --> 00:00:52,039
+Without a container, every service builds
+its dependencies by hand, or reaches into
+static locators, or news up concrete
+classes deep inside methods. Tests suffer.
+
+6
+00:00:52,159 --> 00:00:56,439
+Swapping a real mailer for a fake means
+editing production construction paths.
+
+7
+00:00:56,559 --> 00:01:07,799
+Enterprises adopt Spring because large
+codebases need consistent wiring,
+lifecycle, and extension points — not
+because annotations are fashionable. Hold
+the IoC container mindset firmly.
+
+8
+00:01:07,919 --> 00:01:19,639
+IoC means inversion of control over
+construction: instead of your class
+creating its dependencies, something
+outside provides them. In Spring, that
+something is the ApplicationContext.
+
+9
+00:01:19,759 --> 00:01:32,239
+Objects the container manages are beans.
+You describe what beans exist and how they
+relate; the container instantiates,
+injects, and manages lifecycle. Walk a
+mental first day. You open a service
+class.
+
+10
+00:01:32,359 --> 00:01:39,439
+It declares a constructor taking a
+repository interface. You do not see new
+JdbcOrderRepository inside.
+
+11
+00:01:39,559 --> 00:01:47,559
+Somewhere else — configuration class,
+component scan, Boot auto-config — a bean
+implementing that interface is defined.
+
+12
+00:01:47,679 --> 00:02:01,039
+At runtime the context creates the
+repository, creates the service, injects
+the repository, and hands you a ready
+graph. Your service's job stays business
+logic. Construction policy lives
+elsewhere.
+
+13
+00:02:01,159 --> 00:02:13,960
+Convention plus extension points is why
+teams stay. Defaults get you moving.
+Interfaces and SPI hooks let you replace
+parts without forking the framework. That
+is not magic — it is wiring.
+
+14
+00:02:14,079 --> 00:02:24,839
+Treating Spring as magic is the first
+misunderstanding. Avoiding understanding
+DI is the second: people copy @Autowired
+until a circular dependency appears and
+then declare frameworks evil.
+
+15
+00:02:24,959 --> 00:02:30,719
+Bringing every module for a hello world is
+the third. "Not magic — wiring" deserves a
+debugging ritual.
+
+16
+00:02:30,839 --> 00:02:43,799
+When a bean is missing, read the startup
+failure: which definition was expected,
+which condition failed, which auto-config
+backed out. When two beans compete,
+understand @Primary and qualifiers.
+
+17
+00:02:43,919 --> 00:02:56,199
+When a property is wrong, trace binding.
+Teams that treat Spring as magic restart
+until it works. Teams that treat it as
+wiring read the graph. Portable
+abstractions matter at the edges.
+
+18
+00:02:56,319 --> 00:03:04,560
+A DataSource, a messaging template, a
+cache manager — your code can target
+Spring's abstractions while drivers and
+brokers swap underneath.
+
+19
+00:03:04,680 --> 00:03:11,520
+That portability is incomplete — dialects
+leak — but it beats scattering vendor API
+calls through domain services.
+
+20
+00:03:11,640 --> 00:03:24,160
+Why enterprises adopt Spring becomes
+clearer with ten teams sharing platform
+practices: a shared grammar of beans,
+injection, profiles, and configuration
+beats each team inventing lifecycle
+differently.
+
+21
+00:03:24,280 --> 00:03:34,479
+A healthy first service uses a small
+slice: Boot for executable shape, web for
+HTTP, maybe JDBC or JPA, Security when
+needed.
+
+22
+00:03:34,599 --> 00:03:43,199
+Expanding module count without expanding
+understanding is how microservices become
+micro-monoliths of configuration. You do
+not need every module.
+
+23
+00:03:43,319 --> 00:03:54,560
+You need the container story, then the
+modules your service actually imports —
+curiosity driven by a situation, not a
+checklist. One last orientation: Spring
+did not abolish design.
+
+24
+00:03:54,680 --> 00:04:07,439
+If your domain is a mud ball, the
+container will happily wire a mud ball.
+IoC makes dependencies explicit; it does
+not invent bounded contexts. Use the
+container to reveal the graph, then fix
+the graph.
+
+25
+00:04:07,560 --> 00:04:17,000
+What is Spring at heart? A DI-centered
+programming and configuration model with a
+large ecosystem around web, data,
+security, and integration.
+
+26
+00:04:17,120 --> 00:04:23,879
+Say that, then connect it to why your team
+chose it: testability, consistent
+structure, and battle-tested integrations.
+
+27
+00:04:24,000 --> 00:04:33,759
+Curiosity should already be tugging: how
+exactly should we inject — constructor,
+setter, field — and why do tests become
+easier when construction is honest?

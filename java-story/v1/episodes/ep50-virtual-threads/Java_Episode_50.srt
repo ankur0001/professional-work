@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,828
+Episode Forty-Nine showed how platform threads deadlock under bad lock order.
+
+2
+00:00:04,828 --> 00:00:09,593
+Platform threads are expensive — one megabyte stack, OS scheduling overhead.
+
+3
+00:00:09,593 --> 00:00:15,173
+A web server handling ten thousand concurrent requests cannot spawn ten thousand threads.
+
+4
+00:00:15,173 --> 00:00:20,503
+Project Loom brings virtual threads — lightweight, JVM-managed, millions per process.
+
+5
+00:00:20,503 --> 00:00:24,641
+Block on I/O and the carrier thread serves another virtual thread.
+
+6
+00:00:24,641 --> 00:00:29,218
+Today — virtual threads, pinning, and an intro to structured concurrency.
+
+7
+00:00:29,218 --> 00:00:30,483
+Episode Fifty.
+
+8
+00:00:30,483 --> 00:00:33,284
+Virtual Threads — Project Loom.
+
+9
+00:00:33,284 --> 00:00:37,646
+Project Loom reimagined threads without rewriting your Java code.
+
+10
+00:00:37,646 --> 00:00:45,094
+Virtual threads are cheap — create with Thread.startVirtualThread or Executors.newVirtualThreadPerTaskExecutor.
+
+11
+00:00:45,094 --> 00:00:50,127
+The JVM multiplexes many virtual threads onto few platform carrier threads.
+
+12
+00:00:50,127 --> 00:00:54,421
+Blocking I/O unmounts the virtual thread — carrier runs another.
+
+13
+00:00:54,421 --> 00:00:59,118
+Same Thread API — Runnable, Callable, synchronized — mostly unchanged.
+
+14
+00:00:59,118 --> 00:01:02,742
+Shipped as a preview in Java 19, finalized in Java 21.
+
+15
+00:01:02,742 --> 00:01:05,876
+Platform thread — one-to-one with an OS thread.
+
+16
+00:01:05,876 --> 00:01:09,410
+Virtual thread — many-to-one on carrier pool threads.
+
+17
+00:01:09,410 --> 00:01:13,744
+Platform threads suit CPU-bound parallel work — limited by cores.
+
+18
+00:01:13,744 --> 00:01:18,545
+Virtual threads suit I/O-bound concurrency — waiting on network or disk.
+
+19
+00:01:18,545 --> 00:01:22,946
+Do not pool virtual threads — create one per task, they are cheap.
+
+20
+00:01:22,946 --> 00:01:27,280
+Do pool platform threads or use ForkJoinPool for CPU parallelism.
+
+21
+00:01:27,280 --> 00:01:31,301
+Pinning — when a virtual thread cannot unmount from its carrier.
+
+22
+00:01:31,301 --> 00:01:35,510
+synchronized blocks may pin — carrier stuck until monitor released.
+
+23
+00:01:35,510 --> 00:01:39,342
+Native code or JNI can pin — carrier blocked in native layer.
+
+24
+00:01:39,342 --> 00:01:43,739
+Long CPU work on a virtual thread pins the carrier — hurts throughput.
+
+25
+00:01:43,739 --> 00:01:48,388
+Prefer ReentrantLock over synchronized for hot paths with virtual threads.
+
+26
+00:01:48,388 --> 00:01:52,346
+Monitor jfr events or thread dumps for pinned carrier warnings.
+
+27
+00:01:52,346 --> 00:01:56,853
+Structured concurrency — scope owns child tasks, cancels on failure.
+
+28
+00:01:56,853 --> 00:02:01,758
+StructuredTaskScope in preview — fork subtasks, join or shutdown on error.
+
+29
+00:02:01,758 --> 00:02:05,867
+Parent lifetime bounds children — no orphaned background work.
+
+30
+00:02:05,867 --> 00:02:09,380
+ShutdownOnFailure — first exception cancels siblings.
+
+31
+00:02:09,380 --> 00:02:12,760
+ShutdownOnSuccess — first success cancels the rest.
+
+32
+00:02:12,760 --> 00:02:17,532
+Pairs naturally with virtual threads — cheap fan-out and clean teardown.
+
+33
+00:02:17,532 --> 00:02:19,350
+When virtual threads shine.
+
+34
+00:02:19,350 --> 00:02:23,525
+HTTP servers — one virtual thread per request blocking on I/O.
+
+35
+00:02:23,525 --> 00:02:27,901
+Database calls, REST clients, file reads — classic blocking APIs.
+
+36
+00:02:27,901 --> 00:02:32,816
+Replace reactive frameworks only when simplicity beats throughput tuning.
+
+37
+00:02:32,816 --> 00:02:37,664
+When not — heavy CPU computation — use platform threads or ForkJoinPool.
+
+38
+00:02:37,664 --> 00:02:42,310
+When not — massive synchronized hot paths — pinning negates benefits.
+
+39
+00:02:42,310 --> 00:02:43,829
+Three common mistakes.
+
+40
+00:02:43,829 --> 00:02:48,042
+One — pooling virtual threads — unnecessary, create per task.
+
+41
+00:02:48,042 --> 00:02:51,910
+Two — CPU-bound work on virtual threads — pins carriers.
+
+42
+00:02:51,910 --> 00:02:56,330
+Three — ignoring synchronized pinning — switch to ReentrantLock.
+
+43
+00:02:56,330 --> 00:03:00,820
+Also — thread-local assumptions with millions of virtual threads.
+
+44
+00:03:00,820 --> 00:03:05,240
+Virtual threads change scale — not every old pattern still fits.
+
+45
+00:03:05,240 --> 00:03:09,291
+Interview question — virtual threads versus platform threads?
+
+46
+00:03:09,291 --> 00:03:14,006
+Virtual — lightweight, JVM-scheduled, millions possible, great for I/O.
+
+47
+00:03:14,006 --> 00:03:18,123
+Platform — OS thread, heavier, best for CPU-bound parallelism.
+
+48
+00:03:18,123 --> 00:03:21,975
+Blocking unmounts virtual thread — carrier serves another.
+
+49
+00:03:21,975 --> 00:03:25,960
+Pinning from synchronized or native code blocks the carrier.
+
+50
+00:03:25,960 --> 00:03:30,210
+Mention Java 21 finalization and structured concurrency preview.
+
+51
+00:03:30,210 --> 00:03:33,875
+Threads run code — but where does that code come from?
+
+52
+00:03:33,875 --> 00:03:36,657
+Episode Fifty-One — Class Loading Basics.
+
+53
+00:03:36,657 --> 00:03:40,118
+ClassLoader hierarchy, linkage, and initialization.
+
+54
+00:03:40,118 --> 00:03:41,068
+See you there.

@@ -1,0 +1,178 @@
+1
+00:00:00,000 --> 00:00:12,759
+Your Spring monolith ships. Teams grow.
+Deploys queue behind each other. One noisy
+feature takes the whole process down.
+Someone says the word: microservices. That
+word is not a trophy.
+
+2
+00:00:12,879 --> 00:00:26,439
+Microservices are a scalability and
+organization choice — and distributed
+failure is the price of admission. If you
+cannot name the organizational or scale
+problem you are solving, you are not ready
+to pay that price.
+
+3
+00:00:26,559 --> 00:00:36,479
+Start with boundaries by business
+capability. Orders are not "the database
+layer" and "the web layer" split into two
+repos that still share one schema and must
+deploy together.
+
+4
+00:00:36,599 --> 00:00:51,079
+That split is a distributed monolith:
+network latency with none of the
+independence. Service A owns orders;
+Service B owns inventory. They communicate
+through APIs or events — not by reaching
+into each other's tables.
+
+5
+00:00:51,199 --> 00:01:01,879
+Look at this java for a moment.
+Independent deployability is the test. Can
+the orders team release on Tuesday without
+a coordinated inventory release, as long
+as contracts hold?
+
+6
+00:01:02,059 --> 00:01:09,539
+Two services that must change a shared
+library and a shared database migration in
+lockstep are one system wearing two
+costumes.
+
+7
+00:01:09,659 --> 00:01:20,579
+Contracts — versioned APIs, consumer-
+driven tests, or event schemas — make
+independence real. Data ownership follows
+the same honesty: each service owns its
+persistence.
+
+8
+00:01:20,699 --> 00:01:30,659
+The shared "reporting" schema everyone
+writes to couples you silently; serve
+reporting via events, careful read
+replicas, or a dedicated analytics
+pipeline. The network is unreliable.
+
+9
+00:01:30,779 --> 00:01:39,699
+Calls time out, retry, duplicate, arrive
+reordered. What was a method call in a
+monolith becomes a failure mode you must
+design for.
+
+10
+00:01:39,819 --> 00:01:50,419
+Partial failure is the everyday case:
+inventory succeeded, billing timed out,
+the user clicked again. Idempotency and
+correlation ids are not optional extras.
+
+11
+00:01:50,539 --> 00:02:00,099
+Ignoring observability in that world is
+negligence — you cannot debug a graph of
+services with stdout on one laptop.
+Modular monolith first often wins.
+
+12
+00:02:00,219 --> 00:02:08,419
+Keep module boundaries inside one
+deployable until the boundaries hurt for
+real — separate release cadence, separate
+scaling, separate failure isolation.
+
+13
+00:02:08,539 --> 00:02:14,979
+That often means packages or Gradle
+modules with enforced boundaries, not a
+wish and a wiki diagram.
+
+14
+00:02:15,099 --> 00:02:24,819
+Splitting by technical layers only —
+"controller service" calling "logic
+service" calling "data service" — creates
+chatty services with none of the autonomy.
+
+15
+00:02:24,939 --> 00:02:30,859
+Prefer vertical slices of business
+capability that can answer meaningful
+requests with minimal synchronous fan-out.
+
+16
+00:02:30,979 --> 00:02:40,819
+Organizational scaling is a valid reason
+to split — Conway's law is not a joke —
+but only when teams already struggle to
+ship inside one codebase with clear
+modules.
+
+17
+00:02:40,939 --> 00:02:53,620
+If one team owns everything, microservices
+mainly add operational tax. When not
+microservices? Small team, simple domain,
+early product — a modular monolith may win
+on focus and operability.
+
+18
+00:02:53,740 --> 00:03:04,740
+Say that in interviews without
+embarrassment. Then say what would change
+your mind: independent scaling of a
+hotspot, team autonomy blocked by a single
+release train, or a clear bounded context
+ready to isolate.
+
+19
+00:03:04,860 --> 00:03:16,940
+Return to the monolith morning. Deploys
+queue because every feature shares one
+release train. That organizational
+friction can justify extraction even
+before traffic demands it — if the domain
+boundary is real.
+
+20
+00:03:17,060 --> 00:03:26,979
+Extract the inventory context behind an
+API, give it its own database, keep orders
+talking through a client with timeouts.
+Measure whether deploy frequency actually
+rises.
+
+21
+00:03:27,099 --> 00:03:41,060
+If it does not, you paid the network tax
+for nothing. One closing caution:
+microservices multiply JVM processes, each
+with its own heap, GC, metaspace, and
+startup profile.
+
+22
+00:03:41,180 --> 00:03:52,620
+Everything from Episodes Fifty-Six through
+Sixty-Five becomes a fleet concern. If you
+cannot operate one JVM well, operating
+thirty will not teach you by magic — it
+will page you in parallel.
+
+23
+00:03:52,740 --> 00:04:05,980
+Microservices without visibility and
+without timeouts become a slower monolith
+with worse nights. The next pressure is
+observability and resilience — how you see
+the system and how you survive dependency
+failure.

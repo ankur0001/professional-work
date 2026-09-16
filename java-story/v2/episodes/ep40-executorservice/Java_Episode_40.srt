@@ -1,0 +1,195 @@
+1
+00:00:00,000 --> 00:00:11,439
+We can start threads. We can synchronize
+them. We can lock with more control when
+we must. None of that excuses inventing a
+new thread for every piece of work that
+arrives at the door.
+
+2
+00:00:11,559 --> 00:00:24,640
+Picture a burst of a thousand short tasks
+— thumbnails, notifications, webhook
+deliveries. Spawning a thousand platform
+threads can exhaust memory and scheduling
+capacity before the tasks finish doing
+anything useful.
+
+3
+00:00:24,759 --> 00:00:38,039
+Unbounded thread creation is not a
+strategy. It is a load test you
+accidentally run in production. How do we
+reuse workers and bound concurrency on
+purpose? ExecutorService is Java's
+standard answer.
+
+4
+00:00:38,159 --> 00:00:52,079
+Thread pools bound concurrency, reuse
+threads, and give you a place to attach
+queueing and rejection policy. Submit
+work; do not babysit thread lifecycles by
+hand for every task. Look at this java for
+a moment.
+
+5
+00:00:52,199 --> 00:01:05,879
+newFixedThreadPool(4) creates a pool with
+four worker threads. submit hands tasks to
+that pool. Using try-with-resources (on
+modern executor APIs that are
+AutoCloseable) ties pool shutdown to scope
+exit.
+
+6
+00:01:06,000 --> 00:01:16,039
+Even when you manage shutdown manually in
+a long-running server, the idea is the
+same: pools have a lifecycle, and ignoring
+that lifecycle leaks threads for the life
+of the process.
+
+7
+00:01:16,159 --> 00:01:26,199
+Pool flavors exist because workloads
+differ. A fixed pool caps concurrent
+workers — good when you know how much
+parallelism the machine and the downstream
+dependency can absorb.
+
+8
+00:01:26,319 --> 00:01:38,839
+A cached pool creates threads as needed
+and reuses idle ones — convenient for
+bursty work, and dangerous if an unbounded
+burst arrives with no other limit. A
+scheduled pool runs delayed or periodic
+work.
+
+9
+00:01:38,959 --> 00:01:49,399
+Choose the shape that matches the
+workload, not the factory method you
+memorized first. Shutdown has two common
+verbs. shutdown lets submitted tasks
+finish and refuses new ones.
+
+10
+00:01:49,519 --> 00:02:02,719
+shutdownNow attempts to cancel in-flight
+work and drains the queue, typically by
+interrupting workers. Always have a stop
+story: how does this pool die when the
+application stops, and what happens to
+tasks still waiting?
+
+11
+00:02:02,899 --> 00:02:09,780
+A pool that never shuts down is a quiet
+resource leak. Bounded queues and
+rejection policies are how pools survive
+overload.
+
+12
+00:02:09,899 --> 00:02:15,779
+If the queue can grow forever, you have
+moved the out-of-memory risk from threads
+to queue memory.
+
+13
+00:02:15,899 --> 00:02:25,059
+When the queue is full and workers are
+busy, the rejection policy decides whether
+to run the task on the caller thread,
+discard it, or abort with an exception.
+
+14
+00:02:25,179 --> 00:02:34,459
+Ignoring RejectedExecutionException is how
+overload becomes a mysterious lost task
+that never ran. Look at this java for a
+moment.
+
+15
+00:02:34,579 --> 00:02:48,819
+That sketch shows the knobs: core size,
+max size, keep-alive, a bounded queue, and
+a policy that pushes work back to the
+caller when saturated. newFixedThreadPool
+hid decisions you will eventually want to
+own.
+
+16
+00:02:48,939 --> 00:02:56,979
+Virtual threads will later change some
+defaults for blocking workloads — cheap
+threads make "one task, one thread"
+sensible again in many servers.
+
+17
+00:02:57,099 --> 00:03:10,939
+That does not erase pools for every case,
+especially CPU-bound work that still needs
+bounding. Today the lesson is older and
+still vital: manage concurrency as a
+resource with a budget. Common mistakes
+are predictable.
+
+18
+00:03:11,060 --> 00:03:22,620
+Using a cached pool for unbounded bursty
+work without another limit. Never shutting
+down pools in long-running processes.
+Treating rejection as an impossible edge
+instead of an expected pressure valve.
+
+19
+00:03:22,740 --> 00:03:32,260
+Think about ownership across an
+application. A web framework may own a
+pool for request tasks. A batch module may
+own another for CPU-heavy jobs.
+
+20
+00:03:32,379 --> 00:03:39,740
+Sharing one giant unbounded pool for
+everything couples unrelated workloads: a
+flood of IO tasks can starve CPU work.
+
+21
+00:03:39,859 --> 00:03:55,619
+Separating pools is blast-radius control —
+the same instinct as bounded queues,
+applied at architecture scale. What if
+every library quietly creates its own
+cached thread pool and never shuts it
+down?
+
+22
+00:03:55,799 --> 00:04:07,159
+You get thread leaks that are hard to
+attribute. Prefer passing an Executor in,
+or documenting lifecycle clearly. Pools
+are resources. Resources need owners.
+
+23
+00:04:07,279 --> 00:04:16,759
+Instrument pools when you can: active
+threads, queue depth, rejected tasks.
+Without metrics, "the pool feels slow" is
+superstition.
+
+24
+00:04:16,879 --> 00:04:22,159
+The factory methods get you started;
+observability keeps you honest once
+traffic is real.
+
+25
+00:04:22,279 --> 00:04:33,919
+Submitting work raises a new hunger
+immediately: many tasks produce a result,
+may fail with a checked exception, and
+must not be waited on forever. Runnable is
+not enough for that contract.

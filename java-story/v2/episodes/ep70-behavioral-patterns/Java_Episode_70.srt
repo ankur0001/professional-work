@@ -1,0 +1,183 @@
+1
+00:00:00,000 --> 00:00:09,720
+Structural patterns assembled objects.
+Behavioral patterns organize algorithms
+and communication — how work varies, how
+events propagate, how requests become
+objects.
+
+2
+00:00:09,839 --> 00:00:22,160
+If creational is birth and structural is
+anatomy, behavioral is choreography. Start
+with a deep conditional that everyone
+regrets: Look at this java for a moment.
+Every new promotion type edits this spine.
+
+3
+00:00:22,280 --> 00:00:30,920
+Strategy replaces it with a common
+interface and swappable implementations.
+The caller depends on DiscountPolicy, not
+on a growing if tower.
+
+4
+00:00:31,039 --> 00:00:41,920
+Strategy essence: swap algorithms behind a
+common interface without rewriting
+callers. The failure mode is Strategy
+interfaces with one implementation forever
+— pure ceremony.
+
+5
+00:00:42,039 --> 00:00:53,960
+Use Strategy when variation is real and
+expected to grow. Keep a simple switch
+when few stable variants live local and no
+extension is expected. Admitting the non-
+pattern choice is part of pattern
+literacy.
+
+6
+00:00:54,079 --> 00:01:02,280
+A DiscountPolicy functional interface can
+be implemented by classes or lambdas. The
+important part is the seam: checkout
+depends on the interface.
+
+7
+00:01:02,399 --> 00:01:15,920
+Unit tests inject a fixed policy;
+production wires seasonal policies from
+configuration. The pattern is the seam,
+not the ceremony of anonymous inner
+classes from 2005. Observer fits events.
+
+8
+00:01:16,039 --> 00:01:26,519
+Something interesting happens — order
+placed, user registered — and multiple
+listeners react. The subject notifies
+observers without hard-coding each
+reaction. Useful.
+
+9
+00:01:26,639 --> 00:01:36,319
+Also leaky: forgotten observers are the
+listener leaks from Episode Fifty-Seven
+wearing a pattern name. Register and
+unregister with clear lifetimes.
+
+10
+00:01:36,439 --> 00:01:46,479
+A component that registers on a long-lived
+bus and is never removed keeps its graph
+alive; heaps climb. The pattern did not
+cause the leak — unbounded lifetime did.
+
+11
+00:01:46,599 --> 00:01:57,159
+In modern systems, message buses play
+Observer at a larger scale, with the same
+lifetime discipline — plus at-least-once
+delivery and idempotency that later
+episodes treat seriously.
+
+12
+00:01:57,279 --> 00:02:02,879
+Template Method uses inheritance to fix an
+algorithm skeleton while subclasses fill
+steps.
+
+13
+00:02:02,999 --> 00:02:14,399
+Composition with Strategy-like hooks often
+ages better in Java than deep template
+hierarchies, but you will still meet
+Template Method in frameworks — learn the
+hooks rather than fighting the skeleton.
+
+14
+00:02:14,519 --> 00:02:30,199
+Command turns a request into an object —
+useful for queues, undo stacks, and audit
+trails. RefundOrder carries the data
+needed to perform and to record. Retries
+become re-execution; undo becomes a
+compensating command.
+
+15
+00:02:30,319 --> 00:02:42,479
+If you never retry, never audit, and never
+undo, a method call may suffice. Command
+explosion without need is busywork. Walk a
+checkout flow. Pricing uses Strategy for
+discount policies.
+
+16
+00:02:42,599 --> 00:02:51,240
+Placing an order publishes an event; email
+and inventory observe. A Command
+representing "cancel order" sits on an
+admin undo stack.
+
+17
+00:02:51,359 --> 00:03:03,879
+Each pattern appears because a problem
+appeared — not because a chapter checklist
+demanded coverage. That necessity test is
+the same one Episode Sixty-Seven taught.
+Behavioral patterns also meet concurrency.
+
+18
+00:03:03,999 --> 00:03:13,799
+Strategy objects should usually be
+stateless or immutable so they can be
+shared across threads. Observers that
+mutate shared collections need the
+discipline from the concurrency arc.
+
+19
+00:03:13,919 --> 00:03:27,159
+Commands on queues must be serializable or
+mappable if they cross process boundaries.
+The pattern sketch is single-threaded;
+production choreography is not. Do not
+over-abstract one-off code.
+
+20
+00:03:27,279 --> 00:03:38,359
+Behavioral patterns shine when
+communication or algorithm variation is a
+recurring pain. They dull when every
+method becomes an interface hierarchy "for
+testing" without a second implementation
+in sight.
+
+21
+00:03:38,479 --> 00:03:50,359
+Prefer the smallest structure that keeps
+change local. Interviewers who ask for a
+behavioral pattern you used want a story:
+we replaced a switch with Strategy because
+marketing added three discount types in a
+quarter.
+
+22
+00:03:50,479 --> 00:03:55,399
+Mechanisms plus timeline beat trivia.
+Behavioral patterns close the classical
+catalog arc.
+
+23
+00:03:55,519 --> 00:04:08,559
+Next we enter the ecosystem where many of
+these ideas are industrialized for
+enterprise Java: Spring — dependency
+injection, portable abstractions, and a
+container mindset — starting from a
+practical situation,
+
+24
+00:04:08,679 --> 00:04:10,279
+not a feature brochure.

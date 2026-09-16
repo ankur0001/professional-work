@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,016
+Runnable says do this. But what if the task produces a result?
+
+2
+00:00:04,016 --> 00:00:08,292
+Callable is Runnable with a return value — and checked exceptions.
+
+3
+00:00:08,292 --> 00:00:12,568
+Submit a Callable, get a Future — a handle to the eventual result.
+
+4
+00:00:12,568 --> 00:00:15,547
+Block on get, cancel if needed, check if done.
+
+5
+00:00:15,547 --> 00:00:19,499
+CompletableFuture takes it further — compose async pipelines.
+
+6
+00:00:19,499 --> 00:00:23,386
+Today — Callable, Future, and an intro to CompletableFuture.
+
+7
+00:00:23,386 --> 00:00:24,923
+Episode Forty-One.
+
+8
+00:00:24,923 --> 00:00:28,340
+Callable, Future, and CompletableFuture.
+
+9
+00:00:28,340 --> 00:00:32,716
+Callable of T is a functional interface — T call throws Exception.
+
+10
+00:00:32,716 --> 00:00:37,158
+Like Runnable but returns a value and can throw checked exceptions.
+
+11
+00:00:37,158 --> 00:00:41,733
+Submit to an ExecutorService — the pool runs call on a worker thread.
+
+12
+00:00:41,733 --> 00:00:46,507
+Use lambdas — Callable task equals open paren close paren arrow compute.
+
+13
+00:00:46,507 --> 00:00:51,281
+Callable fits any task that produces a result — fetch, parse, calculate.
+
+14
+00:00:51,281 --> 00:00:54,198
+Separate the computation from where it runs.
+
+15
+00:00:54,198 --> 00:00:58,592
+Future of T represents a pending result of an asynchronous computation.
+
+16
+00:00:58,592 --> 00:01:02,615
+get blocks until the result is ready — optionally with a timeout.
+
+17
+00:01:02,615 --> 00:01:06,948
+get with timeout — wait up to a duration, then throw TimeoutException.
+
+18
+00:01:06,948 --> 00:01:11,094
+isDone checks completion without blocking. cancel attempts to stop.
+
+19
+00:01:11,094 --> 00:01:15,241
+cancel with mayInterruptIfRunning — true interrupts a running task.
+
+20
+00:01:15,241 --> 00:01:19,264
+Always handle ExecutionException — the real cause is in getCause.
+
+21
+00:01:19,264 --> 00:01:24,080
+CompletableFuture of T — a Future you can compose and complete manually.
+
+22
+00:01:24,080 --> 00:01:27,826
+supplyAsync runs a supplier on the default ForkJoinPool.
+
+23
+00:01:27,826 --> 00:01:32,508
+thenApply transforms the result. thenCompose chains dependent futures.
+
+24
+00:01:32,508 --> 00:01:35,251
+allOf and anyOf combine multiple futures.
+
+25
+00:01:35,251 --> 00:01:38,395
+exceptionally handles failures in the pipeline.
+
+26
+00:01:38,395 --> 00:01:43,010
+CompletableFuture is the modern way to build async workflows in Java.
+
+27
+00:01:43,010 --> 00:01:45,712
+Runnable versus Callable versus Future.
+
+28
+00:01:45,712 --> 00:01:49,591
+Runnable — void, no checked exceptions, fire-and-forget.
+
+29
+00:01:49,591 --> 00:01:53,955
+Callable — returns T, throws Exception, submitted for a Future.
+
+30
+00:01:53,955 --> 00:01:57,003
+Future — read-only view of a pending result.
+
+31
+00:01:57,003 --> 00:02:00,605
+CompletableFuture — writable, composable, chainable.
+
+32
+00:02:00,605 --> 00:02:05,316
+Choose based on whether you need a result and how you compose tasks.
+
+33
+00:02:05,316 --> 00:02:07,537
+When to use Callable and Future.
+
+34
+00:02:07,537 --> 00:02:11,632
+Parallel API calls — submit many, collect results with get.
+
+35
+00:02:11,632 --> 00:02:15,657
+CPU work off the request thread — return Future to caller.
+
+36
+00:02:15,657 --> 00:02:19,058
+Batch processing where each unit produces output.
+
+37
+00:02:19,058 --> 00:02:23,639
+CompletableFuture when you need chaining — thenApply, thenCombine.
+
+38
+00:02:23,639 --> 00:02:28,150
+When not — simple fire-and-forget — Runnable and execute suffice.
+
+39
+00:02:28,150 --> 00:02:29,674
+Three common mistakes.
+
+40
+00:02:29,674 --> 00:02:33,761
+One — calling get on the event loop thread — blocks the UI.
+
+41
+00:02:33,761 --> 00:02:38,056
+Two — ignoring ExecutionException — swallowing the real error.
+
+42
+00:02:38,056 --> 00:02:42,628
+Three — not setting timeouts on get — waits forever on hung tasks.
+
+43
+00:02:42,628 --> 00:02:46,300
+Also — chaining blocking gets instead of thenCompose.
+
+44
+00:02:46,300 --> 00:02:51,080
+Async code needs async thinking — do not block what should stay free.
+
+45
+00:02:51,080 --> 00:02:54,273
+Interview question — Callable versus Runnable?
+
+46
+00:02:54,273 --> 00:02:57,396
+Runnable returns void, no checked exceptions.
+
+47
+00:02:57,396 --> 00:03:01,422
+Callable returns a value and can throw checked exceptions.
+
+48
+00:03:01,422 --> 00:03:05,378
+Submit Callable to ExecutorService — receive Future of T.
+
+49
+00:03:05,378 --> 00:03:09,334
+Future get blocks for result — use timeout in production.
+
+50
+00:03:09,334 --> 00:03:13,290
+Mention CompletableFuture for composable async pipelines.
+
+51
+00:03:13,290 --> 00:03:18,279
+Tasks and futures coordinate work. What about shared data structures?
+
+52
+00:03:18,279 --> 00:03:21,388
+Episode Forty-Two — Concurrent Collections.
+
+53
+00:03:21,388 --> 00:03:26,016
+ConcurrentHashMap, CopyOnWriteArrayList, and thread-safe queues.
+
+54
+00:03:26,016 --> 00:03:27,028
+See you there.

@@ -1,0 +1,45 @@
+0:00 Packages organize types
+0:03 PENDING
+0:09 An enum is a type-safe set of named constants — with room…
+0:14 Today we replace magic strings with real domain states.
+0:18 Treat enum structure as architecture you can see in the…
+0:23 Episode Thirteen.
+0:24 Enums — type-safe states instead of magic strings.
+0:28 Declare an enum like a special class.
+0:31 enum OrderStatus — PENDING, PAID, SHIPPED, CANCELLED.
+0:35 Each constant is a singleton instance of that enum type.
+0:39 Compare with equals-equals safely — identity is stable.
+0:43 Switch expressions love enums — finite cases, clear…
+0:47 Folder path and package declaration must agree — same for…
+0:52 Enums can carry fields and methods.
+0:54 Attach a display label
+0:58 That keeps status logic next to the status itself.
+1:01 Better than scattering string compares across services.
+1:05 Feature teams and domain packages often fit better than…
+1:11 Put behavior where the state lives.
+1:13 Why not String status equals PAID?
+1:15 Typos compile
+1:20 Enums make illegal states harder to represent.
+1:23 Serialization still needs care — name versus ordinal.
+1:27 Prefer name for APIs
+1:31 Honest names reduce wrong imports and wrong ownership —…
+1:36 Need a set of flags?
+1:40 Fast
+1:42 Permission READ, WRITE, ADMIN — store combinations cleanly.
+1:46 Better than bit masks scattered as magic ints — unless you…
+1:51 Choose the structure that matches how the set changes.
+1:55 Three common mistakes.
+1:57 One — Stringly typed statuses that drift across services.
+2:01 Two — depending on ordinal in databases or APIs.
+2:04 Three — stuffing volatile business config into enum…
+2:08 Also — giant enums that should have been a data table.
+2:12 Enums model fixed vocabularies — not every changing catalog.
+2:16 Interview question — why prefer enums over string constants?
+2:20 Type safety
+2:25 Constants are real objects — can hold behavior.
+2:28 Avoid ordinal for persistence
+2:33 That answer shows production sense.
+2:35 Fixed states are clear
+2:40 Episode Fourteen — wrappers and autoboxing.
+2:44 Integer, nullability, and hidden allocations.
+2:47 See you there.

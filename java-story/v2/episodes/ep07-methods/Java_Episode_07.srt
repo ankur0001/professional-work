@@ -1,0 +1,209 @@
+1
+00:00:00,000 --> 00:00:11,279
+By now we can store information, compute
+with it, and choose different paths
+through a program. That is enough to make
+main do useful work. It is also enough to
+paint ourselves into a corner.
+
+2
+00:00:11,399 --> 00:00:23,879
+Suppose our application needs to calculate
+the total price of an order. We could
+place the whole calculation directly
+inside main(). For one screen, on one
+afternoon, that can feel fine.
+
+3
+00:00:24,000 --> 00:00:32,399
+Then checkout needs the same math. The
+invoice preview needs it. A refund path
+needs it too. Suddenly the same formula
+lives in three places.
+
+4
+00:00:32,519 --> 00:00:44,079
+So a natural question appears: if the
+behavior is the same, why are we rewriting
+it by hand? Instead of copying the logic,
+we can give that behavior a name and place
+it inside a method.
+
+5
+00:00:44,199 --> 00:00:54,639
+A method is a named piece of behavior. You
+give it inputs, it does work, and it can
+return a result. Variables remember nouns.
+Methods package verbs.
+
+6
+00:00:54,759 --> 00:01:07,919
+Here is the smallest version that still
+teaches the idea: Look at this java for a
+moment. Why show this now? Because an
+abstract definition of "method" is easy to
+nod at and hard to use.
+
+7
+00:01:08,039 --> 00:01:22,319
+This example turns an unnamed expression
+into a reusable idea. calculateTotal is
+the name of the behavior. price and tax
+are the inputs. The body computes price +
+tax and returns that value. The method
+does not print.
+
+8
+00:01:22,439 --> 00:01:33,519
+It does not talk to a database. It answers
+one question: given a price and a tax
+amount, what is the total? But a method
+definition by itself does nothing until
+something calls it.
+
+9
+00:01:33,640 --> 00:01:46,680
+That raises the next question: how does
+the program actually use this named
+behavior? Look at this java for a moment.
+In main, we call calculateTotal(100.0,
+18.0).
+
+10
+00:01:46,799 --> 00:01:58,399
+Java binds 100.0 to price and 18.0 to tax,
+runs the body, and returns 118.0. That
+returned value is stored in total and then
+printed.
+
+11
+00:01:58,519 --> 00:02:05,879
+The payoff is already visible: if the tax
+rule changes, we edit one method instead
+of hunting through every copy of the
+formula.
+
+12
+00:02:06,000 --> 00:02:20,199
+Once calling feels clear, learners usually
+ask a deeper question — sometimes out
+loud, sometimes only as confusion later:
+if I change a parameter inside the method,
+does the caller's variable change? For
+primitives, no.
+
+13
+00:02:20,319 --> 00:02:33,959
+The method receives a copy of the value.
+Look at this java for a moment. x remains
+1, because n was only a copy. For object
+references, Java is still pass-by-value —
+but the value being copied is the
+reference.
+
+14
+00:02:34,079 --> 00:02:41,559
+So a method can mutate the same object the
+caller sees, yet it cannot make the
+caller's variable point somewhere else by
+reassigning the parameter.
+
+15
+00:02:41,679 --> 00:02:52,319
+If an interview asks whether Java is pass-
+by-reference, the precise answer is: no.
+Pass-by-value. For objects, the copied
+value is the reference.
+
+16
+00:02:52,439 --> 00:03:02,119
+Now that the mechanism is honest, let's
+evolve the example toward something closer
+to a shop. Look at this java for a moment.
+Notice what changed and why.
+
+17
+00:03:02,239 --> 00:03:15,279
+calculateTotal now accepts a tax rate
+instead of a precomputed tax amount, and
+it refuses invalid input. printReceipt
+uses the calculation and focuses on
+presentation. Each method has one job.
+
+18
+00:03:15,399 --> 00:03:29,039
+That separation is not style for its own
+sake — it is how testing and reuse stay
+possible as requirements grow. What if we
+skip methods and keep everything in main?
+Look at this java for a moment. This works
+for a demo.
+
+19
+00:03:29,159 --> 00:03:43,719
+Then discounts appear. Receipt formatting
+changes. Refunds need the same math. The
+formula gets copied, then copied with a
+tiny difference, then nobody is sure which
+copy is correct. The method is not
+ceremony.
+
+20
+00:03:43,839 --> 00:03:54,199
+It is how behavior stays coherent as the
+program grows. There is one more pressure
+that appears once methods become natural:
+sometimes several closely related
+operations deserve the same verb.
+
+21
+00:03:54,319 --> 00:04:05,559
+Java allows overloading — multiple methods
+with the same name and different parameter
+lists. Look at this java for a moment. The
+compiler chooses which method to call
+based on the arguments.
+
+22
+00:04:05,679 --> 00:04:14,599
+Overloading helps when the operations are
+truly the same idea. It becomes noise when
+the overloads secretly do unrelated
+things. So let's reconnect the chain.
+
+23
+00:04:14,719 --> 00:04:26,239
+We started with duplicated order math and
+asked why we were rewriting the same
+behavior. Methods gave that behavior a
+name and a contract. Calling showed how
+values move in and results move out.
+
+24
+00:04:26,359 --> 00:04:36,439
+Pass-by-value explained what "inputs"
+really mean. A more practical checkout
+fragment showed responsibilities splitting
+cleanly. Skipping methods showed the
+maintenance trap.
+
+25
+00:04:36,559 --> 00:04:40,519
+Overloading showed how related forms of
+the same verb can coexist.
+
+26
+00:04:40,639 --> 00:04:51,559
+Once we can name behavior, another need
+becomes obvious: we often need many values
+under one name, accessible by position — a
+list of prices, a list of scores, a list
+of ids.
+
+27
+00:04:51,679 --> 00:05:04,279
+Copying price1, price2, price3 into
+separate variables is the same kind of
+trap we just escaped with methods. That is
+the natural door into arrays — many values
+under one name, addressed by position.

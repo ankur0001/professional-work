@@ -1,0 +1,43 @@
+The Java Story — Episode 31: java.time
+Current cut (coherent narration + animated visuals).
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Optional made absence explicit at API boundaries
+• Older tutorials still reach for java.util.Date or Calendar
+• The arithmetic looked fine
+• So the question is not "how do I add seven?" It is: what types keep…
+• Date and Calendar are legacy
+• LocalDate is year, month, day — no time- of-day, no zone
+• …and more
+
+Timestamps
+0:00 Optional made absence explicit at API boundaries
+0:12 Older tutorials still reach for java.util.Date or Calendar
+0:25 The arithmetic looked fine
+0:29 So the question is not "how do I add seven?" It is: what…
+0:42 Date and Calendar are legacy
+0:54 LocalDate is year, month, day — no time- of-day, no zone
+1:10 Shared date values stop surprising you because some other…
+1:16 Sometimes you need "two-thirty this afternoon" without…
+1:29 When you need a true point on the timeline — audit logs,…
+1:40 A forty-eight-hour Duration moves along that timeline
+1:53 Zones are where production bugs live
+2:02 The same instant prints as different local clock times in…
+2:13 Store an Instant for moments; convert with a zone only for…
+2:23 Prefer explicit formatters over hoping toString stays…
+2:35 Confirmation time is an Instant in the database
+2:45 Each type earns its keep by refusing to pretend it is the…
+2:59 The next developer will guess — and guessing is how…
+3:05 Once we can represent time cleanly, another pressure…
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v2/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode31

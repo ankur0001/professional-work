@@ -1,0 +1,79 @@
+The Java Story — Episode 21: Lists
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Modules draw boundaries
+• Almost every Java program needs an ordered sequence of values.
+• That is the List interface — indexed, ordered, and everywhere.
+• ArrayList
+• Today we choose lists with intent — not habit.
+• Order with random access — or order with cheap inserts
+• …and more
+
+Timestamps
+0:00 Modules draw boundaries
+0:04 Almost every Java program needs an ordered sequence of…
+0:08 That is the List interface — indexed, ordered, and…
+0:12 ArrayList
+0:16 Today we choose lists with intent — not habit.
+0:19 Order with random access — or order with cheap inserts
+0:24 Episode Twenty-One.
+0:25 Lists — ordered collections in java.util.
+0:29 List is a contract in java.util.
+0:31 Elements have positions — zero-based indexes.
+0:34 Duplicates are allowed
+0:39 add, get, set, remove, size, contains — the verbs you…
+0:44 Prefer coding to List, not to a concrete class — until…
+0:50 The interface keeps your API flexible.
+0:52 ArrayList is the default workhorse.
+0:55 Backed by a resizable array
+0:59 Random access by index is fast — get and set are…
+1:04 Inserts and removes in the middle shift elements — that…
+1:09 Give an initial capacity when you know the size roughly.
+1:12 For most application lists, start here.
+1:15 LinkedList is a doubly linked structure.
+1:17 Cheap inserts and removes when you already hold the right…
+1:22 Random access by index walks the chain — do not pretend it…
+1:26 It also implements Queue and Deque — useful as a deque…
+1:32 If you mainly get by index, LinkedList is usually the…
+1:36 Measure the access pattern before you romanticize pointers.
+1:39 How to choose.
+1:40 Most reads by index, appends at the end — ArrayList.
+1:44 Heavy middle inserts with sequential traversal — consider…
+1:50 Often a better answer is a different structure — Queue,…
+1:54 Do not pick LinkedList because it sounds advanced.
+1:57 Pick the structure that matches how you touch the data.
+2:01 List pitfalls that show up in reviews.
+2:03 Modifying a list while iterating with a for-each —…
+2:09 Use an Iterator remove, or collect changes and apply after.
+2:13 Arrays.asList returns a fixed-size list backed by an array…
+2:19 List.of creates unmodifiable lists — great for constants,…
+2:25 Know whether your list is growable before you mutate it.
+2:28 Three common mistakes.
+2:30 One — LinkedList everywhere for inserts that never happen…
+2:35 Two — raw types — List without generics — type safety…
+2:39 Three — exposing a mutable ArrayList from an API that…
+2:45 Also — ignoring equals contract when lists hold custom…
+2:49 Lists are simple
+2:52 Interview question — ArrayList versus LinkedList?
+2:55 ArrayList — array-backed, fast index access, costly middle…
+3:00 LinkedList — node-backed, weak random access, better as a…
+3:05 Default choice in apps is almost always ArrayList.
+3:09 Mention Big-O briefly, then talk about real access patterns.
+3:13 That answer is practical — not textbook theater.
+3:17 Ordered sequences are clear
+3:21 Episode Twenty-Two — Sets.
+3:23 HashSet, LinkedHashSet, TreeSet — and when order matters.
+3:28 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode21

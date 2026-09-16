@@ -1,0 +1,45 @@
+The Java Story — Episode 09: Strings
+Current cut (coherent narration + animated visuals).
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Arrays gave us a way to hold many values by position
+• Text feels simple until you try to change it, compare it, or move it…
+• Look at this java for a moment
+• Concatenation does not mutate; it creates another object
+• Why bake immutability into the type everyone uses?
+• If any caller could silently change the characters underneath a…
+• …and more
+
+Timestamps
+0:00 Arrays gave us a way to hold many values by position
+0:14 Text feels simple until you try to change it, compare it,…
+0:26 Look at this java for a moment
+0:39 Concatenation does not mutate; it creates another object
+0:51 Why bake immutability into the type everyone uses?
+1:01 If any caller could silently change the characters…
+1:13 Immutability raises a practical question the first time…
+1:26 Look at this java for a moment
+1:39 A single + in ordinary code is fine — "Hello, " + name is…
+1:50 Comparison is the next place strings surprise people — and…
+2:01 equals asks whether the character content matches
+2:16 Null-safe comparison also matters: Objects.equals(a, b) or…
+2:26 What about longer text — SQL, HTML snippets, sample…
+2:39 Look at this java for a moment
+2:52 Keep ordinary quotes for short values
+3:03 Encoding mistakes are silent until a name with an accent…
+3:12 The platform default charset" is not a team agreement; it…
+3:22 A loop that builds CSV with +, a login check that uses ==,…
+3:37 The discipline exists because the type is everywhere
+3:50 The data and the rules that protect it want to travel…
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v2/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode09

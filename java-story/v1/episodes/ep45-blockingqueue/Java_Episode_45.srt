@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:04,784
+Producers generate work. Consumers process it. They run at different speeds.
+
+2
+00:00:04,784 --> 00:00:09,819
+A shared list without bounds lets producers outpace consumers — memory explodes.
+
+3
+00:00:09,819 --> 00:00:14,288
+BlockingQueue adds capacity limits and blocking put and take semantics.
+
+4
+00:00:14,288 --> 00:00:18,505
+When full, put waits. When empty, take waits. Natural backpressure.
+
+5
+00:00:18,505 --> 00:00:23,288
+The producer-consumer pattern is the backbone of thread pools and pipelines.
+
+6
+00:00:23,288 --> 00:00:27,946
+Today — BlockingQueue, the pattern, and choosing the right implementation.
+
+7
+00:00:27,946 --> 00:00:29,375
+Episode Forty-Five.
+
+8
+00:00:29,375 --> 00:00:32,084
+BlockingQueue and Producer-Consumer.
+
+9
+00:00:32,084 --> 00:00:35,149
+BlockingQueue extends Queue with blocking operations.
+
+10
+00:00:35,149 --> 00:00:38,215
+put inserts an element — blocks if the queue is full.
+
+11
+00:00:38,215 --> 00:00:41,396
+take removes an element — blocks if the queue is empty.
+
+12
+00:00:41,396 --> 00:00:44,750
+offer and poll provide timed or non-blocking alternatives.
+
+13
+00:00:44,750 --> 00:00:48,799
+Thread-safe — multiple producers and consumers without external locks.
+
+14
+00:00:48,799 --> 00:00:52,038
+The queue itself coordinates waiting and waking threads.
+
+15
+00:00:52,038 --> 00:00:55,468
+Producer-consumer decouples creation from processing.
+
+16
+00:00:55,468 --> 00:00:59,093
+Producers enqueue tasks — consumers dequeue and execute.
+
+17
+00:00:59,093 --> 00:01:03,947
+Bounded queue caps in-flight work — protects memory and downstream systems.
+
+18
+00:01:03,947 --> 00:01:08,025
+ExecutorService thread pools use internal work queues this way.
+
+19
+00:01:08,025 --> 00:01:12,490
+Pipeline stages connect via queues — each stage runs at its own pace.
+
+20
+00:01:12,490 --> 00:01:15,856
+Backpressure emerges naturally when the queue fills.
+
+21
+00:01:15,856 --> 00:01:19,381
+ArrayBlockingQueue uses a fixed-capacity circular array.
+
+22
+00:01:19,381 --> 00:01:22,906
+One lock for both put and take — simple and predictable.
+
+23
+00:01:22,906 --> 00:01:26,054
+Fair ordering optional — FIFO for waiting threads.
+
+24
+00:01:26,054 --> 00:01:29,264
+Bounded capacity set at construction — cannot grow.
+
+25
+00:01:29,264 --> 00:01:32,537
+Low overhead for steady workloads with known bounds.
+
+26
+00:01:32,537 --> 00:01:36,314
+Choose when you need a fixed-size buffer with array backing.
+
+27
+00:01:36,314 --> 00:01:40,053
+LinkedBlockingQueue uses linked nodes — optionally bounded.
+
+28
+00:01:40,053 --> 00:01:44,108
+Two locks — one for put, one for take — better under mixed load.
+
+29
+00:01:44,108 --> 00:01:48,037
+Default capacity is Integer.MAX_VALUE — effectively unbounded.
+
+30
+00:01:48,037 --> 00:01:52,916
+Always pass an explicit capacity in production — unbounded queues hide leaks.
+
+31
+00:01:52,916 --> 00:01:57,416
+Higher memory per element than array — but no upfront array allocation.
+
+32
+00:01:57,416 --> 00:02:01,788
+Common in executor frameworks when capacity is configured explicitly.
+
+33
+00:02:01,788 --> 00:02:03,585
+When to use BlockingQueue.
+
+34
+00:02:03,585 --> 00:02:06,834
+Thread pool work queues — bounded backpressure.
+
+35
+00:02:06,834 --> 00:02:10,913
+Log or event pipelines — producers spike, consumers steady.
+
+36
+00:02:10,913 --> 00:02:14,438
+Handoff between stages — parse, transform, persist.
+
+37
+00:02:14,438 --> 00:02:17,757
+Replace wait-notify handoffs with a cleaner API.
+
+38
+00:02:17,757 --> 00:02:21,766
+When not — single-threaded batch — a simple List suffices.
+
+39
+00:02:21,766 --> 00:02:23,185
+Three common mistakes.
+
+40
+00:02:23,185 --> 00:02:27,831
+One — unbounded LinkedBlockingQueue — memory grows under slow consumers.
+
+41
+00:02:27,831 --> 00:02:32,606
+Two — put without handling InterruptedException — shutdown breaks cleanly.
+
+42
+00:02:32,606 --> 00:02:38,800
+Three — multiple consumers on one queue without coordination — usually fine, but watch ordering.
+
+43
+00:02:38,800 --> 00:02:43,316
+Also — blocking take on the only thread that should stop the pipeline.
+
+44
+00:02:43,316 --> 00:02:47,768
+Size the queue — too small starves workers, too large hides overload.
+
+45
+00:02:47,768 --> 00:02:51,822
+Interview question — why BlockingQueue over synchronized List?
+
+46
+00:02:51,822 --> 00:02:55,811
+Built-in blocking put and take — no manual wait-notify loops.
+
+47
+00:02:55,811 --> 00:02:59,276
+Bounded capacity provides backpressure automatically.
+
+48
+00:02:59,276 --> 00:03:02,481
+Thread-safe for multiple producers and consumers.
+
+49
+00:03:02,481 --> 00:03:06,665
+ArrayBlockingQueue — fixed array, one lock. Linked — dual locks.
+
+50
+00:03:06,665 --> 00:03:10,458
+Mention producer-consumer and ExecutorService work queues.
+
+51
+00:03:10,458 --> 00:03:15,618
+Queues pass work between threads. What about composing async results?
+
+52
+00:03:15,618 --> 00:03:19,207
+Episode Forty-Six — CompletableFuture Deep Dive.
+
+53
+00:03:19,207 --> 00:03:23,245
+thenApply, thenCompose, allOf, and exception handling.
+
+54
+00:03:23,245 --> 00:03:24,292
+See you there.

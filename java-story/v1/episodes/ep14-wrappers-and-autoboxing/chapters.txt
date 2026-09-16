@@ -1,0 +1,47 @@
+0:00 Enums gave us type-safe states
+0:04 int is a primitive
+0:09 Autoboxing hides the conversion — and can hide costs and…
+0:13 Today we make that invisible work visible.
+0:16 Get this mental model right — collections depend on it.
+0:20 Lists and maps need objects — wrappers bridge that gap.
+0:23 Episode Fourteen.
+0:25 Wrappers and Autoboxing — objects around primitives.
+0:29 Eight primitives
+0:31 int and Integer
+0:34 Wrappers live on the heap
+0:38 Primitives cannot be null — and that alone prevents many…
+0:42 Choose intentionally — do not default to wrappers…
+0:46 Default to primitives unless nullability is required.
+0:50 Autoboxing converts automatically.
+0:52 Integer x equals ten — boxes the int.
+0:55 int y equals x — unboxes the Integer.
+0:57 Convenient in Lists and Maps that need objects.
+1:00 Dangerous when x is null — unboxing throws…
+1:05 Null plus silent conversion is a classic production trap.
+1:08 Wrappers cost more than primitives.
+1:11 Object header
+1:14 A List of Integer can thrash the heap versus an int array.
+1:18 Hot loops that box every iteration pay a quiet tax.
+1:21 Prefer primitives in hot paths
+1:26 Measure before you box every number in a tight loop.
+1:29 One more quirk — Integer caching.
+1:32 Small values are often cached — so equals-equals may look…
+1:37 Do not rely on that
+1:41 Autoboxing is not a reason to forget object equality rules.
+1:45 Be explicit — always.
+1:46 Three common mistakes.
+1:48 One — unboxing a null wrapper into a primitive.
+1:51 Two — using wrappers in hot numeric loops without need.
+1:55 Three — comparing wrappers with equals-equals.
+1:58 Also — Boolean in conditions without null checks.
+2:02 Nullability is a feature — treat it like one.
+2:05 Interview question — primitive versus wrapper?
+2:08 Primitive — value, non-null, compact, fast.
+2:11 Wrapper — object, nullable, overhead, autoboxing risk.
+2:15 Then mention NullPointerException on unboxing.
+2:19 That lands the production-level detail.
+2:21 Interviewers listen for null and allocation awareness.
+2:25 Objects around values
+2:30 Episode Fifteen — generics.
+2:32 List of Order — compile-time safety without casts.
+2:36 See you there.

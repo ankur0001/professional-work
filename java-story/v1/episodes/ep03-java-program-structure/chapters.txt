@@ -1,0 +1,49 @@
+0:00 In Episode Two, we separated JDK, JRE, and JVM.
+0:03 Now look at a real Java file.
+0:05 Every line has a job — package, class, main, statements.
+0:10 Structure is not decoration.
+0:12 It decides how your code is found, loaded, tested, and…
+0:17 Episode Three.
+0:18 Java Program Structure — packages, classes, and the entry…
+0:23 Here is the shape of a Java program.
+0:25 A package is the folder — the namespace.
+0:28 Inside it — a type
+0:33 Inside the class — fields for state, constructors to…
+0:40 That hierarchy is the blueprint Java expects — and tools…
+0:44 Walk a classic Hello World — line by line.
+0:47 First, optional package — the fully qualified home of the…
+0:52 Then public class HelloWorld — and yes, the filename must…
+0:56 Java is case-sensitive
+1:02 public static void main — the JVM starts here.
+1:05 System.out.println — a statement that prints a line.
+1:09 Four jobs
+1:11 Access is part of structure too.
+1:13 public means other packages can see it.
+1:16 No modifier means package-private — same package only
+1:21 private fields keep state inside the class.
+1:23 Good structure hides what shouldn't leak — and makes APIs…
+1:28 In real services, packages mirror ownership.
+1:31 api at the edge — controllers and DTOs.
+1:33 application to orchestrate use-cases.
+1:36 domain for business rules
+1:40 Arrows should point inward — not dump everything into one…
+1:45 That is how teams keep domain code clean as the service…
+1:49 Follow runtime.
+1:50 Load the class
+1:54 Initialize
+1:57 Your package and class names become the identity the JVM…
+2:01 Same simple name in two packages?
+2:06 Three common mistakes.
+2:07 One — every class in one giant package
+2:11 Two — public fields everywhere — no encapsulation, hard to…
+2:16 Three — Spring main class buried too deep, so component…
+2:22 Put the main class at a sensible root — and keep…
+2:27 Interview question — why do packages matter?
+2:30 Answer with four words on screen.
+2:32 Namespacing
+2:36 Then add — class identity is the name plus the classloader.
+2:40 That answer shows you understand design and runtime — not…
+2:45 You can now read a Java file like a map.
+2:49 Next — variables and data types.
+2:51 int, long, boolean, String — what lives where in memory.
+2:56 Episode Four

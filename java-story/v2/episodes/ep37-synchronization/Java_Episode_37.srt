@@ -1,0 +1,185 @@
+1
+00:00:00,000 --> 00:00:09,160
+Threads gave us more than one path of
+execution. Shared memory made that
+interesting. Now we hit the problem those
+paths create the first week you ship them.
+
+2
+00:00:09,279 --> 00:00:20,320
+Suppose two threads both run count++ on
+the same field ten thousand times. You
+expect twenty thousand. Sometimes you get
+fewer. The line looks atomic in source.
+
+3
+00:00:20,439 --> 00:00:27,239
+At the machine level it is a read, a
+modify, and a write — and another thread
+can interleave between those steps.
+
+4
+00:00:27,359 --> 00:00:39,960
+Even when you "get lucky" on counts in a
+short test, you can still have visibility
+problems: one thread wrote a value,
+another never sees it when its logic
+expected to. Races are not only lost
+updates.
+
+5
+00:00:40,079 --> 00:00:51,640
+They are also stale reads. So how do we
+make a critical section exclusive, and
+make writes visible to the next thread
+that enters? synchronized is Java's built-
+in answer for many cases.
+
+6
+00:00:51,759 --> 00:01:02,640
+It buys mutual exclusion and visibility
+for threads that synchronize on the same
+lock. Keep the sections small. The lock
+should protect shared state, not become a
+global pause button for unrelated work.
+
+7
+00:01:02,759 --> 00:01:15,480
+Look at this java for a moment. Before a
+thread enters incr, it must acquire the
+intrinsic lock associated with the
+instance. Only one thread holds that lock
+at a time for this object's synchronized
+methods.
+
+8
+00:01:15,599 --> 00:01:25,639
+When the method exits, the lock is
+released, and the memory effects become
+visible to other threads that later
+acquire the same monitor. Mutual exclusion
+prevents the torn increment.
+
+9
+00:01:25,759 --> 00:01:34,559
+The happens-before relationship from
+releasing and later acquiring the same
+monitor makes the write visible to get.
+That second part is easy to under-teach.
+
+10
+00:01:34,679 --> 00:01:46,919
+People memorize "synchronized means one at
+a time" and forget "synchronized also
+defines when memory becomes visible."
+Without that, you get designs that lock on
+write and read unlocked fields the rest of
+the time,
+
+11
+00:01:47,039 --> 00:01:59,399
+then wonder why production sees stale
+state that "should be impossible." Lock on
+the shared state you mean to protect —
+typically a private final lock object —
+not on a publicly accessible instance that
+strangers can con
+
+12
+00:01:59,519 --> 00:02:00,319
+tend on:
+
+13
+00:02:00,439 --> 00:02:02,359
+Look at this java for a moment.
+
+14
+00:02:02,480 --> 00:02:13,719
+Synchronizing on this for a public API can
+be careless if callers might also
+synchronize on your instance and create
+unintended coupling. A private lock keeps
+ownership inside your class.
+
+15
+00:02:13,840 --> 00:02:28,800
+Deadlocks appear when multiple locks enter
+the chat. Thread One takes lock A then
+waits for B. Thread Two takes B then waits
+for A. Both wait forever. Nested locks
+without a global ordering are how that
+story starts.
+
+16
+00:02:28,920 --> 00:02:42,640
+Keep critical sections small and lock sets
+simple. Prefer higher-level concurrency
+utilities when they fit — executors,
+concurrent collections, atomics.
+synchronized is foundational, not
+mandatory for every problem.
+
+17
+00:02:42,760 --> 00:02:54,320
+Using it everywhere can serialize a
+program that only needed a concurrent map
+or an atomic counter. A useful way to
+choose the size of a critical section is
+to ask what invariant you are protecting.
+
+18
+00:02:54,440 --> 00:03:01,720
+If the invariant is "count matches the
+number of accepted jobs," then only the
+few lines that update both structures need
+the lock.
+
+19
+00:03:01,840 --> 00:03:10,440
+If you lock the entire request — including
+network calls — you have serialized the
+internet behind one monitor.
+Synchronization is a scalpel.
+
+20
+00:03:10,560 --> 00:03:20,600
+Using it like a blanket is how systems
+become mysteriously single-threaded under
+load. What if two different locks protect
+two related fields, and a reader needs a
+consistent snapshot of both?
+
+21
+00:03:20,780 --> 00:03:29,620
+Synchronizing each field separately is not
+enough. You need one lock for the combined
+invariant, or an atomic structure that
+publishes both values together.
+
+22
+00:03:29,740 --> 00:03:37,220
+Lock identity follows the invariant, not
+the field list in your IDE. Static
+synchronized methods lock on the Class
+object.
+
+23
+00:03:37,340 --> 00:03:48,660
+Useful when the shared state is truly
+static, and painful when unrelated static
+methods contend on the same class lock by
+accident. The lock identity must match the
+shared state identity.
+
+24
+00:03:48,780 --> 00:03:57,900
+Sometimes you do not need a full critical
+section — you only need to publish a flag
+or a reference so other threads reliably
+see that a write happened.
+
+25
+00:03:58,020 --> 00:04:03,580
+That narrower need is where volatile and
+happens-before edges deserve their own
+careful treatment.

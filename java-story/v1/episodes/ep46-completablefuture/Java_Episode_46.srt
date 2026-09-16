@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:05,115
+Episode Forty-One introduced CompletableFuture — supplyAsync and a quick chain.
+
+2
+00:00:05,115 --> 00:00:09,777
+Production async code needs richer composition and solid error handling.
+
+3
+00:00:09,777 --> 00:00:14,245
+thenApply transforms a result synchronously on the completion thread.
+
+4
+00:00:14,245 --> 00:00:18,778
+thenCompose flattens nested futures — the async equivalent of flatMap.
+
+5
+00:00:18,778 --> 00:00:22,857
+allOf waits for every future — anyOf for the first to complete.
+
+6
+00:00:22,857 --> 00:00:27,778
+Today — deep dive into composing and recovering CompletableFuture pipelines.
+
+7
+00:00:27,778 --> 00:00:29,482
+Episode Forty-Six.
+
+8
+00:00:29,482 --> 00:00:32,132
+CompletableFuture Deep Dive.
+
+9
+00:00:32,132 --> 00:00:35,957
+thenApply maps the result when the previous stage completes.
+
+10
+00:00:35,957 --> 00:00:39,910
+Runs on the same executor as the completing thread by default.
+
+11
+00:00:39,910 --> 00:00:44,053
+thenApplyAsync runs the mapping function on a specified executor.
+
+12
+00:00:44,053 --> 00:00:48,516
+Use for pure transformations — parse JSON, format strings, map values.
+
+13
+00:00:48,516 --> 00:00:52,086
+Returns a new CompletableFuture of the transformed type.
+
+14
+00:00:52,086 --> 00:00:56,166
+Chain multiple thenApply calls — each waits for the prior stage.
+
+15
+00:00:56,166 --> 00:01:00,786
+thenCompose chains when the next step itself returns a CompletableFuture.
+
+16
+00:01:00,786 --> 00:01:05,154
+Flattens CompletableFuture of CompletableFuture into a single future.
+
+17
+00:01:05,154 --> 00:01:09,268
+Without compose you nest futures — blocking get inside thenApply.
+
+18
+00:01:09,268 --> 00:01:13,065
+thenComposeAsync runs the composing function on an executor.
+
+19
+00:01:13,065 --> 00:01:17,243
+Essential for dependent async calls — fetch then save then notify.
+
+20
+00:01:17,243 --> 00:01:20,344
+Think flatMap for futures — compose, do not nest.
+
+21
+00:01:20,344 --> 00:01:24,607
+allOf accepts an array or collection of CompletableFuture instances.
+
+22
+00:01:24,607 --> 00:01:29,183
+Returns CompletableFuture of Void — completion means all inputs finished.
+
+23
+00:01:29,183 --> 00:01:33,258
+Join individual futures after allOf completes to collect results.
+
+24
+00:01:33,258 --> 00:01:36,518
+anyOf completes when any one input future completes.
+
+25
+00:01:36,518 --> 00:01:40,843
+Use allOf for parallel fan-out — aggregate when every branch is done.
+
+26
+00:01:40,843 --> 00:01:45,482
+anyOf for racing alternatives — first successful or fastest response wins.
+
+27
+00:01:45,482 --> 00:01:49,414
+exceptionally recovers from failure — returns a fallback value.
+
+28
+00:01:49,414 --> 00:01:54,220
+handle receives both result and exception — unified success and failure path.
+
+29
+00:01:54,220 --> 00:01:58,402
+whenComplete is a side-effect hook — does not transform the result.
+
+30
+00:01:58,402 --> 00:02:02,021
+completeExceptionally manually fails a future you created.
+
+31
+00:02:02,021 --> 00:02:06,141
+orTimeout and completeOnTimeout add deadline semantics in Java 9+.
+
+32
+00:02:06,141 --> 00:02:10,260
+Never swallow exceptions — log in whenComplete, recover in handle.
+
+33
+00:02:10,260 --> 00:02:12,076
+When to use each combinator.
+
+34
+00:02:12,076 --> 00:02:15,642
+thenApply — synchronous transform of a completed value.
+
+35
+00:02:15,642 --> 00:02:19,402
+thenCompose — next step is itself async — dependent chain.
+
+36
+00:02:19,402 --> 00:02:22,580
+allOf — parallel independent work — wait for all.
+
+37
+00:02:22,580 --> 00:02:25,951
+exceptionally or handle — explicit failure recovery.
+
+38
+00:02:25,951 --> 00:02:30,166
+Avoid blocking get in callbacks — keep the pipeline non-blocking.
+
+39
+00:02:30,166 --> 00:02:31,660
+Three common mistakes.
+
+40
+00:02:31,660 --> 00:02:36,212
+One — thenApply when the lambda returns a Future — use thenCompose.
+
+41
+00:02:36,212 --> 00:02:40,491
+Two — ignoring exceptions — pipeline fails silently downstream.
+
+42
+00:02:40,491 --> 00:02:44,567
+Three — blocking get inside thenApply — stalls the executor.
+
+43
+00:02:44,567 --> 00:02:49,729
+Also — allOf without collecting individual results — Void only signals done.
+
+44
+00:02:49,729 --> 00:02:54,824
+Compose async work — do not turn CompletableFuture back into blocking code.
+
+45
+00:02:54,824 --> 00:02:58,077
+Interview question — thenApply versus thenCompose?
+
+46
+00:02:58,077 --> 00:03:01,981
+thenApply — function returns a plain value — map the result.
+
+47
+00:03:01,981 --> 00:03:06,795
+thenCompose — function returns CompletableFuture — flatten nested futures.
+
+48
+00:03:06,795 --> 00:03:11,609
+thenApply nests CompletableFuture of CompletableFuture — compose flattens.
+
+49
+00:03:11,609 --> 00:03:14,797
+allOf waits for all — anyOf for first completion.
+
+50
+00:03:14,797 --> 00:03:19,026
+handle and exceptionally for unified error handling in pipelines.
+
+51
+00:03:19,026 --> 00:03:22,953
+CompletableFuture defaults to ForkJoinPool.commonPool.
+
+52
+00:03:22,953 --> 00:03:26,806
+Episode Forty-Seven — ForkJoinPool and Work-Stealing.
+
+53
+00:03:26,806 --> 00:03:31,242
+Parallel decomposition, recursive tasks, and the common pool.
+
+54
+00:03:31,242 --> 00:03:32,260
+See you there.

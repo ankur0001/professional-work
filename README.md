@@ -1,30 +1,24 @@
 # professional-work
 
-Personal professional hub for **Ankur Kumar** — freelance profiles, career assets, learning resources, and agent-session outputs.
+Personal professional hub for **Ankur Kumar**.
 
-**Repository:** https://github.com/ankur0001/professional-work
-
-## Structure
+## The Java Story (YouTube upload packs)
 
 ```
-all-work/
-├── README.md
-└── freelance-profile/        ← LinkedIn, Upwork, portfolio grooming
-    ├── 10-ANKUR-KUMAR-PROFILE-PACK.md   ← start here (personalized from resume)
-    ├── portfolio/index.html
-    └── ...
+java-story/
+├── v1/episodes/epNN-<slug>/   ← original cut — full YouTube pack
+└── v2/episodes/epNN-<slug>/   ← current cut — full YouTube pack
 ```
 
-## Freelance profile grooming
+Each episode folder includes:
+- `title.txt`, `youtube_description.txt` (with timestamps), `chapters.txt`, `tags.txt`
+- `thumbnail.jpg`
+- clean + captioned `.mp4`
+- `.srt` captions
+- `narration.md`
 
-- **Laptop setup:** [`all-work/LAPTOP-SETUP.md`](all-work/LAPTOP-SETUP.md)
-- Guide: [`all-work/freelance-profile/README.md`](all-work/freelance-profile/README.md)
-- Your copy-paste pack: [`all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md`](all-work/freelance-profile/10-ANKUR-KUMAR-PROFILE-PACK.md)
+Indexes: [v1](java-story/v1/INDEX.md) · [v2](java-story/v2/INDEX.md)
 
-## Cloud Agent environment
+## Freelance profile
 
-`.cursor/environment.json` configures future agent runs (Chrome for profile/browser workflows).
-
-## Author
-
-Ankur Kumar — [LinkedIn](https://www.linkedin.com/in/ankur-kumar-4801078a/)
+[`all-work/freelance-profile/`](all-work/freelance-profile/)

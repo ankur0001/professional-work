@@ -1,0 +1,140 @@
+1
+00:00:00,000 --> 00:00:12,039
+Sorting taught us to declare comparison
+policy. Many loops still look like the
+same story told with different field
+names: take a collection, keep some
+elements, transform what remains, produce
+a result.
+
+2
+00:00:12,159 --> 00:00:22,599
+Streams let you describe bulk operations —
+laziness included — instead of
+micromanaging each iteration. Suppose you
+have a list of words and you want the long
+ones uppercased.
+
+3
+00:00:22,719 --> 00:00:34,759
+The classic loop builds a result list by
+hand. Look at this java for a moment. It
+works. It also mixes three concerns —
+filtering, mapping, collecting — into one
+mutable scratchpad.
+
+4
+00:00:34,879 --> 00:00:45,599
+The natural question is: can we name those
+steps as a pipeline? Look at this java for
+a moment. Walk the pipeline. list.stream()
+is the source.
+
+5
+00:00:45,719 --> 00:00:58,399
+filter and map are intermediate operations
+— they describe what to do, and they are
+lazy. toList() is a terminal operation
+that triggers work and produces a result.
+Until a terminal runs, the intermediate
+steps wait.
+
+6
+00:00:58,519 --> 00:01:09,479
+That laziness means you can build a
+pipeline and still short-circuit with
+findFirst without transforming every
+element. Pipelines always have that shape:
+source, intermediate ops, terminal op.
+
+7
+00:01:09,599 --> 00:01:21,719
+Forget the terminal and you have a
+description that never runs — a common
+beginner surprise when they expect map
+alone to print something. Prefer purity in
+lambdas. A filter should decide, not
+update a database.
+
+8
+00:01:21,839 --> 00:01:34,999
+A map should transform, not quietly mutate
+a shared list. Side effects inside stream
+lambdas make order, laziness, and later
+parallelism hard to reason about. Look at
+this java for a moment. Here the terminal
+is count.
+
+9
+00:01:35,119 --> 00:01:51,479
+No intermediate list required. Modern
+Java's toList() returns an unmodifiable
+list — handy for returning results safely.
+Older code uses
+collect(Collectors.toList()), which is
+mutable. Streams are not always faster.
+
+10
+00:01:51,599 --> 00:02:02,839
+They shine for clarity on bulk data
+transformations. On tiny lists, a simple
+loop can be easier to read and cheaper to
+run. Do not rewrite every for-loop into a
+stream for fashion.
+
+11
+00:02:02,959 --> 00:02:16,519
+A slightly richer example shows
+composition without nesting: Look at this
+java for a moment. Filter, sort, map,
+collect — each step one idea. Comparators
+from the previous episode drop in
+naturally.
+
+12
+00:02:16,639 --> 00:02:29,959
+Laziness becomes tangible with short-
+circuit terminals. Look at this java for a
+moment. If the first element already
+qualifies, later elements need not be
+mapped. Also remember streams are single-
+use.
+
+13
+00:02:30,079 --> 00:02:36,959
+Call a terminal, and the stream is
+consumed. If you need two results, collect
+once or stream from the source twice.
+
+14
+00:02:37,079 --> 00:02:49,719
+Infinite streams exist — Stream.iterate,
+Stream.generate — and they make the
+terminal's role unmistakable. Without
+limit or a short-circuit terminal, they
+never finish. Look at this java for a
+moment.
+
+15
+00:02:49,839 --> 00:03:03,119
+Primitive streams — IntStream, LongStream,
+DoubleStream — avoid boxing when you map
+to numbers and sum or average: Look at
+this java for a moment. Hand-built loops
+mixed filter, map, and collect.
+
+16
+00:03:03,239 --> 00:03:10,599
+Streams named those steps as a lazy
+pipeline. Purity kept lambdas honest.
+Performance humility kept us from cargo-
+culting.
+
+17
+00:03:10,719 --> 00:03:24,159
+Once pipelines feel natural, the terminal
+step gets more interesting: sometimes you
+need a Set, a Map, or groups of elements.
+How do you collect into richer structures?
+That is the pressure that brings stream
+collectors.

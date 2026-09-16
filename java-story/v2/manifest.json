@@ -1,0 +1,1277 @@
+[
+  {
+    "ep": 1,
+    "slug": "why-java-exists-introduction-to-java",
+    "title": "Why Java Exists / Introduction to Java",
+    "folder": "ep01-why-java-exists-introduction-to-java",
+    "v2_files": [
+      "Java_Episode_01.srt",
+      "Java_Episode_01_SOURCE.md",
+      "Java_Episode_01_Why_Java_Exists_Introduction_to_Java.mp4",
+      "Java_Episode_01_Why_Java_Exists_Introduction_to_Java_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 2,
+    "slug": "jdk-jre-and-jvm",
+    "title": "JDK, JRE, and JVM",
+    "folder": "ep02-jdk-jre-and-jvm",
+    "v2_files": [
+      "Java_Episode_02.srt",
+      "Java_Episode_02_JDK_JRE_and_JVM.mp4",
+      "Java_Episode_02_JDK_JRE_and_JVM_CAPTIONED.mp4",
+      "Java_Episode_02_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 3,
+    "slug": "java-program-structure",
+    "title": "Java Program Structure",
+    "folder": "ep03-java-program-structure",
+    "v2_files": [
+      "Java_Episode_03.srt",
+      "Java_Episode_03_Java_Program_Structure.mp4",
+      "Java_Episode_03_Java_Program_Structure_CAPTIONED.mp4",
+      "Java_Episode_03_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 4,
+    "slug": "variables-and-data-types",
+    "title": "Variables and Data Types",
+    "folder": "ep04-variables-and-data-types",
+    "v2_files": [
+      "Java_Episode_04.srt",
+      "Java_Episode_04_SOURCE.md",
+      "Java_Episode_04_Variables_and_Data_Types.mp4",
+      "Java_Episode_04_Variables_and_Data_Types_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 5,
+    "slug": "operators",
+    "title": "Operators",
+    "folder": "ep05-operators",
+    "v2_files": [
+      "Java_Episode_05.srt",
+      "Java_Episode_05_Operators.mp4",
+      "Java_Episode_05_Operators_CAPTIONED.mp4",
+      "Java_Episode_05_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 6,
+    "slug": "control-flow",
+    "title": "Control Flow",
+    "folder": "ep06-control-flow",
+    "v2_files": [
+      "Java_Episode_06.srt",
+      "Java_Episode_06_Control_Flow.mp4",
+      "Java_Episode_06_Control_Flow_CAPTIONED.mp4",
+      "Java_Episode_06_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 7,
+    "slug": "methods",
+    "title": "Methods",
+    "folder": "ep07-methods",
+    "v2_files": [
+      "Java_Episode_07.srt",
+      "Java_Episode_07_Methods.mp4",
+      "Java_Episode_07_Methods_CAPTIONED.mp4",
+      "Java_Episode_07_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 8,
+    "slug": "arrays",
+    "title": "Arrays",
+    "folder": "ep08-arrays",
+    "v2_files": [
+      "Java_Episode_08.srt",
+      "Java_Episode_08_Arrays.mp4",
+      "Java_Episode_08_Arrays_CAPTIONED.mp4",
+      "Java_Episode_08_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 9,
+    "slug": "strings",
+    "title": "Strings",
+    "folder": "ep09-strings",
+    "v2_files": [
+      "Java_Episode_09.srt",
+      "Java_Episode_09_SOURCE.md",
+      "Java_Episode_09_Strings.mp4",
+      "Java_Episode_09_Strings_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 10,
+    "slug": "object-oriented-programming",
+    "title": "Object-Oriented Programming",
+    "folder": "ep10-object-oriented-programming",
+    "v2_files": [
+      "Java_Episode_10.srt",
+      "Java_Episode_10_Object_Oriented_Programming.mp4",
+      "Java_Episode_10_Object_Oriented_Programming_CAPTIONED.mp4",
+      "Java_Episode_10_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 11,
+    "slug": "access-modifiers",
+    "title": "Access Modifiers",
+    "folder": "ep11-access-modifiers",
+    "v2_files": [
+      "Java_Episode_11.srt",
+      "Java_Episode_11_Access_Modifiers.mp4",
+      "Java_Episode_11_Access_Modifiers_CAPTIONED.mp4",
+      "Java_Episode_11_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 12,
+    "slug": "packages",
+    "title": "Packages",
+    "folder": "ep12-packages",
+    "v2_files": [
+      "Java_Episode_12.srt",
+      "Java_Episode_12_Packages.mp4",
+      "Java_Episode_12_Packages_CAPTIONED.mp4",
+      "Java_Episode_12_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 13,
+    "slug": "enums",
+    "title": "Enums",
+    "folder": "ep13-enums",
+    "v2_files": [
+      "Java_Episode_13.srt",
+      "Java_Episode_13_Enums.mp4",
+      "Java_Episode_13_Enums_CAPTIONED.mp4",
+      "Java_Episode_13_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 14,
+    "slug": "wrappers-and-autoboxing",
+    "title": "Wrappers and Autoboxing",
+    "folder": "ep14-wrappers-and-autoboxing",
+    "v2_files": [
+      "Java_Episode_14.srt",
+      "Java_Episode_14_SOURCE.md",
+      "Java_Episode_14_Wrappers_and_Autoboxing.mp4",
+      "Java_Episode_14_Wrappers_and_Autoboxing_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 15,
+    "slug": "generics",
+    "title": "Generics",
+    "folder": "ep15-generics",
+    "v2_files": [
+      "Java_Episode_15.srt",
+      "Java_Episode_15_Generics.mp4",
+      "Java_Episode_15_Generics_CAPTIONED.mp4",
+      "Java_Episode_15_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 16,
+    "slug": "annotations",
+    "title": "Annotations",
+    "folder": "ep16-annotations",
+    "v2_files": [
+      "Java_Episode_16.srt",
+      "Java_Episode_16_Annotations.mp4",
+      "Java_Episode_16_Annotations_CAPTIONED.mp4",
+      "Java_Episode_16_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 17,
+    "slug": "reflection",
+    "title": "Reflection",
+    "folder": "ep17-reflection",
+    "v2_files": [
+      "Java_Episode_17.srt",
+      "Java_Episode_17_Reflection.mp4",
+      "Java_Episode_17_Reflection_CAPTIONED.mp4",
+      "Java_Episode_17_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 18,
+    "slug": "records",
+    "title": "Records",
+    "folder": "ep18-records",
+    "v2_files": [
+      "Java_Episode_18.srt",
+      "Java_Episode_18_Records.mp4",
+      "Java_Episode_18_Records_CAPTIONED.mp4",
+      "Java_Episode_18_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 19,
+    "slug": "sealed-classes",
+    "title": "Sealed Classes",
+    "folder": "ep19-sealed-classes",
+    "v2_files": [
+      "Java_Episode_19.srt",
+      "Java_Episode_19_SOURCE.md",
+      "Java_Episode_19_Sealed_Classes.mp4",
+      "Java_Episode_19_Sealed_Classes_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 20,
+    "slug": "modules-and-jpms",
+    "title": "Modules and JPMS",
+    "folder": "ep20-modules-and-jpms",
+    "v2_files": [
+      "Java_Episode_20.srt",
+      "Java_Episode_20_Modules_and_JPMS.mp4",
+      "Java_Episode_20_Modules_and_JPMS_CAPTIONED.mp4",
+      "Java_Episode_20_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 21,
+    "slug": "lists",
+    "title": "Lists",
+    "folder": "ep21-lists",
+    "v2_files": [
+      "Java_Episode_21.srt",
+      "Java_Episode_21_Lists.mp4",
+      "Java_Episode_21_Lists_CAPTIONED.mp4",
+      "Java_Episode_21_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 22,
+    "slug": "sets",
+    "title": "Sets",
+    "folder": "ep22-sets",
+    "v2_files": [
+      "Java_Episode_22.srt",
+      "Java_Episode_22_SOURCE.md",
+      "Java_Episode_22_Sets.mp4",
+      "Java_Episode_22_Sets_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 23,
+    "slug": "maps",
+    "title": "Maps",
+    "folder": "ep23-maps",
+    "v2_files": [
+      "Java_Episode_23.srt",
+      "Java_Episode_23_Maps.mp4",
+      "Java_Episode_23_Maps_CAPTIONED.mp4",
+      "Java_Episode_23_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 24,
+    "slug": "queues-and-deques",
+    "title": "Queues and Deques",
+    "folder": "ep24-queues-and-deques",
+    "v2_files": [
+      "Java_Episode_24.srt",
+      "Java_Episode_24_Queues_and_Deques.mp4",
+      "Java_Episode_24_Queues_and_Deques_CAPTIONED.mp4",
+      "Java_Episode_24_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 25,
+    "slug": "sorting-and-comparators",
+    "title": "Sorting and Comparators",
+    "folder": "ep25-sorting-and-comparators",
+    "v2_files": [
+      "Java_Episode_25.srt",
+      "Java_Episode_25_SOURCE.md",
+      "Java_Episode_25_Sorting_and_Comparators.mp4",
+      "Java_Episode_25_Sorting_and_Comparators_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 26,
+    "slug": "streams-intro",
+    "title": "Streams Intro",
+    "folder": "ep26-streams-intro",
+    "v2_files": [
+      "Java_Episode_26.srt",
+      "Java_Episode_26_SOURCE.md",
+      "Java_Episode_26_Streams_Intro.mp4",
+      "Java_Episode_26_Streams_Intro_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 27,
+    "slug": "stream-collectors",
+    "title": "Stream Collectors",
+    "folder": "ep27-stream-collectors",
+    "v2_files": [
+      "Java_Episode_27.srt",
+      "Java_Episode_27_SOURCE.md",
+      "Java_Episode_27_Stream_Collectors.mp4",
+      "Java_Episode_27_Stream_Collectors_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 28,
+    "slug": "flatmap-composition",
+    "title": "flatMap & Composition",
+    "folder": "ep28-flatmap-composition",
+    "v2_files": [
+      "Java_Episode_28.srt",
+      "Java_Episode_28_SOURCE.md",
+      "Java_Episode_28_flatMap_Composition.mp4",
+      "Java_Episode_28_flatMap_Composition_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 29,
+    "slug": "parallel-streams",
+    "title": "Parallel Streams",
+    "folder": "ep29-parallel-streams",
+    "v2_files": [
+      "Java_Episode_29.srt",
+      "Java_Episode_29_Parallel_Streams.mp4",
+      "Java_Episode_29_Parallel_Streams_CAPTIONED.mp4",
+      "Java_Episode_29_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 30,
+    "slug": "optional",
+    "title": "Optional",
+    "folder": "ep30-optional",
+    "v2_files": [
+      "Java_Episode_30.srt",
+      "Java_Episode_30_Optional.mp4",
+      "Java_Episode_30_Optional_CAPTIONED.mp4",
+      "Java_Episode_30_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 31,
+    "slug": "java-time",
+    "title": "java.time",
+    "folder": "ep31-java-time",
+    "v2_files": [
+      "Java_Episode_31.srt",
+      "Java_Episode_31_SOURCE.md",
+      "Java_Episode_31_java_time.mp4",
+      "Java_Episode_31_java_time_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 32,
+    "slug": "exceptions",
+    "title": "Exceptions",
+    "folder": "ep32-exceptions",
+    "v2_files": [
+      "Java_Episode_32.srt",
+      "Java_Episode_32_Exceptions.mp4",
+      "Java_Episode_32_Exceptions_CAPTIONED.mp4",
+      "Java_Episode_32_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 33,
+    "slug": "try-with-resources",
+    "title": "try-with-resources",
+    "folder": "ep33-try-with-resources",
+    "v2_files": [
+      "Java_Episode_33.srt",
+      "Java_Episode_33_SOURCE.md",
+      "Java_Episode_33_try_with_resources.mp4",
+      "Java_Episode_33_try_with_resources_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 34,
+    "slug": "files-and-nio-2",
+    "title": "Files and NIO.2",
+    "folder": "ep34-files-and-nio-2",
+    "v2_files": [
+      "Java_Episode_34.srt",
+      "Java_Episode_34_Files_and_NIO_2.mp4",
+      "Java_Episode_34_Files_and_NIO_2_CAPTIONED.mp4",
+      "Java_Episode_34_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 35,
+    "slug": "readers-and-writers",
+    "title": "Readers and Writers",
+    "folder": "ep35-readers-and-writers",
+    "v2_files": [
+      "Java_Episode_35.srt",
+      "Java_Episode_35_Readers_and_Writers.mp4",
+      "Java_Episode_35_Readers_and_Writers_CAPTIONED.mp4",
+      "Java_Episode_35_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 36,
+    "slug": "threads-intro",
+    "title": "Threads Intro",
+    "folder": "ep36-threads-intro",
+    "v2_files": [
+      "Java_Episode_36.srt",
+      "Java_Episode_36_SOURCE.md",
+      "Java_Episode_36_Threads_Intro.mp4",
+      "Java_Episode_36_Threads_Intro_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 37,
+    "slug": "synchronization",
+    "title": "Synchronization",
+    "folder": "ep37-synchronization",
+    "v2_files": [
+      "Java_Episode_37.srt",
+      "Java_Episode_37_SOURCE.md",
+      "Java_Episode_37_Synchronization.mp4",
+      "Java_Episode_37_Synchronization_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 38,
+    "slug": "volatile-and-happens-before",
+    "title": "volatile and Happens-Before",
+    "folder": "ep38-volatile-and-happens-before",
+    "v2_files": [
+      "Java_Episode_38.srt",
+      "Java_Episode_38_SOURCE.md",
+      "Java_Episode_38_volatile_and_Happens_Before.mp4",
+      "Java_Episode_38_volatile_and_Happens_Before_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 39,
+    "slug": "explicit-locks",
+    "title": "Explicit Locks",
+    "folder": "ep39-explicit-locks",
+    "v2_files": [
+      "Java_Episode_39.srt",
+      "Java_Episode_39_Explicit_Locks.mp4",
+      "Java_Episode_39_Explicit_Locks_CAPTIONED.mp4",
+      "Java_Episode_39_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 40,
+    "slug": "executorservice",
+    "title": "ExecutorService",
+    "folder": "ep40-executorservice",
+    "v2_files": [
+      "Java_Episode_40.srt",
+      "Java_Episode_40_ExecutorService.mp4",
+      "Java_Episode_40_ExecutorService_CAPTIONED.mp4",
+      "Java_Episode_40_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 41,
+    "slug": "callable-and-future",
+    "title": "Callable and Future",
+    "folder": "ep41-callable-and-future",
+    "v2_files": [
+      "Java_Episode_41.srt",
+      "Java_Episode_41_Callable_and_Future.mp4",
+      "Java_Episode_41_Callable_and_Future_CAPTIONED.mp4",
+      "Java_Episode_41_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 42,
+    "slug": "concurrent-collections",
+    "title": "Concurrent Collections",
+    "folder": "ep42-concurrent-collections",
+    "v2_files": [
+      "Java_Episode_42.srt",
+      "Java_Episode_42_Concurrent_Collections.mp4",
+      "Java_Episode_42_Concurrent_Collections_CAPTIONED.mp4",
+      "Java_Episode_42_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 43,
+    "slug": "atomics",
+    "title": "Atomics",
+    "folder": "ep43-atomics",
+    "v2_files": [
+      "Java_Episode_43.srt",
+      "Java_Episode_43_Atomics.mp4",
+      "Java_Episode_43_Atomics_CAPTIONED.mp4",
+      "Java_Episode_43_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 44,
+    "slug": "synchronizers",
+    "title": "Synchronizers",
+    "folder": "ep44-synchronizers",
+    "v2_files": [
+      "Java_Episode_44.srt",
+      "Java_Episode_44_SOURCE.md",
+      "Java_Episode_44_Synchronizers.mp4",
+      "Java_Episode_44_Synchronizers_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 45,
+    "slug": "blockingqueue",
+    "title": "BlockingQueue",
+    "folder": "ep45-blockingqueue",
+    "v2_files": [
+      "Java_Episode_45.srt",
+      "Java_Episode_45_BlockingQueue.mp4",
+      "Java_Episode_45_BlockingQueue_CAPTIONED.mp4",
+      "Java_Episode_45_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 46,
+    "slug": "completablefuture",
+    "title": "CompletableFuture",
+    "folder": "ep46-completablefuture",
+    "v2_files": [
+      "Java_Episode_46.srt",
+      "Java_Episode_46_CompletableFuture.mp4",
+      "Java_Episode_46_CompletableFuture_CAPTIONED.mp4",
+      "Java_Episode_46_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 47,
+    "slug": "forkjoinpool",
+    "title": "ForkJoinPool",
+    "folder": "ep47-forkjoinpool",
+    "v2_files": [
+      "Java_Episode_47.srt",
+      "Java_Episode_47_ForkJoinPool.mp4",
+      "Java_Episode_47_ForkJoinPool_CAPTIONED.mp4",
+      "Java_Episode_47_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 48,
+    "slug": "threadlocal",
+    "title": "ThreadLocal",
+    "folder": "ep48-threadlocal",
+    "v2_files": [
+      "Java_Episode_48.srt",
+      "Java_Episode_48_SOURCE.md",
+      "Java_Episode_48_ThreadLocal.mp4",
+      "Java_Episode_48_ThreadLocal_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 49,
+    "slug": "deadlocks",
+    "title": "Deadlocks",
+    "folder": "ep49-deadlocks",
+    "v2_files": [
+      "Java_Episode_49.srt",
+      "Java_Episode_49_Deadlocks.mp4",
+      "Java_Episode_49_Deadlocks_CAPTIONED.mp4",
+      "Java_Episode_49_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 50,
+    "slug": "virtual-threads",
+    "title": "Virtual Threads",
+    "folder": "ep50-virtual-threads",
+    "v2_files": [
+      "Java_Episode_50.srt",
+      "Java_Episode_50_SOURCE.md",
+      "Java_Episode_50_Virtual_Threads.mp4",
+      "Java_Episode_50_Virtual_Threads_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 51,
+    "slug": "class-loading",
+    "title": "Class Loading",
+    "folder": "ep51-class-loading",
+    "v2_files": [
+      "Java_Episode_51.srt",
+      "Java_Episode_51_Class_Loading.mp4",
+      "Java_Episode_51_Class_Loading_CAPTIONED.mp4",
+      "Java_Episode_51_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 52,
+    "slug": "bytecode-basics",
+    "title": "Bytecode Basics",
+    "folder": "ep52-bytecode-basics",
+    "v2_files": [
+      "Java_Episode_52.srt",
+      "Java_Episode_52_Bytecode_Basics.mp4",
+      "Java_Episode_52_Bytecode_Basics_CAPTIONED.mp4",
+      "Java_Episode_52_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 53,
+    "slug": "heap-and-stack",
+    "title": "Heap and Stack",
+    "folder": "ep53-heap-and-stack",
+    "v2_files": [
+      "Java_Episode_53.srt",
+      "Java_Episode_53_Heap_and_Stack.mp4",
+      "Java_Episode_53_Heap_and_Stack_CAPTIONED.mp4",
+      "Java_Episode_53_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 54,
+    "slug": "garbage-collection",
+    "title": "Garbage Collection",
+    "folder": "ep54-garbage-collection",
+    "v2_files": [
+      "Java_Episode_54.srt",
+      "Java_Episode_54_Garbage_Collection.mp4",
+      "Java_Episode_54_Garbage_Collection_CAPTIONED.mp4",
+      "Java_Episode_54_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 55,
+    "slug": "jit-compilation",
+    "title": "JIT Compilation",
+    "folder": "ep55-jit-compilation",
+    "v2_files": [
+      "Java_Episode_55.srt",
+      "Java_Episode_55_JIT_Compilation.mp4",
+      "Java_Episode_55_JIT_Compilation_CAPTIONED.mp4",
+      "Java_Episode_55_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 56,
+    "slug": "gc-collectors",
+    "title": "GC Collectors",
+    "folder": "ep56-gc-collectors",
+    "v2_files": [
+      "Java_Episode_56.srt",
+      "Java_Episode_56_GC_Collectors.mp4",
+      "Java_Episode_56_GC_Collectors_CAPTIONED.mp4",
+      "Java_Episode_56_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 57,
+    "slug": "memory-leaks-and-profiling",
+    "title": "Memory Leaks and Profiling",
+    "folder": "ep57-memory-leaks-and-profiling",
+    "v2_files": [
+      "Java_Episode_57.srt",
+      "Java_Episode_57_Memory_Leaks_and_Profiling.mp4",
+      "Java_Episode_57_Memory_Leaks_and_Profiling_CAPTIONED.mp4",
+      "Java_Episode_57_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 58,
+    "slug": "diagnostic-tools",
+    "title": "Diagnostic Tools",
+    "folder": "ep58-diagnostic-tools",
+    "v2_files": [
+      "Java_Episode_58.srt",
+      "Java_Episode_58_Diagnostic_Tools.mp4",
+      "Java_Episode_58_Diagnostic_Tools_CAPTIONED.mp4",
+      "Java_Episode_58_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 59,
+    "slug": "escape-analysis",
+    "title": "Escape Analysis",
+    "folder": "ep59-escape-analysis",
+    "v2_files": [
+      "Java_Episode_59.srt",
+      "Java_Episode_59_Escape_Analysis.mp4",
+      "Java_Episode_59_Escape_Analysis_CAPTIONED.mp4",
+      "Java_Episode_59_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 60,
+    "slug": "metaspace-and-native-memory",
+    "title": "Metaspace and Native Memory",
+    "folder": "ep60-metaspace-and-native-memory",
+    "v2_files": [
+      "Java_Episode_60.srt",
+      "Java_Episode_60_Metaspace_and_Native_Memory.mp4",
+      "Java_Episode_60_Metaspace_and_Native_Memory_CAPTIONED.mp4",
+      "Java_Episode_60_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 61,
+    "slug": "reference-types",
+    "title": "Reference Types",
+    "folder": "ep61-reference-types",
+    "v2_files": [
+      "Java_Episode_61.srt",
+      "Java_Episode_61_Reference_Types.mp4",
+      "Java_Episode_61_Reference_Types_CAPTIONED.mp4",
+      "Java_Episode_61_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 62,
+    "slug": "jvm-flags-and-tuning",
+    "title": "JVM Flags and Tuning",
+    "folder": "ep62-jvm-flags-and-tuning",
+    "v2_files": [
+      "Java_Episode_62.srt",
+      "Java_Episode_62_JVM_Flags_and_Tuning.mp4",
+      "Java_Episode_62_JVM_Flags_and_Tuning_CAPTIONED.mp4",
+      "Java_Episode_62_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 63,
+    "slug": "object-layout",
+    "title": "Object Layout",
+    "folder": "ep63-object-layout",
+    "v2_files": [
+      "Java_Episode_63.srt",
+      "Java_Episode_63_Object_Layout.mp4",
+      "Java_Episode_63_Object_Layout_CAPTIONED.mp4",
+      "Java_Episode_63_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 64,
+    "slug": "safepoints",
+    "title": "Safepoints",
+    "folder": "ep64-safepoints",
+    "v2_files": [
+      "Java_Episode_64.srt",
+      "Java_Episode_64_SOURCE.md",
+      "Java_Episode_64_Safepoints.mp4",
+      "Java_Episode_64_Safepoints_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 65,
+    "slug": "jvm-startup",
+    "title": "JVM Startup",
+    "folder": "ep65-jvm-startup",
+    "v2_files": [
+      "Java_Episode_65.srt",
+      "Java_Episode_65_JVM_Startup.mp4",
+      "Java_Episode_65_JVM_Startup_CAPTIONED.mp4",
+      "Java_Episode_65_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 66,
+    "slug": "jvm-interview-wrap",
+    "title": "JVM Interview Wrap",
+    "folder": "ep66-jvm-interview-wrap",
+    "v2_files": [
+      "Java_Episode_66.srt",
+      "Java_Episode_66_JVM_Interview_Wrap.mp4",
+      "Java_Episode_66_JVM_Interview_Wrap_CAPTIONED.mp4",
+      "Java_Episode_66_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 67,
+    "slug": "design-patterns-intro",
+    "title": "Design Patterns Intro",
+    "folder": "ep67-design-patterns-intro",
+    "v2_files": [
+      "Java_Episode_67.srt",
+      "Java_Episode_67_Design_Patterns_Intro.mp4",
+      "Java_Episode_67_Design_Patterns_Intro_CAPTIONED.mp4",
+      "Java_Episode_67_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 68,
+    "slug": "creational-patterns",
+    "title": "Creational Patterns",
+    "folder": "ep68-creational-patterns",
+    "v2_files": [
+      "Java_Episode_68.srt",
+      "Java_Episode_68_Creational_Patterns.mp4",
+      "Java_Episode_68_Creational_Patterns_CAPTIONED.mp4",
+      "Java_Episode_68_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 69,
+    "slug": "structural-patterns",
+    "title": "Structural Patterns",
+    "folder": "ep69-structural-patterns",
+    "v2_files": [
+      "Java_Episode_69.srt",
+      "Java_Episode_69_SOURCE.md",
+      "Java_Episode_69_Structural_Patterns.mp4",
+      "Java_Episode_69_Structural_Patterns_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 70,
+    "slug": "behavioral-patterns",
+    "title": "Behavioral Patterns",
+    "folder": "ep70-behavioral-patterns",
+    "v2_files": [
+      "Java_Episode_70.srt",
+      "Java_Episode_70_Behavioral_Patterns.mp4",
+      "Java_Episode_70_Behavioral_Patterns_CAPTIONED.mp4",
+      "Java_Episode_70_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 71,
+    "slug": "spring-framework-intro",
+    "title": "Spring Framework Intro",
+    "folder": "ep71-spring-framework-intro",
+    "v2_files": [
+      "Java_Episode_71.srt",
+      "Java_Episode_71_SOURCE.md",
+      "Java_Episode_71_Spring_Framework_Intro.mp4",
+      "Java_Episode_71_Spring_Framework_Intro_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 72,
+    "slug": "ioc-and-dependency-injection",
+    "title": "IoC and Dependency Injection",
+    "folder": "ep72-ioc-and-dependency-injection",
+    "v2_files": [
+      "Java_Episode_72.srt",
+      "Java_Episode_72_IoC_and_Dependency_Injection.mp4",
+      "Java_Episode_72_IoC_and_Dependency_Injection_CAPTIONED.mp4",
+      "Java_Episode_72_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 73,
+    "slug": "spring-boot-basics",
+    "title": "Spring Boot Basics",
+    "folder": "ep73-spring-boot-basics",
+    "v2_files": [
+      "Java_Episode_73.srt",
+      "Java_Episode_73_SOURCE.md",
+      "Java_Episode_73_Spring_Boot_Basics.mp4",
+      "Java_Episode_73_Spring_Boot_Basics_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 74,
+    "slug": "spring-mvc-and-rest",
+    "title": "Spring MVC and REST",
+    "folder": "ep74-spring-mvc-and-rest",
+    "v2_files": [
+      "Java_Episode_74.srt",
+      "Java_Episode_74_SOURCE.md",
+      "Java_Episode_74_Spring_MVC_and_REST.mp4",
+      "Java_Episode_74_Spring_MVC_and_REST_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 75,
+    "slug": "spring-data-and-persistence",
+    "title": "Spring Data and Persistence",
+    "folder": "ep75-spring-data-and-persistence",
+    "v2_files": [
+      "Java_Episode_75.srt",
+      "Java_Episode_75_SOURCE.md",
+      "Java_Episode_75_Spring_Data_and_Persistence.mp4",
+      "Java_Episode_75_Spring_Data_and_Persistence_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 76,
+    "slug": "spring-security",
+    "title": "Spring Security",
+    "folder": "ep76-spring-security",
+    "v2_files": [
+      "Java_Episode_76.srt",
+      "Java_Episode_76_SOURCE.md",
+      "Java_Episode_76_Spring_Security.mp4",
+      "Java_Episode_76_Spring_Security_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 77,
+    "slug": "spring-testing",
+    "title": "Spring Testing",
+    "folder": "ep77-spring-testing",
+    "v2_files": [
+      "Java_Episode_77.srt",
+      "Java_Episode_77_SOURCE.md",
+      "Java_Episode_77_Spring_Testing.mp4",
+      "Java_Episode_77_Spring_Testing_CAPTIONED.mp4",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 78,
+    "slug": "microservices-basics",
+    "title": "Microservices Basics",
+    "folder": "ep78-microservices-basics",
+    "v2_files": [
+      "Java_Episode_78.srt",
+      "Java_Episode_78_Microservices_Basics.mp4",
+      "Java_Episode_78_Microservices_Basics_CAPTIONED.mp4",
+      "Java_Episode_78_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 79,
+    "slug": "observability-and-resilience",
+    "title": "Observability and Resilience",
+    "folder": "ep79-observability-and-resilience",
+    "v2_files": [
+      "Java_Episode_79.srt",
+      "Java_Episode_79_Observability_and_Resilience.mp4",
+      "Java_Episode_79_Observability_and_Resilience_CAPTIONED.mp4",
+      "Java_Episode_79_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 80,
+    "slug": "architecture-interview-wrap",
+    "title": "Architecture Interview Wrap",
+    "folder": "ep80-architecture-interview-wrap",
+    "v2_files": [
+      "Java_Episode_80.srt",
+      "Java_Episode_80_Architecture_Interview_Wrap.mp4",
+      "Java_Episode_80_Architecture_Interview_Wrap_CAPTIONED.mp4",
+      "Java_Episode_80_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 81,
+    "slug": "caching-strategies",
+    "title": "Caching Strategies",
+    "folder": "ep81-caching-strategies",
+    "v2_files": [
+      "Java_Episode_81.srt",
+      "Java_Episode_81_Caching_Strategies.mp4",
+      "Java_Episode_81_Caching_Strategies_CAPTIONED.mp4",
+      "Java_Episode_81_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 82,
+    "slug": "api-design-deep-dive",
+    "title": "API Design Deep Dive",
+    "folder": "ep82-api-design-deep-dive",
+    "v2_files": [
+      "Java_Episode_82.srt",
+      "Java_Episode_82_API_Design_Deep_Dive.mp4",
+      "Java_Episode_82_API_Design_Deep_Dive_CAPTIONED.mp4",
+      "Java_Episode_82_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 83,
+    "slug": "event-driven-architecture",
+    "title": "Event-Driven Architecture",
+    "folder": "ep83-event-driven-architecture",
+    "v2_files": [
+      "Java_Episode_83.srt",
+      "Java_Episode_83_Event_Driven_Architecture.mp4",
+      "Java_Episode_83_Event_Driven_Architecture_CAPTIONED.mp4",
+      "Java_Episode_83_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 84,
+    "slug": "performance-playbook",
+    "title": "Performance Playbook",
+    "folder": "ep84-performance-playbook",
+    "v2_files": [
+      "Java_Episode_84.srt",
+      "Java_Episode_84_Performance_Playbook.mp4",
+      "Java_Episode_84_Performance_Playbook_CAPTIONED.mp4",
+      "Java_Episode_84_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  },
+  {
+    "ep": 85,
+    "slug": "production-readiness-capstone",
+    "title": "Production Readiness Capstone",
+    "folder": "ep85-production-readiness-capstone",
+    "v2_files": [
+      "Java_Episode_85.srt",
+      "Java_Episode_85_Production_Readiness_Capstone.mp4",
+      "Java_Episode_85_Production_Readiness_Capstone_CAPTIONED.mp4",
+      "Java_Episode_85_SOURCE.md",
+      "narration.md",
+      "thumbnail.jpg"
+    ],
+    "v2_has_thumb": true
+  }
+]

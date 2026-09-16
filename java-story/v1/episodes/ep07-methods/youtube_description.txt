@@ -1,0 +1,69 @@
+The Java Story — Episode 07: Methods
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Control flow chooses the path
+• A method is named behavior — inputs, outputs, and a contract.
+• Good method design makes APIs clear and code reusable.
+• Bad method design hides bugs inside long, unclear routines.
+• Today we learn to write methods that say what they mean.
+• Episode Seven.
+• …and more
+
+Timestamps
+0:00 Control flow chooses the path
+0:03 A method is named behavior — inputs, outputs, and a…
+0:07 Good method design makes APIs clear and code reusable.
+0:11 Bad method design hides bugs inside long, unclear routines.
+0:14 Today we learn to write methods that say what they mean.
+0:18 Episode Seven.
+0:19 Methods — parameters, returns, and clean contracts.
+0:23 Look at the anatomy of a method.
+0:25 Access modifier
+0:29 Then the body — the work.
+0:31 Name should say what it does
+0:35 Return type says what you get back — or void if it only…
+0:39 Read a signature like a sentence — that is the API contract.
+0:43 The signature is the contract.
+0:45 Same name, different parameter types — that is overloading.
+0:49 Overloading is compile-time
+0:53 Do not confuse it with overriding — that is runtime…
+0:58 Keep overloads obvious
+1:01 Clarity beats cleverness when two methods share a name.
+1:05 Design tips that scale.
+1:07 One job per method
+1:09 Avoid boolean flag parameters that fork behavior — split…
+1:14 Prefer returning a clear type over returning null without…
+1:18 Domain methods beat scattered operator soup.
+1:21 order can be cancelled is better than five comparisons…
+1:26 Instance methods need an object
+1:30 Static helpers are fine for pure utilities.
+1:32 But static mutable state is a trap — global lifetime, hard…
+1:37 In Spring, calling this dot method may skip proxies
+1:42 Prefer instance behavior for domain rules — static for…
+1:47 Three common mistakes.
+1:48 One — methods that do five jobs and fill a screen.
+1:52 Two — unclear names like process data or handle stuff.
+1:56 Three — swallowing exceptions inside a helper so callers…
+2:01 Also — making every tiny helper public
+2:06 Interview question — overload versus override?
+2:09 Overload — same name, different parameters, chosen at…
+2:14 Override — subclass replaces a parent method, chosen at…
+2:18 Then add — methods should express domain intent, not just…
+2:22 That answer shows you design APIs, not just syntax.
+2:26 Behavior is packaged
+2:30 Episode Eight — arrays.
+2:31 Fixed size, indexed access, and the off-by-one traps.
+2:35 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode07

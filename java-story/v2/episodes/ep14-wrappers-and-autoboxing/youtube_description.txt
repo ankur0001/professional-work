@@ -1,0 +1,42 @@
+The Java Story — Episode 14: Wrappers and Autoboxing
+Current cut (coherent narration + animated visuals).
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Enums gave us type-safe vocabulary as objects
+• Imagine a shopping cart that stores item quantities
+• So the question becomes unavoidable: how does a primitive…
+• Each wrapper is a reference type that holds a primitive value and…
+• Java then softens the ceremony with autoboxing and unboxing
+• Walk the lines like a slow debugger
+• …and more
+
+Timestamps
+0:00 Enums gave us type-safe vocabulary as objects
+0:11 Imagine a shopping cart that stores item quantities
+0:22 So the question becomes unavoidable: how does a primitive…
+0:35 Each wrapper is a reference type that holds a primitive…
+0:44 Java then softens the ceremony with autoboxing and unboxing
+0:57 Walk the lines like a slow debugger
+1:12 The convenience is real
+1:19 Here is the failure that every Java developer meets…
+1:31 Prefer primitives when absence is not part of the meaning
+1:41 Small Integer values are cached: Look at this java for a…
+1:58 Use equals — or better, compare primitives — when you mean…
+2:10 In a tight numeric loop, prefer primitives
+2:22 They are the wrong default inside a hot sum of a million…
+2:35 The list cannot store bare int values; Integer is the…
+2:47 Collections needed objects; wrappers answered
+3:01 And yet once lists of Integer feel natural, another…
+3:11 How do we tell a collection "these are strings" or "these…
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v2/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode14

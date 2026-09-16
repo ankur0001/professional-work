@@ -1,0 +1,191 @@
+1
+00:00:00,000 --> 00:00:02,836
+In Episode Four, we chose types carefully.
+
+2
+00:00:02,836 --> 00:00:06,618
+Now those values meet operators — plus, equals, and, or.
+
+3
+00:00:06,618 --> 00:00:08,914
+Small symbols. Large consequences.
+
+4
+00:00:08,914 --> 00:00:12,898
+Overflow, equality bugs, and null crashes often start here.
+
+5
+00:00:12,898 --> 00:00:14,038
+Episode Five.
+
+6
+00:00:14,038 --> 00:00:19,124
+Operators — arithmetic, equality, and short-circuit logic.
+
+7
+00:00:19,124 --> 00:00:21,531
+Three families you use every day.
+
+8
+00:00:21,531 --> 00:00:24,666
+Arithmetic — plus, minus, multiply, divide.
+
+9
+00:00:24,666 --> 00:00:28,459
+Relational — less than, greater than, equals-equals.
+
+10
+00:00:28,459 --> 00:00:32,615
+Logical — and, or, not — decisions that branch your code.
+
+11
+00:00:32,615 --> 00:00:36,918
+Java evaluates left to right. Parentheses remove guesswork.
+
+12
+00:00:36,918 --> 00:00:38,927
+The classic trap — equality.
+
+13
+00:00:38,927 --> 00:00:42,657
+For primitives, equals-equals compares values. Fine.
+
+14
+00:00:42,657 --> 00:00:47,751
+For objects, equals-equals compares references — same object in memory?
+
+15
+00:00:47,751 --> 00:00:53,275
+For String content — use equals. Never equals-equals for text you care about.
+
+16
+00:00:53,275 --> 00:00:57,724
+Safer pattern — put the literal first. PAID dot equals status.
+
+17
+00:00:57,724 --> 00:01:00,952
+That avoids a null pointer if status is null.
+
+18
+00:01:00,952 --> 00:01:03,114
+Short-circuit logic protects you.
+
+19
+00:01:03,114 --> 00:01:05,800
+Double ampersand — and. Double pipe — or.
+
+20
+00:01:05,800 --> 00:01:10,452
+If the left side already decides the answer, the right side never runs.
+
+21
+00:01:10,452 --> 00:01:15,759
+user not null and user is active — the second call only happens when user exists.
+
+22
+00:01:15,759 --> 00:01:20,607
+Single ampersand does not short-circuit. That difference causes real bugs.
+
+23
+00:01:20,607 --> 00:01:24,866
+Use short-circuit when the second check is expensive — or unsafe.
+
+24
+00:01:24,866 --> 00:01:26,588
+Arithmetic looks innocent.
+
+25
+00:01:26,588 --> 00:01:30,561
+int can silently wrap on overflow — no exception by default.
+
+26
+00:01:30,561 --> 00:01:34,269
+For money limits and counters, silent wrap is dangerous.
+
+27
+00:01:34,269 --> 00:01:37,977
+Prefer Math dot addExact when overflow must fail loudly.
+
+28
+00:01:37,977 --> 00:01:41,420
+Or use long — and still think about the upper bound.
+
+29
+00:01:41,420 --> 00:01:44,532
+Payment systems choose exact math for a reason.
+
+30
+00:01:44,532 --> 00:01:47,344
+The ternary operator — question mark colon.
+
+31
+00:01:47,344 --> 00:01:51,006
+condition question result-if-true colon result-if-false.
+
+32
+00:01:51,006 --> 00:01:54,538
+Great for simple choices. Terrible for nested puzzles.
+
+33
+00:01:54,538 --> 00:01:59,442
+If the expression needs a paragraph of comments — extract a method instead.
+
+34
+00:01:59,442 --> 00:02:04,870
+Architect tip — order can be cancelled beats a pile of operators copied everywhere.
+
+35
+00:02:04,870 --> 00:02:06,288
+Three common mistakes.
+
+36
+00:02:06,288 --> 00:02:08,801
+One — equals-equals for String content.
+
+37
+00:02:08,801 --> 00:02:12,989
+Two — ignoring integer overflow until production numbers get big.
+
+38
+00:02:12,989 --> 00:02:18,402
+Three — side effects stuffed inside clever expressions. Hard to read. Hard to debug.
+
+39
+00:02:18,402 --> 00:02:24,008
+Also — trusting operator precedence instead of parentheses. Be kind to the next reader.
+
+40
+00:02:24,008 --> 00:02:27,456
+Interview question — equals-equals versus equals?
+
+41
+00:02:27,456 --> 00:02:28,512
+Answer cleanly.
+
+42
+00:02:28,512 --> 00:02:32,874
+Equals-equals — references for objects. Values for primitives.
+
+43
+00:02:32,874 --> 00:02:36,111
+Equals — logical equality defined by the type.
+
+44
+00:02:36,111 --> 00:02:41,178
+Then add — short-circuit and protects null. That shows production sense.
+
+45
+00:02:41,178 --> 00:02:44,709
+Operators decide. Next we control the path.
+
+46
+00:02:44,709 --> 00:02:46,926
+Episode Six — control flow.
+
+47
+00:02:46,926 --> 00:02:51,606
+if, else, switch, loops — how programs choose and repeat.
+
+48
+00:02:51,606 --> 00:02:52,756
+See you there.

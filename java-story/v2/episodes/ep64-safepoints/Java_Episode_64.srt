@@ -1,0 +1,181 @@
+1
+00:00:00,000 --> 00:00:08,800
+GC logs talk about pauses. Product
+dashboards talk about latency spikes.
+Sometimes those align cleanly with a
+collection pause you can point to.
+
+2
+00:00:08,919 --> 00:00:16,079
+Sometimes the pause reason is broader: the
+JVM needed a global rendezvous, and
+threads took a while to arrive.
+
+3
+00:00:16,199 --> 00:00:23,559
+That rendezvous is a safepoint — a state
+where the JVM can consistently inspect or
+mutate thread state for VM operations.
+
+4
+00:00:23,679 --> 00:00:31,439
+If you only ever say "GC pause," you will
+mis-attribute nights when the collector
+was waiting on threads as much as threads
+were waiting on the collector.
+
+5
+00:00:31,559 --> 00:00:35,719
+Think of a meeting that cannot start until
+every required person is in the room.
+
+6
+00:00:35,839 --> 00:00:44,640
+Certain GC phases and other VM operations
+need threads in a known state — not
+halfway through a mutation the runtime
+must understand for relocation or root
+scanning.
+
+7
+00:00:44,759 --> 00:00:56,320
+Threads reach safepoints at well-defined
+opportunities the JIT and interpreter
+cooperate with. The operation runs.
+Threads continue. When arrival is fast,
+you barely notice.
+
+8
+00:00:56,439 --> 00:01:07,759
+When time-to-safepoint is long, request
+latency stretches in ways that feel
+mysterious if your only model is "the GC
+algorithm was bad today." Look at this
+java for a moment.
+
+9
+00:01:07,879 --> 00:01:15,199
+Historically, tight loops could delay
+safepoint polling — counted loops that
+rarely checked whether the JVM wanted to
+pause.
+
+10
+00:01:15,319 --> 00:01:23,959
+Modern HotSpot has improved many of those
+cases, but the conceptual risk remains:
+code that never reaches a safepoint check
+can stretch time-to-safepoint.
+
+11
+00:01:24,079 --> 00:01:37,120
+Exotic spin loops without checks are not
+just CPU hogs; they can interfere with VM
+operations. Spinning forever without
+checks, and blaming GC exclusively when
+TTSP is the villain, are sibling mistakes.
+
+12
+00:01:37,239 --> 00:01:50,679
+Connect this to collector choices from
+Episode Fifty-Six. Low-pause collectors
+try to reduce stop-the-world work, but
+they do not erase coordination entirely.
+Some operations still require threads to
+meet.
+
+13
+00:01:50,799 --> 00:02:04,239
+If your latency budget assumes "ZGC means
+no pauses ever," you will be surprised by
+the pauses that remain and by non-GC
+safepoint operations. Coordinate goals
+with mechanisms, not marketing adjectives.
+
+14
+00:02:04,359 --> 00:02:10,879
+JFR and related diagnostics can show pause
+reasons and safepoint-related events. That
+matters for latency budgets.
+
+15
+00:02:11,000 --> 00:02:20,800
+If your SLO is "p99 under fifty
+milliseconds," you must account for
+safepoint pauses and time-to-safepoint,
+not only average young-gen times from a
+happy graph.
+
+16
+00:02:20,919 --> 00:02:37,159
+A practical diagnostic fork: latency
+spike, GC pause metric flat, CPU not
+saturated. JFR shows prolonged time-to-
+safepoint. Now look for threads slow to
+arrive — a long JNI call, an unusual loop,
+a third-party library.
+
+17
+00:02:37,279 --> 00:02:48,599
+Without the safepoint concept, that
+incident gets filed under "random GC" and
+never solved. The diagnostic tools from
+Episode Fifty-Eight earn their keep here.
+Safepoints are not evil.
+
+18
+00:02:48,719 --> 00:02:55,559
+They are how the VM keeps a consistent
+world while relocating objects or
+performing operations that cannot tolerate
+torn state.
+
+19
+00:02:55,679 --> 00:03:05,599
+The engineering job is to keep time-to-
+safepoint short enough for your SLOs and
+to measure when it is not. Do not panic-
+rewrite every loop because you learned a
+new word.
+
+20
+00:03:05,719 --> 00:03:18,839
+Do treat unexplained latency with a
+broader lens than "GC bad." If asked what
+a safepoint is, say: a state where the JVM
+can consistently pause threads for VM
+operations such as certain GC phases.
+
+21
+00:03:18,959 --> 00:03:27,879
+Mention that time-to-safepoint matters for
+latency and that not every pause story is
+"the collector was slow at reclaiming."
+Offer one failure mode:
+
+22
+00:03:27,999 --> 00:03:33,119
+a thread that rarely polls can stretch the
+rendezvous and look like a GC incident
+from the outside.
+
+23
+00:03:33,239 --> 00:03:44,799
+Low latency means budgeting for
+coordination, choosing collectors and heap
+sizes that keep stop-the-world work small,
+and measuring TTSP when spikes disagree
+with GC pause charts — an engineering
+envelope,
+
+24
+00:03:44,919 --> 00:03:46,959
+not the absence of safepoints.
+
+25
+00:03:47,079 --> 00:03:59,199
+We added the coordination layer behind
+many pauses. Next we go to the beginning
+of a process's life: what happens between
+java -jar and a ready service, and why
+cold start is its own performance domain.

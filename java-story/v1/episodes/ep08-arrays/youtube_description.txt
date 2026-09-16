@@ -1,0 +1,68 @@
+The Java Story — Episode 08: Arrays
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Methods package behavior
+• An array is fixed-size, indexed, and homogeneous — same type in…
+• Arrays are objects in Java, with special syntax and fast indexed…
+• They underpin collections, buffers, and performance-sensitive code.
+• Get the mental model right — index, length, bounds.
+• Episode Eight.
+• …and more
+
+Timestamps
+0:00 Methods package behavior
+0:03 An array is fixed-size, indexed, and homogeneous — same…
+0:08 Arrays are objects in Java, with special syntax and fast…
+0:13 They underpin collections, buffers, and…
+0:18 Get the mental model right — index, length, bounds.
+0:21 Episode Eight.
+0:22 Arrays — fixed size, indexed access, and off-by-one traps.
+0:27 Declaration looks like this.
+0:29 int scores equals new int of five.
+0:31 Length is five
+0:35 Remember — zero-based indexing
+0:40 Once created, the length never grows
+0:45 If you need growth — that is a list conversation, coming…
+0:49 Access is by index.
+0:50 scores bracket zero equals ninety
+0:55 Ask for scores bracket five —…
+0:59 Off-by-one bugs love loops that use less-than-or-equal…
+1:05 Practice saying length minus one out loud until it sticks.
+1:09 Multidimensional arrays are arrays of arrays.
+1:12 int bracket bracket grid — rows that each hold a row array.
+1:16 Rows can even have different lengths — jagged arrays.
+1:19 Do not assume one flat contiguous block the way C…
+1:23 When you need a true matrix library — use a library
+1:28 When do you choose arrays versus ArrayList?
+1:31 Arrays — fixed size, simple, very fast indexed access.
+1:34 ArrayList — grows, richer API, clearer for most…
+1:39 Prefer collections when intent is a growing list of domain…
+1:43 Prefer arrays for tight buffers, primitives, and…
+1:48 Choose the structure that matches how the size changes.
+1:51 Three common mistakes.
+1:53 One — off-by-one indexing in loops.
+1:55 Two — exposing an internal array from a getter — callers…
+2:00 Three — returning huge arrays from APIs when a stream or…
+2:05 Also — using Object arrays when a typed collection…
+2:10 Interview question — are arrays objects in Java?
+2:13 Yes — they live on the heap and have a length field.
+2:17 But they have special syntax — brackets — and covariant…
+2:22 Length for arrays
+2:26 Zero-based indexing is non-negotiable.
+2:28 Many values, fixed slots
+2:31 Episode Nine — Strings.
+2:33 Immutability, equals, and careful construction.
+2:37 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode08

@@ -1,0 +1,165 @@
+1
+00:00:00,000 --> 00:00:09,519
+Operators can tell you that a score is
+high enough, that a name is non-null, that
+a counter has not reached its limit. Those
+answers are still just values.
+
+2
+00:00:09,639 --> 00:00:21,159
+A program that only computes and never
+chooses is a calculator stuck on one path.
+Picture a registration desk. You can
+compute age from a birth year. That still
+does not enroll anyone.
+
+3
+00:00:21,279 --> 00:00:33,039
+You need a fork: if age is at least
+eighteen, continue; otherwise refuse. Then
+you need a loop: for each applicant in
+today's list, repeat the check. Control is
+what turns facts into actions.
+
+4
+00:00:33,159 --> 00:00:46,640
+So the next natural question is: how does
+Java take a boolean — or a set of cases —
+and send the program down different
+routes? That is control flow. It is how
+programs make decisions and how they
+repeat work.
+
+5
+00:00:46,759 --> 00:00:58,799
+It is also how nesting turns into vines
+nobody wants to read. Start with the
+choice you already feel after Episode
+Five: if this, then that. Look at this
+java for a moment.
+
+6
+00:00:58,919 --> 00:01:03,759
+The condition is an expression that yields
+a boolean. One branch runs. The other does
+not.
+
+7
+00:01:03,879 --> 00:01:15,599
+When the decision has several labeled
+outcomes instead of a true/false fork,
+modern Java prefers switch expressions
+that return a value and push you toward
+covering the cases. Look at this java for
+a moment.
+
+8
+00:01:15,719 --> 00:01:23,640
+A switch expression is not just new syntax
+for old switch statements. It encourages
+exhaustiveness and makes the result a
+value you can store.
+
+9
+00:01:23,759 --> 00:01:36,319
+Old fall-through statement switches still
+exist, and forgetting a break is still a
+classic bug. Prefer the form that matches
+the job: expression when you want a
+result, statement when you are performing
+actions.
+
+10
+00:01:36,439 --> 00:01:45,840
+Choosing once is not enough. Often the
+same kind of decision must happen for
+every item — every student, every retry
+attempt, every page of results.
+
+11
+00:01:45,959 --> 00:01:58,639
+That pressure brings loops: for, while,
+and the enhanced-for when you simply walk
+each element. Look at this java for a
+moment. This loop visits indexes from zero
+up to, but not including, n.
+
+12
+00:01:58,759 --> 00:02:09,719
+When i is even, continue skips the rest of
+that iteration. When i is odd, it prints.
+break would leave the loop entirely. while
+fits when you do not know the trip count
+in advance.
+
+13
+00:02:09,840 --> 00:02:17,520
+Enhanced-for fits when you already have a
+collection and only need each element.
+Index for still wins when the position
+itself matters.
+
+14
+00:02:17,640 --> 00:02:27,200
+Labeled break and continue exist for
+nested loops; use them sparingly — if you
+need a label to explain the control, the
+structure may be asking for a method
+instead.
+
+15
+00:02:27,320 --> 00:02:37,920
+Later, when you work with type hierarchies
+and general references, Java can also bind
+a narrowed type in the same instanceof
+test — pattern matching — so the cast does
+not drift away from the check.
+
+16
+00:02:38,040 --> 00:02:51,680
+Hold that curiosity; the pressure for it
+arrives after objects have a clearer
+shape. Now look at the design failure that
+control flow tempts: the giant nested if
+pyramid. Look at this java for a moment.
+
+17
+00:02:51,800 --> 00:03:04,439
+Each condition feels reasonable. Together
+they bury the real work. The healthier
+move is often to extract methods — early
+returns for guard clauses, named helpers
+for each policy — so each block has one
+job.
+
+18
+00:03:04,560 --> 00:03:17,599
+Look at this java for a moment. Now the
+nested pyramid becomes a flat checklist.
+Control flow syntax cannot save a design
+that refuses to name its decisions — but
+naming the decision often shrinks the
+syntax you need.
+
+19
+00:03:17,719 --> 00:03:30,599
+Operators produced the booleans and
+comparisons we needed. Control flow uses
+those results to choose branches, return
+values from switches, and repeat with
+loops. The skill is not collecting
+keywords.
+
+20
+00:03:30,719 --> 00:03:36,919
+It is keeping the path readable as the
+rules multiply. Once main can decide and
+loop, another trap appears.
+
+21
+00:03:37,039 --> 00:03:48,000
+The same decision logic — calculate a
+total, validate an order, format a line —
+gets copied into every place that needs
+it. Behavior wants a name. That need is
+what methods exist to answer.

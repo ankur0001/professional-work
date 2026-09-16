@@ -1,0 +1,79 @@
+The Java Story — Episode 49: Deadlocks
+Original cut.
+
+The Java Story is a structured series that teaches Java from first principles through modern production practice — one clear episode at a time.
+
+In this episode:
+• Episode Forty-Eight kept state private per thread.
+• Shared resources still need locks — and locks can trap threads…
+• Thread A holds lock one, waits for lock two.
+• Thread B holds lock two, waits for lock one.
+• Neither can proceed — classic circular wait.
+• Today — deadlock conditions, detection, avoidance, and lock ordering.
+• …and more
+
+Timestamps
+0:00 Episode Forty-Eight kept state private per thread.
+0:03 Shared resources still need locks — and locks can trap…
+0:07 Thread A holds lock one, waits for lock two.
+0:10 Thread B holds lock two, waits for lock one.
+0:13 Neither can proceed — classic circular wait.
+0:16 Today — deadlock conditions, detection, avoidance, and…
+0:21 Episode Forty-Nine.
+0:22 Deadlocks — Detection and Avoidance.
+0:26 Coffman conditions — all four must hold for a deadlock.
+0:29 Mutual exclusion — at least one resource is non-sharable.
+0:33 Hold and wait — a thread holds a lock while waiting for…
+0:38 No preemption — locks cannot be forcibly taken away.
+0:41 Circular wait — a cycle of threads each waiting on the next.
+0:46 Break any one condition — and deadlocks cannot form.
+0:49 The dining philosophers — intuitive deadlock story.
+0:53 Five philosophers, five forks — need two forks to eat.
+0:56 Everyone picks left fork, then right — cycle forms.
+1:00 In code — transfer between accounts locking in opposite…
+1:04 Thread one locks account A then B.
+1:07 Thread two locks B then A — same circular pattern.
+1:10 Detection — find cycles in the wait-for graph.
+1:13 Thread dump on JVM — jstack or kill minus three.
+1:17 Look for BLOCKED threads waiting on monitors held by each…
+1:21 ThreadMXBean.findDeadlockedThreads returns deadlocked…
+1:25 Detection is reactive — the system is already stuck.
+1:29 Use in production monitoring — alert when deadlocks appear.
+1:33 Avoidance — design so deadlocks cannot happen.
+1:36 Lock ordering — always acquire locks in a global…
+1:40 Try-lock with timeout — back off and retry instead of…
+1:45 Lock fewer resources — coarser design or lock-free…
+1:49 Banker algorithm — theoretical resource allocation —…
+1:54 Prevention beats detection — design locks in from the start.
+1:58 Lock ordering in practice.
+2:00 Assign each lock a unique integer ID — always lock lower…
+2:04 For account transfer — lock accounts by ascending hash or…
+2:08 ReentrantLock with tryLock and timeout — fail fast under…
+2:13 synchronized blocks — same ordering rule applies.
+2:16 Document the order — code review catches violations early.
+2:20 Three common mistakes.
+2:22 One — nested locks in different orders across call paths.
+2:26 Two — calling external code while holding a lock — hidden…
+2:30 Three — ignoring try-lock timeouts — infinite BLOCKED in…
+2:35 Also — fine-grained locks without a documented acquisition…
+2:39 Deadlocks are design bugs — not random runtime glitches.
+2:43 Interview question — what causes deadlock and how do you…
+2:47 Four Coffman conditions — mutual exclusion, hold-and-wait,…
+2:53 Prevention — consistent global lock ordering.
+2:56 Detection — thread dumps, ThreadMXBean, cycle in wait-for…
+3:01 tryLock with timeout — back off instead of blocking forever.
+3:05 Mention dining philosophers or account transfer example.
+3:09 Platform threads block — and blocking under load gets…
+3:13 Episode Fifty — Virtual Threads.
+3:15 Project Loom, pinning, and structured concurrency.
+3:19 See you there.
+
+Resources
+- Captions: included (SRT in repo)
+- Narration / transcript: see narration.md
+- Series index: java-story/v1/INDEX.md
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Java #JavaTutorial #Programming #TheJavaStory #Episode49

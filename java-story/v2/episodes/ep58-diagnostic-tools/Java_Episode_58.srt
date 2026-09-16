@@ -1,0 +1,194 @@
+1
+00:00:00,000 --> 00:00:04,960
+Episode Fifty-Seven taught us to dump the
+heap when memory climbs for the wrong
+reason.
+
+2
+00:00:05,080 --> 00:00:18,359
+Another kind of hurt is the process that
+is "up" but not answering — threads stuck,
+latency spiking, CPU hot with no obvious
+culprit. Folklore arrives fast: restart
+it, bump the heap, roll back, blame the
+network.
+
+3
+00:00:18,479 --> 00:00:25,399
+Sometimes a restart "works." It also
+erases the crime scene. The team feels
+productive and learns nothing.
+
+4
+00:00:25,519 --> 00:00:35,159
+So today's question is practical: when
+production hurts, what do you capture, and
+in what order, so tools beat folklore?
+Start with the stuck or slow application.
+
+5
+00:00:35,279 --> 00:00:46,039
+Before you kill the process, ask whether
+threads are blocked, waiting on locks, or
+parked on I/O: Look at this bash for a
+moment. Thread.print gives stacks right
+now.
+
+6
+00:00:46,159 --> 00:00:54,439
+Look for many threads BLOCKED or waiting
+on the same monitor. Look for a deadlock
+section. Look for application code versus
+a driver or DNS call.
+
+7
+00:00:54,559 --> 00:01:06,399
+That single dump often turns "the app is
+hung" into "checkout threads wait on the
+inventory lock held by thread forty-two" —
+a code review target instead of a ritual
+sacrifice of the pod.
+
+8
+00:01:06,519 --> 00:01:20,719
+Java Flight Recorder is the continuous
+story instead of a snapshot. A recording
+during the incident captures CPU samples,
+allocation pressure, lock contention, GC
+pauses, and more. Capture while the pain
+is happening.
+
+9
+00:01:20,839 --> 00:01:25,399
+Taking dumps after the problem vanishes
+collects empty files and strong opinions.
+
+10
+00:01:25,519 --> 00:01:36,159
+The most expensive sentence in ops is "it
+recovered before we could capture
+anything." Heap dumps still belong when
+memory is the symptom — we practiced that
+last episode.
+
+11
+00:01:36,279 --> 00:01:48,519
+Dumps are different lenses, not rivals:
+thread dump for concurrency shape, heap
+dump for retention, JFR for a timed
+narrative. Knowing which lens fits the
+symptom is half of diagnosis.
+
+12
+00:01:48,639 --> 00:01:59,839
+Using every lens without a question is how
+you drown in files. When the question is
+"where is CPU going?" or "who is
+allocating?", async-profiler earns its
+keep.
+
+13
+00:01:59,959 --> 00:02:12,559
+It samples CPU or allocation and produces
+flame graphs that make hot methods
+obvious. Pair it with metrics you already
+have: request rate, error rate, heap
+usage, GC pause percentiles.
+
+14
+00:02:12,679 --> 00:02:25,639
+Metrics tell you when; dumps and profiles
+tell you why. A CPU spike lined up with an
+endpoint in JFR is a diagnosis. A spike
+with no recording is a postmortem that
+never finishes.
+
+15
+00:02:25,759 --> 00:02:37,399
+Build a capture kit into the platform
+before you need it. Can jcmd reach the
+process in the container? Are JDK tools in
+the image? Is JFR allowed? Is there disk
+for a heap dump?
+
+16
+00:02:37,579 --> 00:02:48,379
+Practice before the outage includes
+checking that the tools exist where the
+process runs, not only that you know their
+names on your laptop. None of this helps
+if the first muscle memory is always
+restart.
+
+17
+00:02:48,499 --> 00:02:59,499
+Restart after you have a dump, a
+recording, or a clear reason that
+continuing is unsafe. Resist the opposite
+failure too: a museum of profilers and no
+sequence.
+
+18
+00:02:59,619 --> 00:03:11,899
+A short playbook beats arguing about
+dashboards while customers wait. Practice
+a simple sequence. Stuck app: thread dump,
+then JFR if you can afford the window,
+then decide on restart.
+
+19
+00:03:12,019 --> 00:03:23,859
+Climbing heap: metrics confirm growth,
+heap dump under load, dominators. Hot CPU:
+async-profiler or JFR CPU view under the
+same load that hurts.
+
+20
+00:03:23,979 --> 00:03:39,019
+Practice in staging or on a game day so
+muscle memory is not invented at 3 a.m.
+Put that playbook next to a concrete
+night. Latency spikes at 2:14. Error rate
+is flat. CPU is elevated on one instance.
+
+21
+00:03:39,139 --> 00:03:52,459
+A thread dump shows most request threads
+waiting on a database socket. JFR confirms
+time in socket reads. Metrics show the
+database failover started at 2:13. Three
+lenses, no restart, a real why.
+
+22
+00:03:52,579 --> 00:04:00,139
+Folklore would have bounced the pod and
+filed "transient issue." If an interview
+asks what you reach for first when an app
+is stuck,
+
+23
+00:04:00,259 --> 00:04:07,099
+say thread dump and/or JFR to see blockers
+— and that restart without capture
+guarantees a repeat incident with less
+data.
+
+24
+00:04:07,219 --> 00:04:14,859
+Offer the correlation habit: metrics for
+timing, dumps for mechanism. We now have
+collectors, leak hunting, and an incident
+toolkit.
+
+25
+00:04:14,979 --> 00:04:22,180
+Step back from the war room: the JIT and
+the allocator still decide whether short-
+lived objects ever become real heap
+pressure.
+
+26
+00:04:22,300 --> 00:04:29,139
+Escape analysis explains why some
+allocations you "see" in source never show
+up the way you expect in profiles.

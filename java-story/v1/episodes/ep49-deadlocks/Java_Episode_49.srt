@@ -1,0 +1,215 @@
+1
+00:00:00,000 --> 00:00:03,303
+Episode Forty-Eight kept state private per thread.
+
+2
+00:00:03,303 --> 00:00:07,994
+Shared resources still need locks — and locks can trap threads forever.
+
+3
+00:00:07,994 --> 00:00:10,901
+Thread A holds lock one, waits for lock two.
+
+4
+00:00:10,901 --> 00:00:13,808
+Thread B holds lock two, waits for lock one.
+
+5
+00:00:13,808 --> 00:00:16,715
+Neither can proceed — classic circular wait.
+
+6
+00:00:16,715 --> 00:00:21,274
+Today — deadlock conditions, detection, avoidance, and lock ordering.
+
+7
+00:00:21,274 --> 00:00:22,911
+Episode Forty-Nine.
+
+8
+00:00:22,911 --> 00:00:26,012
+Deadlocks — Detection and Avoidance.
+
+9
+00:00:26,012 --> 00:00:29,834
+Coffman conditions — all four must hold for a deadlock.
+
+10
+00:00:29,834 --> 00:00:33,795
+Mutual exclusion — at least one resource is non-sharable.
+
+11
+00:00:33,795 --> 00:00:38,242
+Hold and wait — a thread holds a lock while waiting for another.
+
+12
+00:00:38,242 --> 00:00:41,855
+No preemption — locks cannot be forcibly taken away.
+
+13
+00:00:41,855 --> 00:00:46,025
+Circular wait — a cycle of threads each waiting on the next.
+
+14
+00:00:46,025 --> 00:00:49,638
+Break any one condition — and deadlocks cannot form.
+
+15
+00:00:49,638 --> 00:00:53,190
+The dining philosophers — intuitive deadlock story.
+
+16
+00:00:53,190 --> 00:00:56,951
+Five philosophers, five forks — need two forks to eat.
+
+17
+00:00:56,951 --> 00:01:00,503
+Everyone picks left fork, then right — cycle forms.
+
+18
+00:01:00,503 --> 00:01:04,821
+In code — transfer between accounts locking in opposite order.
+
+19
+00:01:04,821 --> 00:01:07,190
+Thread one locks account A then B.
+
+20
+00:01:07,190 --> 00:01:10,672
+Thread two locks B then A — same circular pattern.
+
+21
+00:01:10,672 --> 00:01:13,804
+Detection — find cycles in the wait-for graph.
+
+22
+00:01:13,804 --> 00:01:17,071
+Thread dump on JVM — jstack or kill minus three.
+
+23
+00:01:17,071 --> 00:01:21,428
+Look for BLOCKED threads waiting on monitors held by each other.
+
+24
+00:01:21,428 --> 00:01:25,853
+ThreadMXBean.findDeadlockedThreads returns deadlocked thread IDs.
+
+25
+00:01:25,853 --> 00:01:29,393
+Detection is reactive — the system is already stuck.
+
+26
+00:01:29,393 --> 00:01:33,410
+Use in production monitoring — alert when deadlocks appear.
+
+27
+00:01:33,410 --> 00:01:36,474
+Avoidance — design so deadlocks cannot happen.
+
+28
+00:01:36,474 --> 00:01:40,871
+Lock ordering — always acquire locks in a global consistent order.
+
+29
+00:01:40,871 --> 00:01:45,534
+Try-lock with timeout — back off and retry instead of waiting forever.
+
+30
+00:01:45,534 --> 00:01:49,664
+Lock fewer resources — coarser design or lock-free structures.
+
+31
+00:01:49,664 --> 00:01:54,527
+Banker algorithm — theoretical resource allocation — rarely used in apps.
+
+32
+00:01:54,527 --> 00:01:58,524
+Prevention beats detection — design locks in from the start.
+
+33
+00:01:58,524 --> 00:02:00,296
+Lock ordering in practice.
+
+34
+00:02:00,296 --> 00:02:04,794
+Assign each lock a unique integer ID — always lock lower ID first.
+
+35
+00:02:04,794 --> 00:02:08,951
+For account transfer — lock accounts by ascending hash or ID.
+
+36
+00:02:08,951 --> 00:02:13,586
+ReentrantLock with tryLock and timeout — fail fast under contention.
+
+37
+00:02:13,586 --> 00:02:16,925
+synchronized blocks — same ordering rule applies.
+
+38
+00:02:16,925 --> 00:02:20,878
+Document the order — code review catches violations early.
+
+39
+00:02:20,878 --> 00:02:22,327
+Three common mistakes.
+
+40
+00:02:22,327 --> 00:02:26,082
+One — nested locks in different orders across call paths.
+
+41
+00:02:26,082 --> 00:02:30,627
+Two — calling external code while holding a lock — hidden lock order.
+
+42
+00:02:30,627 --> 00:02:35,238
+Three — ignoring try-lock timeouts — infinite BLOCKED in thread dumps.
+
+43
+00:02:35,238 --> 00:02:39,519
+Also — fine-grained locks without a documented acquisition order.
+
+44
+00:02:39,519 --> 00:02:43,208
+Deadlocks are design bugs — not random runtime glitches.
+
+45
+00:02:43,208 --> 00:02:47,815
+Interview question — what causes deadlock and how do you prevent it?
+
+46
+00:02:47,815 --> 00:02:53,776
+Four Coffman conditions — mutual exclusion, hold-and-wait, no preemption, circular wait.
+
+47
+00:02:53,776 --> 00:02:56,824
+Prevention — consistent global lock ordering.
+
+48
+00:02:56,824 --> 00:03:01,160
+Detection — thread dumps, ThreadMXBean, cycle in wait-for graph.
+
+49
+00:03:01,160 --> 00:03:05,224
+tryLock with timeout — back off instead of blocking forever.
+
+50
+00:03:05,224 --> 00:03:09,018
+Mention dining philosophers or account transfer example.
+
+51
+00:03:09,018 --> 00:03:13,620
+Platform threads block — and blocking under load gets expensive.
+
+52
+00:03:13,620 --> 00:03:15,922
+Episode Fifty — Virtual Threads.
+
+53
+00:03:15,922 --> 00:03:19,517
+Project Loom, pinning, and structured concurrency.
+
+54
+00:03:19,517 --> 00:03:20,524
+See you there.
