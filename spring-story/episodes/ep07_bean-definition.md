@@ -11,23 +11,49 @@
 
 ## Full narration
 
-The container cannot invent beans from thin air. It needs a description of what to build. That description is a bean definition.
+An `ApplicationContext` on refresh does not invent beans from vibes. It reads descriptions — recipes — and materializes objects from them. Those recipes are bean definitions.
 
-Here is the pain this lesson exists to remove. Object graphs assembled with new, lookups, and static holders become untestable and impossible to swap safely.
+Suppose your team needs two `DataSource` beans: one for commands, one for read replicas. Both are the same Java type. If the container only knew "create a DataSource," it could not tell them apart, could not set different JDBC URLs, and could not mark one primary. Or imagine a legacy report generator that must start after the schema-migrator bean finishes. Without metadata for depends-on, startup order becomes race-shaped luck.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Bean Definition.
+When definitions are missing or vague, you get ambiguous injection, wrong property values, or beans that never appear because nothing registered them. The engineer asks: what information does Spring store about a bean before the instance exists?
 
-At a practical level, Bean Definition is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+A `BeanDefinition` is that information. It is not the live object. It is metadata: bean class (or factory method), scope, whether it is lazy, constructor argument values, property values, init and destroy method names, primary flag, depends-on relationships, and role hints. XML `<bean>`, `@Component` stereotypes, and `@Bean` methods all end as bean definitions in a registry. Different authoring styles; one runtime model.
 
-Spring's design choice here is deliberate. Spring’s container owns creation, wiring, and lifecycle so business types can stay plain and testable.
+```java
+AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+DefaultListableBeanFactory registry = context.getDefaultListableBeanFactory();
 
-Once you accept the feature, the next honest question is how it works under the hood. Bean definitions are registered, post-processed, instantiated, injected, and initialized inside the ApplicationContext refresh cycle.
+GenericBeanDefinition writerDs = new GenericBeanDefinition();
+writerDs.setBeanClass(HikariDataSource.class);
+writerDs.setAttribute("role", "writer");
+MutablePropertyValues writerProps = new MutablePropertyValues();
+writerProps.add("jdbcUrl", "jdbc:postgresql://primary/app");
+writerProps.add("username", "app");
+writerDs.setPropertyValues(writerProps);
+writerDs.setPrimary(true);
+registry.registerBeanDefinition("writerDataSource", writerDs);
 
-As you practice Bean Definition, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+GenericBeanDefinition readerDs = new GenericBeanDefinition();
+readerDs.setBeanClass(HikariDataSource.class);
+MutablePropertyValues readerProps = new MutablePropertyValues();
+readerProps.add("jdbcUrl", "jdbc:postgresql://replica/app");
+readerProps.add("username", "app_ro");
+readerDs.setPropertyValues(readerProps);
+registry.registerBeanDefinition("readerDataSource", readerDs);
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+context.refresh();
 
-Today we walked through Bean Definition inside Phase 1 — Spring Fundamentals. The next natural question is waiting in Episode 08 — Bean Scopes.
+DataSource primary = context.getBean(DataSource.class); // writer — marked primary
+DataSource reader = context.getBean("readerDataSource", DataSource.class);
+```
+
+Before `refresh`, the registry holds two definitions and zero pooled connections. During refresh, Spring instantiates from each definition, applies property values, and caches singletons. Type-based lookup for `DataSource` resolves to the primary writer. The reader is still available by name. The definition carried identity and configuration that the class alone could not express.
+
+You rarely register `GenericBeanDefinition` by hand in modern apps — component scanning and `@Bean` methods do it — but understanding definitions explains otherwise mysterious behavior. Why does a `@Bean` method name become the default bean name? Because the definition's id came from the method. Why does `@Lazy` change startup? Because the definition's lazy flag changed. Why do `BeanFactoryPostProcessor`s feel powerful? Because they rewrite definitions before any instance exists.
+
+Do not confuse the definition with the singleton instance. Changing a field on a live bean does not change the recipe. Conversely, editing XML or Java config changes definitions on the next refresh, not the heap objects already created. Another trap: assuming every Java class in the project automatically has a definition. Only what you register — scan, `@Bean`, or XML — becomes a bean.
+
+Definitions answer what to build and with which settings. They also carry a quiet field you will feel the moment shared mutable state appears: scope. How many instances should this definition produce — one for the whole container, one per request, or a fresh object every lookup? That question is bean scopes, and it is waiting as soon as your recipe is more than a class name.
 
 ## Source attribution
 

@@ -11,23 +11,51 @@
 
 ## Full narration
 
-A bean is not only created. It is initialized, ready, used, and eventually destroyed. Lifecycle hooks exist because production needs that control.
+Scope told us how many instances exist. Lifecycle tells us what Spring does to each instance on the way in — and on the way out.
 
-Here is the pain this lesson exists to remove. Object graphs assembled with new, lookups, and static holders become untestable and impossible to swap safely.
+Picture a `MarketDataClient` that opens a WebSocket during construction and registers a JVM shutdown hook in a field initializer. In tests, contexts start and stop repeatedly. Sockets leak. Hooks pile up. Or the opposite failure: initialization that needs an injected collaborator runs in the constructor before injection finishes, so you read a null repository and blame Spring for "not wiring." The real issue is timing. Construction, dependency population, and custom init are different phases.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Bean Lifecycle.
+Without a clear lifecycle, teams sprinkle startup logic in constructors, static blocks, and `@PostConstruct` with no shared model of order. Destroy logic is forgotten until file handles and thread pools outlive the context. The practical question is: in what order does Spring bring a bean to life, and where can I safely run custom setup and teardown?
 
-At a practical level, Bean Lifecycle is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+Spring's bean lifecycle for a typical singleton is a sequence. Instantiate the object. Populate properties and inject collaborators. Call Aware callbacks such as `BeanNameAware` or `ApplicationContextAware` if implemented. Let `BeanPostProcessor`s wrap or decorate the instance — this is where AOP proxies often appear. Invoke initialization: `@PostConstruct`, `InitializingBean.afterPropertiesSet`, or a custom init method from the definition. The bean is ready for use. On context close, run destroy: `@PreDestroy`, `DisposableBean.destroy`, or a custom destroy method.
 
-Spring's design choice here is deliberate. Spring’s container owns creation, wiring, and lifecycle so business types can stay plain and testable.
+```java
+@Component
+public class MarketDataClient implements DisposableBean {
+    private final MeterRegistry meters;
+    private WebSocketSession session;
 
-Once you accept the feature, the next honest question is how it works under the hood. Bean definitions are registered, post-processed, instantiated, injected, and initialized inside the ApplicationContext refresh cycle.
+    public MarketDataClient(MeterRegistry meters) {
+        this.meters = meters;
+        // constructor: only store dependencies — do not open the socket yet
+    }
 
-As you practice Bean Lifecycle, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    @PostConstruct
+    void connect() throws Exception {
+        session = WebSocketClient.connect("wss://feeds.example/quotes");
+        meters.counter("marketdata.connects").increment();
+    }
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+    public Quote latest(String symbol) {
+        return session.requestQuote(symbol);
+    }
 
-Today we walked through Bean Lifecycle inside Phase 1 — Spring Fundamentals. The next natural question is waiting in Episode 10 — Configuration Styles.
+    @Override
+    public void destroy() throws Exception {
+        if (session != null) {
+            session.close();
+        }
+    }
+}
+```
+
+Follow one refresh. Spring constructs `MarketDataClient` with a real `MeterRegistry`. Injection is done before `@PostConstruct`, so `connect` can use `meters` safely. The socket opens once the bean is otherwise wired. While the context runs, `latest` uses the live session. On `context.close()`, `destroy` closes the socket. Move `connect` into the constructor and you either cannot use injected collaborators yet or you open resources before the container finished wiring — both are lifecycle mistakes.
+
+`BeanPostProcessor`s sit in that sequence for a reason. If you log `this.getClass()` inside `@PostConstruct` and see a CGLIB proxy, a post-processor already wrapped you. Initialization methods still run on the underlying instance according to Spring's rules, but understanding the phase order stops a lot of "why is my aspect missing?" confusion.
+
+A lifecycle-specific misconception is treating the constructor as the init hook for anything that needs collaborators or that might throw checked startup failures you want Spring to manage uniformly. Another is assuming prototype beans get the same destroy care as singletons — they do not; Spring does not track prototypes for full destruction the same way.
+
+Once you can place init and destroy on the timeline, another authoring question appears. How should a team express all of this configuration — XML documents, stereotype annotations on classes, or Java `@Configuration` classes? Those configuration styles are the next fork in the road.
 
 ## Source attribution
 

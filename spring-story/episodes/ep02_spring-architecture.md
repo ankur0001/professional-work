@@ -11,36 +11,41 @@
 
 ## Full narration
 
-Once you know why Spring exists, the next question is almost unavoidable: what pieces make up Spring itself?
+Episode One left us with a promise: Spring assembles an object graph so your domain can stay plain Java. That promise only makes sense if you know what "Spring" actually is on the classpath — because Spring is not one giant JAR that does everything.
 
-Here is the pain this lesson exists to remove. Problem Statement Monolithic "framework JAR" dependencies cause classpath bloat and version skew. Without modular architecture, a REST API might accidentally pull ORM, JMS, and SOAP stacks. Spring's layered modules let libraries depend only on spring-context , not the entire web stack.
+Picture a team shipping a nightly inventory reconciliation job. The job needs a container for wiring repositories and a mail client. Someone adds a dependency named vaguely "spring" and suddenly the build pulls web MVC, servlet APIs, and half a messaging stack the batch process will never call. Classpath size climbs. Version alignment gets fragile. Onboarding engineers cannot tell which modules are load-bearing and which arrived by accident. The failure mode is not a missing annotation. It is modular blindness.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Spring Architecture.
+So an engineer asks a precise question: which Spring modules do we actually depend on, and what job does each layer own?
 
-At a practical level, Spring Architecture is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+Spring Framework answers with a layered module architecture. At the center sits the core container — `spring-core`, `spring-beans`, and `spring-context`. That trio is where bean definitions, factories, and the application context live. Around it, optional modules attach when you need them: `spring-aop` for cross-cutting proxies, `spring-web` and `spring-webmvc` for HTTP, `spring-jdbc` / `spring-orm` / `spring-tx` for data access and transactions, `spring-test` for test support. You compose a stack the way you compose a meal — take the base, add only the courses you will eat.
 
-Spring's design choice here is deliberate. Architectural styles give teams a shared language for boundaries, dependencies, and change.
-
-Once you accept the feature, the next honest question is how it works under the hood. Dependency direction and boundary rules decide what can know about what — and what stays replaceable.
-
-Let's make this concrete with a small example you can read aloud and still follow.
+That modularity is the architecture lesson. A REST API can depend on `spring-webmvc` plus the container. A pure domain service library can depend on `spring-context` alone. A messaging worker can skip MVC entirely. Dependency direction matters: higher-level modules may rely on the container, but your business code should not sprawl into every Spring package just because it is available.
 
 ```java
-public class OrderService {
- private final PaymentGateway gateway = new StripePaymentGateway(
- System.getenv("STRIPE_KEY") // fails in tests, hard to mock
- );
- private final OrderRepository repo = new JdbcOrderRepository(
- DriverManager.getConnection(...) // untestable, no pool
- );
+// Batch job: container + JDBC only — no web stack required
+@Configuration
+@ComponentScan("com.acme.inventory")
+public class InventoryBatchConfig {
+
+    @Bean
+    DataSource dataSource() {
+        HikariDataSource ds = new HikariDataSource();
+        ds.setJdbcUrl("jdbc:postgresql://db/inventory");
+        return ds;
+    }
+
+    @Bean
+    JdbcTemplate jdbcTemplate(DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
+    }
 }
 ```
 
-Read it top to bottom once. Notice what your code declares versus what the framework takes over. The point of Spring is rarely "more annotations." The point is fewer decisions you must reinvent on every project.
+When this configuration boots inside an `AnnotationConfigApplicationContext`, Spring loads container modules and JDBC support. It does not invent a `DispatcherServlet`. The architecture is doing work by absence: unused modules stay off the classpath, so the runtime stays honest about what the process is.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+People often treat "Spring architecture" as a slide of colored boxes to memorize for interviews. Boxes without dependency stories are decoration. Another trap is assuming Boot starters erase the need to understand modules. Starters choose modules for you; they do not change what each module is for. When a transitive dependency surprises you, module literacy is how you diagnose it.
 
-Today we walked through Spring Architecture inside Phase 1 — Spring Fundamentals. The next natural question is waiting in Episode 03 — IoC (Inversion of Control).
+Hold the mental map: core container first, then AOP, data, web, and test as optional rings. Once that map is clear, a deeper question appears. Inside the container modules themselves — who actually owns creating objects and deciding when they live? That ownership flip is Inversion of Control, and it is the next idea we need.
 
 ## Source attribution
 

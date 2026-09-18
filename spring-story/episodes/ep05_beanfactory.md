@@ -11,23 +11,40 @@
 
 ## Full narration
 
-Dependency injection needs a place to live. At the lowest level of Spring, that place is BeanFactory.
+Dependency Injection told us collaborators arrive from the outside. That sentence still hides a machine. Somewhere, Spring must store bean recipes and hand back instances when asked. At the lowest public API, that machine is `BeanFactory`.
 
-Here is the pain this lesson exists to remove. Object graphs assembled with new, lookups, and static holders become untestable and impossible to swap safely.
+Imagine you are debugging a CLI tool that embeds Spring only for wiring. You do not need HTTP events or message bundles yet. You need one honest question answered: given a name or a type, can the container produce the object? Without a factory abstraction, every module invents its own registry — static maps, service locators, thread-local holders. Those registries drift. Tests fight globals. Shutdown order becomes folklore.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is BeanFactory.
+What breaks without a bean factory is consistency. Two libraries register "the" `Clock` differently. Lookups disagree on lazy versus eager. You cannot ask a single API "do you have this bean?" across the process.
 
-At a practical level, BeanFactory is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+So the engineer asks: what is the minimal Spring interface that can create and retrieve managed objects?
 
-Spring's design choice here is deliberate. Spring’s container owns creation, wiring, and lifecycle so business types can stay plain and testable.
+`BeanFactory` is that interface. It is the root of the Spring container hierarchy. You register bean definitions with it — or load them through a reader — then call `getBean`. Implementations such as `DefaultListableBeanFactory` hold the definition map, resolve dependencies, and cache singletons. Historically, a raw `BeanFactory` is lazy: it does not create singletons until something requests them. That laziness is useful for constrained environments and for understanding the plumbing without the full application runtime.
 
-Once you accept the feature, the next honest question is how it works under the hood. Bean definitions are registered, post-processed, instantiated, injected, and initialized inside the ApplicationContext refresh cycle.
+```java
+DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
 
-As you practice BeanFactory, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+GenericBeanDefinition paymentDef = new GenericBeanDefinition();
+paymentDef.setBeanClass(StripePaymentClient.class);
+factory.registerBeanDefinition("paymentClient", paymentDef);
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+GenericBeanDefinition checkoutDef = new GenericBeanDefinition();
+checkoutDef.setBeanClass(CheckoutService.class);
+checkoutDef.getConstructorArgumentValues()
+        .addIndexedArgumentValue(0, new RuntimeBeanReference("paymentClient"));
+factory.registerBeanDefinition("checkoutService", checkoutDef);
 
-Today we walked through BeanFactory inside Phase 1 — Spring Fundamentals. The next natural question is waiting in Episode 06 — ApplicationContext.
+CheckoutService checkout = factory.getBean("checkoutService", CheckoutService.class);
+checkout.checkout(Cart.sample());
+```
+
+Step through the run. First the factory only holds metadata — two definitions, no instances. The `getBean` call for `checkoutService` forces instantiation. Spring sees the constructor needs `paymentClient`, creates that bean, injects it, returns `CheckoutService`. A second `getBean("checkoutService")` returns the same singleton instance from the singleton cache. You just watched the factory's core contract: define, resolve, cache, return.
+
+Most applications never touch `DefaultListableBeanFactory` directly. They use `ApplicationContext`, which builds on this foundation. Still, when logs say "bean factory" or you read container source, this is the floor. Misread it as "the class I inject into services." You almost never inject `BeanFactory` into domain code; doing so recreates the service-locator smell DI was meant to erase. Reach for it in infrastructure, bootstrapping, or learning the model — not inside `OrderService`.
+
+Another misconception: thinking `getBean` by string name is the normal application style. Names matter inside the container, but application code should prefer type-safe injection. String lookups are for the container's internals and for rare dynamic cases.
+
+`BeanFactory` can create beans. Production systems usually want more on day one: environment abstraction, event publication, internationalization, and eager failure if a singleton cannot start. That richer runtime is `ApplicationContext` — and it is the natural next layer above this factory floor.
 
 ## Source attribution
 

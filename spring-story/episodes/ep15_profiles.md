@@ -11,23 +11,52 @@
 
 ## Full narration
 
-One codebase, many environments. Profiles exist because production, staging, and local setup cannot share every bean blindly.
+`@Bean` methods made it easy to publish a payment client. They also made it easy to publish the wrong payment client in the wrong environment.
 
-Here is the pain this lesson exists to remove. Object graphs assembled with new, lookups, and static holders become untestable and impossible to swap safely.
+A common incident: local development uses `FakePaymentClient` that records charges in memory. Someone forgets to gate it. The production JAR still scans that `@Primary` fake, or both fake and Stripe beans load and ambiguity crashes boot — if you are lucky. If you are unlucky, the fake wins and real orders never charge. Another team copies `application.properties` and uses `if (env.equals("prod"))` inside a `@Bean` method. It works until a staging hostname does not match the string table and silently selects the local branch.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Profiles.
+What goes wrong is environment-specific wiring expressed as ad-hoc conditionals instead of a first-class container feature. The engineer asks: how can one codebase activate different beans for local, test, and production without scattering `if` statements?
 
-At a practical level, Profiles is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+Spring profiles answer that. A profile is a named group of definitions. Mark a `@Configuration`, `@Component`, or `@Bean` method with `@Profile("prod")` or `@Profile("!prod")`. Activate profiles with `spring.profiles.active`, environment variables, JVM flags, or programmatically on the context. Only definitions matching the active profiles — plus beans with no profile restriction — register. The same binary ships; the active profile set changes the object graph.
 
-Spring's design choice here is deliberate. Spring’s container owns creation, wiring, and lifecycle so business types can stay plain and testable.
+```java
+@Configuration
+public class PaymentClientsConfig {
 
-Once you accept the feature, the next honest question is how it works under the hood. Bean definitions are registered, post-processed, instantiated, injected, and initialized inside the ApplicationContext refresh cycle.
+    @Bean
+    @Profile("local")
+    PaymentClient fakePaymentClient() {
+        return new FakePaymentClient();
+    }
 
-As you practice Profiles, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    @Bean
+    @Profile("prod")
+    PaymentClient stripePaymentClient(Environment env) {
+        return new StripePaymentClient(env.getRequiredProperty("stripe.api-key"));
+    }
+}
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+@Service
+public class CheckoutService {
+    private final PaymentClient payments;
 
-Today we walked through Profiles inside Phase 1 — Spring Fundamentals. The next natural question is waiting in Episode 16 — Environment.
+    public CheckoutService(PaymentClient payments) {
+        this.payments = payments;
+    }
+
+    public Receipt checkout(Cart cart) {
+        return Receipt.of(payments.charge(cart.total()));
+    }
+}
+```
+
+Run with `spring.profiles.active=local` and the context registers `fakePaymentClient` only. `CheckoutService` injects the fake. Run with `prod` and Stripe is the sole `PaymentClient`. Activate neither and injection fails — which is often what you want, rather than a silent default to fake. Profiles also stack: `spring.profiles.active=prod,eu-west` can combine environment and region-specific beans when you design definitions that way.
+
+Use profiles for beans and configuration classes that truly differ by environment: stubs versus real gateways, in-memory stores versus clustered caches. Prefer property values for simple scalars like URLs when the bean type stays the same — profiles for shape changes, properties for value changes. That division keeps profile counts from exploding.
+
+A profile-specific misconception is stuffing every tiny property difference into a new profile name until nobody remembers what `prod-east-canary-2` means. Another is relying on a default profile that includes production-capable beans while developers forget to set `local`, so laptops accidentally talk to shared systems.
+
+Profiles choose which beans exist. They do not, by themselves, explain where `stripe.api-key` is read from, or which property source wins when the same key appears in a file, an env var, and a command-line flag. That layered property resolution lives in Spring's `Environment` abstraction — the next episode.
 
 ## Source attribution
 
