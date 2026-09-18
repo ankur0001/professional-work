@@ -11,23 +11,80 @@
 
 ## Full narration
 
-JPA is the API. Hibernate is often the engine. Internals matter when performance stops being theoretical.
+Last episode we mapped a `Product` and called `productRepository.save`. The method returned. A row appeared. That can feel like magic — and magic is a terrible mental model for production databases.
 
-Here is the pain this lesson exists to remove. Object-relational work without discipline produces N+1 queries, lazy-load surprises, and SQL you only discover when production latency spikes.
+So peel the stack. Spring Data's repository proxy receives `save`. If the entity has no id, the call typically reaches `EntityManager.persist`. If it already has an id and is treated as detached or existing, the path may go through `merge` or an update flush. Either way, the JPA facade hands work to Hibernate — the provider that owns Session, dirty checking, SQL generation, and the dialect for your database.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Hibernate Internals.
+Think of Hibernate as three cooperating ideas. First, a metamodel: every `@Entity` becomes a persister that knows the table, columns, id generator, and associations. Second, a Session (Hibernate's richer cousin of `EntityManager`): a unit of work that holds managed instances and queues SQL until flush. Third, a JDBC batching and dialect layer that turns those queued actions into concrete statements for Postgres, MySQL, or whatever you configured.
 
-At a practical level, Hibernate Internals is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+Watch a create path with an order line item — still entity and database, not bean wiring theater.
 
-Spring's design choice here is deliberate. Spring Data and JPA give a productive persistence model while still letting you drop to explicit queries when performance demands it.
+```java
+@Entity
+@Table(name = "order_lines")
+public class OrderLine {
 
-Once you accept the feature, the next honest question is how it works under the hood. History Hibernate Internals evolved across Spring releases as annotation support matured (Spring 2.5+ annotations, Spring 3.0 @Configuration , Spring 4 @Conditional , Spring Boot externalized config). Early versions relied heavily on DTD/XSD XML; modern Boot apps rarely ship applicationContext.xml , but the same underlying SessionFactory powers both styles. Rod Johnson's original container was XML-centric; annotation and Java-config were responses to configuration fatigue — the same pain Boot later addressed with conventions.
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-As you practice Hibernate Internals, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    @Column(nullable = false)
+    private String sku;
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+    @Column(nullable = false)
+    private int quantity;
 
-Today we walked through Hibernate Internals inside Phase 4 — Spring Data JPA. The next natural question is waiting in Episode 40 — Entity Lifecycle.
+    @Column(nullable = false)
+    private BigDecimal unitPrice;
+
+    protected OrderLine() {}
+
+    public OrderLine(String sku, int quantity, BigDecimal unitPrice) {
+        this.sku = sku;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+    }
+}
+
+// inside a @Transactional boundary
+OrderLine line = new OrderLine("SKU-42", 2, new BigDecimal("19.99"));
+entityManager.persist(line);
+// no INSERT yet — only scheduled
+entityManager.flush();
+// Hibernate: INSERT INTO order_lines (sku, quantity, unit_price) VALUES (?, ?, ?)
+```
+
+`persist` does not mean "SQL right now." It means "make this instance managed and schedule an insert for flush." Flush happens before query execution when needed, on explicit `flush()`, and typically before commit. That delay is intentional: Hibernate can reorder statements, batch inserts, and use the persistence context as a write-behind cache.
+
+Updates ride a different trick. Load a managed `OrderLine`, change `quantity`, and do nothing else. On flush, Hibernate compares the current field values to a snapshot taken at load time. If they differ, it emits `UPDATE`. That is dirty checking. You did not call `update`. The Session noticed.
+
+```java
+OrderLine line = entityManager.find(OrderLine.class, 15L);
+line.setQuantity(5);
+// no repository.save required while managed
+entityManager.flush();
+// UPDATE order_lines SET quantity = 5 WHERE id = 15
+```
+
+Under Boot, you rarely inject `Session` directly. You inject repositories or occasionally `EntityManager`. The Session is still there — bound to the transaction by Spring's `JpaTransactionManager` and Hibernate's session context. Open-session-in-view may keep the Session alive for the whole HTTP request in web apps; that choice affects lazy loading later. For internals, remember: one persistence context per unit of work, SQL at flush boundaries.
+
+Id generation shapes SQL timing. `IDENTITY` often forces an early insert to obtain the key. `SEQUENCE` (and Hibernate's pooled optimizers) can defer inserts and batch better. `UUID` assigned in Java needs no database round-trip for the id. Teams that ignore generator choice discover mysterious flush order and batching limits under load.
+
+Enable SQL logging in development when you are learning:
+
+```properties
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+logging.level.org.hibernate.orm.jdbc.bind=TRACE
+```
+
+Those logs are not decoration. They are how you verify that "I updated a field" became one `UPDATE`, not a delete-plus-insert, and that "I loaded an order" did not secretly fire twelve child selects — a problem we will name later as N+1.
+
+People sometimes treat Hibernate as "a SQL generator I should fight with native queries everywhere." Native SQL is a tool, not a lifestyle. The provider earns its keep when dirty checking, cascading, and the unit of work match your domain operations. People also assume `save` always issues SQL immediately. It schedules work; the transaction and flush policy decide when the database sees it.
+
+We opened the engine: metamodel, Session as unit of work, persist versus flush, dirty checking, dialects, and generators. The next gap is sharper. If an entity can be "managed," what are the other states — and what happens when you call `persist`, `merge`, or `remove` on the wrong one?
+
+That is the entity lifecycle — Episode Forty.
 
 ## Source attribution
 

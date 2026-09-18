@@ -11,23 +11,86 @@
 
 ## Full narration
 
-Dynamic queries do not love string concatenation. The Criteria API builds queries as objects.
+JPQL is excellent when the query shape is fixed. Real admin screens are not fixed. A product search might filter by name, by price range, by category, by "only in stock" — any subset of those, depending on what the user typed. Building that with string-concatenated JPQL is fragile. The Criteria API builds the same query with Java objects: types, predicates, and compilers that fail before the database does.
 
-Here is the pain this lesson exists to remove. Object-relational work without discipline produces N+1 queries, lazy-load surprises, and SQL you only discover when production latency spikes.
+Criteria code is verbose. That verbosity is the point — every join and predicate is explicit.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Criteria API.
+```java
+@Repository
+public class ProductSearchRepository {
 
-At a practical level, Criteria API is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+    private final EntityManager entityManager;
 
-Spring's design choice here is deliberate. Spring Data and JPA give a productive persistence model while still letting you drop to explicit queries when performance demands it.
+    public ProductSearchRepository(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
-Once you accept the feature, the next honest question is how it works under the hood. Entities move through lifecycle states inside a persistence context; flush and commit translate the unit of work into SQL.
+    public List<Product> search(ProductFilter filter) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Product> query = cb.createQuery(Product.class);
+        Root<Product> product = query.from(Product.class);
 
-As you practice Criteria API, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+        List<Predicate> predicates = new ArrayList<>();
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+        if (filter.nameContains() != null && !filter.nameContains().isBlank()) {
+            predicates.add(cb.like(
+                    cb.lower(product.get("name")),
+                    "%" + filter.nameContains().toLowerCase() + "%"));
+        }
+        if (filter.minPrice() != null) {
+            predicates.add(cb.greaterThanOrEqualTo(product.get("price"), filter.minPrice()));
+        }
+        if (filter.maxPrice() != null) {
+            predicates.add(cb.lessThanOrEqualTo(product.get("price"), filter.maxPrice()));
+        }
+        if (Boolean.TRUE.equals(filter.inStockOnly())) {
+            predicates.add(cb.greaterThan(product.get("stockQuantity"), 0));
+        }
 
-Today we walked through Criteria API inside Phase 4 — Spring Data JPA. The next natural question is waiting in Episode 46 — Specifications.
+        query.select(product)
+                .where(predicates.toArray(Predicate[]::new))
+                .orderBy(cb.asc(product.get("name")));
+
+        return entityManager.createQuery(query).getResultList();
+    }
+}
+
+public record ProductFilter(
+        String nameContains,
+        BigDecimal minPrice,
+        BigDecimal maxPrice,
+        Boolean inStockOnly) {}
+```
+
+Follow the pieces. `CriteriaBuilder` factories predicates and expressions. `CriteriaQuery` is the query definition. `Root` is the from clause — here `Product`. Each optional filter adds a `Predicate` only when present. Empty predicate list means "all products," which is a conscious product decision, not an accident of a broken WHERE clause.
+
+String attribute names like `product.get("price")` still fail at runtime if you typo. Metamodel classes generate `Product_.price` static fields for compile-time safety:
+
+```java
+predicates.add(cb.greaterThanOrEqualTo(product.get(Product_.price), filter.minPrice()));
+```
+
+Enable JPA metamodel generation in your build when Criteria becomes a regular tool. The first time a refactor renames `price` and the metamodel breaks the compile, you will not miss string paths.
+
+Joins work the same object way:
+
+```java
+CriteriaQuery<Order> query = cb.createQuery(Order.class);
+Root<Order> order = query.from(Order.class);
+Join<Order, OrderLine> line = order.join("lines", JoinType.INNER);
+predicates.add(cb.equal(line.get("sku"), sku));
+query.select(order).distinct(true).where(...);
+```
+
+You can `fetch` with Criteria too (`order.fetch("lines", JoinType.LEFT)`) when the use case needs initialized collections. Same rule as JPQL: fetch when you will touch children, not by default on every search.
+
+Criteria also powers dynamic updates and bulk deletes, though teams usually keep those as JPQL for readability. Where Criteria dominates is search forms, report filters, and multi-tenant predicates composed from several optional clauses.
+
+The downside is ceremony. For a one-line `findByEmail`, a derived query wins. For a fixed three-way join everyone knows by heart, JPQL in `@Query` wins. Reach for Criteria when the predicate set is data-dependent. If you write Criteria for every repository method "for consistency," you trade clarity for uniformity.
+
+Even Criteria repositories tend to accumulate duplicated predicate blocks — "active customer," "in stock," "placed after." Spring Data Specifications wrap Criteria predicates into composable, reusable pieces that plug into `JpaSpecificationExecutor`.
+
+That composition is Episode Forty-Six.
 
 ## Source attribution
 

@@ -11,23 +11,71 @@
 
 ## Full narration
 
-Objects and tables speak different languages. JPA is the translation layer Spring apps usually choose.
+You can ship a REST controller that returns JSON forever and still not have a product. Sooner or later someone asks you to store an order, reload it tomorrow, and update its status without corrupting the row. That is when Java objects meet relational tables — and the mismatch becomes the real work.
 
-Here is the pain this lesson exists to remove. Problem Statement Raw JDBC causes: SQL string concatenation, manual ResultSet mapping, duplicated CRUD per table, no caching, no lazy loading, transaction boundaries scattered in code. JPA + Spring Data JPA provide declarative mapping, repository abstraction, and @Transactional integration.
+Picture a checkout service written with raw JDBC. You open a connection, write `INSERT INTO orders (...)`, then walk a `ResultSet` column by column into an `Order` object. Tomorrow you add a column. Every mapper breaks. You concatenate SQL for filters and hope nobody injects a quote. You copy the same `findById` / `save` / `delete` boilerplate for customers, products, and invoices. Transactions live in try/finally blocks scattered through the service. There is no shared identity for "the same order row I already loaded." There is no lazy association. There is no unit of work — only statements you remember to run.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is JPA Fundamentals.
+That tax is not a Java syntax problem. It is an object-relational problem. Objects have graphs, identity, and lifecycle. Tables have rows, keys, and joins. Something has to translate.
 
-Concept JPA (Java Persistence API) is the Java standard for object-relational mapping (ORM). Spring Data JPA builds on JPA + Hibernate to eliminate boilerplate DAO/repository code. Together they map Java objects (entities) to relational database tables and back.
+JPA — the Jakarta Persistence API, still widely called Java Persistence API — is that standard translation layer. You map a class to a table with annotations. An `EntityManager` (or Spring Data repository sitting on top of one) loads and saves those entities. Hibernate is the most common JPA provider in Spring apps: it implements the specification and generates the SQL. Spring Data JPA then removes the DAO boilerplate so you declare an interface and get a working repository at runtime.
 
-Spring's design choice here is deliberate. Why Spring Provides This Feature Spring Data JPA generates repository implementations at runtime — no OrderDaoImpl boilerplate. Integrates with Spring TX ( @Transactional ), validation, and Boot auto-config for datasource + EMF.
+Hold the layers clear, because interviews mash the names together. JPA is the API and mapping rules. Hibernate is the engine that talks to the database. Spring Data JPA is the Spring abstraction that generates repository implementations and plugs into Spring transactions. Boot wires the datasource, `EntityManagerFactory`, and transaction manager when `spring-boot-starter-data-jpa` is on the classpath. You can use Hibernate without Spring. In this series we stay in the Spring Boot path, because that is how most teams ship.
 
-Once you accept the feature, the next honest question is how it works under the hood. Internal Working Boot auto-config: HibernateJpaAutoConfiguration creates LocalContainerEntityManagerFactoryBean , JpaTransactionManager , and scans @Entity classes. SimpleJpaRepository is the base impl for all repos. EntityManagerFactory (singleton) creates EntityManager (per transaction or request). Container Refresh Sequence (High Level) Application startup
+Make the before-and-after concrete with a catalog entity — not a service that only wires beans.
 
-As you practice JPA Fundamentals, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+```java
+@Entity
+@Table(name = "products")
+public class Product {
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-Today we walked through JPA Fundamentals inside Phase 4 — Spring Data JPA. The next natural question is waiting in Episode 39 — Hibernate Internals.
+    @Column(nullable = false, length = 120)
+    private String sku;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
+    private BigDecimal price;
+
+    protected Product() {
+        // JPA requires a no-arg constructor
+    }
+
+    public Product(String sku, String name, BigDecimal price) {
+        this.sku = sku;
+        this.name = name;
+        this.price = price;
+    }
+
+    // getters...
+}
+```
+
+Read that mapping slowly. `@Entity` marks a persistence type. `@Table` names the table when it differs from the class. `@Id` declares the primary key; `@GeneratedValue` lets the database assign it. Columns become fields. The protected no-arg constructor is for the provider — your domain still constructs with a real factory or public constructor. When Hibernate loads a row, it materializes a `Product` instance. When you change `price` inside a transaction and flush, Hibernate issues `UPDATE`. You did not write the SQL string.
+
+Spring Data JPA then shrinks the repository side:
+
+```java
+public interface ProductRepository extends JpaRepository<Product, Long> {
+    Optional<Product> findBySku(String sku);
+}
+```
+
+No `ProductDaoImpl`. At startup, Spring Data creates a proxy backed by `SimpleJpaRepository`. `save`, `findById`, `findAll`, and `delete` are already there. Method names like `findBySku` become queries derived from the property path. Under the hood the repository still uses an `EntityManager` bound to the current transaction.
+
+Boot's auto-configuration is the quiet hero here. With a JDBC driver and the JPA starter present, Boot builds a `DataSource`, a Hibernate `EntityManagerFactory`, and a `JpaTransactionManager`. Entity scanning picks up `@Entity` classes. You override when your schema or dialect is special. You do not hand-assemble the factory for the common case.
+
+One failure mode to name early: treating JPA as "annotations until the red squiggles vanish." If you only memorize `@Entity` and `JpaRepository`, you do not own persistence yet. The idea is a mapped domain model with identity and a unit of work that translates field changes into SQL. Another failure mode is writing entities that are anemic copies of every table column with no thought for keys, nullability, or invariants — then wondering why the database fills with garbage.
+
+So we answered why JPA shows up after MVC: objects and tables need a disciplined bridge. We separated JPA, Hibernate, and Spring Data JPA. We mapped a `Product` and declared a repository without a hand-written DAO.
+
+But annotations alone do not explain what happens when you call `save`. Who builds the SQL? Who tracks which fields changed? Who decides when an `INSERT` becomes an `UPDATE`?
+
+That pressure takes us into Hibernate's internals — Episode Thirty-Nine.
 
 ## Source attribution
 
