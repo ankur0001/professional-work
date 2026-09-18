@@ -11,23 +11,57 @@
 
 ## Full narration
 
-Trusting request bodies is how bad data enters. Validation belongs at the boundary.
+A request body that parses as JSON can still be garbage. Validation belongs at the API boundary so bad data never becomes half-written state.
 
-Here is the pain this lesson exists to remove. Without a clear request pipeline, encoding, security, exception handling, and routing get duplicated across servlets and controllers.
+Without bean validation, controllers grow hand-written checks: null tests, length tests, regex tests, nested `if` blocks that return ad-hoc error maps. Rules drift between endpoints. Services re-check the same fields because they do not trust the controller. Spring’s integration with Jakarta Bean Validation gives you declarative constraints on DTOs and a standard failure path when those constraints fail.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Validation.
+The pattern is simple to say and easy to miswire. Annotate the DTO. Put `@Valid` on the `@RequestBody` parameter. Let the framework run the validator before your method body executes. When validation fails, Spring throws `MethodArgumentNotValidException` instead of calling your method. You then map that exception to a 400-level response — often through `@ExceptionHandler` or a `@ControllerAdvice`, which the next episode owns in depth.
 
-At a practical level, Validation is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+```java
+public class CreateOrderRequest {
 
-Spring's design choice here is deliberate. Spring MVC centralizes the HTTP pipeline so controllers stay thin and cross-cutting request concerns stay consistent.
+    @NotNull
+    private Long customerId;
 
-Once you accept the feature, the next honest question is how it works under the hood. DispatcherServlet receives the request, resolves a handler, runs interceptors/advice, invokes the controller, and renders the response.
+    @NotBlank
+    private String sku;
 
-As you practice Validation, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    @Min(1)
+    private int quantity;
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+    // getters/setters or a compact constructor + accessors
+}
 
-Today we walked through Validation inside Phase 3 — Spring MVC. The next natural question is waiting in Episode 33 — Exception Handling.
+@RestController
+@RequestMapping("/orders")
+public class OrderController {
+
+    @PostMapping
+    public ResponseEntity<OrderResponse> create(
+            @Valid @RequestBody CreateOrderRequest body) {
+        // only runs when constraints pass
+        return ResponseEntity.ok(orders.create(body));
+    }
+}
+```
+
+Constraints compose. `@NotNull` rejects a missing reference. `@NotBlank` rejects null, empty, and whitespace-only strings. `@Min` and `@Max` bound numbers. `@Email`, `@Size`, and `@Pattern` cover common formats. For nested objects, put `@Valid` on the nested field so the cascade continues. For collections of nested DTOs, the same idea applies: validate elements, not only the list reference.
+
+Boot usually auto-configures a `LocalValidatorFactoryBean` when a validation implementation such as Hibernate Validator is on the classpath — typically via `spring-boot-starter-validation`. If `@Valid` appears to do nothing, check that dependency first. Also distinguish `@Validated` on a class (method-level validation with groups) from `@Valid` on a parameter (argument validation for MVC binding). For request bodies, `@Valid` on the parameter is the everyday tool.
+
+When `MethodArgumentNotValidException` fires, the exception carries a `BindingResult` with field errors: which property failed, which code, which default message. That is gold for building a consistent error payload — `field`, `rejectedValue`, `message` — instead of a stack trace. Do not catch it inside every controller method. Centralize the translation once.
+
+Groups and custom constraints appear when the same DTO is used in more than one operation. Create might require `sku`; patch might allow partial fields. Validation groups let you activate different constraint sets. Custom annotations backed by a `ConstraintValidator` capture domain rules that `@Pattern` cannot express cleanly — for example, "quantity must be a multiple of pack size." Keep those rules readable; a validator that opens a database connection on every request is usually the wrong layer for uniqueness checks that belong in the service transaction.
+
+Also separate binding errors from validation errors in your head. Type mismatches — sending `"abc"` for an `int` — fail during binding and surface as related but distinct exceptions. Constraint violations assume the value was bound and then judged. Clients experience both as "bad request," but your logs and tests should know which stage failed.
+
+A topic-specific misconception is validating only in the service and calling the controller "done." Services should still protect invariants, but transport-level shape belongs at the edge so HTTP clients get fast, uniform 400s. Another misconception is using `@Valid` without a validator on the classpath and concluding "annotations are decorative." A third is returning 200 with an errors array in the body for constraint failures — that fights every HTTP client convention.
+
+So today we put declarative constraints on DTOs, required `@Valid` at the controller parameter, and named `MethodArgumentNotValidException` as the failure signal when the body is structurally wrong.
+
+That raises the broader question: validation is only one failure mode. Controllers and services throw many others — missing resources, conflicts, unexpected bugs. How does Spring turn those exceptions into a coherent HTTP error model instead of a container stack page?
+
+Exception handling is next.
 
 ## Source attribution
 
