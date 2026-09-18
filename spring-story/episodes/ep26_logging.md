@@ -11,23 +11,52 @@
 
 ## Full narration
 
-When production breaks at 2 a.m., logs are often first evidence. Boot’s logging defaults are an operational contract.
+DevTools shortens the restart loop. Logging decides whether each restart — and each production incident — teaches you something or buries you.
 
-Here is the pain this lesson exists to remove. Teams lost days to version alignment, manual datasource config, WAR deployment friction, and missing health endpoints before the first useful API was live.
+Every Boot app logs. The failure mode is not "no logs." It is the wrong shape of logs: Hibernate SQL at DEBUG in production melting disks, your package silent at ERROR while a payment bug hides, or three logging facades fighting because someone added Log4j config beside Logback beside `System.out`. Teams also hard-code levels in code and then redeploy to "turn on debug."
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Logging.
+So how does Boot want you to configure loggers, levels, and formats — centrally, externally, and without fighting the starter defaults?
 
-At a practical level, Logging is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+Spring Boot's logging starter (pulled in transitively by other starters) sets up a default logging system — typically Logback for servlet stacks — with console output and sensible root levels. You configure through `application.yml` / properties, environment-specific overrides, or a `logback-spring.xml` when you need full control. Prefer Boot's `logging.level.*` keys for everyday work. Use the XML (or Log4j2 config) when you need custom appenders, JSON encoding, or intricate routing.
 
-Spring's design choice here is deliberate. Boot keeps Framework power and removes repetitive platform wiring through auto-configuration, starters, and an executable deployment model.
+```yaml
+logging:
+  level:
+    root: INFO
+    com.acme.orders: DEBUG
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
+```
 
-Once you accept the feature, the next honest question is how it works under the hood. Startup follows Environment → context creation → auto-configuration import → refresh → embedded server → readiness events.
+Runtime behavior is immediate on the next log event after Environment bind — and with Actuator or Cloud tooling you can sometimes adjust levels at runtime, but start by getting file-based config right. Your application code should log through SLF4J:
 
-As you practice Logging, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+```java
+@Service
+public class OrderService {
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+    public Order place(Cart cart) {
+        log.debug("placing order for cart {}", cart.id());
+        try {
+            return repo.save(Order.from(cart));
+        } catch (DataAccessException ex) {
+            log.error("failed to persist order for cart {}", cart.id(), ex);
+            throw ex;
+        }
+    }
+}
+```
 
-Today we walked through Logging inside Phase 2 — Spring Boot. The next natural question is waiting in Episode 27 — Profiles.
+Notice the facade: `LoggerFactory` from SLF4J, not a direct Logback API in domain code. Boot chooses the backend. You keep the facade so tests and future backend swaps stay calm. Log placeholders use `{}` — not string concatenation — so DEBUG messages skip formatting when the level is disabled.
+
+Profile-specific logging is a common production pattern. Keep `com.acme.orders` at DEBUG in `application-local.yml`, INFO in `application-prod.yml`. Ship correlation-friendly patterns when you later add request IDs. Avoid logging secrets: tokens, passwords, and full card payloads do not belong in INFO lines no matter how helpful they feel during a firefight.
+
+The misconception is configuring logging only inside the IDE console filter and never in the app config — then production looks nothing like your laptop. Another is enabling `org.springframework` at TRACE "temporarily" and leaving it on until the cluster spends its budget on log ingestion. A third is mixing `System.out.println` into services "just for now" until those prints become the only signal anyone trusts.
+
+Levels and packages often need to differ by environment. That is the same profile machinery you met in fundamentals — now applied the Boot way, with `application-{profile}` documents and `spring.profiles.active` as the switch.
+
+Boot profiles are next: activating sets of config and beans for local, test, and prod without forking the codebase.
 
 ## Source attribution
 

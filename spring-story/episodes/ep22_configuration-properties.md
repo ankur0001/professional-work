@@ -11,23 +11,58 @@
 
 ## Full narration
 
-Scattered @Value fields work until configuration becomes a product. Typed configuration properties restore structure.
+Boot already binds dozens of `spring.*` keys into framework objects. Your product has its own settings — payment base URLs, feature flags, retry budgets — and scattering `@Value` across services ages badly.
 
-Here is the pain this lesson exists to remove. Teams lost days to version alignment, manual datasource config, WAR deployment friction, and missing health endpoints before the first useful API was live.
+Watch a codebase rot. One service injects `@Value("${payments.base-url}")`. Another copies the same key with a typo in the default. A third reads a timeout as a String and parses it by hand. Nothing fails at startup. Failures arrive in production when a property is missing or the wrong type. Configuration becomes tribal knowledge instead of a typed contract.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Configuration Properties.
+The question becomes: can we bind a prefix of the Environment into one object, validate it early, and inject that object like any other bean?
 
-At a practical level, Configuration Properties is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+Spring Boot's `@ConfigurationProperties` is that contract. You declare a class — often a record or a simple POJO — with fields that match property names under a prefix. Boot binds relaxed names: `payments.base-url`, `payments.baseUrl`, and `PAYMENTS_BASE_URL` can map to the same field depending on source. Enable the class with `@EnableConfigurationProperties` or annotate it with `@ConfigurationProperties` plus `@Component` / `@ConfigurationPropertiesScan`. Prefer constructor binding for immutability when you can.
 
-Spring's design choice here is deliberate. Boot keeps Framework power and removes repetitive platform wiring through auto-configuration, starters, and an executable deployment model.
+```java
+@ConfigurationProperties(prefix = "payments")
+public record PaymentsProperties(
+    String baseUrl,
+    Duration timeout,
+    boolean resilient
+) {}
+```
 
-Once you accept the feature, the next honest question is how it works under the hood. Startup follows Environment → context creation → auto-configuration import → refresh → embedded server → readiness events.
+```java
+@SpringBootApplication
+@EnableConfigurationProperties(PaymentsProperties.class)
+public class OrdersApplication { }
+```
 
-As you practice Configuration Properties, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+```yaml
+payments:
+  base-url: https://payments.internal/api
+  timeout: 2s
+  resilient: true
+```
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+Wire `PaymentsProperties` into a client. The client no longer knows about property key strings. Tests construct a `PaymentsProperties` directly. At startup, Boot converts `2s` into a `Duration`. Add `spring-boot-starter-validation` and Bean Validation annotations on the properties type, and illegal config can fail fast instead of shipping a null base URL.
 
-Today we walked through Configuration Properties inside Phase 2 — Spring Boot. The next natural question is waiting in Episode 23 — External Configuration.
+```java
+@Service
+public class PaymentsClient {
+    private final PaymentsProperties props;
+    private final RestClient http;
+
+    public PaymentsClient(PaymentsProperties props, RestClient.Builder builder) {
+        this.props = props;
+        this.http = builder.baseUrl(props.baseUrl()).build();
+    }
+}
+```
+
+Compare that to a pile of `@Value` fields. `@Value` is fine for a single one-off. `@ConfigurationProperties` wins when a feature has a cluster of related settings, needs conversion, or should be documented as a group. Boot's own `DataSourceProperties` and server properties use the same idea — your code can follow the same pattern.
+
+The trap is treating properties classes as dumping grounds for every key in the app. Keep prefixes feature-sized: `payments`, `inventory.cache`, `orders.shipping`. Another trap is mutable setters without validation and then mutating the object at runtime until nobody knows the effective config. A third is forgetting relaxed binding rules and declaring "YAML is broken" when the field name simply did not match.
+
+Typed properties still have to come from somewhere outside the JAR when environments differ — files, environment variables, command-line overrides, profile-specific documents.
+
+That outside story is external configuration: precedence, profile files, and how the Environment actually layers sources.
 
 ## Source attribution
 

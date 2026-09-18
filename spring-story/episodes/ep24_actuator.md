@@ -11,23 +11,57 @@
 
 ## Full narration
 
-A service that cannot answer “am I healthy?” is flying blind. Actuator opens operational windows.
+Your app starts. Config binds. Traffic may even flow. Operations still needs a contract: how do we know this process is healthy without SSH and a debugger?
 
-Here is the pain this lesson exists to remove. Teams lost days to version alignment, manual datasource config, WAR deployment friction, and missing health endpoints before the first useful API was live.
+Without Actuator, teams invent ad-hoc `/ping` controllers that always return `"ok"`, even when the database pool is exhausted. Load balancers keep sending traffic. Or someone exposes raw JMX in ways nobody documented. Shipping without standard health and metrics means every service invents its own ops dialect.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Actuator.
+The engineer question is blunt: can the platform expose health, info, and metrics endpoints with the same discipline Boot brought to startup?
 
-At a practical level, Actuator is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+Spring Boot Actuator is that ops surface. Add `spring-boot-starter-actuator` and Boot auto-configures management endpoints under a base path — by default `/actuator`. The headline endpoint is health. Hit it and you get a status that can aggregate disk space, database connectivity, and custom indicators.
 
-Spring's design choice here is deliberate. Boot keeps Framework power and removes repetitive platform wiring through auto-configuration, starters, and an executable deployment model.
+```xml
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
 
-Once you accept the feature, the next honest question is how it works under the hood. Startup follows Environment → context creation → auto-configuration import → refresh → embedded server → readiness events.
+```yaml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+```
 
-As you practice Actuator, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+Walk a request. Process listens on 8080. Client calls `GET /actuator/health`. The dispatcher routes to Actuator's web layer, not your business controllers. Health contributors run: a DB indicator may open a validation query; disk space checks free bytes. The response body looks like `{"status":"UP"}` when everything passes, or `DOWN` / `OUT_OF_SERVICE` when a contributor fails. Kubernetes readiness and liveness probes often point here — sometimes split into separate readiness and liveness groups in modern Boot.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+```bash
+curl -s http://localhost:8080/actuator/health
+# {"status":"UP"}
 
-Today we walked through Actuator inside Phase 2 — Spring Boot. The next natural question is waiting in Episode 25 — DevTools.
+curl -s http://localhost:8080/actuator/metrics/http.server.requests
+# meter names, counts, and tag dimensions for request traffic
+```
+
+`/actuator/info` can publish build info when you configure the build plugin to generate it. `/actuator/metrics` lists meters; a named meter path returns measurements. Other endpoints exist — `env`, `beans`, `threaddump` — and they are powerful enough that exposure must be intentional. Do not open everything on a public port. Prefer limiting exposure, securing management endpoints, or binding management to a separate port.
+
+```yaml
+management:
+  server:
+    port: 8081
+```
+
+That split keeps business traffic on 8080 and ops traffic on 8081 behind a tighter network policy. Custom health indicators are ordinary beans implementing `HealthIndicator` when your dependency on a payments cache or message broker matters to "UP."
+
+The misconception is "Actuator is optional decoration for demos." In production it is how platforms ask the process questions. The opposite misconception is enabling every endpoint with full `env` detail on the internet — that is a credentials leak waiting to happen. Treat exposure as a security decision, not a convenience checkbox.
+
+With ops endpoints in place, local developers still want a faster inner loop than stop, rebuild, restart for every controller tweak.
+
+That inner-loop tooling is DevTools.
 
 ## Source attribution
 
