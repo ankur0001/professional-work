@@ -11,23 +11,36 @@
 
 ## Full narration
 
-Version conflicts and twenty manual dependencies used to burn a morning. Starters package a coherent stack.
+Auto-configuration reacts to the classpath. Starters are how teams build that classpath without playing dependency roulette.
 
-Here is the pain this lesson exists to remove. Teams lost days to version alignment, manual datasource config, WAR deployment friction, and missing health endpoints before the first useful API was live.
+Before starters, a "simple" Spring web app meant listing spring-web, spring-webmvc, Jackson, validation, an embedded Tomcat, logging bridges, and hoping every version agreed. One library upgraded early, another lagged, and you spent the morning on `NoSuchMethodError`. The business endpoint was never the hard part — the bill of materials was.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Starter Dependencies.
+So the engineer question is: can we declare a capability — web, JPA, security — and inherit a tested set of libraries with aligned versions?
 
-At a practical level, Starter Dependencies is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+Spring Boot starters are that declaration. A starter is a Maven or Gradle dependency that pulls a curated set of transitive libraries. It usually contains little or no code of its own. The value is the graph. `spring-boot-starter-web` brings MVC, an embedded Tomcat by default, Jackson, and validation support. `spring-boot-starter-data-jpa` brings Spring Data JPA, Hibernate, and related pieces. `spring-boot-starter-actuator` brings operational endpoints. Versions are managed by Boot's BOM — the dependency management that pins compatible releases so you typically omit version numbers on starters.
 
-Spring's design choice here is deliberate. Boot keeps Framework power and removes repetitive platform wiring through auto-configuration, starters, and an executable deployment model.
+```xml
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
+```
 
-Once you accept the feature, the next honest question is how it works under the hood. Startup follows Environment → context creation → auto-configuration import → refresh → embedded server → readiness events.
+With a Boot parent POM or the Boot dependency BOM imported, those two lines replace a fragile hand-picked list. Build the project and inspect the resolved tree: Tomcat, Jackson, Hibernate, and friends appear as transitives. Change Boot's version, and the curated set moves together. That is why onboarding a new service got faster — the "web stack" decision became one coordinate, not twelve.
 
-As you practice Starter Dependencies, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+Runtime connects straight back to auto-configuration. Put `spring-boot-starter-web` on the classpath and web-related auto-config classes see their `@ConditionalOnClass` checks succeed. Leave it off, and those classes stay inactive. Starters do not configure beans by themselves; they supply the jars that make conditions true. Think of starters as the shopping cart and auto-configuration as the kitchen that cooks what you bought.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+You can still customize. Exclude Tomcat and add Jetty if you want a different embedded server. Add a database driver beside the JPA starter so datasource auto-config has a driver class. Override a transitive version only when you must — and treat that as a conscious risk, because you stepped outside the BOM's tested combination.
 
-Today we walked through Starter Dependencies inside Phase 2 — Spring Boot. The next natural question is waiting in Episode 21 — @SpringBootApplication.
+The misunderstanding that wastes time is "starters are frameworks." They are dependency aggregates. Another is adding both `spring-boot-starter-web` and `spring-boot-starter-webflux` "just in case" and then wondering why the app's reactive-versus-servlet story is confused. Choose the stack you mean. A third is pinning random library versions on top of the BOM until the classpath is unique to your laptop.
+
+Once the classpath is coherent and auto-config can fire, you still need one application entry point that turns scanning, configuration, and auto-config import into a single annotation people actually type.
+
+That entry point is `@SpringBootApplication`.
 
 ## Source attribution
 

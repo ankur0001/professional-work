@@ -11,23 +11,96 @@
 
 ## Full narration
 
-One query becomes hundreds. The N+1 problem is the classic ORM footgun — and it is diagnosable.
+You load twenty orders for a customer dashboard. SQL log shows one `SELECT` for orders — good. Then, as the JSON serializer or a loop touches each order's lines, nineteen more selects appear. Or twenty. Or two hundred on a busier day. That is the N+1 problem: **1** query for the parents plus **N** queries for children, one per parent.
 
-Here is the pain this lesson exists to remove. History N+1 Problem evolved across Spring releases as annotation support matured (Spring 2.5+ annotations, Spring 3.0 @Configuration , Spring 4 @Conditional , Spring Boot externalized config). Early versions relied heavily on DTD/XSD XML; modern Boot apps rarely ship applicationContext.xml , but the same underlying Statistics powers both styles. Rod Johnson's original container was XML-centric; annotation and Java-config were responses to configuration fatigue — the same pain Boot later addressed with conventions.
+It shows up wherever lazy associations meet loops.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is N+1 Problem.
+```java
+@Entity
+@Table(name = "orders")
+public class Order {
 
-At a practical level, N+1 Problem is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-Spring's design choice here is deliberate. Spring Data and JPA give a productive persistence model while still letting you drop to explicit queries when performance demands it.
+    private String customerEmail;
 
-Once you accept the feature, the next honest question is how it works under the hood. Entities move through lifecycle states inside a persistence context; flush and commit translate the unit of work into SQL.
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
+    private List<OrderLine> lines = new ArrayList<>();
 
-As you practice N+1 Problem, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    public List<OrderLine> getLines() {
+        return lines;
+    }
+}
+```
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+```java
+@Transactional(readOnly = true)
+public List<OrderResponse> listForCustomer(String email) {
+    List<Order> orders = orderRepository.findByCustomerEmail(email);
+    // 1 query: select * from orders where customer_email = ?
 
-Today we walked through N+1 Problem inside Phase 4 — Spring Data JPA. The next natural question is waiting in Episode 52 — @Transactional.
+    List<OrderResponse> responses = new ArrayList<>();
+    for (Order order : orders) {
+        // each getLines() may fire: select * from order_lines where order_id = ?
+        responses.add(OrderResponse.from(order, order.getLines()));
+    }
+    return responses;
+}
+```
+
+Lazy is not the villain. Lazy is the default that keeps writes and incidental loads cheap. The villain is navigating lazy associations across a collection without a fetch plan. Open-session-in-view can make this "work" without `LazyInitializationException` while still issuing N+1 SQL — silent latency.
+
+Fix it by loading what you need in fewer queries. Join fetch is the clearest teaching fix:
+
+```java
+public interface OrderRepository extends JpaRepository<Order, Long> {
+
+    @Query("""
+            select distinct o from Order o
+            left join fetch o.lines
+            where o.customerEmail = :email
+            """)
+    List<Order> findWithLinesByCustomerEmail(@Param("email") String email);
+}
+```
+
+```java
+@Transactional(readOnly = true)
+public List<OrderResponse> listForCustomer(String email) {
+    List<Order> orders = orderRepository.findWithLinesByCustomerEmail(email);
+    // typically 1 select with a join (or a follow-up select, depending on plan)
+    return orders.stream()
+            .map(order -> OrderResponse.from(order, order.getLines()))
+            .toList();
+}
+```
+
+`join fetch` tells Hibernate to initialize `lines` as part of loading `Order`. `distinct` softens duplicate parent rows that joins can produce in the result list. For pagination, join fetch of collections is awkward — the database page of joined rows is not the same as a page of parent entities. Prefer fetching collections for non-paged detail use cases, or use a two-step approach: page parent ids, then fetch aggregates by those ids with `join fetch` or `@BatchSize`.
+
+`@BatchSize` on the collection or entity reduces N+1 into fewer batched IN queries:
+
+```java
+@OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
+@BatchSize(size = 25)
+private List<OrderLine> lines = new ArrayList<>();
+```
+
+Instead of twenty single-id selects, Hibernate may load lines for twenty orders in one or a few `WHERE order_id IN (...)` queries. Still not always one query — but dramatically better — and useful when you cannot join fetch every path.
+
+Entity graphs offer another explicit plan:
+
+```java
+@EntityGraph(attributePaths = {"lines"})
+List<Order> findByCustomerEmail(String email);
+```
+
+Diagnosis before dogma. Enable SQL logging. Reproduce the endpoint. Count statements. If you see the repeating child select, you found N+1. Fix with fetch join, entity graph, batch size, or a DTO query that selects exactly the columns the screen needs — not by marking every association `FetchType.EAGER`, which often moves the pain to writes and to every accidental load.
+
+Notice what all of these fixes assume: an open persistence context and a transaction that spans the whole read. If each repository call opens and closes its own short transaction, even a good fetch query can be followed by lazy failures when you touch something else. The boundary that keeps the unit of work honest has a name in Spring.
+
+`@Transactional` — Episode Fifty-Two — is where persistence context lifetime, commit, and rollback become deliberate instead of accidental.
 
 ## Source attribution
 

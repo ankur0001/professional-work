@@ -11,23 +11,45 @@
 
 ## Full narration
 
-Not everything belongs as a stereotype on a class you own. Sometimes you publish an object Spring did not invent — that is @Bean.
+`@Configuration` gives you a place to assemble infrastructure. `@Bean` is the method-level tool that publishes each object into the container.
 
-Here is the pain this lesson exists to remove. Object graphs assembled with new, lookups, and static holders become untestable and impossible to swap safely.
+Take `ObjectMapper`. You do not own Jackson's class. You cannot slap `@Component` on it inside the library. Yet every service wants the same mapper with Java time modules registered and unknown properties ignored. Without `@Bean`, teams hide `new ObjectMapper()` in static holders or build a fresh mapper per call — either shared mutable configuration races or repeated setup cost. Or they subclass just to put a stereotype on a wrapper, which is ceremony without clarity.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is @Bean.
+The question is simple: how do I register an object Spring did not invent from one of my annotated classes?
 
-At a practical level, @Bean is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+`@Bean` on a method tells Spring: invoke this method to produce a bean, manage the result according to the method's scope and lifecycle settings, and expose it for injection by type or name. The default bean name is the method name. Method parameters are injected dependencies. You can set `initMethod`, `destroyMethod`, and `@Scope` on the method. This is the preferred way to bring third-party and infrastructure objects under container control.
 
-Spring's design choice here is deliberate. Spring’s container owns creation, wiring, and lifecycle so business types can stay plain and testable.
+```java
+@Configuration
+public class JacksonConfig {
 
-Once you accept the feature, the next honest question is how it works under the hood. Bean definitions are registered, post-processed, instantiated, injected, and initialized inside the ApplicationContext refresh cycle.
+    @Bean
+    ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return mapper;
+    }
 
-As you practice @Bean, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    @Bean(destroyMethod = "close")
+    HikariDataSource inventoryDataSource(Environment env) {
+        HikariDataSource ds = new HikariDataSource();
+        ds.setJdbcUrl(env.getRequiredProperty("inventory.jdbc-url"));
+        ds.setUsername(env.getRequiredProperty("inventory.jdbc-user"));
+        ds.setPassword(env.getRequiredProperty("inventory.jdbc-password"));
+        return ds;
+    }
+}
+```
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+At refresh, Spring calls `objectMapper()`, registers the returned instance as a singleton named `objectMapper`, and does the same for `inventoryDataSource`. Every injection point of type `ObjectMapper` receives the same configured mapper unless you define another and disambiguate. On context close, `destroyMethod = "close"` shuts the pool cleanly. For some pooled libraries Spring infers a destroy method you do not want — then you set `destroyMethod = ""` to disable inference. That lifecycle knob is part of why `@Bean` is more than a fancy `new`.
 
-Today we walked through @Bean inside Phase 1 — Spring Fundamentals. The next natural question is waiting in Episode 15 — Profiles.
+Use `@Bean` when you need to configure before publish, when the type is external, or when one interface has multiple implementations you want to construct explicitly. Prefer `@Component` on your own services when default construction and constructor injection suffice — less config noise.
+
+A `@Bean`-specific misconception is that the annotation belongs on the class you want to expose. It belongs on the factory method that returns the instance. Another is creating a new `@Bean` method for every tiny collaborator that could have been a simple constructor dependency of a single published bean, which scatters assembly without benefit.
+
+`@Bean` methods publish objects for one runtime. Real systems have many runtimes — local, test, staging, production — and not every bean should exist in all of them. Selecting which definitions are active is the job of profiles, and that problem shows up as soon as your local fake payment client must not ship to production.
 
 ## Source attribution
 

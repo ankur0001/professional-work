@@ -11,23 +11,75 @@
 
 ## Full narration
 
-Not every query fits a method name. JPQL lets you query the entity model instead of raw tables.
+Derived repository method names are great until the question outgrows English. "Find orders for this email with status NEW that contain SKU-42 and were placed after Monday" becomes a method name nobody wants to read. JPQL — Jakarta Persistence Query Language — queries the entity model instead of the physical schema.
 
-Here is the pain this lesson exists to remove. Object-relational work without discipline produces N+1 queries, lazy-load surprises, and SQL you only discover when production latency spikes.
+JPQL looks like SQL with a different subject. You select entities and properties. You join associations by field name. Hibernate translates to SQL for your dialect.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is JPQL.
+```java
+public interface OrderRepository extends JpaRepository<Order, Long> {
 
-At a practical level, JPQL is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+    @Query("""
+            select distinct o from Order o
+            join o.lines line
+            where o.customerEmail = :email
+              and o.status = :status
+              and line.sku = :sku
+            """)
+    List<Order> findOpenOrdersWithSku(
+            @Param("email") String email,
+            @Param("status") OrderStatus status,
+            @Param("sku") String sku);
 
-Spring's design choice here is deliberate. Spring Data and JPA give a productive persistence model while still letting you drop to explicit queries when performance demands it.
+    @Query("""
+            select o from Order o
+            left join fetch o.lines
+            where o.id = :id
+            """)
+    Optional<Order> findWithLinesById(@Param("id") Long id);
+}
+```
 
-Once you accept the feature, the next honest question is how it works under the hood. Entities move through lifecycle states inside a persistence context; flush and commit translate the unit of work into SQL.
+Walk the first query. `from Order o` uses the entity name (defaults to the simple class name). `join o.lines line` navigates the `@OneToMany` field — not the table name `order_lines`. The `where` clause filters on entity properties. Parameters are bound by name. `distinct` helps when joins multiply parent rows in the result list.
 
-As you practice JPQL, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+The second query introduces `join fetch`. That is not decoration. It tells Hibernate to load `lines` in the same select so later `order.getLines()` does not fire a second query. Without fetch, a lazy `lines` collection stays uninitialized until touched — and if you touch it in a loop across many orders, you invent the N+1 problem. Remember this pattern; Episode Fifty-One will put it under a microscope.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+Projection queries keep payloads small:
 
-Today we walked through JPQL inside Phase 4 — Spring Data JPA. The next natural question is waiting in Episode 45 — Criteria API.
+```java
+public interface OrderRepository extends JpaRepository<Order, Long> {
+
+    @Query("""
+            select new com.example.orders.OrderSummary(o.id, o.customerEmail, o.status, count(line))
+            from Order o
+            left join o.lines line
+            where o.customerEmail = :email
+            group by o.id, o.customerEmail, o.status
+            """)
+    List<OrderSummary> summarizeForCustomer(@Param("email") String email);
+}
+
+public record OrderSummary(Long id, String email, OrderStatus status, long lineCount) {}
+```
+
+Here you are not managing full `Order` aggregates — you are selecting a DTO constructor expression. Useful for read models and list screens. You cannot dirty-check a DTO; it is not an entity.
+
+Updates and deletes in JPQL are bulk operations:
+
+```java
+@Modifying(clearAutomatically = true)
+@Query("update Order o set o.status = :status where o.id in :ids")
+int markStatus(@Param("ids") Collection<Long> ids, @Param("status") OrderStatus status);
+```
+
+Bulk JPQL skips the persistence context's usual per-entity lifecycle. Managed instances already loaded can go stale — hence `clearAutomatically`. Use bulk when you mean bulk; use entity mutation when you need lifecycle callbacks and dirty checking.
+
+Native queries (`nativeQuery = true`) speak SQL and column names. Reach for them when the dialect feature has no JPQL equivalent — window functions, vendor hints — not as a first reflex. Mixing native SQL with entity mapping requires care about what is returned and whether Hibernate can still manage the result.
+
+JPQL errors often show up as `PropertyReferenceException` or unexpected SQL. Turn on SQL logging and compare your mental join to the generated join. If you filter on a column that exists only in the database and not as a mapped field, JPQL cannot see it — map it or use native SQL deliberately.
+
+Static JPQL strings still struggle when the filter set is dynamic: maybe email, maybe status, maybe a date range, maybe none. String concatenation of JPQL is how injection and broken syntax sneak back in. The Criteria API builds queries as objects for those cases.
+
+Episode Forty-Five — Criteria API.
 
 ## Source attribution
 

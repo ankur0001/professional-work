@@ -11,23 +11,39 @@
 
 ## Full narration
 
-Annotation-driven apps still need a place where Spring learns how to wire the graph. @Configuration is that place.
+Injection annotations assume the beans already exist. Somebody still has to teach Spring how to construct the awkward parts of the graph — especially types your scanner cannot see.
 
-Here is the pain this lesson exists to remove. Object graphs assembled with new, lookups, and static holders become untestable and impossible to swap safely.
+Imagine integrating a payment SDK. You need a single shared `StripeClient` built from an API key, and a `WebhookVerifier` that must use that same client instance. You write a plain class with two `@Bean` methods where `webhookVerifier()` calls `stripeClient()` directly. Without special handling, that is just Java: each call to `stripeClient()` would construct another client. Connection pools double. Rate-limit state splits. Tests lie because they see one instance while production quietly builds two.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is @Configuration.
+What fails is inter-bean referencing inside factory methods if the configuration class is "lite" — processed as ordinary `@Bean` methods on a non-configuration class — instead of full `@Configuration` semantics. The engineer asks: how does Spring make `@Bean` methods participate in the container so that calls between them reuse managed singletons?
 
-At a practical level, @Configuration is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+`@Configuration` marks a class as a full source of bean definitions. Spring enhances those classes — typically with CGLIB — so that calls to `@Bean` methods from other `@Bean` methods are intercepted and redirected through the container. You write natural Java. The container still guarantees singleton semantics for singleton-scoped beans. `@Configuration` classes are themselves beans, can be profiled, imported, and composed with `@Import`.
 
-Spring's design choice here is deliberate. Spring’s container owns creation, wiring, and lifecycle so business types can stay plain and testable.
+```java
+@Configuration
+public class StripeConfig {
 
-Once you accept the feature, the next honest question is how it works under the hood. Bean definitions are registered, post-processed, instantiated, injected, and initialized inside the ApplicationContext refresh cycle.
+    @Bean
+    StripeClient stripeClient(Environment env) {
+        return new StripeClient(env.getRequiredProperty("stripe.api-key"));
+    }
 
-As you practice @Configuration, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    @Bean
+    WebhookVerifier webhookVerifier() {
+        // Full @Configuration: this call returns the container-managed singleton
+        // of stripeClient(), not a second new StripeClient().
+        return new WebhookVerifier(stripeClient());
+    }
+}
+```
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+On refresh, Spring registers definitions for `stripeClient` and `webhookVerifier`, creates a enhanced configuration instance, and when `webhookVerifier()` runs, the intercepted `stripeClient()` call returns the already-cached singleton. One API client. One verifier. If you removed `@Configuration` and left only `@Bean` methods on a plain `@Component`, lite mode would not intercept that call — `new StripeClient` could happen twice. That difference is the heart of this episode.
 
-Today we walked through @Configuration inside Phase 1 — Spring Fundamentals. The next natural question is waiting in Episode 14 — @Bean.
+`@Configuration` also signals intent to readers: this type is assembly, not domain. Keep business rules out of it. Use it to bind infrastructure, third-party clients, and explicit wiring that scanning cannot express cleanly. `@Import` other config classes to keep modules bounded instead of one thousand-line config type.
+
+A misconception specific to `@Configuration` is that it is required on every class that uses `@Autowired`. It is not. Another is ignoring lite versus full mode and wondering why singleton guarantees "broke" when you called one `@Bean` method from another on a non-configuration class.
+
+`@Configuration` is the theater. The actors on stage are the `@Bean` methods themselves — how they name beans, accept parameters, and customize init or destroy. That annotation deserves its own close-up next.
 
 ## Source attribution
 

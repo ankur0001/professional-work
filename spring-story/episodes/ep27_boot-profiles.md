@@ -1,4 +1,4 @@
-# Episode 27 — Profiles
+# Episode 27 — Profiles (Boot)
 
 | Field | Value |
 |---|---|
@@ -11,23 +11,76 @@
 
 ## Full narration
 
-Boot inherits profiles, then makes them natural through application-*.yml and spring.profiles.active.
+Logging levels, datasource URLs, and even entire beans need to change between laptop and production. Boot profiles are how one artifact wears those different outfits.
 
-Here is the pain this lesson exists to remove. Teams lost days to version alignment, manual datasource config, WAR deployment friction, and missing health endpoints before the first useful API was live.
+You met profiles in Phase One as a Framework idea: `@Profile` on beans, active profiles in the Environment. Boot makes the day-to-day workflow concrete. Document defaults in `application.yml`. Put overrides in `application-dev.yml`, `application-staging.yml`, `application-prod.yml`. Activate with `spring.profiles.active`, an environment variable, or a command-line flag. Without that discipline, teams either hard-code environment checks in Java or maintain separate branches per deploy target — both rot.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Profiles.
+The question to hold: how do we activate a named set of property documents and beans so "prod" is a switch, not a rewrite?
 
-At a practical level, Profiles is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+Boot's profile documents are loaded when their profile is active. Multiple profiles can be active; later sources still follow the Environment precedence rules you already saw. Group profiles can compose — for example a `cloud` group that includes `prod` and `kubernetes` — so activation stays declarative.
 
-Spring's design choice here is deliberate. Boot keeps Framework power and removes repetitive platform wiring through auto-configuration, starters, and an executable deployment model.
+```yaml
+# application.yml
+spring:
+  application:
+    name: orders
+server:
+  port: 8080
+```
 
-Once you accept the feature, the next honest question is how it works under the hood. Startup follows Environment → context creation → auto-configuration import → refresh → embedded server → readiness events.
+```yaml
+# application-dev.yml
+spring:
+  datasource:
+    url: jdbc:h2:mem:orders
+logging:
+  level:
+    com.acme.orders: DEBUG
+```
 
-As you practice Profiles, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+```yaml
+# application-prod.yml
+spring:
+  datasource:
+    url: jdbc:postgresql://db.prod.internal:5432/orders
+logging:
+  level:
+    com.acme.orders: INFO
+```
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+```bash
+java -jar orders.jar --spring.profiles.active=prod
+# or
+export SPRING_PROFILES_ACTIVE=prod
+```
 
-Today we walked through Profiles inside Phase 2 — Spring Boot. The next natural question is waiting in Episode 28 — Packaging.
+Beans participate too. A `@Profile("dev")` `@Bean` might expose an H2 console helper or a stub payments client. A `@Profile("prod")` bean supplies the real gateway. On startup Boot logs the active profiles — read that line every time you debug "wrong datasource." If the line says `dev` in a prod pod, stop looking at SQL and fix activation.
+
+```java
+@Configuration
+public class PaymentsConfig {
+
+    @Bean
+    @Profile("dev")
+    PaymentsClient stubPayments() {
+        return new StubPaymentsClient();
+    }
+
+    @Bean
+    @Profile("prod")
+    PaymentsClient livePayments(PaymentsProperties props) {
+        return new HttpPaymentsClient(props);
+    }
+}
+```
+
+Default profiles cover the case when nothing is set — useful so local runs work out of the box. Prefer explicit activation in shared environments. Keep secrets out of profile files in git; combine profiles with external env vars for credentials. Profile-specific `application-prod.yml` can still say `password: ${DB_PASSWORD}` and let the platform inject the value.
+
+The trap is proliferating micro-profiles until nobody knows what `spring.profiles.active=a,b,c,d` means. Another is using profiles for feature toggles that should be ordinary boolean properties — profiles shine for environment-shaped differences, not for every experiment. A third is forgetting that `@Profile` beans are skipped entirely when inactive, which can leave you with a missing bean definition error if no alternate bean exists for the active profile.
+
+When config, logging, and profile-specific beans are under control, you still have to ship the process. How does Boot turn this application into something you can `java -jar` — with dependencies nested and an embedded server inside?
+
+That packaging model is the last Boot lesson before we open the web layer for real.
 
 ## Source attribution
 

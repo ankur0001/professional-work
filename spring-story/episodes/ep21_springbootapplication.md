@@ -11,23 +11,46 @@
 
 ## Full narration
 
-One annotation seems to start everything. @SpringBootApplication is three decisions composed together.
+Every Boot tutorial starts with one annotation on the main class. Treat it as a composition, not a lucky charm — because when scanning misses a package, that annotation is usually where the story went wrong.
 
-Here is the pain this lesson exists to remove. Teams lost days to version alignment, manual datasource config, WAR deployment friction, and missing health endpoints before the first useful API was live.
+Imagine a service where controllers live under `com.acme.orders.web` and the main class sits in `com.acme.orders`. Everything starts. Move the main class to `com.acme.bootstrap` "to keep startup separate," leave components under `com.acme.orders`, and suddenly mappings vanish. No compile error. Just empty request mappings and a quiet 404. The team blames MVC. The real issue was the default scan root.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is @SpringBootApplication.
+The practical question: what does `@SpringBootApplication` actually enable, and where does component scanning begin?
 
-At a practical level, @SpringBootApplication is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+`@SpringBootApplication` is a composed annotation. It layers three jobs. `@SpringBootConfiguration` marks the class as a source of bean definitions — Boot's specialization of `@Configuration`. `@EnableAutoConfiguration` triggers the import of auto-configuration classes we just studied. `@ComponentScan` turns on classpath scanning for `@Component`, `@Service`, `@Repository`, `@Controller`, and the rest — by default from the package of the annotated class downward.
 
-Spring's design choice here is deliberate. Boot keeps Framework power and removes repetitive platform wiring through auto-configuration, starters, and an executable deployment model.
+```java
+package com.acme.orders;
 
-Once you accept the feature, the next honest question is how it works under the hood. Startup follows Environment → context creation → auto-configuration import → refresh → embedded server → readiness events.
+@SpringBootApplication
+public class OrdersApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(OrdersApplication.class, args);
+    }
+}
+```
 
-As you practice @SpringBootApplication, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+Place that class in `com.acme.orders` and scanning covers `com.acme.orders..*`. Controllers, services, and `@Configuration` classes in that tree are candidates. Auto-configuration still imports from Boot's list. Your main method hands the annotated class to `SpringApplication.run`, which uses it as both configuration source and scan anchor.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+When the default is wrong, be explicit. Narrow or widen scan bases. Exclude an auto-config class that fights your environment. Keep the composition honest instead of sprinkling duplicate enable annotations.
 
-Today we walked through @SpringBootApplication inside Phase 2 — Spring Boot. The next natural question is waiting in Episode 22 — Configuration Properties.
+```java
+@SpringBootApplication(
+    scanBasePackages = "com.acme.orders",
+    exclude = { DataSourceAutoConfiguration.class }
+)
+public class OrdersApplication { }
+```
+
+That form says: scan the orders tree even if this class lives elsewhere, and do not auto-configure a datasource — perhaps tests supply one, or this process is not a DB owner. You can achieve similar effects with `@ComponentScan` and `@EnableAutoConfiguration` written out separately. Prefer the composed form for clarity unless you need a non-default mix.
+
+Runtime behavior is easy to verify. Start the app with debug logging for `org.springframework.context` and watch which packages are scanned. Hit a mapped endpoint. If the handler is missing, check package placement before rewriting controller annotations. Also remember: `@SpringBootApplication` does not replace your domain `@Configuration` classes. It is the root that discovers them and imports Boot's defaults beside them.
+
+A frequent mistake is treating the annotation as "Boot mode on" with no package consequences. Another is stacking `@SpringBootApplication`, `@EnableAutoConfiguration`, and `@ComponentScan` redundantly until nobody knows which attribute wins. A third is putting the main class in a root package so scanning walks the entire classpath including third-party noise — slow startup and surprising bean definitions.
+
+Knowing the entry annotation is half the configuration story. The other half is typed, validated settings for *your* product — not only `spring.*` keys Boot already understands.
+
+That leads to configuration properties: binding your own prefix into a dedicated object.
 
 ## Source attribution
 

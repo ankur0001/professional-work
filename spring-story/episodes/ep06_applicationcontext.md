@@ -11,23 +11,48 @@
 
 ## Full narration
 
-BeanFactory can create beans. Production apps usually need more — events, environment, and a richer runtime. That is ApplicationContext.
+`BeanFactory` can answer `getBean`. A shipping backend usually needs the container to do more before the first request arrives.
 
-Here is the pain this lesson exists to remove. Object graphs assembled with new, lookups, and static holders become untestable and impossible to swap safely.
+Consider a payments API that must publish a `PaymentCompletedEvent` when a charge succeeds, resolve a localized decline message for the UI, load a classpath schema for validation, and fail fast at startup if the fraud-check bean cannot be constructed. With only a bare factory, you wire those concerns yourself — a static event bus here, ad-hoc property files there, lazy surprises in production when the first customer hits a broken singleton. The graph "works" in a smoke test that never requested the broken bean.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is ApplicationContext.
+Without an application-level context, teams reinvent the same surround sound: events, resources, environment, and startup validation. The question becomes unavoidable: is there a Spring container that extends the factory with those application services and a defined refresh lifecycle?
 
-At a practical level, ApplicationContext is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+That container is `ApplicationContext`. It extends `BeanFactory` and adds the features production code expects. It is also a `MessageSource` for i18n, an `ApplicationEventPublisher` for events, a `ResourcePatternResolver` for classpath and file resources, and the home of `Environment` for profiles and properties. On refresh, a typical context pre-instantiates singleton beans, so configuration errors surface at boot instead of at 2 a.m. under load.
 
-Spring's design choice here is deliberate. Spring’s container owns creation, wiring, and lifecycle so business types can stay plain and testable.
+```java
+@Configuration
+@ComponentScan("com.acme.payments")
+public class PaymentsConfig { }
 
-Once you accept the feature, the next honest question is how it works under the hood. Bean definitions are registered, post-processed, instantiated, injected, and initialized inside the ApplicationContext refresh cycle.
+@Service
+public class PaymentService {
+    private final ApplicationEventPublisher events;
 
-As you practice ApplicationContext, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    public PaymentService(ApplicationEventPublisher events) {
+        this.events = events;
+    }
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+    public void charge(ChargeRequest request) {
+        // charge against the gateway, then notify the rest of the app
+        events.publishEvent(new PaymentCompletedEvent(request.token()));
+    }
+}
 
-Today we walked through ApplicationContext inside Phase 1 — Spring Fundamentals. The next natural question is waiting in Episode 07 — Bean Definition.
+// bootstrap
+AnnotationConfigApplicationContext context =
+        new AnnotationConfigApplicationContext(PaymentsConfig.class);
+PaymentService payments = context.getBean(PaymentService.class);
+payments.charge(new ChargeRequest("tok_42", Money.usd(20)));
+context.close();
+```
+
+When `AnnotationConfigApplicationContext` starts with `PaymentsConfig`, it registers bean definitions from the configuration and component scan, then refreshes. Singleton services are created up front. `PaymentService` receives the context's event publisher through DI — not by holding the whole context. Publishing `PaymentCompletedEvent` notifies `@EventListener` methods elsewhere. Closing the context runs destroy hooks. That is the application runtime story, not merely `getBean`.
+
+Contexts come in flavors worth naming. `AnnotationConfigApplicationContext` for Java config. `ClassPathXmlApplicationContext` for XML-era apps. Web and Boot supply their own context types. Same conceptual role: factory plus application services plus refresh.
+
+A misconception unique to this layer is "I should inject `ApplicationContext` into every service so I can look up beans." That turns the context into a service locator and hides real dependencies. Prefer injecting the collaborators — or `ApplicationEventPublisher`, `Environment`, `ResourceLoader` — the narrow interfaces the context already implements. Another misconception is that `ApplicationContext` replaces `BeanFactory`. It does not replace it; it builds on it. When documentation says bean factory, you are still inside the context's lower half.
+
+You now have a living container. But refresh only works if the context knows what to build. Where do those recipes live — class name, scope, lazy flag, constructor arguments? That metadata is the bean definition, and without understanding it the context remains a black box.
 
 ## Source attribution
 

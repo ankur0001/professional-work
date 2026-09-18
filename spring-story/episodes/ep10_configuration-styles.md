@@ -11,23 +11,42 @@
 
 ## Full narration
 
-You can tell Spring what to build in XML, annotations, or Java config. The choice is how teams express intent.
+Lifecycle hooks only help if Spring knows which classes are beans and how they connect. Teams have argued for years about the best way to write that knowledge down.
 
-Here is the pain this lesson exists to remove. Object graphs assembled with new, lookups, and static holders become untestable and impossible to swap safely.
+Walk into a codebase from 2008 and you may find a thousand-line `applicationContext.xml` where every service is a `<bean>` element. Walk into a 2016 service and you find `@Component` on every class plus a few XML leftovers. Walk into a modern library integration and you find `@Configuration` classes with `@Bean` methods wrapping third-party types. Same container underneath. Three dialects for declaring intent. Mixing them without a policy produces dual sources of truth: a bean defined in XML and again in Java, or a scan that silently duplicates an XML id.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Configuration Styles.
+What goes wrong is not that XML is evil or annotations are magic. What goes wrong is unclear authorship — nobody knows where to look, reviews miss wiring, and refactors break the silent second definition. The engineer asks: how should we express bean definitions so the team can read and change them safely?
 
-At a practical level, Configuration Styles is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+Spring supports three primary configuration styles. XML configuration declares beans in documents the container loads. Annotation-driven configuration puts stereotypes like `@Component`, `@Service`, and `@Repository` on classes and relies on discovery. Java-based configuration uses `@Configuration` classes with `@Bean` factory methods — type-safe, refactorable in the IDE, and excellent for objects you do not own. Modern Spring applications lean on Java config plus annotations; XML remains for legacy islands and some externalized wiring.
 
-Spring's design choice here is deliberate. Spring’s container owns creation, wiring, and lifecycle so business types can stay plain and testable.
+```java
+// Java config style — explicit, refactor-friendly
+@Configuration
+public class NotificationConfig {
 
-Once you accept the feature, the next honest question is how it works under the hood. Bean definitions are registered, post-processed, instantiated, injected, and initialized inside the ApplicationContext refresh cycle.
+    @Bean
+    NotificationClient notificationClient(Environment env) {
+        return new SendGridClient(env.getRequiredProperty("sendgrid.api-key"));
+    }
 
-As you practice Configuration Styles, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    @Bean
+    OrderNotifier orderNotifier(NotificationClient client) {
+        return new OrderNotifier(client);
+    }
+}
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+// Equivalent idea in annotation style elsewhere:
+// @Service class OrderNotifier { ... }
+// discovered by component scanning instead of an @Bean method
+```
 
-Today we walked through Configuration Styles inside Phase 1 — Spring Fundamentals. The next natural question is waiting in Episode 11 — Component Scanning.
+When this `NotificationConfig` is registered with an `AnnotationConfigApplicationContext`, Spring turns each `@Bean` method into a bean definition, invokes the methods at the right time, and injects `notificationClient` into `orderNotifier`. Rename the method in the IDE and the bean name updates with you. Compare that to hunting string ids in XML. For `SendGridClient` — a type you do not control — `@Bean` is the natural style because you cannot put `@Component` on a third-party class without wrapping it.
+
+Style choice is contextual. Prefer stereotypes and scanning for your own application services. Prefer `@Bean` methods for infrastructure and external types. Keep XML only when migrating or when a legacy module still speaks it. You can combine styles in one context, but pick a default and document exceptions.
+
+A misconception here is "annotations replaced the need to understand configuration." Annotations are one authoring style that still produces bean definitions. Another is copying every bean into both XML and Java "to be sure," which creates conflicts and duplicate definitions.
+
+Annotation style only scales if Spring can find the annotated classes. That discovery mechanism — component scanning — is the next piece. Without it, `@Service` is just a comment the compiler ignores.
 
 ## Source attribution
 
