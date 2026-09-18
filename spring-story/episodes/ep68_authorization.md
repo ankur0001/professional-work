@@ -11,23 +11,44 @@
 
 ## Full narration
 
-Identity alone is not permission. Authorization decides what that identity may do.
+Authentication told you the caller is Alice. Authorization decides whether Alice may touch this resource, with this method, right now.
 
-Here is the pain this lesson exists to remove. Open endpoints, weak identity checks, and ad-hoc authorization rules turn APIs into production incidents waiting to happen.
+Picture two authenticated users hitting the same API. Alice has role `ROLE_USER`. Bob has `ROLE_ADMIN`. Both send valid credentials. `GET /api/orders/42` should succeed for Alice if she owns order 42. `POST /api/admin/refunds` should succeed for Bob and return 403 for Alice — not 401. A 401 means "we do not know who you are." A 403 means "we know who you are, and you are not allowed." That distinction is the heartbeat of authorization debugging.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Authorization.
+Before a central model, teams sprinkle `if (!user.isAdmin()) throw ...` through controllers and services. Rules drift. One endpoint checks a role string; another checks a group in LDAP; a third forgets the check entirely. The failure mode is not theoretical — it is an authenticated user reaching a destructive operation because the guard lived only on the UI.
 
-At a practical level, Authorization is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+Spring Security separates the concerns on purpose. Authentication fills the `SecurityContext`. Authorization consumes it. At the HTTP layer, `authorizeHttpRequests` (or older `authorizeRequests`) declares which paths need authentication, which roles, which authorities, or custom matchers. The decision runs in the filter chain — typically via `AuthorizationFilter` — before your controller method executes.
 
-Spring's design choice here is deliberate. Spring Security provides a filter chain and authorization model so identity and access rules are explicit and testable.
+```java
+@Bean
+SecurityFilterChain app(HttpSecurity http) throws Exception {
+    http.authorizeHttpRequests(auth -> auth
+        .requestMatchers("/api/public/**").permitAll()
+        .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyRole("USER", "ADMIN")
+        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+        .anyRequest().authenticated()
+    );
+    return http.build();
+}
 
-Once you accept the feature, the next honest question is how it works under the hood. Security filters sit in a chain before controllers; Authentication establishes identity and Authorization enforces decisions.
+// Authenticated Alice (ROLE_USER) → POST /api/admin/refunds
+// AuthorizationFilter: hasRole("ADMIN")? false → 403 Forbidden
+//
+// Authenticated Bob (ROLE_ADMIN) → POST /api/admin/refunds
+// AuthorizationFilter: hasRole("ADMIN")? true  → controller runs
+```
 
-As you practice Authorization, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+Read the denial path carefully. Alice is authenticated. The security context is populated. The matcher for `/api/admin/**` demands `ROLE_ADMIN`. Spring prefixes `ROLE_` when you use `hasRole("ADMIN")`. Alice lacks it, so the filter short-circuits with forbidden. Bob passes the same rule and reaches the refund controller. Same login machinery; different authorization outcome.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+Authorities are the finer grain: strings like `orders:read` or `refunds:write` that you attach to the `Authentication`. Roles are a convention — authorities with a `ROLE_` prefix — not a separate type system. Prefer explicit authorities when product permissions do not map cleanly to a handful of roles. Prefer roles when the org already thinks in USER / ADMIN / SUPPORT.
 
-Today we walked through Authorization inside Phase 7 — Spring Security. The next natural question is waiting in Episode 69 — JWT.
+URL rules are not the whole story. A path matcher cannot easily express "Alice may read only her own orders." Object-level rules need method security or a custom `AuthorizationManager` that loads the order and compares `order.getOwnerId()` to the principal. We will open method security soon. Today, own the HTTP decision: authenticated is not the same as authorized, and 401 is not the same as 403.
+
+A common misunderstanding is enabling `anyRequest().authenticated()` and believing the app is locked down. That only requires a valid identity. Another is checking roles in the UI and assuming the API is safe — browsers are not your enforcement point. Enforce on the server, on every request that mutates or reveals data.
+
+We established identity last episode. Today we enforced access on paths and saw an authenticated user correctly denied. APIs that span many services often stop carrying server sessions and start carrying signed claims instead. How do you authenticate and authorize with a token the client sends on every call?
+
+That pressure leads straight into JWT.
 
 ## Source attribution
 

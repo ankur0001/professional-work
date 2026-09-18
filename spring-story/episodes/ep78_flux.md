@@ -11,23 +11,38 @@
 
 ## Full narration
 
-Streams of many values need a different contract. Flux is that many-valued publisher.
+`Mono` was zero or one. `Flux<T>` is zero to many — a reactive sequence. Search results, event streams, Server-Sent Events, and chunked database reads live here. The mental model is still a publisher: assemble operators, subscribe to run, honor demand from downstream.
 
-Here is the pain this lesson exists to remove. Blocking I/O on limited threads collapses under concurrency; teams need a model for async streams and backpressure.
+```java
+public Flux<OrderView> streamOpenOrders(String tenantId) {
+    return orderRepository.findOpenByTenant(tenantId)   // Flux<Order>
+        .filter(Order::isOpen)
+        .flatMap(order ->
+            pricingClient.quote(order)                  // Mono<Money>
+                .map(price -> OrderView.from(order, price))
+        , 8) // concurrency hint: up to 8 in-flight quotes
+        .limitRate(32)
+        .doOnCancel(() -> log.info("client cancelled tenant {}", tenantId));
+}
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Flux.
+// WebFlux controller can return Flux for JSON array (buffered) or streaming media types
+@GetMapping(value = "/orders/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+Flux<OrderView> stream(@RequestParam String tenantId) {
+    return streamOpenOrders(tenantId);
+}
+```
 
-At a practical level, Flux is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+`flatMap` on a `Flux` fans out async work per element. The concurrency parameter matters: unbounded fan-out can overwhelm a downstream API. `concatMap` preserves order and waits for each inner publisher to finish — slower, safer for ordered side effects. `map` stays synchronous per item. `buffer`, `window`, and `collectList` move between stream and aggregate shapes; `collectList()` turns a `Flux` into `Mono<List<T>>` when you truly need the whole collection in memory — know that cost.
 
-Spring's design choice here is deliberate. Reactor and WebFlux give Spring a first-class model for non-blocking streams when the workload demands it.
+Hot versus cold shows up more with `Flux`. A cold publisher — typical repository query — runs per subscriber. A hot publisher — a shared event bus — emits regardless of when you subscribe; late subscribers miss earlier signals. `share()` and `publish().refCount()` bridge those worlds carefully. For HTTP responses, cold pipelines tied to the request subscription are the usual story.
 
-Once you accept the feature, the next honest question is how it works under the hood. Publishers signal demand through backpressure; schedulers decide which threads execute which operators.
+Cancellation is part of the API. When a browser closes an SSE connection, Reactor cancels the subscription. `doOnCancel` and operator cleanup release downstream work. Ignoring cancellation leaks subscriptions against remote systems. That is not optional polish in streaming endpoints.
 
-As you practice Flux, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+A misconception is using `Flux` for a single optional entity because "reactive means Flux." Use `Mono` for 0..1. Another is `toStream()` or `blockLast()` in request code to get back to familiar loops — you just left the reactive model. A third is assuming `filter` plus `map` replaces SQL pushdown — filter early in the database when you can; reactive operators do not make wasted rows free.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+We can now express sequences. The next practical question is where those operators run. CPU work, blocking legacy calls, and event-loop I/O should not all share one thread by accident.
 
-Today we walked through Flux inside Phase 8 — Reactive Spring. The next natural question is waiting in Episode 79 — Schedulers.
+That is the job of schedulers.
 
 ## Source attribution
 

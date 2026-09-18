@@ -11,23 +11,92 @@
 
 ## Full narration
 
-Some bugs only appear when layers meet. Integration testing exercises those seams deliberately.
+Unit tests prove a class. Slice tests prove a layer. Integration tests prove that several real pieces cooperate: HTTP in, security filters, service logic, persistence out — or messaging round trips — with as few doubles as the risk requires. In Spring terms that often means `@SpringBootTest` with a running web environment, test properties, and either an embedded database or an external one the suite can reach.
 
-Here is the pain this lesson exists to remove. Without automated proof at the right layer, regressions slip through and teams fear every deploy.
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("integration")
+class OrderCheckoutIntegrationTest {
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Integration Testing.
+    @LocalServerPort
+    int port;
 
-At a practical level, Integration Testing is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+    @Autowired
+    TestRestTemplate rest;
 
-Spring's design choice here is deliberate. Spring’s test support and the wider Java test ecosystem let you verify units, slices, and full integrations deliberately.
+    @Autowired
+    OrderRepository orders;
 
-Once you accept the feature, the next honest question is how it works under the hood. Test slices load only the relevant context; containers and mocks replace the rest so feedback stays fast and honest.
+    @Test
+    void checkoutPersistsAndReturnsAccepted() {
+        PlaceOrderRequest body = new PlaceOrderRequest("SKU-1", 1, "cust-9");
 
-As you practice Integration Testing, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+        ResponseEntity<OrderResponse> response = rest.postForEntity(
+                "http://localhost:" + port + "/orders",
+                body,
+                OrderResponse.class);
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+        assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
+        assertTrue(orders.findById(response.getBody().id()).isPresent());
+    }
+}
+```
 
-Today we walked through Integration Testing inside Phase 10 — Testing. The next natural question is waiting in Episode 97 — Testcontainers.
+`RANDOM_PORT` starts the embedded server on an ephemeral port; `@LocalServerPort` injects it. `TestRestTemplate` or `WebTestClient` exercises the real stack including filters and converters. That catches wiring bugs `@WebMvcTest` will never see: a security rule that blocks POST, a `Filter` that mishandles content types, a missing bean that only appears when the full configuration loads.
+
+Integration scope is a judgment call. Some teams include Testcontainers-backed Postgres in what they call integration tests; others reserve that name for in-process Boot tests with H2 and use “contract” or “component” for containerized suites. Agree on vocabulary in the team. The technical point is the same: more real collaborators, slower feedback, higher confidence about wiring.
+
+```java
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestSecurityConfig.class)
+class OrderSecurityIntegrationTest {
+
+    @Autowired
+    MockMvc mockMvc;
+
+    @Test
+    @WithMockUser(roles = "CUSTOMER")
+    void customerCanPlaceOrder() throws Exception {
+        mockMvc.perform(post("/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {"sku":"SKU-1","qty":1,"customerId":"cust-9"}
+                            """))
+                .andExpect(status().isAccepted());
+    }
+
+    @Test
+    void anonymousIsUnauthorized() throws Exception {
+        mockMvc.perform(post("/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isUnauthorized());
+    }
+}
+```
+
+Here the server may stay mock-based (`MockMvc`) while security and validation still run for real. That middle ground is still integration: multiple framework subsystems, one process.
+
+Compare the pyramid out loud. Lots of Mockito unit tests for branching. Fewer Spring slices for MVC and JPA mapping. Still fewer random-port integration tests for security and filter order. Rare full-environment journeys. If your pyramid is upside down — everything is `@SpringBootTest` — builds slow down and failures become harder to localize.
+
+Messaging integrations deserve the same honesty. An `@SpringBootTest` that publishes to an embedded broker — or a Testcontainers Kafka in the next episode — and waits until a listener writes a row proves the binder wiring that unit-mocked `Consumer` beans never see. Use Awaitility with a clear condition on the repository rather than `Thread.sleep(2000)` that flakes on slow CI agents.
+
+```java
+await().atMost(Duration.ofSeconds(5))
+        .untilAsserted(() ->
+                assertTrue(orders.findById(orderId).isPresent()));
+```
+
+Flakes appear when integration tests share mutable resources — fixed ports, shared database rows, timing on async listeners. Prefer random ports, transactional rollback or unique keys per test, and deterministic waits on messaging. Clean `@DirtiesContext` is a last resort when a test poisons the cached context; overuse destroys suite speed.
+
+A misconception is replacing unit tests with integration tests because “they catch more.” They catch different things and cost more CPU. Another is asserting only HTTP 200 without checking side effects in the database or outbox table — you have tested a stubbed smile. A third is pointing integration profiles at shared staging services so parallel CI jobs collide.
+
+Today we widened the lens: Boot on a random port, real HTTP calls, security-aware MockMvc flows, and discipline around shared state — confidence in wiring, not only in isolated classes.
+
+H2 will forgive SQL that Postgres rejects. JSONB, locking, and sequences differ across engines. When the integration risk is the database itself, an embedded substitute is not enough.
+
+That gap is why Testcontainers exists.
 
 ## Source attribution
 

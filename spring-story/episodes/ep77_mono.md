@@ -11,23 +11,39 @@
 
 ## Full narration
 
-Many async results are zero or one. Mono is Reactor’s type for that shape.
+Reactive programming introduced publishers. Most business lookups are not streams of thousands of rows — they are "give me this user," "save this order," "call this payment API once." Reactor’s type for that is `Mono<T>`: a publisher that completes with zero or one item, or with an error.
 
-Here is the pain this lesson exists to remove. Blocking I/O on limited threads collapses under concurrency; teams need a model for async streams and backpressure.
+Think of `Mono` as a lazy asynchronous `Optional` with operators — but do not implement it by wrapping blocking calls in `Mono.just`. `Mono.just(repo.findById(id))` still blocks the caller thread before the Mono even exists. Prefer sources that are non-blocking, or defer blocking work explicitly.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Mono.
+```java
+public Mono<Order> findOrder(String id) {
+    return orderRepository.findById(id)          // reactive repo → Mono<Order>
+        .switchIfEmpty(Mono.error(new NotFoundException(id)))
+        .flatMap(order ->
+            inventoryClient.reserve(order.sku()) // Mono<Reservation>
+                .map(res -> order.withReservation(res))
+        )
+        .timeout(Duration.ofSeconds(3))
+        .doOnNext(o -> log.info("loaded order {}", o.getId()));
+}
 
-At a practical level, Mono is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+// Cold: nothing runs until subscribe / WebFlux returns this Mono to the framework
+// Empty → NotFoundException
+// Downstream inventory error → error signal to subscriber
+// Success → one Order emitted, then onComplete
+```
 
-Spring's design choice here is deliberate. Reactor and WebFlux give Spring a first-class model for non-blocking streams when the workload demands it.
+Operator vocabulary you should say out loud. `map` transforms the item synchronously. `flatMap` chains another `Mono` or `Flux` when each item needs an async call — that is the reactive replacement for nested callbacks. `switchIfEmpty` handles the zero-item case. `timeout`, `retry`, `onErrorResume` shape time and failure. `zipWhen` / `zipWith` combine parallel lookups. `then` ignores the payload and waits for completion — useful for deletes.
 
-Once you accept the feature, the next honest question is how it works under the hood. Publishers signal demand through backpressure; schedulers decide which threads execute which operators.
+Cardinality is the contract. If you accidentally emit two items into a `Mono`, Reactor signals an error. If your repository can return many rows, you wanted `Flux`. Choosing `Mono` documents intent for readers and for APIs: WebFlux treats `Mono` as a single JSON object body, not an array.
 
-As you practice Mono, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+Empty is not null. A completed empty `Mono` means "no value." Mapping without guarding empty keeps emptiness. Turning empty into an error with `switchIfEmpty(Mono.error(...))` is how you express 404-style domain failures at the reactive layer. Returning `Mono.justOrEmpty(optional)` bridges imperative code carefully; returning `null` from a reactive adapter is not the same and usually breaks callers.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+A misconception is calling `.block()` on a `Mono` inside WebFlux request handling to "make it simple." That reintroduces thread blocking on the event loop. Blocking belongs at edges you control — tests sometimes, or a narrow adapter — not in the hot path. Another misconception is nesting `subscribe` inside `map` instead of `flatMap` — that breaks backpressure and error propagation.
 
-Today we walked through Mono inside Phase 8 — Reactive Spring. The next natural question is waiting in Episode 78 — Flux.
+Today we treated `Mono` as the 0..1 reactive publisher: compose with `flatMap`, handle empty, signal errors, return it to the web layer instead of blocking. Real list endpoints and event streams need 0..n.
+
+That publisher is `Flux`.
 
 ## Source attribution
 

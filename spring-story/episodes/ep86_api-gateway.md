@@ -11,23 +11,65 @@
 
 ## Full narration
 
-Clients should not know every internal URL. An API gateway is the deliberate edge of the system.
+Discovery solved “where is payment-service?” It did not solve “should every phone app know twelve internal hostnames and CORS policies?” An API gateway is the edge hop: one public entry point that routes to internal services, applies cross-cutting rules, and keeps clients ignorant of how many pods sit behind `/api/orders`.
 
-Here is the pain this lesson exists to remove. Hard-coded hosts, copy-pasted config, and unbounded remote calls make multi-service systems fragile and hard to operate.
+Spring Cloud Gateway is the reactive, Boot-based successor to the older Zuul teaching demos. It is not a servlet MVC app pretending to proxy. It builds on WebFlux and a filter chain of its own. You declare routes: predicates match a request, filters mutate it, and a URI — often `lb://order-service` — sends the call through the load balancer into discovery. The gateway becomes the place for path rewriting, request rate limiting, header injection, and sometimes authentication at the edge.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is API Gateway.
+```java
+@SpringBootApplication
+public class GatewayApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(GatewayApplication.class, args);
+    }
 
-At a practical level, API Gateway is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+    @Bean
+    RouteLocator commerceRoutes(RouteLocatorBuilder builder) {
+        return builder.routes()
+            .route("orders", r -> r
+                .path("/api/orders/**")
+                .filters(f -> f
+                    .rewritePath("/api/orders/(?<segment>.*)", "/orders/${segment}")
+                    .addRequestHeader("X-Edge", "spring-cloud-gateway"))
+                .uri("lb://order-service"))
+            .route("payments", r -> r
+                .path("/api/payments/**")
+                .filters(f -> f.stripPrefix(2))
+                .uri("lb://payment-service"))
+            .build();
+    }
+}
+```
 
-Spring's design choice here is deliberate. Spring Cloud packages proven distributed-system patterns—config, discovery, gateway, resilience—on top of Boot.
+You can express the same routes in YAML. Many teams prefer config for route tables so ops can adjust without recompiling.
 
-Once you accept the feature, the next honest question is how it works under the hood. Sidecar-style clients, gateways, and config servers coordinate through discovery and well-defined remote contracts.
+```yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: orders
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - RewritePath=/api/orders/(?<segment>.*), /orders/${segment}
+```
 
-As you practice API Gateway, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+Say the word `lb://` out loud. That scheme tells Gateway to use Spring Cloud LoadBalancer with the service id `order-service`. Without discovery, you could still point `uri` at `http://fixed-host:8080`, but then you are back to static topology. With Eureka or Kubernetes discovery on the classpath, the gateway resolves instances per request or per cache window.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+Walk one request. A mobile client calls `https://api.example.com/api/orders/42`. TLS may terminate at a load balancer in front. The request hits Gateway. Predicates select the orders route. Filters rewrite the path to `/orders/42` and maybe attach a correlation header. The gateway asks the load balancer for an `order-service` instance, opens a proxied HTTP call, streams the response back, and the client never learned the pod IP. If order-service is down, the failure surfaces at the edge where you can map it to a clean status and message.
 
-Today we walked through API Gateway inside Phase 9 — Spring Cloud. The next natural question is waiting in Episode 87 — Load Balancing.
+Cross-cutting filters are why gateways earn their keep. Authentication can validate a JWT once at the edge before internal services see traffic — with the caveat that defense in depth still matters inside. Rate limiting can protect fragile backends. Retry filters can absorb blips — carefully, because retries on non-idempotent POSTs hurt. Global filters run for every route; gateway filters run per route. Knowing which layer you configured saves hours.
+
+Operational details separate demos from production. Path predicates are only one matcher — you can match on headers, methods, host, query params, or custom predicates. When two routes could match, specificity and order matter; mis-ordered routes are a classic “why is my rewrite wrong?” bug. Websocket and streaming responses need care because Gateway is reactive end to end: blocking work inside a filter starves the event loop. For auth at the edge, prefer validating tokens and forwarding identity headers over inventing a second session store in the gateway process.
+
+A misconception is stuffing business logic into the gateway until it becomes a second monolith. Keep routes and technical filters at the edge; keep domain rules in services. Another is exposing every internal Actuator through the gateway “for convenience” — that convenience is an attack surface. A third is confusing Gateway with Spring MVC `RestController` reverse-proxy hacks: Gateway’s programming model is route + predicate + filter, not controller methods returning remote calls.
+
+Today we placed Spring Cloud Gateway as the public front door: predicates match, filters reshape, `lb://` URIs lean on discovery, and clients talk to one host while the mesh of services stays private.
+
+Routing to a service name still leaves a choice when three healthy instances exist. Who picks which pod gets this request — and what algorithm keeps one hot instance from taking all the load?
+
+That choice is Load Balancing.
 
 ## Source attribution
 

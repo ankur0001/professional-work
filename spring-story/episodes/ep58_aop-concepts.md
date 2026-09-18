@@ -11,23 +11,55 @@
 
 ## Full narration
 
-Logging, security, and transactions cut across every service method. AOP exists so those concerns stop duplicating.
+Open a typical service class before aspects arrive and you can predict the clutter. At the top of every method: log entry with arguments. Then a security check. Then maybe a timer. Then the real business lines. At the bottom: log exit, or log error in a catch that rethrows. Change the audit format and you edit two hundred methods. Forget the security check on one new endpoint and you ship a hole. The domain logic was never the hard part — the repeated rim around it was.
 
-Here is the pain this lesson exists to remove. Problem Statement Scatter/gather anti-pattern: copy-paste logging and TX in every service method. Changes to audit format require editing 200 classes.
+Those repeated rims are cross-cutting concerns. Logging, security, transactions, metrics — they cut across modules instead of belonging to one feature package. Aspect-oriented programming exists to pull them into their own modules and apply them systematically.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is AOP Concepts.
+Spring AOP does that with proxies and a small AspectJ-inspired programming model. You write an aspect: a class that packages pointcuts — where to intervene — and advice — what to run. At runtime, calls into a Spring bean hit a proxy first. If the join point matches, advice runs before, after, or around the real method.
 
-Concept AOP (Aspect-Oriented Programming) modularizes cross-cutting concerns — logic that spans many modules (logging, security, transactions, metrics) without duplicating it in every class. Spring AOP uses proxies to intercept method calls and run additional code at well-defined join points . Cross-Cutting vs Business Logic Without AOP With AOP
+```java
+@Aspect
+@Component
+public class ServiceGuardAspect {
 
-Spring's design choice here is deliberate. History AOP originated in Xerox PARC AspectJ (1997). Spring AOP (2004) provides subset of AspectJ with proxy-based weaving — simpler, no special compiler required for most use cases. Timeline Year Milestone Impact on AOP Concepts 2002 Rod Johnson's J2EE book Lightweight container philosophy 2009 Spring 3.0 Java config @Configuration , @Component 2014 Spring Boot 1.0 Auto-config, embedded servers 2022 Spring Framework 6 / Boot 3 Jakarta EE, Java 17 baseline Before Spring: The J2EE Pain Developer burden (circa 2001)
+    private static final Logger log = LoggerFactory.getLogger(ServiceGuardAspect.class);
 
-Once you accept the feature, the next honest question is how it works under the hood. Internal Working AnnotationAwareAspectJAutoProxyCreator creates proxies for @Aspect and @Transactional . ReflectiveMethodInvocation chains interceptors; @Around controls proceed(). Container Refresh Sequence (High Level) Application startup
+    private final PermissionChecker permissions;
 
-As you practice AOP Concepts, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    public ServiceGuardAspect(PermissionChecker permissions) {
+        this.permissions = permissions;
+    }
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+    @Around("@within(org.springframework.stereotype.Service) && execution(public * *(..))")
+    public Object guard(ProceedingJoinPoint pjp) throws Throwable {
+        String name = pjp.getSignature().toShortString();
+        log.info("enter {}", name);
+        permissions.assertAllowed(name);
 
-Today we walked through AOP Concepts inside Phase 6 — Spring AOP. The next natural question is waiting in Episode 59 — Dynamic Proxies.
+        long start = System.nanoTime();
+        try {
+            Object result = pjp.proceed();
+            log.info("exit {} in {} ms", name, (System.nanoTime() - start) / 1_000_000);
+            return result;
+        } catch (Throwable ex) {
+            log.warn("fail {}: {}", name, ex.toString());
+            throw ex;
+        }
+    }
+}
+```
+
+Speak the example. `@Aspect` marks the module. `@Around` advice wraps matching service methods. Before `proceed`, we log and enforce a permission check. After `proceed`, we log timing. On failure, we log and rethrow. The service methods themselves stay about invoices or reservations — no copy-pasted security or timing boilerplate. Transactions fit the same story: `@Transactional` is implemented with AOP infrastructure even when you never write `@Aspect` yourself.
+
+Hold a few vocabulary words so later episodes stay crisp. Join point: a moment you could intervene — in Spring AOP, primarily method execution. Pointcut: the predicate that selects join points. Advice: the code that runs. Aspect: the unit combining pointcut and advice. Weaving: applying aspects to targets — Spring usually weaves at runtime via proxies, not compile-time bytecode rewriting like full AspectJ.
+
+History helps expectations. AspectJ at Xerox PARC aimed at a rich join-point model. Spring AOP, arriving with the framework’s early years, chose a pragmatic subset: proxy-based, method-centric, friendly to plain Java config and annotations. You enable it with `@EnableAspectJAutoProxy` or, in Boot, by having spring-aop and aspectjweaver on the classpath with aspects as beans. `AnnotationAwareAspectJAutoProxyCreator` notices `@Aspect` beans and wraps matching targets.
+
+What AOP is not: a replacement for clean module boundaries, or a place to hide core business rules. If the “aspect” is really domain policy that only one aggregate cares about, keep it in the domain. Use aspects for true cross-cuts. Also, Spring AOP will not advise private methods, self-invocations, or calls that never pass through the proxy — limits that become vivid once you see how proxies work.
+
+We modularized logging, security, and transactional-style wrapping with an `@Aspect`. The remaining mystery is mechanical: what object actually sits in front of your bean and intercepts the call?
+
+That object is a dynamic proxy — and understanding it unlocks the next episodes.
 
 ## Source attribution
 

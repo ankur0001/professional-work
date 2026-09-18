@@ -11,23 +11,56 @@
 
 ## Full narration
 
-Frontends and APIs often live on different origins. CORS is the browser’s permission protocol.
+CSRF was about a browser silently using cookies against your site. CORS is about a browser *refusing* to let JavaScript on one origin read responses from another — unless your API opts in.
 
-Here is the pain this lesson exists to remove. Open endpoints, weak identity checks, and ad-hoc authorization rules turn APIs into production incidents waiting to happen.
+Origins are scheme + host + port. `https://app.example` and `https://api.example` are different origins. A SPA on the app origin that calls `fetch('https://api.example/orders')` is cross-origin. Simple GETs may be sent, but the browser hides the response from JS unless the API returns the right `Access-Control-Allow-Origin` (and related) headers. For requests that the browser classifies as "not simple" — custom headers like `Authorization`, JSON content types, or certain methods — the browser first sends a **preflight**: `OPTIONS` with `Access-Control-Request-Method` and `Access-Control-Request-Headers`. Your API must answer the preflight successfully before the real request runs.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is CORS.
+Without CORS configuration, local development feels haunted: Postman works, curl works, the SPA console shows a CORS error. Nothing is wrong with your controller mapping — the browser enforced the same-origin policy.
 
-At a practical level, CORS is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+Spring MVC lets you declare CORS with `@CrossOrigin`, `WebMvcConfigurer#addCorsMappings`, or a `CorsConfigurationSource` bean. When Spring Security is on the classpath, you must also integrate CORS into the security filter chain — otherwise Security may reject or ignore the preflight before MVC’s CORS handling helps you.
 
-Spring's design choice here is deliberate. Spring Security provides a filter chain and authorization model so identity and access rules are explicit and testable.
+```java
+@Bean
+SecurityFilterChain api(HttpSecurity http) throws Exception {
+    http
+        .cors(Customizer.withDefaults())
+        .csrf(csrf -> csrf.disable()) // bearer API example
+        .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+        .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+    return http.build();
+}
 
-Once you accept the feature, the next honest question is how it works under the hood. Security filters sit in a chain before controllers; Authentication establishes identity and Authorization enforces decisions.
+@Bean
+CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowedOrigins(List.of("https://app.example"));
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+    config.setAllowCredentials(true);
+    config.setMaxAge(3600L);
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/api/**", config);
+    return source;
+}
 
-As you practice CORS, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+// Browser on https://app.example:
+//   1) OPTIONS https://api.example/api/orders
+//      Access-Control-Request-Method: POST
+//      Access-Control-Request-Headers: authorization, content-type
+//   2) API responds 200 with
+//      Access-Control-Allow-Origin: https://app.example
+//      Access-Control-Allow-Methods: ...
+//      Access-Control-Allow-Headers: authorization, content-type
+//   3) Real POST with Authorization: Bearer ... proceeds; JS may read the response
+```
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+Narrate credentials carefully. If you set `Allow-Credentials: true`, you cannot use `Allow-Origin: *`. You must echo an explicit origin. Cookie-based SPAs and credentialed XHR need that pairing. Bearer-token SPAs often send `Authorization` explicitly and may not need cookies — still list `Authorization` in allowed headers so preflight passes.
 
-Today we walked through CORS inside Phase 7 — Spring Security. The next natural question is waiting in Episode 75 — Security Filters.
+CORS is not an authentication mechanism. Allowing an origin does not authenticate the user. It only tells the browser which frontends may read responses. A non-browser client can still call your API; protect with authentication and authorization as before.
+
+A misconception is fixing CORS by disabling browser security or reflecting arbitrary `Origin` headers in production. Reflecting every origin with credentials is an open door. Another is confusing CORS errors with 401/403 from Spring Security — check the Network tab: failed preflight vs failed bearer validation look different.
+
+We have now secured identity, access, tokens, methods, CSRF, and cross-origin browser access. Those behaviors are not scattered magic — they are ordered filters. The next episode names that chain and shows how a request walks it.
 
 ## Source attribution
 

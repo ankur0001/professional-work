@@ -11,23 +11,53 @@
 
 ## Full narration
 
-Servlet stacks are not the only HTTP story. WebFlux brings reactive endpoints to Spring.
+Reactor gave us `Mono`, `Flux`, schedulers, and backpressure. Spring WebFlux is how those types become HTTP servers and clients on a non-blocking stack — typically Netty with Boot’s WebFlux starter, not an embedded Tomcat servlet container.
 
-Here is the pain this lesson exists to remove. Blocking I/O on limited threads collapses under concurrency; teams need a model for async streams and backpressure.
+Contrast the center of gravity. Spring MVC: `DispatcherServlet`, thread-per-request style, blocking signatures returning objects or `ResponseEntity`. WebFlux: reactive HTTP, handlers that return `Mono` / `Flux`, and a choice of programming model — annotated `@RestController` familiar from MVC, or functional `RouterFunction` / `HandlerFunction` beans. Same application for JSON APIs; different concurrency contract.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Spring WebFlux.
+```java
+@RestController
+@RequestMapping("/api/orders")
+class OrderController {
+    private final OrderService orders;
 
-At a practical level, Spring WebFlux is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+    @GetMapping("/{id}")
+    Mono<Order> byId(@PathVariable String id) {
+        return orders.findById(id); // Mono from reactive repo / WebClient
+    }
 
-Spring's design choice here is deliberate. Reactor and WebFlux give Spring a first-class model for non-blocking streams when the workload demands it.
+    @GetMapping(produces = MediaType.APPLICATION_NDJSON_VALUE)
+    Flux<Order> stream(@RequestParam String tenant) {
+        return orders.streamOpen(tenant);
+    }
+}
 
-Once you accept the feature, the next honest question is how it works under the hood. Publishers signal demand through backpressure; schedulers decide which threads execute which operators.
+// Functional style alternative:
+@Bean
+RouterFunction<ServerResponse> routes(OrderHandler handler) {
+    return route(GET("/api/orders/{id}"), handler::byId)
+        .andRoute(GET("/api/orders"), handler::stream);
+}
 
-As you practice Spring WebFlux, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+// Client side (non-blocking):
+WebClient client = WebClient.create("https://inventory.example");
+Mono<Stock> stock = client.get()
+    .uri("/sku/{sku}", sku)
+    .retrieve()
+    .bodyToMono(Stock.class);
+```
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+`WebClient` replaces blocking `RestTemplate` in this world. It returns publishers; you compose them with the same operators you already learned. Connecting WebFlux to a blocking DataSource without offloading will stall Netty event loops — pair WebFlux with R2DBC or wrap blocking JDBC on `boundedElastic` at a clear boundary.
 
-Today we walked through Spring WebFlux inside Phase 8 — Reactive Spring. The next natural question is waiting in Episode 82 — Reactive Security.
+Boot chooses the stack from the classpath. `spring-boot-starter-web` pulls MVC. `spring-boot-starter-webflux` pulls WebFlux. Putting both on the classpath makes Boot prefer MVC unless you force a reactive application type. Be explicit in multi-module builds so you do not accidentally ship a servlet stack while writing `Mono` return types that never get a reactive runtime.
+
+Error handling and validation have reactive-aware variants, but the teaching point for this episode is the request pipeline: channel reads bytes, decoding produces objects, your handler returns a publisher, encoding writes when items arrive, cancellation propagates when clients disconnect. That is why returning `Flux` for SSE is natural here and awkward under a blocking servlet mindset.
+
+A misconception is "WebFlux is always faster than MVC." For modest concurrency and blocking drivers, MVC is often simpler and plenty fast. WebFlux shines when concurrency and I/O wait dominate and the whole stack is non-blocking. Another misconception is using WebFlux only because it looks modern while calling `.block()` in every handler — that is the worst of both models.
+
+We can serve reactive HTTP. Security still matters — identity and authorization cannot vanish because we changed the server. The filter story must move to the reactive channel.
+
+That is reactive security.
 
 ## Source attribution
 

@@ -11,23 +11,53 @@
 
 ## Full narration
 
-URL rules are not enough when service methods are the real boundary. Method security guards the domain.
+URL matchers catch coarse gates: authenticated, has role ADMIN, permit health checks. They struggle with rules that need the method arguments — "cancel this order only if the principal owns it," "export payroll only if the account id in the path matches a claim." Method security moves those decisions onto the service layer with the same `Authentication` you already established.
 
-Here is the pain this lesson exists to remove. Open endpoints, weak identity checks, and ad-hoc authorization rules turn APIs into production incidents waiting to happen.
+Spring enables it with `@EnableMethodSecurity` (modern) or older `@EnableGlobalMethodSecurity`. Under the hood, Spring AOP proxies the bean. Before the target method runs, an interceptor evaluates annotations like `@PreAuthorize`, `@PostAuthorize`, `@Secured`, or JSR-250 `@RolesAllowed`. SpEL expressions can reach `authentication`, method parameters by name, and beans you expose for custom checks.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Method Security.
+```java
+@Configuration
+@EnableMethodSecurity
+class MethodSecurityConfig {}
 
-At a practical level, Method Security is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+@Service
+public class OrderService {
 
-Spring's design choice here is deliberate. Spring Security provides a filter chain and authorization model so identity and access rules are explicit and testable.
+    @PreAuthorize("hasRole('ADMIN') or @orderSecurity.isOwner(authentication, #orderId)")
+    public void cancel(long orderId) {
+        // mutual fund / shop domain work
+    }
 
-Once you accept the feature, the next honest question is how it works under the hood. Security filters sit in a chain before controllers; Authentication establishes identity and Authorization enforces decisions.
+    @PostAuthorize("returnObject.ownerId == authentication.name or hasRole('ADMIN')")
+    public Order get(long orderId) {
+        return repo.findById(orderId).orElseThrow();
+    }
+}
 
-As you practice Method Security, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+@Component("orderSecurity")
+class OrderSecurity {
+    private final OrderRepository repo;
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+    boolean isOwner(Authentication auth, long orderId) {
+        return repo.findById(orderId)
+            .map(o -> o.getOwnerId().equals(auth.getName()))
+            .orElse(false);
+    }
+}
 
-Today we walked through Method Security inside Phase 7 — Spring Security. The next natural question is waiting in Episode 73 — CSRF.
+// Authenticated Alice (ROLE_USER), owns order 42:
+//   cancel(42) → @PreAuthorize true → method runs
+// Authenticated Alice, order 99 owned by Bob:
+//   cancel(99) → @PreAuthorize false → AccessDeniedException → typically 403
+```
+
+`@PreAuthorize` runs before the call — use it to block work that should never start. `@PostAuthorize` runs after and can veto based on the return value — useful for read paths where you load then confirm visibility, with care about side effects. `@PreFilter` / `@PostFilter` trim collections in place; know they mutate return values and can surprise callers.
+
+Method security does not replace HTTP security. Filters still authenticate and apply path rules. Method rules add defense in depth and express domain authorization where the arguments live. If someone invokes `OrderService.cancel` from a scheduled job or another bean inside the JVM, the HTTP matcher never ran — the method annotation still can, as long as the call goes through the Spring proxy. Self-invocation inside the same class bypasses the proxy, same AOP footgun you met earlier in the series.
+
+A misconception is annotating controllers only and believing services are safe when called from messaging listeners or other adapters. Put the rule on the service that owns the invariant when multiple entry points exist. Another misconception is writing SpEL so complex nobody can audit it — extract `@orderSecurity.isOwner(...)` style beans so security reviews stay readable.
+
+We can now deny an authenticated user on a specific business operation, not only on a URL prefix. Browser-based apps that use cookies for the session still have a different attack to respect: a forged request from another site that rides the user’s cookies. That attack is CSRF — and it needs its own defense, not another `@PreAuthorize`.
 
 ## Source attribution
 

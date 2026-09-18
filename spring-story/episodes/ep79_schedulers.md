@@ -11,23 +11,34 @@
 
 ## Full narration
 
-Reactive code still runs somewhere. Schedulers decide which threads do which work.
+`Mono` and `Flux` describe what happens. Schedulers describe where it happens. In Reactor, threads are not an afterthought you sprinkle with `new Thread` — you shift execution with `publishOn` and `subscribeOn`, backed by `Schedulers` factories.
 
-Here is the pain this lesson exists to remove. Blocking I/O on limited threads collapses under concurrency; teams need a model for async streams and backpressure.
+Know the common pools by role. `Schedulers.parallel()` is for non-blocking CPU-ish work across cores. `Schedulers.single()` is one dedicated thread for tasks that must be serialized. `Schedulers.boundedElastic()` is for blocking or blocking-ish legacy calls — it grows elastically up to a bound so you do not invent unbounded thread creation. `Schedulers.immediate()` runs on the caller. Netty event loops in WebFlux are precious: blocking on them stalls unrelated requests.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Schedulers.
+```java
+public Mono<Report> buildReport(String id) {
+    return Mono.fromCallable(() -> legacyJdbc.loadReport(id)) // blocking JDBC
+        .subscribeOn(Schedulers.boundedElastic())             // run callable on elastic pool
+        .flatMap(raw ->
+            enricher.enrich(raw)                              // reactive HTTP → Mono
+                .publishOn(Schedulers.parallel())             // CPU transform off event loop if needed
+                .map(this::toReport)
+        );
+}
 
-At a practical level, Schedulers is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+// subscribeOn: influences where the subscription upstream begins (source side)
+// publishOn: switches threads for downstream operators after it appears in the chain
+```
 
-Spring's design choice here is deliberate. Reactor and WebFlux give Spring a first-class model for non-blocking streams when the workload demands it.
+Say the difference out loud until it sticks. `subscribeOn` affects the thread where the source is subscribed — useful when the source itself blocks. `publishOn` inserts a thread hop for operators below it in the chain. Stacking them without need adds latency and confusion. Prefer keeping pure reactive I/O on the event loop and isolating blocking adapters behind `boundedElastic`.
 
-Once you accept the feature, the next honest question is how it works under the hood. Publishers signal demand through backpressure; schedulers decide which threads execute which operators.
+In WebFlux, you often never call `subscribeOn` because the framework and Netty already drive non-blocking I/O. You reach for schedulers when you must integrate a blocking library, when you deliberately parallelize CPU work, or when you time deferred tasks with `Mono.delay` and friends. `Schedulers.fromExecutor` wraps an executor you already size for your service.
 
-As you practice Schedulers, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+A misconception is wrapping every operator in `publishOn(parallel())` "for performance." Thread hops cost; measure. Another is using `boundedElastic` for everything, including non-blocking Netty calls — you lose the point of the event loop. A third is spawning unbounded `elastic()` from older Reactor habits; prefer `boundedElastic` so overload becomes visible as queueing instead of silent thread explosion.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+Pipelines now know what to emit and which threads may run stages. When a fast producer meets a slow consumer — network writer, browser, or downstream service — you still need a rule for how much data may be in flight.
 
-Today we walked through Schedulers inside Phase 8 — Reactive Spring. The next natural question is waiting in Episode 80 — Backpressure.
+That rule is backpressure.
 
 ## Source attribution
 

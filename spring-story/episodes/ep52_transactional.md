@@ -11,23 +11,65 @@
 
 ## Full narration
 
-Multiple database steps often need one all-or-nothing outcome. @Transactional declares that boundary.
+Picture a warehouse reservation that must touch three tables in one business action. You decrement available stock. You insert a reservation row. You write an audit ledger entry so finance can prove what happened. If stock decrements and then the reservation insert fails — maybe a unique constraint, maybe a transient outage — you cannot leave the inventory permanently short. Those three writes need one outcome: all committed, or all undone.
 
-Here is the pain this lesson exists to remove. Problem Statement Manual transaction code: try { conn.setAutoCommit(false); ... conn.commit(); } catch { rollback(); } Duplicated everywhere, easy to forget rollback, connection leaks, inconsistent across team.
+That is a transaction boundary. Not a framework slogan. A contract with the database: begin, do work, commit on success, roll back on failure.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is @Transactional.
+Teams used to write that contract by hand. Open a connection. `setAutoCommit(false)`. Try the three statements. `commit()`. On any failure, `rollback()`, and hope every path remembered to close the connection. Copy that try/catch into every service method that touches more than one table. Miss one catch branch and you leak connections or leave half-applied state. The ceremony dwarfed the business rules.
 
-Concept @Transactional is Spring's declarative transaction management annotation. It tells Spring: "Wrap this method in a database transaction — begin before, commit on success, rollback on failure." Without it, each JPA save() might auto-commit independently — breaking atomicity across multiple operations.
+Spring’s answer is declarative: mark the boundary, let the infrastructure own begin, commit, and rollback.
 
-Spring's design choice here is deliberate. Same annotation works for JDBC, JPA, MyBatis when PlatformTransactionManager is configured. Integrates with @Rollback in tests. Design Principles Behind Spring Principle How Spring Applies It Inversion of Control Container controls object creation and wiring Dependency Injection Dependencies supplied via constructor/setter/field Separation of Concerns Config, cross-cutting (AOP), and domain logic separated Program to Interfaces Beans wired by type/name; swap impls without code change Convention over Configuration Boot defaults; sensible @Component scanning Non-invasive No framework classes required in domain model (POJOs) Spring vs Solving It Yourself Custom DI container Spring Framework
+```java
+@Service
+public class ReservationService {
 
-Once you accept the feature, the next honest question is how it works under the hood. Internal Working TransactionInterceptor + BeanFactoryTransactionAttributeSourceAdvisor create JDK/CGLIB proxy. Attributes parsed from @Transactional → RuleBasedTransactionAttribute . TransactionSynchronizationManager binds Connection/EntityManager to current thread. Container Refresh Sequence (High Level) Application startup
+    private final StockRepository stockRepository;
+    private final ReservationRepository reservationRepository;
+    private final LedgerRepository ledgerRepository;
 
-As you practice @Transactional, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    public ReservationService(
+            StockRepository stockRepository,
+            ReservationRepository reservationRepository,
+            LedgerRepository ledgerRepository) {
+        this.stockRepository = stockRepository;
+        this.reservationRepository = reservationRepository;
+        this.ledgerRepository = ledgerRepository;
+    }
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+    @Transactional
+    public ReservationId reserve(Sku sku, int qty, WarehouseId warehouse) {
+        Stock stock = stockRepository.findForUpdate(warehouse, sku)
+                .orElseThrow(() -> new SkuNotFoundException(sku));
 
-Today we walked through @Transactional inside Phase 5 — Transaction Management. The next natural question is waiting in Episode 53 — Propagation.
+        if (stock.available() < qty) {
+            throw new InsufficientStockException(sku, qty, stock.available());
+        }
+
+        stock.decrement(qty);
+        stockRepository.save(stock);
+
+        Reservation reservation = Reservation.open(warehouse, sku, qty);
+        reservationRepository.save(reservation);
+
+        ledgerRepository.append(LedgerEntry.reserved(reservation.id(), sku, qty));
+        return reservation.id();
+    }
+}
+```
+
+Read the method as a spoken story. Enter `reserve`. Spring starts a transaction and binds the JDBC connection or JPA `EntityManager` to the current thread. Decrement stock. Persist the reservation. Append the ledger. If every step succeeds, Spring commits when the method returns. If `InsufficientStockException` or any other runtime failure escapes, Spring rolls back — stock decrement, reservation insert, and ledger append all disappear together.
+
+Without `@Transactional`, each repository `save` can auto-commit on its own connection. You might persist the stock change, then fail on the reservation, and wake up to inventory that no longer matches reality. The annotation is the boundary that restores atomicity across those steps.
+
+Under the hood, Spring does not rewrite your bytecode for this feature in the common path. It wraps the bean in a proxy. A call through the proxy hits a `TransactionInterceptor`. The interceptor reads attributes from `@Transactional`, asks a `PlatformTransactionManager` to get or create a transaction, invokes your method, then commits or rolls back. `TransactionSynchronizationManager` keeps the resource — connection or persistence context — tied to the thread for the duration of that boundary.
+
+A few details matter in production conversations. The default rollback policy is runtime exceptions and errors — checked exceptions do not roll back unless you say so. Self-invocation bypasses the proxy: if `reserve` calls another `@Transactional` method on `this`, that inner annotation is invisible. Read-only flags hint the manager and sometimes the persistence provider that you intend queries only. And the same annotation works across JDBC, JPA, and MyBatis as long as a transaction manager is configured for the resource you use.
+
+One misconception is treating `@Transactional` as “make this method talk to the database.” It does not open a repository for you. It scopes a unit of work. Another is sprinkling it on every private helper. Advice applies to external calls through the proxy, not to every method on the class file.
+
+So we named the boundary, walked a multi-step reservation that must succeed or vanish together, and saw the proxy plus interceptor own begin, commit, and rollback. But the story is incomplete the moment one transactional method calls another. Does the inner call join the outer transaction, or does it demand a brand-new one that can commit even if the outer work later fails?
+
+That nested-call question is propagation — and it is where the next episode starts.
 
 ## Source attribution
 

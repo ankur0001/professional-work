@@ -11,26 +11,93 @@
 
 ## Full narration
 
-When frameworks leak into the domain, change gets expensive. Hexagonal architecture puts the domain in the center.
+Layered Spring apps often still let the framework sit in the middle of the onion. A "domain" class annotated with JPA and Jackson, a service that returns `ResponseEntity`, a repository interface that extends Spring Data in the same package as business rules — the layers have names, but the center is not isolated. Hexagonal architecture — ports and adapters — flips the gravity: the domain sits in the center; everything else plugs in around it.
 
-Here is the pain this lesson exists to remove. Without clear boundaries, frameworks leak into the domain and every change becomes expensive.
+Alistair Cockburn’s idea is simple to say. The application core defines ports — interfaces for things it needs and things that drive it. Adapters implement those ports for HTTP, databases, message brokers, mail. The core never imports Spring Web. Spring remains the composition root that wires adapters to ports.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Hexagonal Architecture.
+Draw one hexagon for checkout:
 
-At a practical level, Hexagonal Architecture is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+- Driving (primary) port: `PlaceOrderUseCase` — what the outside world can ask the app to do.
+- Driven (secondary) ports: `OrderRepository`, `PaymentGateway` — what the app needs from the outside.
+- Adapters: `OrderController` (Spring MVC) drives the use case; `JpaOrderAdapter` and `StripePaymentAdapter` implement driven ports.
 
-Spring's design choice here is deliberate. Architectural styles give teams a shared language for boundaries, dependencies, and change.
+```java
+// domain + application core — no Spring Web imports
+public interface PlaceOrderUseCase {
+    Order place(PlaceOrderCommand command);
+}
 
-Once you accept the feature, the next honest question is how it works under the hood. Dependency direction and boundary rules decide what can know about what — and what stays replaceable.
+public interface OrderRepository {
+    Order save(Order order);
+    Optional<Order> findById(OrderId id);
+}
 
-As you practice Hexagonal Architecture, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+public class PlaceOrderService implements PlaceOrderUseCase {
+    private final OrderRepository orders;
+    private final PaymentGateway payments;
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+    public PlaceOrderService(OrderRepository orders, PaymentGateway payments) {
+        this.orders = orders;
+        this.payments = payments;
+    }
 
-Today we walked through Hexagonal Architecture inside Phase 12 — Enterprise Architecture. The next natural question is waiting in Episode 108 — Clean Architecture.
+    @Override
+    public Order place(PlaceOrderCommand command) {
+        PaymentResult paid = payments.charge(command.total());
+        return orders.save(Order.create(command, paid));
+    }
+}
+```
+
+```java
+// adapter — Spring Web talks to the port only
+@RestController
+@RequestMapping("/orders")
+public class OrderController {
+    private final PlaceOrderUseCase placeOrder;
+
+    public OrderController(PlaceOrderUseCase placeOrder) {
+        this.placeOrder = placeOrder;
+    }
+
+    @PostMapping
+    public OrderResponse post(@Valid @RequestBody PlaceOrderRequest body) {
+        Order order = placeOrder.place(body.toCommand());
+        return OrderResponse.from(order);
+    }
+}
+```
+
+```java
+// adapter — persistence implements the driven port
+@Repository
+public class JpaOrderAdapter implements OrderRepository {
+    private final SpringDataOrderRepo springData;
+
+    public JpaOrderAdapter(SpringDataOrderRepo springData) {
+        this.springData = springData;
+    }
+
+    @Override
+    public Order save(Order order) {
+        return springData.save(OrderEntity.fromDomain(order)).toDomain();
+    }
+    // ...
+}
+```
+
+Boot’s job is wiring. A `@Configuration` class constructs `PlaceOrderService` with adapter beans, or you mark the core service with a thin stereotype if you accept a minimal Spring annotation in the application layer. The test payoff is immediate: unit-test `PlaceOrderService` with fakes for `OrderRepository` and `PaymentGateway` — no `@SpringBootTest` required for the core rule.
+
+Hexagonal is not "rewrite everything into six packages named port and adapter." It is dependency inversion at the boundaries that hurt. Start with the payment gateway and the web API; leave trivial read-only admin screens layered if they are stable.
+
+Misconception: hexagons forbid Spring. They forbid Spring in the core. Misconception: every interface needs an adapter hierarchy six types deep. One port, one implementation is enough until a second adapter exists.
+
+Today we put the domain in the center, showed a use-case port driven by MVC and implemented repositories as adapters, and kept Spring at the edges. Clean architecture pushes the same dependency rule further with explicit rings and use-case interactors — a sharpening of what you just saw.
+
+That sharpening is next.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 107 (*Hexagonal Architecture*).
 
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.
+Narration technique: framework-in-the-middle pain → ports/adapters → core use case without Spring Web → MVC + JPA adapters → wiring/tests → misconceptions → bridge to clean architecture.

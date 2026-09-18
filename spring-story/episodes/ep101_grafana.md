@@ -11,26 +11,36 @@
 
 ## Full narration
 
-Raw metrics are hard to feel. Grafana turns them into operational pictures humans can read.
+Prometheus can answer any PromQL question you type. At three in the morning nobody wants to invent the question from scratch. Grafana is where scrape data becomes a shared operational picture: panels, variables, alert rules hanging off the same queries your on-call already trusts.
 
-Here is the pain this lesson exists to remove. A service you cannot measure, trace, or visualize is a service you cannot operate when it fails.
+Connect Grafana to Prometheus as a data source — URL of the Prometheus server, nothing Spring-specific there. Then build a dashboard around the meters you actually emit. For the checkout service from the Micrometer episode, start narrow. One row for traffic and success. One row for latency. One row for saturation. Resist the urge to paste thirty JVM panels on day one.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Grafana.
+A practical starter layout for `checkout-service`:
 
-At a practical level, Grafana is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+| Panel | PromQL sketch | Why it exists |
+|---|---|---|
+| Requests in flight / rate | `sum(rate(http_server_requests_seconds_count{application="checkout-service"}[5m]))` | Are we busy? |
+| Checkout success ratio | `sum(rate(checkout_succeeded_total[5m])) / sum(rate(checkout_started_total[5m]))` | Is business OK? |
+| Payment p99 | `histogram_quantile(0.99, sum(rate(checkout_payment_duration_seconds_bucket[5m])) by (le))` | Where does time go? |
+| JVM heap used | `jvm_memory_used_bytes{area="heap"}` | Are we near OOM? |
+| Tomcat threads / DB pool | pool gauges from Boot | Are we saturated? |
 
-Spring's design choice here is deliberate. Micrometer and the observability stack turn runtime behavior into metrics, traces, and dashboards operators can act on.
+Dashboard JSON in a repo beats click-ops. Export the dashboard, store it next to the service, and provision it so every environment sees the same panels. Variables for `application` and `env` keep one dashboard reusable across services that share naming conventions — which is why those Micrometer common tags mattered. A folder structure that mirrors your domain — `checkout`, `inventory`, `payments` — beats one endless list titled "Spring apps."
 
-Once you accept the feature, the next honest question is how it works under the hood. Instrumentation emits metrics and traces; backends scrape or receive them; dashboards and alerts turn signals into action.
+Walk an incident with the dashboard open. Traffic rate flat, success ratio down: look at error panels and logs. Success ratio fine, payment p99 up: open the latency row and jump to traces for that operation name. Heap climbing while latency is fine: you are early on a memory problem — Episode 104 territory — and the panel still earned its keep by showing the ramp.
 
-As you practice Grafana, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+Alerts belong next to panels, not in a separate tribal wiki. Example: page if payment p99 stays above two seconds for five minutes, or if success ratio drops below 0.95. Grafana can evaluate PromQL and notify Slack or PagerDuty. The skill is choosing signals that mean customer harm, not every blip on a CPU graph. Burn-rate alerts on SLOs beat "CPU > 80%" pages that train on-call to ignore noise.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+Spring’s role here is upstream honesty. Grafana cannot invent a `checkout.payment.duration` timer you never registered. Bad tag cardinality makes every panel slow. Missing `application` tags make variables useless. When a panel is empty, debug in order: is the meter recorded, is `/actuator/prometheus` exposing it, is Prometheus scraping the right target, is the PromQL label matcher wrong? Units matter too — a panel that treats `_seconds` as milliseconds will invent a crisis.
 
-Today we walked through Grafana inside Phase 11 — Observability. The next natural question is waiting in Episode 102 — OpenTelemetry.
+A misconception is treating a pretty JVM dashboard as application observability. Heap graphs without business timers leave you knowing the GC ran while checkout failed for a different reason. Another misconception is one giant org-wide dashboard. Prefer service dashboards with a small RED/USE core — rate, errors, duration; utilization, saturation, errors — then deep-links into traces when latency spikes.
+
+So today we turned scraped series into an operable checkout dashboard, tied alerts to the same queries, and put the burden back on good Micrometer names. Metrics answer "how much" and "how often." They still struggle with "what happened on this one request as it crossed four services?"
+
+That request-shaped story is OpenTelemetry’s home ground.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 101 (*Grafana*).
 
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.
+Narration technique: PromQL at 3am → Grafana as shared picture → starter panel table → provisioning/alerts → Spring upstream honesty → bridge to distributed traces.

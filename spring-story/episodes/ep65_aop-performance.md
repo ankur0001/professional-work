@@ -11,23 +11,57 @@
 
 ## Full narration
 
-Proxies are not free. AOP performance is about knowing when the abstraction costs real latency.
+Proxies are an elegant way to modularize cross-cutting concerns. They are not free. Each advised call pays for entering the proxy, walking an interceptor chain, evaluating whatever remains of matching work, and only then running your method. On a cold path that hits the database for forty milliseconds, a few microseconds of AOP vanish into noise. On a tight in-memory loop advised by three `@Around` aspects with fat pointcut expressions, the abstraction becomes a tax you can measure.
 
-Here is the pain this lesson exists to remove. Logging, security, and transactions get copy-pasted into every service method until cross-cutting concerns dominate the codebase.
+AOP performance is about knowing where that tax is worth paying.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Performance.
+Startup cost comes first. Auto-proxy creators scan advisors, build candidate sets, and generate JDK or CGLIB proxy classes for matching beans. Hundreds of beans times class-based proxy generation shows up in boot time and metaspace. Narrow pointcuts and fewer blanket aspects reduce how many beans get wrapped. If only ten services need auditing, an `@annotation(Audited)` pointcut beats `execution(* com.example..*(..))` across the entire tree.
 
-At a practical level, Performance is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+```java
+@Aspect
+@Component
+public class ExpensiveVsCheapAspect {
 
-Spring's design choice here is deliberate. Spring AOP modularizes cross-cutting behavior with proxies so domain methods stay about the domain.
+    // wide — tempting, costly if it matches hundreds of beans/methods
+    @Around("execution(* com.example..*Service.*(..))")
+    public Object wide(ProceedingJoinPoint pjp) throws Throwable {
+        return pjp.proceed();
+    }
+}
+```
 
-Once you accept the feature, the next honest question is how it works under the hood. Spring builds a proxy around the bean; join points matching a pointcut run advice before, after, or around the target method.
+```java
+@Aspect
+@Component
+public class OptInAuditAspect {
 
-As you practice Performance, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    // narrow — opt-in methods only
+    @Around("@annotation(com.example.audit.Audited)")
+    public Object audit(ProceedingJoinPoint pjp) throws Throwable {
+        long start = System.nanoTime();
+        try {
+            return pjp.proceed();
+        } finally {
+            long took = System.nanoTime() - start;
+            if (took > 5_000_000L) {
+                slowLog.warn("{} took {} µs", pjp.getSignature(), took / 1000);
+            }
+        }
+    }
+}
+```
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+Runtime cost sits in the call path. Prefer cheap advice bodies. An `@Around` that allocates format strings, serializes arguments to JSON, and writes synchronous network audit on every call can dominate a service that used to be a few field updates. Sample, bound, or async the observability side effects. Avoid advising trivial getters called thousands of times per request. Remember self-invocation: people sometimes “fix” performance by moving logic to public advised methods and accidentally create extra proxy hops — or conversely wonder why removing an annotation did nothing because calls never hit the proxy.
 
-Today we walked through Performance inside Phase 6 — Spring AOP. The next natural question is waiting in Episode 66 — Security Fundamentals.
+Pointcut shape matters more than many teams expect. Complex runtime matching is cheaper when Spring can cache and when static structure dominates. Extremely wide expressions force more proxying and more interceptor evaluations. Named composed pointcuts that fail fast — type first, then annotation — keep intent clear and matching bounded.
+
+Measure before you blame AOP. Use a profiler or micrometer timers around representative endpoints with aspects enabled and disabled. Check allocation rates, not only average latency. Watch for CGLIB proxy class explosion in metaspace on apps that create many advised beans dynamically. And distinguish framework advisors you want — transactions, security — from accidental custom aspects on hot loops.
+
+A misconception is “remove all AOP for speed.” You would reintroduce copy-pasted logging and transaction demarkation, usually with worse bugs and similar overhead in handwritten form. Another is enabling `exposeProxy = true` and calling `AopContext.currentProxy()` everywhere to “fix” self-invocation — correct sometimes, but a design smell that also adds cost and thread-local coupling. Prefer restructuring so external calls enter through the proxy naturally.
+
+We have now walked AOP from concepts through proxies, advice, pointcuts, ordering, and cost. Cross-cutting concerns are under control in the service layer. The next pressure is different: who is allowed to call those services at all, how credentials travel with a request, and what “authenticated” means inside a Spring application.
+
+That opens security fundamentals — the natural continuation beyond AOP.
 
 ## Source attribution
 

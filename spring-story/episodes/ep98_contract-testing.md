@@ -11,23 +11,68 @@
 
 ## Full narration
 
-Independent services still share contracts. Contract testing catches breakage before production does.
+Testcontainers proved your service talks to a real database. It did not prove that inventory still returns the JSON your Feign client deserializes after their team ships on Friday. End-to-end environments catch that late and flaky. Contract testing catches it earlier: consumer and provider agree on a document — requests and responses — and each side verifies against that document in isolation.
 
-Here is the pain this lesson exists to remove. Without automated proof at the right layer, regressions slip through and teams fear every deploy.
+Spring Cloud Contract is the Spring-centric tooling for this. You write contracts — often Groovy or YAML DSL — that describe an HTTP interaction. From those contracts the framework can generate producer-side tests that fail if the controller no longer satisfies the spec, and stub runners that give the consumer a WireMock-like stub in tests so Feign clients keep working without the real provider process.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Contract Testing.
+```groovy
+// contracts/inventory/should_return_stock.groovy
+Contract.make {
+    description "stock by sku"
+    request {
+        method GET()
+        url "/stock/SKU-1"
+    }
+    response {
+        status 200
+        headers {
+            contentType(applicationJson())
+        }
+        body([
+            sku      : "SKU-1",
+            available: 5
+        ])
+    }
+}
+```
 
-At a practical level, Contract Testing is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+On the producer (inventory), the build generates a test that performs `GET /stock/SKU-1` against the Spring context and asserts status and body fragments. If someone renames `available` to `qtyAvailable` without updating the contract, the producer build breaks — before consumers discover it in staging.
 
-Spring's design choice here is deliberate. Spring’s test support and the wider Java test ecosystem let you verify units, slices, and full integrations deliberately.
+On the consumer (order), `@AutoConfigureStubRunner` downloads or locates the stub jar built from those contracts and starts stubs on a port. Your Feign client points at that stub during tests.
 
-Once you accept the feature, the next honest question is how it works under the hood. Test slices load only the relevant context; containers and mocks replace the rest so feedback stays fast and honest.
+```java
+@SpringBootTest
+@AutoConfigureStubRunner(
+        ids = "com.example:inventory-service:+:stubs:0",
+        stubsMode = StubRunnerProperties.StubsMode.LOCAL)
+class OrderServiceContractTest {
 
-As you practice Contract Testing, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    @Autowired
+    InventoryClient inventory;
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+    @Test
+    void readsStockFromStub() {
+        StockView stock = inventory.getStock("SKU-1");
+        assertEquals(5, stock.available());
+    }
+}
+```
 
-Today we walked through Contract Testing inside Phase 10 — Testing. The next natural question is waiting in Episode 99 — Micrometer.
+The flow across teams becomes a pipeline: contracts live in the producer repo (or a shared contract repo), producer CI publishes stub artifacts, consumer CI runs against stubs at a known version. That is consumer-driven contract testing when consumers propose contracts; it is provider-driven when the provider publishes and consumers must follow. Either way, the artifact is the agreement, not a wiki screenshot of JSON.
+
+Contracts also work for messaging — message inputs and outputs — which pairs cleanly with Spring Cloud Stream from earlier. The same idea holds: generate tests for the producer of the message and stubs for the listener side.
+
+Producer-side generated tests usually sit under `generated-test-sources` and run with the provider’s Spring context — often `@AutoConfigureMockMvc` style under the hood. When a generated test fails, read the contract first, then the controller mapping. The failure means the live API drifted from the agreed document; either fix the API or deliberately revise the contract and republish stubs so consumers can adapt in the same change train.
+
+WireMock stubs from contracts are not an excuse to skip consumer logic tests. They freeze the HTTP conversation so your Feign mapping and domain branching can run quickly. Pair them with a few true integration tests against a real inventory in a shared environment when the risk warrants it.
+
+A misconception is treating contracts as end-to-end tests. They do not prove business workflows across real deployments; they prove shape and status compatibility at the boundary. Another is duplicating every internal field in contracts until churn makes teams disable the suite — contract the fields consumers need. A third is never versioning stubs, so consumers silently float to incompatible producer stubs.
+
+Today we used a contract to lock `GET /stock/SKU-1`, generate producer verification, and run the order Feign client against stubs — breaking builds on incompatible API changes before production does.
+
+You can test units, slices, containers, and contracts and still fly blind in production if you cannot see live latency, error rates, and traffic. After confidence in the build comes telemetry in the running system.
+
+That telemetry starts with Micrometer.
 
 ## Source attribution
 

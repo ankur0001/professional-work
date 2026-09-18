@@ -11,26 +11,62 @@
 
 ## Full narration
 
-Feature-complete is not production-ready. Readiness is the checklist that ships with confidence.
+Feature-complete is a product statement. Production-ready is an operations statement. You can demo checkout on a laptop and still be unsafe to expose to real traffic: no probes, secrets in the image, every Actuator endpoint on the public port, zero dashboards, and a single instance with sticky dreams of availability.
 
-Here is the pain this lesson exists to remove. A service you cannot measure, trace, or visualize is a service you cannot operate when it fails.
+Production readiness is the gate where Phase 11’s tools become habits. Health for orchestrators. Metrics and traces for humans. Safe config. Resource limits. Rollback story. You are not collecting trophies — you are removing classes of three-in-the-morning failure.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Production Readiness.
+Start with Actuator honestly. Liveness and readiness are not the same. Liveness failure means restart the process. Readiness failure means stop sending traffic while the process may still be alive — database warmed up, caches primed, dependent check passed.
 
-At a practical level, Production Readiness is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+```yaml
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  server:
+    port: 8081   # management on a separate port
+```
 
-Spring's design choice here is deliberate. Micrometer and the observability stack turn runtime behavior into metrics, traces, and dashboards operators can act on.
+Kubernetes probes hit `/actuator/health/liveness` and `/actuator/health/readiness` on the management port. Custom `HealthIndicator` beans should fail readiness when the app cannot do useful work — empty required config, migration not finished — not when a non-critical cache is cold.
 
-Once you accept the feature, the next honest question is how it works under the hood. Instrumentation emits metrics and traces; backends scrape or receive them; dashboards and alerts turn signals into action.
+Config and secrets: externalize with env vars or a secret store; never bake production credentials into the jar. Use profiles deliberately. Fail fast on missing required properties with `@ConfigurationProperties` validation. Logging: structured JSON in prod, correlation with trace ids, and levels that do not print payloads containing PII.
 
-As you practice Production Readiness, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+From earlier episodes, require a minimum observability bar before "go":
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+- Micrometer business timers/counters on critical paths
+- Prometheus scrape working on the management port
+- A Grafana dashboard with traffic, errors, latency, saturation
+- Tracing sampled and reachable from that dashboard
+- Memory and GC panels watched under a load test
+- Alerts on SLO burn, not on every CPU blip
 
-Today we walked through Production Readiness inside Phase 11 — Observability. The next natural question is waiting in Episode 106 — Layered Architecture.
+Resilience is part of readiness. Timeouts on every remote call. Bulkheads or concurrency limits where one dependency can exhaust your threads. Circuit breakers where fail-fast beats pile-up. Graceful shutdown so in-flight requests finish when a pod receives SIGTERM:
+
+```yaml
+server:
+  shutdown: graceful
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+```
+
+Capacity: set JVM and container limits that match, horizontal pod autoscaling on a meaningful metric, and a proven rollback — previous image, previous config map. A readiness review that cannot answer "how do we undo this deploy?" is incomplete. Prefer scaling on saturation or request rate tied to SLO burn, not on CPU alone when your bottleneck is a downstream pool.
+
+Run a pre-prod drill once: kill a pod mid-request and confirm graceful shutdown drains connections; break the database and confirm readiness goes false while liveness stays true; scrape metrics from a fresh instance and open the Grafana dashboard cold. Paper checklists lie; drills tell the truth.
+
+Misconception: a green `/actuator/health` means production-ready. Health can be shallow while your payment timer is missing and your scrape endpoint is firewalled wrong. Misconception: readiness is a one-time checklist at first launch. It is a living contract as dependencies and traffic shapes change. Misconception: "we have Kubernetes, so we are ready." Orchestration without probes, budgets, and observability only restarts confusion faster.
+
+Today we closed Phase 11 by binding probes, management ports, observability bars, timeouts, and graceful shutdown into one gate. Once a service survives production, a different pressure appears: the codebase itself gets harder to change — controllers talk to SQL, domain rules scatter, every feature touches everything.
+
+That structural pain is where enterprise architecture begins — starting with the layered baseline most Spring teams already half-use.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 105 (*Production Readiness*).
 
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.
+Narration technique: feature-complete vs ready → probes and management port → observability bar → resilience/shutdown → misconceptions → bridge to layered architecture (Phase 12).

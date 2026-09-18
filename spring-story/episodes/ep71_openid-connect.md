@@ -11,23 +11,56 @@
 
 ## Full narration
 
-OAuth2 authorizes access. OpenID Connect adds a standardized identity layer on top.
+OAuth2 delegates access. It does not, by itself, define how a client learns the user’s identity in a standard way. OpenID Connect (OIDC) sits on top of OAuth2 and adds that identity layer.
 
-Here is the pain this lesson exists to remove. Open endpoints, weak identity checks, and ad-hoc authorization rules turn APIs into production incidents waiting to happen.
+The short version: OIDC keeps the authorization code flow you already know, and adds an **ID token** — a JWT that asserts who authenticated — plus a UserInfo endpoint for profile claims. Scopes like `openid`, `profile`, and `email` are the handshake that you want login, not only API access. If you request `openid`, a conformant provider returns an ID token alongside the access token.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is OpenID Connect.
+Why teams care in Spring apps: you want "Sign in with Okta / Google / Azure AD" without inventing a proprietary profile JSON for every IdP. OIDC standardizes `sub`, `iss`, `aud`, `exp`, `nonce`, and optional profile claims. Your app verifies the ID token, establishes a local session or security context, and optionally still uses the access token to call APIs.
 
-At a practical level, OpenID Connect is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+```java
+@Bean
+SecurityFilterChain oidcLogin(HttpSecurity http) throws Exception {
+    http
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/css/**", "/login").permitAll()
+            .anyRequest().authenticated()
+        )
+        .oauth2Login(oauth2 -> oauth2
+            .userInfoEndpoint(userInfo -> userInfo
+                .oidcUserService(this.oidcUserService())
+            )
+        );
+    return http.build();
+}
 
-Spring's design choice here is deliberate. Spring Security provides a filter chain and authorization model so identity and access rules are explicit and testable.
+private OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService() {
+    final OidcUserService delegate = new OidcUserService();
+    return userRequest -> {
+        OidcUser user = delegate.loadUser(userRequest);
+        // ID token claims: sub, email, ...
+        String email = user.getEmail();
+        // Map IdP groups/roles → GrantedAuthority for your app
+        Set<GrantedAuthority> mapped = mapAuthorities(user);
+        return new DefaultOidcUser(mapped, user.getIdToken(), user.getUserInfo());
+    };
+}
 
-Once you accept the feature, the next honest question is how it works under the hood. Security filters sit in a chain before controllers; Authentication establishes identity and Authorization enforces decisions.
+// Browser flow (sketch):
+// 1) GET /oauth2/authorization/okta
+// 2) Redirect to IdP → user authenticates + consents (scope includes openid)
+// 3) Callback with code → token endpoint returns access_token + id_token
+// 4) Spring validates id_token (sig, iss, aud, exp, nonce) → OidcUser in SecurityContext
+```
 
-As you practice OpenID Connect, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+Hold the token types apart. The **ID token** is for the client application to know who logged in. The **access token** is for calling a resource server. Your SPA should not send the ID token as an API bearer credential just because it is also a JWT. Resource servers validate access tokens (and audience/scope). Login apps validate ID tokens.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+Nonce and state are not decorative. State ties the callback to the browser session that started the redirect (CSRF-ish protection on the OAuth redirect). Nonce binds the ID token to that authentication attempt so replayed ID tokens are harder to abuse. Spring’s OAuth2 login support handles the common case when you use the client starter correctly — still know why those parameters exist when something fails in production.
 
-Today we walked through OpenID Connect inside Phase 7 — Spring Security. The next natural question is waiting in Episode 72 — Method Security.
+A topic-specific misconception is saying "OIDC replaces OAuth2." It extends it. Another is assuming every JWT from the IdP is interchangeable: access tokens and ID tokens have different audiences and purposes. A third is mapping `email` to your local admin role without an explicit claim-to-authority policy — that is how contractors inherit god mode from a misconfigured IdP group.
+
+So today we added identity assertions on top of delegation: `openid` scope, ID token validation, `OidcUser` in the security context, and a clear split between login tokens and API tokens. HTTP and login rules still live at the edge. Many domain rules — "only the owner may cancel this order" — want to sit next to the service method itself.
+
+That is where method security earns its place.
 
 ## Source attribution
 

@@ -11,26 +11,88 @@
 
 ## Full narration
 
-One model for reads and writes can choke either side. CQRS separates those responsibilities on purpose.
+An `Order` aggregate protects write invariants — authorize before capture, lines frozen after authorize. The customer support screen wants a denormalized page: order header, payment status, shipment tracking, loyalty points, last five notes. Forcing that screen through the write aggregate produces either N+1 queries, bloated aggregates, or transactions that lock too much. CQRS — Command Query Responsibility Segregation — separates the write model from the read model on purpose.
 
-Here is the pain this lesson exists to remove. Without clear boundaries, frameworks leak into the domain and every change becomes expensive.
+Command side: validate and mutate aggregates, emit events. Query side: answer reads from models shaped for screens — SQL views, separate tables, Redis documents, Elasticsearch. The two sides can share a database in a mild form or use different stores in a strong form. Mild CQRS is often enough in a modular Spring monolith.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is CQRS.
+```java
+// write model — commands only
+@RestController
+@RequestMapping("/orders")
+public class OrderCommandController {
+    private final AuthorizeOrderService authorize;
 
-At a practical level, CQRS is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+    @PostMapping("/{id}/authorize")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void authorize(@PathVariable OrderId id, @RequestBody AuthorizeRequest body) {
+        authorize.authorize(id, body.amount());
+    }
+}
 
-Spring's design choice here is deliberate. Architectural styles give teams a shared language for boundaries, dependencies, and change.
+// read model — queries only
+@RestController
+@RequestMapping("/order-views")
+public class OrderQueryController {
+    private final OrderViewRepository views;
 
-Once you accept the feature, the next honest question is how it works under the hood. Dependency direction and boundary rules decide what can know about what — and what stays replaceable.
+    @GetMapping("/{id}")
+    public OrderSupportView get(@PathVariable String id) {
+        return views.findSupportView(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+}
+```
 
-As you practice CQRS, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+```java
+public interface OrderViewRepository {
+    Optional<OrderSupportView> findSupportView(String orderId);
+}
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+// projection updated from events
+@Component
+public class OrderViewProjector {
+    private final OrderViewJdbc views;
 
-Today we walked through CQRS inside Phase 12 — Enterprise Architecture. The next natural question is waiting in Episode 112 — Production Case Studies.
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void on(OrderAuthorized event) {
+        views.markAuthorized(event.orderId().value(), event.amount());
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void on(OrderShipped event) {
+        views.attachTracking(event.orderId().value(), event.trackingNumber());
+    }
+}
+```
+
+```sql
+-- read table shaped for the support screen
+CREATE TABLE order_support_view (
+  order_id        TEXT PRIMARY KEY,
+  status          TEXT NOT NULL,
+  authorized_amt  NUMERIC,
+  tracking_number TEXT,
+  loyalty_points  INT,
+  updated_at      TIMESTAMPTZ NOT NULL
+);
+```
+
+Reads become simple SELECTs. Writes stay strict. Consistency between them is eventual unless you update the read model in the same transaction — possible when both share a DB, harder when the read side is another technology.
+
+Spring Data fits naturally: one repository style for aggregates, another for query objects or JOINs via JDBC templates. Do not expose write entities on query controllers "just this once" — that once becomes the permanent API.
+
+CQRS is not required everywhere. A settings page with three fields can use one model. Adopt CQRS where read shapes and write invariants diverge painfully — support consoles, search, personalized feeds. Event sourcing is optional and heavier; CQRS does not demand event sourcing, though they pair often. When you do both, the event store is the write log and projections become the query models — powerful, and a bigger operational commitment than a single SQL view.
+
+Watch lag. A Micrometer gauge or a `updated_at` age on the projection tells on-call whether support is looking at stale data. Without that signal, every "wrong status in the UI" ticket becomes a ghost hunt across write and read paths.
+
+Misconception: CQRS means microservices. You can CQRS inside one deployable. Misconception: every query must be eventually consistent. Same-database projections updated in-transaction keep read-your-writes for many flows. Misconception: the write model may never be queried. Admin tools sometimes need a careful get-by-id on the aggregate; the split is about default paths and screen shapes, not a religious ban.
+
+Today we split command and query controllers, projected an `order_support_view` from domain events, and kept the write aggregate focused. Patterns only earn trust when they survive messy production constraints — traffic, people, legacy, and tradeoffs.
+
+The last episode is where those patterns meet case studies and the series closes.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 111 (*CQRS*).
 
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.
+Narration technique: write vs support-screen conflict → CQRS definition → separate controllers → projector + SQL view → when to use → misconceptions → bridge to case studies / series close.

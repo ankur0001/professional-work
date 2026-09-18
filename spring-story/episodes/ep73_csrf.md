@@ -11,23 +11,48 @@
 
 ## Full narration
 
-Browsers can be tricked into firing requests as you. CSRF defense exists for that attack class.
+Method security answered domain rules for an already-authenticated principal. CSRF answers a browser-shaped attack that never needs to steal the password — it only needs the browser to attach cookies automatically.
 
-Here is the pain this lesson exists to remove. Open endpoints, weak identity checks, and ad-hoc authorization rules turn APIs into production incidents waiting to happen.
+Here is the forged-POST story. Alice is logged into `https://shop.example` with a session cookie. While her session is alive, she visits `https://evil.example`. That page contains a hidden form that POSTs to `https://shop.example/api/transfer` with Alice’s account numbers in the body. Alice’s browser sends the shop’s session cookie on that cross-site POST because that is how cookies work for the target domain. The shop server sees a authenticated session and executes the transfer. Alice never clicked "Transfer" on the real site. That is cross-site request forgery.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is CSRF.
+APIs that use `Authorization: Bearer` headers from JavaScript are usually not vulnerable in the same way — browsers do not auto-attach arbitrary bearer tokens the way they attach cookies. Cookie-session browser apps are the classic CSRF victims. Spring Security enables CSRF protection by default for browser-oriented configurations precisely because of that model.
 
-At a practical level, CSRF is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+The defense is a synchronizer token. The server issues a CSRF token bound to the session. Legitimate forms and AJAX calls from your origin include that token in a header or form field. The forged page on `evil.example` cannot read your token (same-origin policy). Spring’s `CsrfFilter` rejects state-changing requests that lack a valid token.
 
-Spring's design choice here is deliberate. Spring Security provides a filter chain and authorization model so identity and access rules are explicit and testable.
+```java
+@Bean
+SecurityFilterChain browserApp(HttpSecurity http) throws Exception {
+    http
+        .csrf(csrf -> csrf
+            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+        )
+        .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+        .formLogin(Customizer.withDefaults());
+    return http.build();
+}
 
-Once you accept the feature, the next honest question is how it works under the hood. Security filters sit in a chain before controllers; Authentication establishes identity and Authorization enforces decisions.
+// Legitimate page (same origin) includes token:
+// <form method="post" action="/transfer">
+//   <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+//   ...
+// </form>
+//
+// Or AJAX:
+//   headers: { "X-XSRF-TOKEN": readCookie("XSRF-TOKEN") }
+//
+// Forged evil.example POST /transfer with cookies attached but no valid CSRF token
+//   → CsrfFilter → 403 Forbidden
+```
 
-As you practice CSRF, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+Walk the denial: session cookie may be present; authentication may succeed; CSRF check still fails without the token. That ordering matters when you debug — you can be logged in and still get 403 on POST, PUT, PATCH, DELETE.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+For pure stateless bearer-token APIs with no cookie session, teams often disable CSRF in the security DSL because the browser cookie attack does not apply. Disabling it on a Thymeleaf form-login app because "it was noisy in Postman" is how you reopen the forged-POST hole. Match the protection to the credential style.
 
-Today we walked through CSRF inside Phase 7 — Spring Security. The next natural question is waiting in Episode 74 — CORS.
+SameSite cookie attributes reduce some CSRF variants but are not a complete replacement for token checks on sensitive actions, especially across older browsers and complex subdomain setups. Defense in depth: SameSite where appropriate, CSRF tokens for cookie sessions, and never rely on the UI alone.
+
+A misconception is "CSRF is an XSS problem." They interact — XSS can steal tokens — but CSRF is specifically about abuse of ambient authority (cookies). Fixing XSS does not remove the need for CSRF tokens in cookie apps. Another misconception is protecting only `/login` — protect every state-changing endpoint that trusts the session.
+
+Today we watched a cross-site forged POST ride a session cookie and saw Spring’s CSRF token stop it. Browsers bring another cross-origin concern that is not forgery of cookie POSTs but controlled access to your API from JavaScript on another origin. That policy surface is CORS.
 
 ## Source attribution
 

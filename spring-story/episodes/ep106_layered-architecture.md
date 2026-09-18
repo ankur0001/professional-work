@@ -11,34 +11,75 @@
 
 ## Full narration
 
-Before fancy architectures, most teams start with layers. Layered architecture is the baseline map.
+You can be production-ready operationally and still drown in structural mud. Controllers open JDBC connections. Entities serialize straight to JSON with lazy-loading landmines. One "util" package imports everything. Phase 12 starts here because most Spring codebases already gesture at layers — and then violate them under deadline pressure.
 
-Here is the pain this lesson exists to remove. Problem Statement Without layers: SQL in controllers, entities exposed as JSON, untestable god classes, circular dependencies between packages.
+Layered architecture organizes the app into horizontal bands with a one-way dependency rule: outer/upper layers may call inward/downward; domain and persistence must not reach up into web concerns. In a typical Spring Boot service the bands are web (controllers, DTOs), application/service (use cases, transactions), domain (model, rules), and persistence (repositories, JPA entities). Names vary; the direction does not.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Layered Architecture.
+Why bother? Without layers, every change fans out. Swap JSON field names and you break SQL. Write a unit test and you boot Tomcat. Circular package dependencies appear because nothing forbade them. Layers give a default map for where code goes when the team is moving fast.
 
-Concept Layered Architecture (n-tier) organizes Spring applications into horizontal layers with strict dependency direction : upper layers depend on lower layers, never the reverse.
+Spring encourages this map with stereotypes and package layout:
 
-Spring's design choice here is deliberate. Why Spring Provides This Feature Stereotypes + component scan + package-by-layer conventions make structure enforceable with ArchUnit. Design Principles Behind Spring Principle How Spring Applies It Inversion of Control Container controls object creation and wiring Dependency Injection Dependencies supplied via constructor/setter/field Separation of Concerns Config, cross-cutting (AOP), and domain logic separated Program to Interfaces Beans wired by type/name; swap impls without code change Convention over Configuration Boot defaults; sensible @Component scanning Non-invasive No framework classes required in domain model (POJOs) Spring vs Solving It Yourself Custom DI container Spring Framework
-
-Once you accept the feature, the next honest question is how it works under the hood. Internal Working Same IoC container — layers are package/bean organization, not separate contexts. Container Refresh Sequence (High Level) Application startup
-
-Let's make this concrete with a small example you can read aloud and still follow.
-
-```java
-HTTP → Controller → Service → Repository → Database
- │ │
- DTO @Entity (map at boundary)
+```text
+com.example.checkout
+  web          → @RestController, request/response DTOs
+  service      → @Service, @Transactional use cases
+  domain       → Order, Money, domain services (often pure Java)
+  persistence  → Spring Data repositories, @Entity types
 ```
 
-Read it top to bottom once. Notice what your code declares versus what the framework takes over. The point of Spring is rarely "more annotations." The point is fewer decisions you must reinvent on every project.
+```java
+@RestController
+@RequestMapping("/orders")
+public class OrderController {
+    private final OrderService orders;
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+    public OrderController(OrderService orders) {
+        this.orders = orders;
+    }
 
-Today we walked through Layered Architecture inside Phase 12 — Enterprise Architecture. The next natural question is waiting in Episode 107 — Hexagonal Architecture.
+    @PostMapping
+    public OrderResponse place(@Valid @RequestBody PlaceOrderRequest req) {
+        Order placed = orders.place(req.toCommand());
+        return OrderResponse.from(placed);
+    }
+}
+
+@Service
+public class OrderService {
+    private final OrderRepository repo;
+    private final PaymentGateway payments;
+
+    @Transactional
+    public Order place(PlaceOrderCommand cmd) {
+        PaymentResult paid = payments.charge(cmd.total());
+        return repo.save(Order.create(cmd, paid));
+    }
+}
+```
+
+Notice the translation at the boundary. The controller speaks HTTP DTOs. The service speaks domain types and commands. The repository speaks persistence. Mapping costs a few lines and saves you from exposing `@Entity` graphs as API contracts — a classic layered failure mode when a lazy collection serializes after the session closes.
+
+Enforce the rule mechanically when you can. ArchUnit tests that `..web..` may depend on `..service..` but `..domain..` must not depend on `..web..` or `..persistence..` catch drift in CI. Package-by-layer is not the only option — package-by-feature also works — but each feature still needs an internal dependency direction.
+
+```java
+@ArchTest
+static final ArchRule domain_does_not_depend_on_web =
+        noClasses().that().resideInAPackage("..domain..")
+                .should().dependOnClassesThat().resideInAPackage("..web..");
+```
+
+Transactions usually live on the service layer — `@Transactional` on use-case methods — so controllers stay free of persistence session concerns. Repositories return domain objects or entities that the service maps; controllers never inject `EntityManager` "just this once."
+
+Limits appear as the domain grows. Layers do not by themselves stop framework types from leaking downward: a domain module that imports `Pageable` or `HttpServletRequest` is still coupled. Layers also tempt anemic models — entities as bags of getters and all rules in services. Those pressures push teams toward hexagonal and clean variations next.
+
+Misconception: "we have `@RestController` and `@Service`, so we have architecture." Stereotypes without dependency direction are naming, not structure. Misconception: more layers always help. Four clear bands beat seven bands of pass-through methods that only forward calls.
+
+Today we set the baseline map, showed DTO-at-boundary discipline, and admitted where layers leak. When the pain is "domain should not know Spring Web or JPA at all," you need ports, adapters, and an inside that stays pure.
+
+That reshaping is hexagonal architecture.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 106 (*Layered Architecture*).
 
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.
+Narration technique: ops-ready but structurally muddy → dependency direction → package map + controller/service code → ArchUnit → limits of layers → bridge to hexagonal.

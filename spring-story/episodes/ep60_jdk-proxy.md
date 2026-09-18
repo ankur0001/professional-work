@@ -11,23 +11,62 @@
 
 ## Full narration
 
-If your class implements an interface, Spring can often wrap it with a JDK dynamic proxy.
+If your bean type is an interface, the JDK already has a built-in way to wrap it. `java.lang.reflect.Proxy` can implement that interface at runtime and funnel every call through one `InvocationHandler`. Spring AOP leans on that when it decides an interface-based proxy is enough. No subclass of your concrete class. A brand-new class that only promises the interface methods.
 
-Here is the pain this lesson exists to remove. Logging, security, and transactions get copy-pasted into every service method until cross-cutting concerns dominate the codebase.
+Why start here? Because interface-oriented design and JDK proxies fit together cleanly. You program to `NotificationGateway`, inject `NotificationGateway`, and Spring can substitute a proxy that still is-a `NotificationGateway`. Callers never need the concrete class.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is JDK Proxy.
+```java
+public interface NotificationGateway {
+    void send(UserId userId, String template, Map<String, String> vars);
+}
 
-At a practical level, JDK Proxy is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+@Service
+public class EmailNotificationGateway implements NotificationGateway {
 
-Spring's design choice here is deliberate. Spring AOP modularizes cross-cutting behavior with proxies so domain methods stay about the domain.
+    private final EmailClient emailClient;
 
-Once you accept the feature, the next honest question is how it works under the hood. Spring builds a proxy around the bean; join points matching a pointcut run advice before, after, or around the target method.
+    public EmailNotificationGateway(EmailClient emailClient) {
+        this.emailClient = emailClient;
+    }
 
-As you practice JDK Proxy, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    @Override
+    public void send(UserId userId, String template, Map<String, String> vars) {
+        emailClient.dispatch(userId, template, vars);
+    }
+}
+```
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+```java
+@Aspect
+@Component
+public class NotificationMetricsAspect {
 
-Today we walked through JDK Proxy inside Phase 6 — Spring AOP. The next natural question is waiting in Episode 61 — CGLIB.
+    @Around("execution(* com.example.notify.NotificationGateway.send(..))")
+    public Object timeSend(ProceedingJoinPoint pjp) throws Throwable {
+        long start = System.nanoTime();
+        try {
+            return pjp.proceed();
+        } finally {
+            Metrics.timer("notification.send")
+                    .record(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+        }
+    }
+}
+```
+
+In this setup, collaborators depend on `NotificationGateway`. At runtime the injected object is often a JDK proxy implementing `NotificationGateway`, holding `EmailNotificationGateway` as the target. `send` enters the proxy, the metrics `@Around` runs, `proceed` hits `EmailNotificationGateway.send`. The concrete class is never the type of the injected field — and that is fine.
+
+Contrast this with a mistake teams make: injecting or casting to `EmailNotificationGateway` while Spring published a JDK proxy. The proxy is not an instance of `EmailNotificationGateway`. It implements the interface only. `instanceof EmailNotificationGateway` is false. `(EmailNotificationGateway) bean` throws `ClassCastException`. Prefer the interface type everywhere you inject.
+
+JDK proxies can implement multiple interfaces. If your bean implements `NotificationGateway` and `HealthIndicator`, the proxy can expose both. Only interface methods are advised through this mechanism — there is no “class method” on a JDK proxy beyond what the interfaces declare. Final methods on the concrete class are irrelevant to the proxy type because callers should not see the concrete class through the proxy reference.
+
+Spring’s selection rule of thumb: when the target implements interfaces, JDK proxy is eligible. You can force class-based proxies with `spring.aop.proxy-target-class=true` or `@EnableAspectJAutoProxy(proxyTargetClass = true)`, which pushes you toward CGLIB even when interfaces exist. Boot’s defaults have shifted over versions toward class proxies in many apps — so always verify what you actually get instead of assuming a textbook JDK proxy.
+
+Debugging tip: log `AopUtils.isJdkDynamicProxy(bean)` and `AopUtils.isCglibProxy(bean)`, or inspect the class name — JDK proxies often look like `$Proxy12`. Seeing `$Proxy` in a stack trace is a clue you are in interface-proxy land.
+
+The limitation is the point of the next episode. What if there is no interface? What if the bean is a concrete `@Service` class injected by its class type? JDK `Proxy` cannot subclass that concrete type. You need a different machinery that generates a subclass at runtime.
+
+That machinery is CGLIB.
 
 ## Source attribution
 

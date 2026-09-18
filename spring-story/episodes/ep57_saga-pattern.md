@@ -11,23 +11,58 @@
 
 ## Full narration
 
-When two-phase commit is the wrong medicine, sagas coordinate long business flows with compensations.
+Two-phase commit tried to make many resources behave like one database. For long business flows — book a flight, reserve a hotel, charge a card, email a confirmation — that medicine is often worse than the disease. Steps take seconds or minutes. Participants are other teams’ APIs. Locks cannot stay open across prepare forever. You need a different promise: each step commits locally, and if a later step fails, earlier steps run compensating actions that undo their business effect.
 
-Here is the pain this lesson exists to remove. Multi-step database work without clear transaction boundaries leaves partial writes, inconsistent reads, and rollback surprises.
+That is the saga pattern. Not one global transaction. A narrative of local transactions with explicit recovery.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Saga Pattern.
+Say travel booking. Step one: reserve a seat — local commit in the inventory service. Step two: hold a hotel room — local commit in hotels. Step three: charge the card. If the charge fails, you do not “roll back” the seat the way JDBC rolls back a row. You call `releaseSeat` and `cancelHotelHold` — compensations that are themselves ordinary local transactions. The system may pass through visible intermediate states. Guests might briefly see a held seat that later frees. Saga trades immediate global consistency for availability and clearer failure handling across services.
 
-At a practical level, Saga Pattern is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+```java
+@Service
+public class TripBookingSaga {
 
-Spring's design choice here is deliberate. Spring transaction management declares boundaries once and applies them consistently through proxies, not copy-pasted begin/commit code.
+    private final InventoryClient inventory;
+    private final HotelClient hotels;
+    private final PaymentsClient payments;
 
-Once you accept the feature, the next honest question is how it works under the hood. AOP proxies intercept annotated methods, bind a transaction to the thread, and commit or roll back based on outcome and rules.
+    public TripBookingSaga(
+            InventoryClient inventory,
+            HotelClient hotels,
+            PaymentsClient payments) {
+        this.inventory = inventory;
+        this.hotels = hotels;
+        this.payments = payments;
+    }
 
-As you practice Saga Pattern, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    public BookingResult book(TripRequest request) {
+        SeatHold seat = inventory.reserveSeat(request.flightId(), request.seat());
+        HotelHold hotel = null;
+        try {
+            hotel = hotels.holdRoom(request.hotelId(), request.nights());
+            payments.charge(request.customerId(), request.total());
+            return BookingResult.confirmed(seat, hotel);
+        } catch (RuntimeException ex) {
+            if (hotel != null) {
+                hotels.cancelHold(hotel.id());
+            }
+            inventory.releaseSeat(seat.id());
+            throw ex;
+        }
+    }
+}
+```
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+That sketch is orchestration: one component directs the steps and compensations. Choreography is the other style — each service listens for events and reacts. `SeatReserved` triggers hotel holding. `HotelHeld` triggers payment. `PaymentFailed` triggers `ReleaseSeat` and `CancelHotel`. Orchestration is easier to follow in one place. Choreography avoids a central boss but scatters the flow across consumers. Both are sagas if they share the compensation mindset.
 
-Today we walked through Saga Pattern inside Phase 5 — Transaction Management. The next natural question is waiting in Episode 58 — AOP Concepts.
+Spring does not ship a single `@Saga` annotation that solves distributed workflows for you. What Spring gives you are the building blocks: local `@Transactional` boundaries per service, messaging with Spring Kafka or AMQP, transactional outbox patterns so an event publish reliably follows a local commit, and application code or state machines that track saga progress. Libraries and platforms exist on top — but the idea you must own is independent of any one library: forward actions plus compensations, idempotent handlers, and timeouts.
+
+Idempotency matters because compensations and retries duplicate. Releasing an already-released seat must be safe. Payments need clear capture versus void semantics. Store saga state — which steps succeeded — so a crash mid-flow can resume or compensate without guessing.
+
+Misconceptions to kill early. Saga is not XA with friendlier branding; it deliberately allows temporary inconsistency. Compensation is not always the mechanical inverse of insert — canceling a shipped order may mean refund plus restock, not deleting history. And saga does not remove the need for local transactions; every step still wants a solid `@Transactional` boundary inside its service.
+
+We have closed the transaction arc from one-method boundaries through nesting, isolation, rollback rules, XA limits, and sagas. Step back and notice a pattern that kept appearing: something intercepts method calls to start transactions, maybe later to log, authorize, or time them. That cross-cutting interception is not unique to transactions.
+
+What modularizes those concerns so every service method does not copy-paste them? Aspect-oriented programming — and that is the door into the next phase.
 
 ## Source attribution
 

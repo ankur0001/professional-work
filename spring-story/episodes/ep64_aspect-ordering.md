@@ -11,23 +11,77 @@
 
 ## Full narration
 
-Multiple aspects on one method need an order. Aspect ordering prevents accidental sequencing bugs.
+One method. Three aspects. Security wants to reject unauthorized callers before anything else runs. Transactions want to begin before business work and commit after. Metrics want to time the whole thing, including security failures — or maybe only successful business calls. If the order is accidental, you get accidental behavior: a transaction that opens before the auth check, a timer that excludes the expensive part, an audit entry that claims success for a call that never authorized.
 
-Here is the pain this lesson exists to remove. Logging, security, and transactions get copy-pasted into every service method until cross-cutting concerns dominate the codebase.
+Aspect ordering is how you make that sequence intentional.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Aspect Ordering.
+Spring uses `Ordered` / `@Order` on aspect beans (and on some infrastructure advisors). Lower order values run with higher precedence. For `@Around` advice, higher precedence means outer: it enters first and exits last. Think nested wrappers. The outermost advice calls `proceed`, which enters the next advice, which eventually reaches the target, then unwinds back out.
 
-At a practical level, Aspect Ordering is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+```java
+@Aspect
+@Component
+@Order(1) // outer: runs first on the way in
+public class SecurityAspect {
 
-Spring's design choice here is deliberate. Spring AOP modularizes cross-cutting behavior with proxies so domain methods stay about the domain.
+    @Around("@annotation(secured)")
+    public Object authorize(ProceedingJoinPoint pjp, Secured secured) throws Throwable {
+        security.assertHas(secured.value());
+        return pjp.proceed();
+    }
+}
+```
 
-Once you accept the feature, the next honest question is how it works under the hood. Spring builds a proxy around the bean; join points matching a pointcut run advice before, after, or around the target method.
+```java
+@Aspect
+@Component
+@Order(2)
+public class TransactionalStyleAspect {
 
-As you practice Aspect Ordering, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    // teaching stand-in — real @Transactional uses Spring's own advisor
+    @Around("@annotation(com.example.tx.AppTransactional)")
+    public Object aroundTx(ProceedingJoinPoint pjp) throws Throwable {
+        tx.begin();
+        try {
+            Object result = pjp.proceed();
+            tx.commit();
+            return result;
+        } catch (RuntimeException ex) {
+            tx.rollback();
+            throw ex;
+        }
+    }
+}
+```
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+```java
+@Aspect
+@Component
+@Order(3) // inner: closest to the target among these three
+public class MetricsAspect {
 
-Today we walked through Aspect Ordering inside Phase 6 — Spring AOP. The next natural question is waiting in Episode 65 — Performance.
+    @Around("execution(* com.example.shop..*Service.*(..))")
+    public Object time(ProceedingJoinPoint pjp) throws Throwable {
+        Timer.Sample sample = Timer.start();
+        try {
+            return pjp.proceed();
+        } finally {
+            sample.stop(Timer.builder("service.method").register(meterRegistry));
+        }
+    }
+}
+```
+
+Narrate the enter path with these orders. Client calls the proxy. `SecurityAspect` (order 1) enters, checks permission, calls `proceed`. `TransactionalStyleAspect` (order 2) begins a transaction, calls `proceed`. `MetricsAspect` (order 3) starts a timer, calls `proceed`, hits the target. On the way out, metrics stop, transaction commits, security exits. Unauthorized callers fail in security and never open a transaction — which is usually what you want. Swap orders carelessly and you hold database connections for callers who were going to be rejected anyway.
+
+Spring’s own `@Transactional` and `@Async` advisors participate in the same precedence world. Documentation and source set default orders for infrastructure; custom aspects that must run outside or inside transactions should declare `@Order` explicitly instead of relying on undefined relative order between your aspects. When two aspects share the same order value, relative order is effectively undefined — do not depend on class name sorting luck.
+
+Within a single aspect class, advice ordering among `@Before` / `@After` / `@Around` methods follows Spring’s precedence rules for advice types; cross-aspect problems are the ones `@Order` on the aspect bean is meant to solve. Prefer one clear responsibility per aspect so ordering decisions stay reviewable.
+
+Misconception: “`@Order` on a `@Component` always controls method call order in the app.” Here it controls advisor precedence in the AOP chain, not general bean initialization order — related annotation, different meaning in this context. Another misconception: expecting `@After` advice from a lower-precedence aspect to run before `@After` from a higher-precedence aspect without drawing the enter/exit nesting. Draw the nest. Speak the nest. Then the annotation values make sense.
+
+Ordered aspects keep security, transactions, and metrics from tripping over each other. They do not erase the fact that every proxy hop and every advice invocation costs CPU and allocations.
+
+When does that cost matter, and how do you keep AOP from becoming a latency tax? That is the performance episode next — and after it, the series turns toward securing the application itself.
 
 ## Source attribution
 

@@ -11,23 +11,111 @@
 
 ## Full narration
 
-Tests should not need a real payment gateway. Mockito replaces collaborators with controllable doubles.
+JUnit runs the test. It does not invent stand-ins for your dependencies. Mockito does: it creates mock objects, stubs return values, and verifies interactions. In a Spring codebase, the classic unit-test move is to construct a service with mocked collaborators so you exercise branching logic without a database, without Feign, and without a Spring context.
 
-Here is the pain this lesson exists to remove. Without automated proof at the right layer, regressions slip through and teams fear every deploy.
+Take an order service that must check stock through a port and then persist. In production the port is a Feign client. In a unit test the port is a mock.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Mockito.
+```java
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-At a practical level, Mockito is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
-Spring's design choice here is deliberate. Spring’s test support and the wider Java test ecosystem let you verify units, slices, and full integrations deliberately.
+@ExtendWith(MockitoExtension.class)
+class OrderServiceTest {
 
-Once you accept the feature, the next honest question is how it works under the hood. Test slices load only the relevant context; containers and mocks replace the rest so feedback stays fast and honest.
+    @Mock
+    InventoryPort inventory;
 
-As you practice Mockito, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    @Mock
+    OrderRepository orders;
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+    @InjectMocks
+    OrderService service;
 
-Today we walked through Mockito inside Phase 10 — Testing. The next natural question is waiting in Episode 95 — Spring Test.
+    @Test
+    void placesOrderWhenStockAvailable() {
+        when(inventory.getStock("SKU-1"))
+                .thenReturn(new StockView("SKU-1", 5));
+        when(orders.save(any(Order.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        Order placed = service.place(new PlaceOrderCommand("SKU-1", 2, "cust-9"));
+
+        assertEquals("SKU-1", placed.sku());
+        assertEquals(2, placed.qty());
+        verify(inventory).reserve(new ReserveRequest("SKU-1", 2));
+        verify(orders).save(any(Order.class));
+    }
+
+    @Test
+    void rejectsWhenInsufficientStock() {
+        when(inventory.getStock("SKU-1"))
+                .thenReturn(new StockView("SKU-1", 1));
+
+        assertThrows(InsufficientStockException.class,
+                () -> service.place(new PlaceOrderCommand("SKU-1", 2, "cust-9")));
+
+        verify(inventory, never()).reserve(any());
+        verify(orders, never()).save(any());
+    }
+}
+```
+
+Walk the first test. `@ExtendWith(MockitoExtension.class)` hooks Mockito into Jupiter. `@Mock` creates fake `InventoryPort` and `OrderRepository`. `@InjectMocks` builds `OrderService`, injecting those mocks via constructor or fields. `when(...).thenReturn(...)` stubs stock. The service runs real code paths. `verify` asserts that reserve and save happened. The second test stubs low stock, asserts the domain exception, and verifies the remote reserve never fired — exactly the regression you want when someone “refactors” and reserves before checking.
+
+Prefer explicit construction when teaching juniors:
+
+```java
+@Test
+void placesOrderWhenStockAvailable_manualWiring() {
+    InventoryPort inventory = mock(InventoryPort.class);
+    OrderRepository orders = mock(OrderRepository.class);
+    OrderService service = new OrderService(inventory, orders);
+
+    when(inventory.getStock("SKU-1")).thenReturn(new StockView("SKU-1", 5));
+    when(orders.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    Order placed = service.place(new PlaceOrderCommand("SKU-1", 2, "cust-9"));
+    assertEquals(2, placed.qty());
+}
+```
+
+Same collaborators, no `@InjectMocks` mystery. Use whichever style your team standardizes; both are Mockito. The point is the subject under test is real Java, and the port is a controlled fake.
+
+Argument matchers (`any`, `eq`) and captors refine verification when you care about the payload:
+
+```java
+ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
+verify(orders).save(captor.capture());
+assertEquals("cust-9", captor.getValue().customerId());
+```
+
+Stubbing exceptions exercises failure branches without a real outage:
+
+```java
+when(inventory.getStock("SKU-1"))
+        .thenThrow(new InventoryUnavailableException("down"));
+```
+
+Then assert that `OrderService` maps that into a domain failure or a retry decision — whichever your design promises. The mock’s job is to make the collaborator’s failure mode reproducible on every run.
+
+Strictness matters. Modern Mockito is strict about unused stubs; that is a feature — it catches tests that no longer mean what you think. Prefer constructor injection in the production class so `@InjectMocks` and manual `new OrderService(inventory, orders)` stay honest. Spies wrap real objects; use them sparingly when you must partially mock, not as a default.
+
+In Spring Boot tests you will later meet `@MockBean`, which places a Mockito mock *inside* the ApplicationContext. That is still Mockito under the hood, but the lifecycle belongs to Spring Test. Keep the distinction: this episode’s unit test never starts a context.
+
+A misconception is mocking the class under test. Mock collaborators; run the real subject. Another is verifying every getter call until tests mirror implementation noise — verify state-changing interactions and meaningful outcomes. A third is using Mockito to fake types you do not own in elaborate ways (HTTP containers, JDBC drivers) when a narrower port interface would make stubbing trivial.
+
+Today we unit-tested `OrderService` by mocking `InventoryPort` and `OrderRepository`, stubbing stock, asserting domain behavior, and verifying reserve/save interactions — JUnit for execution, Mockito for collaborators.
+
+Some behavior only appears when Spring wires real beans, applies AOP proxies, or binds properties. Mocks alone will not load a `@Transactional` proxy or a `@ConditionalOnProperty` bean. For that you need the Spring TestContext Framework.
+
+That is Spring Test.
 
 ## Source attribution
 

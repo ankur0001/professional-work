@@ -11,23 +11,47 @@
 
 ## Full narration
 
-Reactive apps still need identity and authorization. Reactive security adapts the filter story.
+WebFlux changed the HTTP engine. Spring Security still has to authenticate and authorize — but it cannot assume `ThreadLocal` and servlet filters the way the MVC chain did. Reactive security adapts the same ideas to WebFlux’s `WebFilter` chain and a context that rides with the reactive subscription.
 
-Here is the pain this lesson exists to remove. Open endpoints, weak identity checks, and ad-hoc authorization rules turn APIs into production incidents waiting to happen.
+In servlet apps, `SecurityContextHolder` defaulted to `ThreadLocal` storage. In WebFlux, the security context is typically stored in Reactor’s `Context` and retrieved with reactive adapters so it survives thread hops from `publishOn` / Netty event loops. You configure a `SecurityWebFilterChain` instead of a servlet `SecurityFilterChain`. Method security has reactive-aware expressions when return types are publishers.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Reactive Security.
+```java
+@Bean
+SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+    return http
+        .csrf(ServerHttpSecurity.CsrfSpec::disable) // bearer API example
+        .authorizeExchange(ex -> ex
+            .pathMatchers("/actuator/health").permitAll()
+            .pathMatchers("/api/admin/**").hasRole("ADMIN")
+            .anyExchange().authenticated()
+        )
+        .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+        .build();
+}
 
-At a practical level, Reactive Security is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+@GetMapping("/api/me")
+Mono<Map<String, Object>> me(@AuthenticationPrincipal Mono<Jwt> jwt) {
+    return jwt.map(token -> Map.of(
+        "sub", token.getSubject(),
+        "scopes", token.getClaimAsStringList("scope")
+    ));
+}
 
-Spring's design choice here is deliberate. Spring Security provides a filter chain and authorization model so identity and access rules are explicit and testable.
+// Request: GET /api/me
+// Header:  Authorization: Bearer <jwt>
+// AuthenticationWebFilter / JWT decoder validates → reactive SecurityContext
+// AuthorizationWebFilter checks exchange matchers → handler runs
+```
 
-Once you accept the feature, the next honest question is how it works under the hood. Security filters sit in a chain before controllers; Authentication establishes identity and Authorization enforces decisions.
+Mirror the earlier JWT walk, now on the reactive chain: bearer token extracted, decoded without blocking the event loop, authentication placed in context, authorization decision on the exchange, then the controller’s `Mono` executes. CSRF and form login exist for browser-oriented WebFlux apps too — use cookie sessions only when you accept the same CSRF obligations you learned on the servlet side.
 
-As you practice Reactive Security, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+Watch blocking habits. A custom `ReactiveAuthenticationManager` that calls blocking JDBC inside `authenticate` without `subscribeOn(boundedElastic)` will stall the event loop under load. Prefer reactive user stores or explicit offloads. Similarly, `@PreAuthorize` on methods returning `Mono` must use the reactive method-security support so the decision participates in the publisher chain instead of blocking for a context that is not on the thread.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+A misconception is copying a servlet `HttpSecurity` config class into a WebFlux project unchanged — types differ (`ServerHttpSecurity`, `authorizeExchange`). Another is reading `SecurityContextHolder.getContext()` imperatively inside a WebFlux handler after a thread hop and wondering why it is empty — use reactive context propagation and `@AuthenticationPrincipal Mono<...>`.
 
-Today we walked through Reactive Security inside Phase 8 — Reactive Spring. The next natural question is waiting in Episode 83 — Microservices with Spring.
+Phase 8 closes the reactive web and security loop: publishers, WebFlux, and a filter chain that respects Reactor’s context. Many production systems are not one reactive service — they are many deployables that must discover each other, share config, and fail partially without taking the whole product down.
+
+That organizational jump is microservices with Spring.
 
 ## Source attribution
 

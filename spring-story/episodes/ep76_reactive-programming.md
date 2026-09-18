@@ -11,23 +11,40 @@
 
 ## Full narration
 
-Threads waiting on I/O do not scale forever. Reactive programming rethinks how work is scheduled.
+Servlet security assumed a familiar shape: a request arrives, a thread runs filters and controllers, blocking I/O waits on the database or HTTP client, then the thread returns to the pool. That model scales until waiting dominates — thousands of open connections each holding a thread hostage while something remote thinks.
 
-Here is the pain this lesson exists to remove. Problem Statement Thread-per-request model breaks at ~10K concurrent connections — memory for stacks, context switching. Reactive model scales I/O-bound apps with fixed thread pools. Complexity cost: debugging, stack traces, learning curve.
+Reactive programming flips the default. Instead of returning a finished value, you return a **publisher** that will emit values later. The thread that accepts the connection does not sit blocked on JDBC or a remote call; it schedules work and moves on. Subscribers pull or request data; operators transform streams; schedulers decide which threads run which stages. The goal is higher concurrency with fewer threads for I/O-bound workloads — not magic speed for CPU-bound math.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Reactive Programming.
+Project Reactor is the library Spring WebFlux builds on. The Reactive Streams specification sits underneath: `Publisher`, `Subscriber`, `Subscription`, and `Processor`, with **backpressure** as a first-class idea — subscribers request only what they can handle. Reactor’s `Mono` and `Flux` are publishers with a rich operator vocabulary. You compose pipelines declaratively; nothing runs until something subscribes.
 
-Concept Reactive Programming is a programming paradigm oriented around asynchronous data streams and non-blocking execution. Instead of one thread blocked per request waiting for I/O, a small pool of threads handles many concurrent operations via event loops and callbacks/pipelines.
+```java
+// Not servlet DI — a reactive pipeline
+Mono<User> user = userClient.findById(id);           // Publisher of 0..1
+Flux<Order> orders = orderClient.findByUser(id);     // Publisher of 0..n
 
-Spring's design choice here is deliberate. Interop with blocking via subscribeOn(Schedulers.boundedElastic()) when needed. Design Principles Behind Spring Principle How Spring Applies It Inversion of Control Container controls object creation and wiring Dependency Injection Dependencies supplied via constructor/setter/field Separation of Concerns Config, cross-cutting (AOP), and domain logic separated Program to Interfaces Beans wired by type/name; swap impls without code change Convention over Configuration Boot defaults; sensible @Component scanning Non-invasive No framework classes required in domain model (POJOs) Spring vs Solving It Yourself Custom DI container Spring Framework
+Mono<UserOrders> page = user
+    .zipWith(orders.collectList(), UserOrders::new)
+    .timeout(Duration.ofSeconds(2))
+    .doOnError(e -> log.warn("assembly failed: {}", e.toString()));
 
-Once you accept the feature, the next honest question is how it works under the hood. Internal Working Reactor operators build operator chains (lazy until subscribe). Netty under WebFlux — no Servlet API. DispatcherHandler replaces DispatcherServlet for routing. Container Refresh Sequence (High Level) Application startup
+// Nothing hits the network until:
+page.subscribe(
+    result -> response.write(result),
+    error -> response.error(error)
+);
+```
 
-As you practice Reactive Programming, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+Read that as assembly, not as imperative steps that already executed. `zipWith` and `timeout` describe a graph. Subscription triggers demand. That laziness is why returning a `Mono` from a WebFlux controller works — the framework subscribes and wires the response when data arrives.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+Reactive is not "async annotations on servlet code." A blocking `Thread.sleep` or JDBC call inside a reactive operator still blocks a thread — often an event-loop thread you cannot afford to stall. The discipline is end-to-end non-blocking I/O (R2DBC, reactive HTTP clients) or explicit offloading of blocking work onto bounded elastic schedulers. Mixing one blocking repository into a WebFlux app is a classic production footgun.
 
-Today we walked through Reactive Programming inside Phase 8 — Reactive Spring. The next natural question is waiting in Episode 77 — Mono.
+When do you reach for this model? Many concurrent slow I/O dependencies, streaming responses, or gateways that multiplex downstream calls. When do you stay on Spring MVC? Familiar blocking drivers, team expertise, and workloads that never needed tens of thousands of concurrent connections. Boot can run either stack; picking both without clear boundaries usually creates confusion.
+
+A misconception is equating reactive with faster CPU-bound algorithms. Another is treating `subscribe()` inside business code as normal — in WebFlux you typically return the publisher and let the framework subscribe. A third is ignoring error and cancellation paths: when a client disconnects, subscriptions cancel; your pipeline should not ignore that.
+
+Today we named the shift: publishers instead of eager values, subscription as the start gun, backpressure as part of the contract. The smallest publisher shape — zero or one element — is where most service calls live.
+
+That shape is `Mono`.
 
 ## Source attribution
 

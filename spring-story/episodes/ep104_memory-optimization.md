@@ -11,26 +11,52 @@
 
 ## Full narration
 
-Heap dumps and native memory surprises sink services. Memory optimization is production hygiene.
+The latency panel looked fine until the pod restarted every forty minutes. Grafana’s heap gauge climbed like a staircase. GC pause metrics spiked near the top of each ramp. That is not a "buy a bigger node" story first — it is a memory story: what retains objects, how large the live set is, and whether native memory or the heap is the real pressure.
 
-Here is the pain this lesson exists to remove. A service you cannot measure, trace, or visualize is a service you cannot operate when it fails.
+Start with the meters you already exposed. `jvm.memory.used` and `jvm.memory.max` by area. GC overhead and pause timers. When using a modern collector, allocation rate matters as much as heap size — high allocation with a stable live set is a different problem than a growing old generation. Micrometer’s JVM binders give you the graphs; heap dumps give you the names.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Memory Optimization.
+A Spring-specific leak pattern: unbounded caches. `@Cacheable` without eviction, a home-grown `ConcurrentHashMap` as a "quick cache," or a Caffeine cache with maximum size left unset. Another: listening to application events or WebSocket sessions without deregistration. Another: Hibernate persistence contexts or open sessions held across long HTTP calls, pinning entities.
 
-At a practical level, Memory Optimization is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+```java
+@Bean
+public CacheManager cacheManager() {
+    CaffeineCacheManager manager = new CaffeineCacheManager("productBySku");
+    manager.setCaffeine(Caffeine.newBuilder()
+            .maximumSize(10_000)
+            .expireAfterWrite(Duration.ofMinutes(10))
+            .recordStats());
+    return manager;
+}
+```
 
-Spring's design choice here is deliberate. Micrometer and the observability stack turn runtime behavior into metrics, traces, and dashboards operators can act on.
+`recordStats()` plus Micrometer cache metrics lets you see hit rate and eviction. A cache that never evicts and always grows is a leak with good intentions.
 
-Once you accept the feature, the next honest question is how it works under the hood. Instrumentation emits metrics and traces; backends scrape or receive them; dashboards and alerts turn signals into action.
+Watch payload and collection sizes in your own code. Loading `findAll()` into a list for a report, mapping entities to DTOs that embed large blobs, or buffering entire multipart uploads in memory will show up as allocation spikes under load. Stream, page, or spill to disk when the domain allows it.
 
-As you practice Memory Optimization, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+```java
+@Transactional(readOnly = true)
+public void exportPrices(Consumer<PriceRow> out) {
+    int page = 0;
+    Page<PriceRow> slice;
+    do {
+        slice = prices.findAll(PageRequest.of(page++, 500));
+        slice.forEach(out);
+    } while (slice.hasNext());
+}
+```
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+Container memory limits interact with the JVM. If the cgroup limit is 512Mi and the heap is set as if the machine had 8Gi, you get OOMKills that look mysterious in app logs. Prefer container-aware heap settings (modern JDKs help) and leave headroom for metaspace, direct buffers, and thread stacks. Direct `ByteBuffer` use and Netty arenas can exhaust native memory while the heap graph looks calm — another reason to watch more than one panel.
 
-Today we walked through Memory Optimization inside Phase 11 — Observability. The next natural question is waiting in Episode 105 — Production Readiness.
+How to investigate: capture a heap dump on OOM (`-XX:+HeapDumpOnOutOfMemoryError`) or via Actuator/`jcmd` in a safe environment. Dominator trees in Eclipse MAT or VisualVM answer "what retains what?" Class histograms answer "how many of these?" If the dump points at a Spring bean you expected to be a tiny singleton holding a giant map, you found the bug.
+
+Misconception: "GC tuning flags will fix a leak." They can delay the crash. Fix retention. Misconception: "more heap always helps." Oversized heaps make full GCs rarer but longer and hide leaks until traffic peaks.
+
+Today we tied heap gauges to Spring cache and paging habits, respected container limits, and treated dumps as evidence. Metrics, traces, memory hygiene — you have the operational lenses. What remains is bundling them into a definition of "ready to serve production traffic," not merely "feature complete."
+
+That checklist is production readiness.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 104 (*Memory Optimization*).
 
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.
+Narration technique: staircase heap → meters then dumps → Spring leak patterns → Caffeine bounds → paging export → cgroup/native caveats → bridge to readiness.

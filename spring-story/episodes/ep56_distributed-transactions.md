@@ -11,23 +11,59 @@
 
 ## Full narration
 
-One database is easy. Two systems that must agree is distributed transaction territory — and dangerous.
+One PostgreSQL database and `@Transactional` feel almost comfortable now. Stretch the same business promise across two systems and the comfort evaporates. Place an order in the orders database. Publish `OrderPlaced` to Kafka so inventory and billing react. If the commit succeeds and the publish never leaves the process, inventory never moves. If the publish succeeds and the database rolls back, consumers act on an order that does not exist. Two resources. One business sentence. No single local transaction can cover both without help.
 
-Here is the pain this lesson exists to remove. Multi-step database work without clear transaction boundaries leaves partial writes, inconsistent reads, and rollback surprises.
+That help historically meant a distributed transaction: a coordinator, resource managers that speak XA, and a protocol that tries to commit everywhere or nowhere.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Distributed Transactions.
+The classic protocol is two-phase commit. In phase one, the coordinator asks every participant to prepare — flush, lock, vote yes or no. If all vote yes, phase two tells everyone to commit. If any votes no, everyone rolls back. On paper, atomicity spans databases and JMS brokers. In production, the coordinator can crash between phases, participants can block holding locks, and networks can partition. You trade local simplicity for global coordination cost and operational pain.
 
-At a practical level, Distributed Transactions is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+```java
+// Conceptual: JTA / XA spanning a DataSource and a JMS connection factory
+@Configuration
+public class XaConfig {
 
-Spring's design choice here is deliberate. Spring transaction management declares boundaries once and applies them consistently through proxies, not copy-pasted begin/commit code.
+    @Bean
+    public JtaTransactionManager transactionManager(
+            UserTransaction userTransaction,
+            TransactionManager transactionManager) {
+        return new JtaTransactionManager(userTransaction, transactionManager);
+    }
+}
+```
 
-Once you accept the feature, the next honest question is how it works under the hood. AOP proxies intercept annotated methods, bind a transaction to the thread, and commit or roll back based on outcome and rules.
+```java
+@Service
+public class OrderPlacementService {
 
-As you practice Distributed Transactions, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    private final OrderRepository orders;
+    private final JmsTemplate jms;
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+    public OrderPlacementService(OrderRepository orders, JmsTemplate jms) {
+        this.orders = orders;
+        this.jms = jms;
+    }
 
-Today we walked through Distributed Transactions inside Phase 5 — Transaction Management. The next natural question is waiting in Episode 57 — Saga Pattern.
+    @Transactional // backed by JtaTransactionManager in an XA setup
+    public OrderId place(NewOrder request) {
+        Order order = Order.open(request);
+        orders.save(order);
+        jms.convertAndSend("orders.placed", OrderPlaced.of(order));
+        return order.id();
+    }
+}
+```
+
+In a true XA arrangement, that single `@Transactional` is enlisted with a `JtaTransactionManager`. Both the XA datasource and the XA connection factory become participants. Spring’s programming model looks familiar — same annotation — but the runtime is heavier: application server or standalone transaction manager like Atomikos/Narayana, XA drivers, recovery logs, and ops runbooks for in-doubt transactions.
+
+Spring Boot apps today often do not go there. Cloud datastores, managed Kafka, and polyglot stores frequently lack honest XA support. Even when XA works, holding locks across prepare and commit under latency kills throughput. Teams discovered that “just enable two-phase commit” was rarely the product-friendly answer for long workflows.
+
+Still, you should know the vocabulary. Global transaction versus local. Resource manager versus transaction manager. `UserTransaction` begin/commit in raw JTA versus Spring’s declarative boundary on top. Heuristic exceptions when participants disagree after prepare. Those words show up in postmortems even when your team chose not to use XA.
+
+A misconception is assuming `@Transactional` automatically spans every bean interaction — REST calls to other services, Mongo writes, Redis updates. It does not. A local `DataSourceTransactionManager` covers one JDBC resource. Crossing process or technology boundaries without XA means you either accept eventual inconsistency or design for it. Another misconception is treating distributed transactions as “Spring’s fault” when they hurt. The protocol’s cost is inherent; Spring only integrates with it.
+
+So the honest fork in the road appears. Either invest in XA where both resources truly support it and the business demands strict atomicity across them, or stop pretending one ACID transaction can cover a multi-service workflow. The second path needs a different coordination style: a sequence of local transactions plus compensations when a later step fails.
+
+That pattern has a name — saga — and it is the next episode’s problem to solve.
 
 ## Source attribution
 

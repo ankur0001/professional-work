@@ -11,23 +11,53 @@
 
 ## Full narration
 
-AOP in Spring is not bytecode mysticism first — it is usually a proxy wrapping your bean.
+When Spring says it will run your advice around a service method, it does not sprinkle invisible hooks into the class file by default. It hands out a different object than the one you wrote — an object that looks like your bean to callers, holds a reference to the real instance, and decides what to do when a method is invoked. That stand-in is a proxy. Dynamic proxies are built at runtime, not handwritten as `FooProxy extends Foo` for every type in the app.
 
-Here is the pain this lesson exists to remove. Logging, security, and transactions get copy-pasted into every service method until cross-cutting concerns dominate the codebase.
+Without a proxy, AOP has no place to stand. A client calls `billingService.charge(…)`. If `billingService` is the raw target, your `@Around` never runs. If `billingService` is a proxy, the call enters the proxy’s invocation handler, the interceptor chain runs matching advice, and only then does `proceed` reach the target method.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Dynamic Proxies.
+```java
+public interface PricingService {
+    Quote quote(Sku sku, int qty);
+}
 
-At a practical level, Dynamic Proxies is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+public class PricingServiceImpl implements PricingService {
+    @Override
+    public Quote quote(Sku sku, int qty) {
+        return Quote.of(sku, qty * 10);
+    }
+}
+```
 
-Spring's design choice here is deliberate. Spring AOP modularizes cross-cutting behavior with proxies so domain methods stay about the domain.
+```java
+// Illustrative: JDK dynamic proxy shape (Spring builds this for you)
+PricingService target = new PricingServiceImpl();
 
-Once you accept the feature, the next honest question is how it works under the hood. Spring builds a proxy around the bean; join points matching a pointcut run advice before, after, or around the target method.
+PricingService proxy = (PricingService) Proxy.newProxyInstance(
+        PricingService.class.getClassLoader(),
+        new Class<?>[] { PricingService.class },
+        (proxyObj, method, args) -> {
+            System.out.println("before " + method.getName());
+            Object result = method.invoke(target, args);
+            System.out.println("after " + method.getName());
+            return result;
+        });
 
-As you practice Dynamic Proxies, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+Quote q = proxy.quote(Sku.of("ABC"), 3); // advice runs; target.quote does the math
+```
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+That JDK snippet is the teaching skeleton. `Proxy.newProxyInstance` needs a class loader, the interfaces to implement, and an `InvocationHandler`. Every interface method call becomes `invoke` on the handler. Spring’s AOP runtime is the industrial version of this idea: an advisor chain, pointcut matching, `ReflectiveMethodInvocation` calling `proceed` through interceptors — including transaction and security interceptors you did not author by hand.
 
-Today we walked through Dynamic Proxies inside Phase 6 — Spring AOP. The next natural question is waiting in Episode 60 — JDK Proxy.
+Two proxy families matter inside Spring. If the bean exposes at least one interface, Spring may create a JDK dynamic proxy that implements those interfaces and delegates to the target. If the bean is a concrete class with no interface — or you force class-based proxies — Spring uses CGLIB to subclass the concrete type and override methods. Same idea from the caller’s perspective: you talk to a wrapper. Different mechanics under the floor.
+
+Why “dynamic”? Because the proxy class is synthesized at runtime. You do not maintain `PricingServiceProxy.java`. The JVM (or CGLIB’s generator) creates the type as the context refreshes and eligible beans are wrapped by auto-proxy creators.
+
+Operational consequences follow. The object injected into collaborators is the proxy, not the raw target — which is what you want for advice to fire. Casting the injected bean to a concrete class can fail when the runtime chose a JDK interface proxy. Self-calls inside the target (`this.helper()`) never enter the proxy, so annotated advice on `helper` is skipped. `@Async`, `@Transactional`, and custom `@Aspect` advice all share that proxy requirement.
+
+People sometimes imagine AOP as a compiler plugin rewriting every `.class` in `target/`. Full AspectJ can weave that way. Spring AOP’s everyday path is proxy-based. Confusing the two leads to surprise when private methods or field access are not advised.
+
+So a proxy is the runtime seat of Spring AOP: an object in front of your bean that runs interceptor logic, then delegates. The next split is which proxy technology Spring picks — and what breaks when you assume the wrong one.
+
+Start with the interface-based path: JDK Proxy.
 
 ## Source attribution
 

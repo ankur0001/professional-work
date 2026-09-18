@@ -11,26 +11,63 @@
 
 ## Full narration
 
-Clean architecture sharpens the dependency rule: business rules should not know about web or database details.
+Hexagonal gave you a center and adapters. Clean Architecture — Robert C. Martin’s rings — says the same dependency rule with a stricter vocabulary: source code dependencies point inward. Enterprise business rules sit at the center. Frameworks, UI, and databases are outer details. An inner circle never knows the name of a type declared in an outer circle.
 
-Here is the pain this lesson exists to remove. Without clear boundaries, frameworks leak into the domain and every change becomes expensive.
+Map the rings onto a Spring codebase without drowning in ceremony.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Clean Architecture.
+1. **Entities** — enterprise rules: `Order`, `Money`, invariants. Pure Java.
+2. **Use cases** — application rules: `PlaceOrderInteractor`, input/output models. Pure Java, depends only on entities and outbound ports.
+3. **Interface adapters** — controllers, presenters, gateways that convert between use-case models and outer formats.
+4. **Frameworks & drivers** — Spring MVC, JPA, the actual Postgres driver, the servlet container.
 
-At a practical level, Clean Architecture is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+The practical difference from a loose hexagon is often the request/response models. Use cases do not accept HTTP DTOs or return JPA entities. They accept input data objects and return output data objects. Adapters map both ways.
 
-Spring's design choice here is deliberate. Architectural styles give teams a shared language for boundaries, dependencies, and change.
+```java
+public record PlaceOrderInput(String customerId, List<LineInput> lines) {}
+public record PlaceOrderOutput(String orderId, String status) {}
 
-Once you accept the feature, the next honest question is how it works under the hood. Dependency direction and boundary rules decide what can know about what — and what stays replaceable.
+public class PlaceOrderInteractor {
+    private final OrderRepository orders;
+    private final PaymentGateway payments;
 
-As you practice Clean Architecture, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    public PlaceOrderOutput execute(PlaceOrderInput input) {
+        Order order = Order.create(input);
+        payments.charge(order.total());
+        Order saved = orders.save(order);
+        return new PlaceOrderOutput(saved.id().value(), saved.status().name());
+    }
+}
+```
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+```java
+@RestController
+public class PlaceOrderController {
+    private final PlaceOrderInteractor interactor;
 
-Today we walked through Clean Architecture inside Phase 12 — Enterprise Architecture. The next natural question is waiting in Episode 109 — DDD Basics.
+    @PostMapping("/orders")
+    public ResponseEntity<OrderHttpResponse> place(@RequestBody OrderHttpRequest http) {
+        PlaceOrderOutput out = interactor.execute(http.toInput());
+        return ResponseEntity.accepted().body(OrderHttpResponse.from(out));
+    }
+}
+```
+
+Transaction boundaries usually sit in an adapter or a thin application wrapper annotated with `@Transactional`, not inside the entity. The interactor stays free of Spring stereotypes if you construct it in configuration. That purity is the point: you can move the use case to another runtime without dragging MVC annotations with it.
+
+Clean Architecture overlaps heavily with hexagonal. Teams argue about diagrams more than about dependency direction. Use clean rings when you need a shared language for "who may import whom" across a large codebase; use hexagonal language when ports/adapters communicate better to your team. Do not implement both as duplicate folder trees for the same service.
+
+Where Spring fights you: Spring Data repository interfaces and `@Entity` classes want to be the model. Resist by keeping domain entities separate from JPA entities when the model is non-trivial, or accept a pragmatic compromise on simple CRUD screens and reserve strict rings for the core revenue path. Dogma that doubles every type for a three-field admin form is not clean — it is ceremony.
+
+Testing is where the rings pay rent. An interactor test constructs the class with fakes and asserts output records — no `@SpringBootTest`. Adapter tests use `@WebMvcTest` or Data JPA slices against the outer ring only. If every test boots the full context to prove a total calculation, the dependency rule is only a slide.
+
+Misconception: clean architecture means no Spring Boot. Boot is an excellent outer ring. Misconception: more interfaces equal more cleanliness. Interfaces at real boundaries beat interfaces between every package. Misconception: entities must be immutable records always. Immutability helps; invariants enforced by methods matter more than the record keyword.
+
+Today we enforced the inward dependency rule, separated use-case IO from HTTP, and placed Spring in the outer ring. Boundaries protect structure — but they do not invent a language for complex business rules. When "Order" means different things to billing and warehouse teams, you need domain modeling vocabulary.
+
+That vocabulary is DDD basics.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 108 (*Clean Architecture*).
 
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.
+Narration technique: rings + dependency rule → Spring mapping → interactor + HTTP adapter → transactional placement → hex overlap → pragmatism → bridge to DDD.

@@ -11,23 +11,50 @@
 
 ## Full narration
 
-Password forms are not the whole internet. OAuth2 obtains limited access without sharing passwords.
+JWT told you how a resource server trusts a bearer token. OAuth2 answers a different question: how did the client get permission to hold that token in the first place?
 
-Here is the pain this lesson exists to remove. Open endpoints, weak identity checks, and ad-hoc authorization rules turn APIs into production incidents waiting to happen.
+Think about a calendar app that wants to read a user’s Google events. You do not want the calendar app to collect the Google password. You want the user to log in at Google, approve a scope like `calendar.readonly`, and send the calendar app an access token that represents that limited grant. OAuth2 is that delegation protocol. Roles have names: resource owner (the user), client (the app), authorization server (issues tokens), resource server (accepts tokens).
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is OAuth2.
+The authorization code flow is the one you should be able to narrate for browser and confidential clients. The client redirects the user to the authorization server with client id, redirect URI, scopes, and a state value. The user authenticates and consents. The authorization server redirects back with a short-lived code. The client exchanges that code — plus its client secret, for confidential clients — at the token endpoint for an access token (and often a refresh token). The client then calls APIs with `Authorization: Bearer ...`. PKCE adds a code challenge so public clients (mobile, SPA) are safer even without a secret.
 
-At a practical level, OAuth2 is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+Spring Security supports both sides you usually build. As a **resource server**, you validate access tokens — the JWT path from the previous episode, or opaque token introspection. As an **OAuth2 client**, Boot can drive the redirect, code exchange, and authorized `WebClient` / RestClient calls. As an **authorization server**, Spring Authorization Server is a separate project when you issue tokens yourself instead of buying Okta, Auth0, Keycloak, or a cloud IdP.
 
-Spring's design choice here is deliberate. Spring Security provides a filter chain and authorization model so identity and access rules are explicit and testable.
+```java
+@Bean
+SecurityFilterChain clientApp(HttpSecurity http) throws Exception {
+    http
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/", "/error").permitAll()
+            .anyRequest().authenticated()
+        )
+        .oauth2Login(Customizer.withDefaults())       // sign-in via IdP
+        .oauth2Client(Customizer.withDefaults());     // outbound token use
+    return http.build();
+}
 
-Once you accept the feature, the next honest question is how it works under the hood. Security filters sit in a chain before controllers; Authentication establishes identity and Authorization enforces decisions.
+// application.yml (client registration sketch)
+// spring:
+//   security:
+//     oauth2:
+//       client:
+//         registration:
+//           google-calendar:
+//             provider: google
+//             client-id: ${GOOGLE_CLIENT_ID}
+//             client-secret: ${GOOGLE_CLIENT_SECRET}
+//             scope: openid, profile, email, https://www.googleapis.com/auth/calendar.readonly
+//             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+```
 
-As you practice OAuth2, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+When the user hits a protected page, `oauth2Login` sends them to the provider. After callback success, Spring establishes a local `Authentication` (often an `OAuth2AuthenticationToken`) and can store authorized client tokens for later API calls. Separately, your API microservice might only enable `oauth2ResourceServer` and never redirect browsers at all — it only trusts bearer tokens. Pick the hat your process is wearing.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+Grant types matter in interviews and in production. Authorization code (+ PKCE) for user-delegated access. Client credentials when a service talks to another service with no user present — the token represents the client, not Alice. Implicit and password grants are legacy for most new work; prefer code + PKCE or client credentials.
 
-Today we walked through OAuth2 inside Phase 7 — Spring Security. The next natural question is waiting in Episode 71 — OpenID Connect.
+A frequent misunderstanding is treating "we added oauth2Login" as the same as securing a JSON API for mobile. Login redirect flows are for interactive clients. Machine APIs usually want resource-server validation of access tokens. Another misunderstanding is confusing the access token with proof of *who the user is* for your own profile screen — access tokens authorize API calls; identity claims for login UX are the OpenID Connect layer we open next.
+
+Today we placed JWT inside a protocol: clients obtain tokens through redirects and token endpoints; resource servers consume them; scopes limit the grant. The remaining gap is login itself — when you need a standardized ID token that says "this browser session is Alice," not only "this client may call these APIs."
+
+That is OpenID Connect.
 
 ## Source attribution
 

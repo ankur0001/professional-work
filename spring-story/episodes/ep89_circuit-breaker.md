@@ -11,23 +11,57 @@
 
 ## Full narration
 
-Calling a sick dependency forever is how outages spread. Circuit breakers fail fast on purpose.
+Feign made `inventory.reserve(...)` look like a local method. Under load, that courtesy becomes a trap. Inventory is failing — timeouts, 503s, thread pool exhaustion on their side. Order service keeps calling. Every checkout thread blocks on a doomed HTTP call. Order’s own thread pool fills. Health checks fail. The gateway marks order unhealthy. Now a dependency outage has taken down a service that might have degraded gracefully. A circuit breaker exists to stop calling a failing dependency after a threshold, fail fast, and optionally run fallback logic while the dependency recovers.
 
-Here is the pain this lesson exists to remove. Hard-coded hosts, copy-pasted config, and unbounded remote calls make multi-service systems fragile and hard to operate.
+The electrical metaphor is intentional. Closed circuit: calls flow to the remote system. Open circuit: calls short-circuit immediately without hitting the network. Half-open: a limited number of trial calls probe whether the dependency is healthy again; success closes the circuit, failure re-opens it. Spring Cloud CircuitBreaker provides an abstraction; Resilience4j is the common implementation on modern stacks. You can annotate methods with `@CircuitBreaker` from Spring Cloud CircuitBreaker or use Resilience4j annotations directly — same state machine idea.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Circuit Breaker.
+Watch a failing remote call open the circuit with a concrete service sketch.
 
-At a practical level, Circuit Breaker is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+```java
+@Service
+public class PaymentFacade {
+    private final PaymentClient paymentClient;
 
-Spring's design choice here is deliberate. Spring Cloud packages proven distributed-system patterns—config, discovery, gateway, resilience—on top of Boot.
+    public PaymentFacade(PaymentClient paymentClient) {
+        this.paymentClient = paymentClient;
+    }
 
-Once you accept the feature, the next honest question is how it works under the hood. Sidecar-style clients, gateways, and config servers coordinate through discovery and well-defined remote contracts.
+    @CircuitBreaker(name = "payment", fallbackMethod = "chargeFallback")
+    public PaymentResult charge(ChargeCommand cmd) {
+        return paymentClient.charge(cmd); // Feign/WebClient — may time out or 503
+    }
 
-As you practice Circuit Breaker, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+    private PaymentResult chargeFallback(ChargeCommand cmd, Throwable ex) {
+        return PaymentResult.pendingRetry(cmd.orderId(), ex.getMessage());
+    }
+}
+```
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+```yaml
+resilience4j:
+  circuitbreaker:
+    instances:
+      payment:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+```
 
-Today we walked through Circuit Breaker inside Phase 9 — Spring Cloud. The next natural question is waiting in Episode 90 — Distributed Tracing.
+Narrate a run. The first few `charge` calls hit payment and fail — timeouts count as failures when configured that way. Once ten calls sit in the sliding window and half or more have failed, the breaker opens. Call eleven does not wait on HTTP; it jumps to `chargeFallback` in milliseconds. Order can record a pending payment state instead of melting its threads. After `waitDurationInOpenState`, the breaker goes half-open. A few calls are allowed through. If payment is healthy again, the circuit closes. If they still fail, it opens once more.
+
+Integrate with Feign carefully. You can wrap Feign calls inside a service method that carries the circuit annotation, or use Resilience4j Feign capabilities depending on your stack version. The important design rule: the breaker wraps the remote boundary, not your entire domain transaction, unless you intentionally want that scope. Fallback signatures must match the original method plus a trailing `Throwable` (or specific exception types) so the proxy can dispatch correctly.
+
+Metrics and Actuator endpoints matter operationally. A breaker that opens should be visible — state transitions, failure rates — or on-call will only notice via customer complaints. Pair breakers with sensible timeouts; a breaker without timeouts still lets threads hang until the window fills slowly.
+
+A misconception is setting thresholds so tight that normal blips permanently open the circuit, or so loose that the breaker never trips during a real outage. Another is a fallback that returns empty success and writes nothing durable — you have hidden data loss. A third is putting a circuit breaker on purely in-process calls “for consistency”; breakers earn their keep on unreliable boundaries: network, process, or shared resource contention.
+
+Today we watched a payment remote call fail until a circuit opened, fail-fast to a fallback, and probe half-open for recovery — protecting order capacity when a dependency burns.
+
+When the breaker trips, you know *that* payment is unhealthy. You still may not know *which* hop across six services first slowed down for a single customer request. Logs without shared context will not tell you.
+
+That cross-process story is Distributed Tracing.
 
 ## Source attribution
 

@@ -11,23 +11,36 @@
 
 ## Full narration
 
-Fast producers can drown slow consumers. Backpressure is the negotiation that keeps systems alive.
+Schedulers place work on threads. Backpressure answers how much work is allowed to be outstanding. In Reactive Streams, the subscriber tells the publisher how many items it requests through the `Subscription`. Publishers should respect that demand. That conversation is backpressure.
 
-Here is the pain this lesson exists to remove. Blocking I/O on limited threads collapses under concurrency; teams need a model for async streams and backpressure.
+Without it, a fast source can overwhelm a slow sink: unbounded queues, memory growth, latency spikes, then collapse. Classic imperative code hides the same problem behind thread pools and blocking queues; reactive makes the demand signal explicit.
 
-So the natural question becomes: what does Spring give us so we do not keep paying that cost? The idea we need next is Backpressure.
+```java
+Flux<Event> incoming = eventSource.stream(); // potentially high-rate cold/hot source
 
-At a practical level, Backpressure is the Spring mechanism you reach for when this pain shows up in a real codebase. Treat it as a tool with a clear job — not as a checklist item.
+Flux<Event> protectedFlow = incoming
+    .onBackpressureBuffer(256)                 // bounded buffer strategy
+    .flatMap(this::persistAsync, 4)            // limit in-flight persists
+    .doOnRequest(n -> log.debug("downstream requested {}", n));
 
-Spring's design choice here is deliberate. Reactor and WebFlux give Spring a first-class model for non-blocking streams when the workload demands it.
+// Alternative strategies (pick deliberately):
+// onBackpressureDrop()     — drop when consumer is slow (telemetry sometimes OK)
+// onBackpressureLatest()   — keep only newest (UI gauges)
+// onBackpressureBuffer(n, overflowHandler) — bounded + explicit overflow behavior
+// limitRate(32)            — prefetch / request in chunks toward upstream
+```
 
-Once you accept the feature, the next honest question is how it works under the hood. Publishers signal demand through backpressure; schedulers decide which threads execute which operators.
+Prefetch matters. Many operators request a batch ahead of time for throughput. `limitRate` helps shape how demand is propagated upstream. `flatMap` concurrency caps how many inner publishers run at once — that is also a backpressure-related control, even though it is not named `onBackpressure*`.
 
-As you practice Backpressure, keep one habit: explain the before-and-after. What did the team do manually, and which Spring mechanism now owns that step?
+Strategies are product decisions. Buffering smooths bursts until memory hurts — always bound the buffer. Dropping suits metrics where staleness beats crash. Latest suits dashboards. Erroring on overflow makes failure visible when silent loss is unacceptable. There is no universal default that saves you from thinking.
 
-A common misunderstanding is to memorize names without a mental model. If you can only recite an annotation or class name, you do not own the concept yet. If you can explain the problem it removes, the runtime piece that implements it, and one failure mode, you are ready for production conversations.
+In WebFlux, the HTTP response and Netty watermarks participate in demand. If you return a `Flux` as SSE, a slow client should slow generation when the pipeline is wired correctly. If you assemble an in-memory list with `collectList()` first, you already opted out of streaming backpressure for that payload — fine for small pages, dangerous for unbounded queries.
 
-Today we walked through Backpressure inside Phase 8 — Reactive Spring. The next natural question is waiting in Episode 81 — Spring WebFlux.
+A misconception is "reactive automatically prevents OOM." It prevents OOM only when operators and sources honor bounded demand. A blocking JDBC `Flux` created by hammering a cursor without limits can still blow memory. Another misconception is using unbounded `onBackpressureBuffer()` and calling it production-ready. Name the bound. A third is confusing backpressure with circuit breaking — related resilience themes, different mechanisms.
+
+We now have publishers, thread control, and demand control. The missing piece in the Spring stack is the web layer that speaks HTTP with these types end to end — routers, annotated controllers returning `Mono`/`Flux`, and a runtime that is not `DispatcherServlet`.
+
+That layer is Spring WebFlux.
 
 ## Source attribution
 
