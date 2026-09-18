@@ -11,65 +11,49 @@
 
 ## Full narration
 
-Shipping endpoints is easy. Shipping an API a team can live with for years is a set of habits — naming, status discipline, error shape, pagination, and honest versioning.
+You can wire controllers, validation, advice, filters, and uploads and still ship an API that fights its clients. REST best practices are the craft layer: idempotent parcel create, honest pagination of tracking events, and boundaries that keep persistence out of the wire format.
 
-By now you have the mechanics: dispatcher, controllers, validation, advice, filters, interceptors, uploads. The pain that remains is entropy. Two squads invent two error formats. Collection endpoints return unbounded lists. Resources expose persistence fields. Breaking changes ship without a migration story. Best practices are not decorations on Spring. They are constraints that keep Spring MVC features pointed in one direction.
+Start with resource naming. Use nouns and plural collections: `/parcels`, `/parcels/{id}`, `/parcels/{id}/events`. Avoid verby paths like `/createParcel`. Let HTTP verbs carry the action. Keep identifiers opaque in URLs.
 
-Start with resource naming. Use nouns and plural collections: `/orders`, `/orders/{id}`, `/orders/{id}/attachments`. Avoid verby paths like `/createOrder`. Let HTTP verbs carry the action. Keep identifiers opaque in URLs; do not leak storage keys you are not willing to support forever.
-
-Status codes should be boring and consistent. `200` for successful reads and many updates. `201` plus `Location` for creates. `204` when a delete or update has no body. `400` for validation and malformed input. `401`/`403` for authn/authz. `404` for missing resources. `409` for conflicts. `429` when you throttle. Do not invent a private meaning for `200` that actually means failure.
+Idempotent create matters the moment a trucker’s mobile app retries a POST after a timeout. Without an idempotency key, you register the same parcel twice. With one, the second call returns the original resource:
 
 ```java
-@GetMapping("/orders")
-public ResponseEntity<PageResponse<OrderSummary>> list(
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "20") int size) {
-
-    if (size > 100) {
-        size = 100;
-    }
-    Page<OrderSummary> result = orders.list(page, size);
-    return ResponseEntity.ok(PageResponse.from(result));
-}
-
-public record PageResponse<T>(
-        List<T> items,
-        int page,
-        int size,
-        long totalElements,
-        int totalPages) {
-
-    static <T> PageResponse<T> from(Page<T> page) {
-        return new PageResponse<>(
-                page.getContent(),
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.getTotalPages());
-    }
+@PostMapping("/parcels")
+public ResponseEntity<ParcelResponse> create(
+        @RequestHeader("Idempotency-Key") String idempotencyKey,
+        @Valid @RequestBody CreateParcelRequest body) {
+    ParcelResponse created = parcels.createIdempotent(idempotencyKey, body);
+    return ResponseEntity
+            .created(URI.create("/parcels/" + created.id()))
+            .body(created);
 }
 ```
 
-Pagination and filtering belong on collections by default. Unbounded `findAll()` over HTTP is how you create an accidental denial-of-service against your own database. Cap `size`. Document sort parameters. Prefer stable cursors for deep pages when offset pagination gets expensive — but even simple page/size is better than returning everything.
+Store the key with the created parcel id. On replay, return the same body and the same `Location`. Do not invent a second parcel. Clients must send the key; document that requirement as part of the contract.
 
-Keep a single error envelope across the API — the `ApiError` idea from exception handling — so clients parse one schema. Include a machine-readable `code`, a human `message`, and optionally a `correlationId` that matches logs. Do not return JPA entities as payloads. Map to request/response DTOs so renaming a column does not become a breaking API change and so lazy associations cannot trigger accidental queries during serialization.
+Pagination keeps tracking-event lists honest:
 
-Idempotency and concurrency deserve explicit design on write endpoints. For creates that clients may retry, consider an `Idempotency-Key` header stored server-side. For updates to contested resources, use ETags or a version field and answer with `412`/`409` when the client’s view is stale. Document these rules; silent uniqueness constraints that only appear as SQL exceptions are not an API.
+```java
+@GetMapping("/parcels/{id}/events")
+public Page<TrackingEventResponse> events(
+        @PathVariable String id,
+        @PageableDefault(size = 50, sort = "occurredAt") Pageable pageable) {
+    return parcels.events(id, pageable);
+}
+```
 
-Version only when you must, and pick one strategy. URI versioning (`/v1/...`) is obvious to operators and gateways. Media-type versioning is more precise but harder to debug. Running two versions temporarily is fine; running five forever is a tax. Deprecate with headers or docs, then remove on a published schedule.
+Return `Page` when the UI needs total counts; return `Slice` when "has next" is enough and count queries hurt. Cap `size` so a client cannot ask for a million events. Stable sort keys matter — without them, page two drifts under concurrent inserts.
 
-Observability is part of API craft. Propagate correlation ids from filters into logs. Expose latency and error-rate metrics per route. Treat 5xx spikes as product incidents, not only ops noise. Contract tests — consumer-driven or snapshot OpenAPI diffs in CI — catch accidental breaking changes before clients do. Spring MVC gives you the endpoints; the surrounding discipline keeps them trustworthy.
+DTO boundaries close the loop. Request and response types are not your JPA entities. Entities grow lazy associations and persistence annotations; JSON serializers will happily walk them into N+1 territory and leak columns you never meant to publish. Map explicitly at the edge.
 
-A topic-specific misconception is chasing "perfect REST purity" while shipping inconsistent statuses and unbounded lists. Another is equating OpenAPI generation with API design — generated docs help, but they cannot invent pagination or error discipline for you. A third is exposing internal exception messages as the public contract and calling it transparency.
+Status discipline stays non-negotiable: `201` for creates, `204` for empty successful deletes, `404` for missing parcels, `409` for conflicts, `400` for validation. One error envelope from your advice keeps mobile parsers sane.
 
-So today we tightened the craft around the MVC stack you already have: resource-oriented URLs, disciplined statuses, paginated collections, DTO boundaries, and a single error shape.
+Caching headers on pure GETs of immutable snapshots can help; do not cache personalized or rapidly changing gate state without thought. Prefer ISO-8601 timestamps and explicit money types. Empty collections are `200` with `[]`, not `404`.
 
-That closes the core Spring MVC pass. The next practical pressure is persistence: how those order resources are stored, loaded, and related in a database without turning controllers into SQL.
+RPC-in-disguise paths (`/parcels/doCheckIn`) fight every HTTP tool you adopt later. Returning entities "just for now" becomes forever. Skipping idempotency because "retries are rare" guarantees duplicate parcels on the first flaky pier Wi-Fi day.
 
-JPA fundamentals are waiting on the other side of that door.
+Phase Three gave you the HTTP front door and the habits to speak it carefully. The next pressure is storage: vessels, manifests, and cargo lines that must survive process restarts. Mapping those as entities — instead of hand-written JDBC for every vessel column — is where Spring Data JPA begins.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 37 (*REST Best Practices*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

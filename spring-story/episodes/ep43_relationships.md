@@ -11,109 +11,79 @@
 
 ## Full narration
 
-A single `@Entity` maps one table. Real domains are graphs. An order has lines. A line belongs to an order. A product may appear on many lines. Relationship mappings tell Hibernate how foreign keys and join tables mirror those links — and whether loading a parent also loads children.
+A ship’s manifest is a document with lines. In the database that is two tables. In Java you want a `Manifest` that owns a list of `CargoLine` — and when a clerk deletes a line from the list, you want the row gone without a separate delete call. That is relationship mapping with orphan removal.
 
-Start with the classic pair: `Order` and `OrderLine`.
+JPA association annotations describe cardinality and ownership. `@OneToMany` / `@ManyToOne` cover the manifest↔line case. `@ManyToMany` and `@OneToOne` exist too; misuse them and join tables multiply. For harbor cargo, start with the classic parent-child:
 
 ```java
 @Entity
-@Table(name = "orders")
-public class Order {
+@Table(name = "manifests")
+public class Manifest {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "manifest_number", nullable = false, unique = true)
+    private String manifestNumber;
+
+    @Column(name = "vessel_imo", nullable = false)
+    private String vesselImo;
+
+    @OneToMany(mappedBy = "manifest", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CargoLine> lines = new ArrayList<>();
+
+    protected Manifest() {}
+
+    public void addLine(CargoLine line) {
+        lines.add(line);
+        line.setManifest(this);
+    }
+
+    public void removeLine(CargoLine line) {
+        lines.remove(line);
+        line.setManifest(null);
+    }
+}
+```
+
+```java
+@Entity
+@Table(name = "cargo_lines")
+public class CargoLine {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String customerEmail;
+    private String description;
 
-    @Enumerated(EnumType.STRING)
-    private OrderStatus status;
-
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderLine> lines = new ArrayList<>();
-
-    protected Order() {}
-
-    public Order(String customerEmail) {
-        this.customerEmail = customerEmail;
-        this.status = OrderStatus.NEW;
-    }
-
-    public void addLine(String sku, int quantity, BigDecimal unitPrice) {
-        OrderLine line = new OrderLine(this, sku, quantity, unitPrice);
-        lines.add(line);
-    }
-
-    public List<OrderLine> getLines() {
-        return Collections.unmodifiableList(lines);
-    }
-}
-
-@Entity
-@Table(name = "order_lines")
-public class OrderLine {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "weight_kg", nullable = false)
+    private int weightKg;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    @JoinColumn(name = "manifest_id")
+    private Manifest manifest;
 
-    @Column(nullable = false)
-    private String sku;
+    protected CargoLine() {}
 
-    private int quantity;
-
-    private BigDecimal unitPrice;
-
-    protected OrderLine() {}
-
-    OrderLine(Order order, String sku, int quantity, BigDecimal unitPrice) {
-        this.order = order;
-        this.sku = sku;
-        this.quantity = quantity;
-        this.unitPrice = unitPrice;
+    void setManifest(Manifest manifest) {
+        this.manifest = manifest;
     }
 }
 ```
 
-Read the mapping as a conversation. `@OneToMany(mappedBy = "order")` says the foreign key lives on the `OrderLine` side — the `order` field owns the relationship. `cascade = CascadeType.ALL` means persisting or removing the `Order` cascades to its lines. `orphanRemoval = true` means removing a line from the collection schedules a delete for that line row. `@ManyToOne(fetch = LAZY)` keeps the parent from loading until touched — and keeps line queries from eagerly pulling the whole order graph unless you ask.
+`mappedBy = "manifest"` says the child owns the foreign key column `manifest_id`. Cascade `ALL` means persisting a new manifest persists new lines. `orphanRemoval = true` means removing a line from the collection schedules a `DELETE` for that cargo row on flush — the relational mirror of "this line no longer belongs to the document."
 
-Always maintain both sides in one place. The `addLine` method sets `line.order` and adds to `lines`. If you only add to the list and leave `order` null, the foreign key may not write. If you only set `order` and forget the collection, in-memory navigation lies to you even when the database is fine.
+Always maintain both sides in `addLine` / `removeLine`. If you only `lines.add(line)` and forget `line.setManifest(this)`, the foreign key may stay null depending on flush order and owning side rules. Prefer `FetchType.LAZY` on collections so loading one manifest for a header screen does not pull every line until you ask.
 
-Cardinality choices matter. `@ManyToOne` / `@OneToMany` cover parent-child. `@OneToOne` fits a dedicated shipping address row. `@ManyToMany` needs a join table — use it sparingly; often a first-class association entity (like `Enrollment`) is clearer than a naked many-to-many.
+Bidirectional relationships are not free. Equals/hashCode on entities with generated ids is a footgun inside sets. Cascading `REMOVE` from manifest to lines is powerful — deleting a manifest deletes its lines; do that only when the business rule matches. `@ManyToMany` between vessels and ports often wants an explicit association entity (`PortCall`) instead of a bare join table, because the call has its own arrival time.
 
-Fetch type is where production pain hides. JPA's default for `@ManyToOne` and `@OneToOne` is eager in the specification, though teams often override to lazy. Collections default to lazy. Eager collections on `Order.lines` look convenient until you load fifty orders and Hibernate joins or selects every line every time. Prefer lazy defaults and fetch what a use case needs with a query — join fetch, entity graphs, or batch size — which we will sharpen in JPQL and N+1 episodes.
+People mark every association `EAGER` "so I never see LazyInitializationException" and then wonder why a simple manifest list issues a forest of joins. Others forget orphan removal and leave cargo rows pointing at deleted manifests — or delete lines manually in three places. A third mistake is putting `@JoinColumn` on both sides of a bidirectional pair and confusing Hibernate about ownership.
 
-```java
-public interface OrderRepository extends JpaRepository<Order, Long> {
-    List<Order> findByCustomerEmail(String email);
-}
-
-@Transactional
-public Long placeOrder(String email, List<LineRequest> requests) {
-    Order order = new Order(email);
-    for (LineRequest request : requests) {
-        order.addLine(request.sku(), request.quantity(), request.unitPrice());
-    }
-    return orderRepository.save(order).getId();
-    // cascade persists lines; FK order_id set from the many-to-one side
-}
-```
-
-Cascade is not free affection. Cascading `REMOVE` from a shared reference (say cascading from `Product` to every `OrderLine` that ever used it) is how you delete history by accident. Cascade along true ownership boundaries — order owns lines — not along every association you can annotate.
-
-Bidirectional mappings need `equals`/`hashCode` care. Using a generated id in `hashCode` before persist breaks `Set` membership. Many teams equal by business key or use identity only after the id exists. Do not put entities into sets casually without a strategy.
-
-Relationship mappings give you a graph. Querying that graph with SQL strings tied to column names fights the model. JPQL lets you query entities and associations in object terms — select orders, join lines, filter by customer — without dropping to JDBC.
-
-That is Episode Forty-Four — JPQL.
+Associations give you a graph. Querying that graph without dropping to table columns — "manifests for this vessel on this date" — is JPQL’s job.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 43 (*Relationships*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

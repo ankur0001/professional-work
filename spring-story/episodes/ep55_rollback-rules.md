@@ -11,74 +11,76 @@
 
 ## Full narration
 
-Not every exception means “undo everything.” Imagine a document import that writes a batch header, inserts two hundred line rows, then tries to notify a downstream indexer. If the indexer client throws because the search cluster is briefly unreachable, do you really want to erase two hundred successfully validated lines — or commit the import and retry notification later? Flip the scene: a payment capture throws a domain-checked `PaymentDeclinedException`. If that type is checked and you forgot to declare rollback, Spring may commit the surrounding work anyway — leaving an order marked paid when money never moved.
+A manifest import throws `ManifestException` — checked, on purpose, so callers must handle bad customs data. The service method is `@Transactional`. The exception escapes. The transaction commits anyway. Half a manifest sits in the database with a status that says “accepted.” Nightly reconciliation fails. Someone asks why Spring “ignored” the error.
 
-Rollback rules are how you encode which failures are fatal to the transaction boundary.
+It did not ignore the error. It followed the default rollback rules.
 
-Spring’s default is sharp and easy to misremember. Unchecked exceptions — subclasses of `RuntimeException` — and `Error` mark the transaction for rollback. Checked exceptions — subclasses of `Exception` that are not runtime — do not, unless you say so. The interceptor inspects what escapes the advised method, matches it against rollback and no-rollback rules, and tells the transaction manager to commit or roll back.
+Unchecked exceptions — `RuntimeException` and subclasses — and `Error` mark the transaction for rollback. Checked exceptions do not, unless you list them. The interceptor inspects what escapes the advised method, matches rollback and no-rollback rules, and tells the manager to commit or roll back.
+
+For harbor manifests, the business meaning is usually clear: a checked `ManifestException` is fatal to the unit of work. Say so on the annotation.
 
 ```java
 @Service
-public class InvoiceImportService {
+public class ManifestIntakeService {
 
-    private final InvoiceRepository invoices;
-    private final IndexerClient indexer;
+    private final ManifestRepository manifests;
+    private final CustomsNotifier notifier;
 
-    public InvoiceImportService(InvoiceRepository invoices, IndexerClient indexer) {
-        this.invoices = invoices;
-        this.indexer = indexer;
+    public ManifestIntakeService(ManifestRepository manifests, CustomsNotifier notifier) {
+        this.manifests = manifests;
+        this.notifier = notifier;
     }
 
     @Transactional(
-            rollbackFor = PaymentDeclinedException.class,
-            noRollbackFor = IndexerUnavailableException.class)
-    public ImportResult importBatch(ImportFile file) throws PaymentDeclinedException {
-        InvoiceBatch batch = InvoiceBatch.parse(file);
-        invoices.save(batch);
+            rollbackFor = ManifestException.class,
+            noRollbackFor = CustomsLinkDownException.class)
+    public ManifestId intake(ManifestDraft draft) throws ManifestException {
+        Manifest manifest = Manifest.from(draft);
+        manifests.save(manifest);
 
-        try {
-            indexer.submit(batch.id());
-        } catch (IndexerUnavailableException ex) {
-            // keep the batch; schedule a retry outside this method
-            batch.markIndexPending();
-            invoices.save(batch);
-            return ImportResult.savedWithoutIndex(batch.id());
+        if (!manifest.passesCustomsRules()) {
+            throw new ManifestException("CUSTOMS_REJECT", manifest.id());
         }
 
-        return ImportResult.savedAndIndexed(batch.id());
+        try {
+            notifier.announce(manifest.id());
+        } catch (CustomsLinkDownException ex) {
+            manifest.markNotifyPending();
+            manifests.save(manifest);
+            return manifest.id(); // commit intake; retry notify later
+        }
+
+        return manifest.id();
     }
 }
 ```
 
 ```java
-// checked on purpose — must be listed in rollbackFor to undo the TX
-public class PaymentDeclinedException extends Exception {
-    public PaymentDeclinedException(String code) {
-        super(code);
+public class ManifestException extends Exception {
+    public ManifestException(String code, ManifestId id) {
+        super(code + ":" + id);
     }
 }
 
-public class IndexerUnavailableException extends RuntimeException {
-    public IndexerUnavailableException(String message, Throwable cause) {
+public class CustomsLinkDownException extends RuntimeException {
+    public CustomsLinkDownException(String message, Throwable cause) {
         super(message, cause);
     }
 }
 ```
 
-Speak through the annotation. `rollbackFor = PaymentDeclinedException.class` says: even though this is checked, treat it as fatal — roll back. `noRollbackFor = IndexerUnavailableException.class` says: even though this is a runtime exception, do not undo the database work — commit the batch and let the caller handle a pending index state. Without those attributes, the defaults would invert both stories: the declined payment might leave committed debris, and a flaky indexer might wipe a valid import.
+Read the attributes aloud. `rollbackFor = ManifestException.class` means: even though this is checked, undo the transaction. Without it, the default would commit the saved manifest after a customs reject — the bug that started this episode. `noRollbackFor = CustomsLinkDownException.class` means: even though this is a runtime exception, keep the intake; mark notify-pending and let a retry path finish the side effect. Defaults would have wiped a valid manifest because a downstream link blinked.
 
-You can list multiple types. Rules apply to the exception that actually escapes the method — including subclasses, following Spring’s matching. If you catch an exception inside the method and do not rethrow, the interceptor never sees it; the transaction may commit with whatever partial state you left. Catching and swallowing is not a rollback rule. It is a decision to finish successfully from the interceptor’s point of view.
+Rules match the exception that actually escapes, including subclasses. Catch inside the method and swallow without rethrowing, and the interceptor sees success — partial state may commit. Catching is not a rollback rule; it is a decision that the boundary completed.
 
-There is also `rollbackForClassName` / `noRollbackForClassName` for stringly-typed configuration, and XML-era rule sets that still appear in older codebases. Prefer type-safe `rollbackFor` / `noRollbackFor` on the annotation in modern code. In tests, `@Rollback` / `@Commit` on Spring Test methods steer the test transaction — related idea, different switch.
+You can list multiple types, or use the stringly `rollbackForClassName` forms in older configs. Prefer explicit class literals. In tests, `@Rollback` / `@Commit` steer the test transaction — related idea, different switch.
 
-A frequent bug is converting a runtime failure into a checked wrapper, declaring `throws`, and forgetting `rollbackFor`. Another is marking `noRollbackFor` on a broad type like `Exception`, then wondering why serious failures still commit. Be precise. Prefer domain exceptions with clear fatal versus recoverable meaning, and align the annotation with that meaning.
+A frequent bug is wrapping a runtime failure in a checked type, adding `throws`, and forgetting `rollbackFor`. Another is `noRollbackFor = Exception.class`, then wondering why serious failures still commit. Prefer domain exceptions with clear fatal versus recoverable meaning, and align the annotation with that meaning — especially for checked `ManifestException` on intake paths.
 
-We can now declare the boundary, nest it with propagation, tune what concurrency may see, and decide which exceptions undo work. All of that still assumed one resource manager — typically one database. The day your “one business action” must mutate a database and a message broker, or two databases, in lockstep, local `@Transactional` is no longer enough.
+Local rules still assume one resource manager. The day intake must write Postgres and publish a JMS booking message in one breath, a single local boundary is no longer enough.
 
-How multiple systems agree — or fail to — is distributed transactions territory. That is where we go next.
+Distributed transactions are where that stretch gets honest — and expensive.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 55 (*Rollback Rules*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

@@ -11,39 +11,47 @@
 
 ## Full narration
 
-Auto-configuration reacts to the classpath. Starters are how teams build that classpath without playing dependency roulette.
+New hire opens a PR titled "add web endpoint for station status." The `pom.xml` diff lists `spring-web`, `spring-webmvc`, `hibernate-validator`, `jackson-databind`, `tomcat-embed-core`, each with a hand-picked version. Two of those versions disagree with the Boot BOM already imported. CI fails on `NoSuchMethodError` deep in Jackson or Spring MVC — not in the new controller. Reviewer comment: "Delete all of that. Use `spring-boot-starter-web`." The bike-share API does not need a custom dependency graph for "hello HTTP."
 
-Before starters, a "simple" Spring web app meant listing spring-web, spring-webmvc, Jackson, validation, an embedded Tomcat, logging bridges, and hoping every version agreed. One library upgraded early, another lagged, and you spent the morning on `NoSuchMethodError`. The business endpoint was never the hard part — the bill of materials was.
-
-So the engineer question is: can we declare a capability — web, JPA, security — and inherit a tested set of libraries with aligned versions?
-
-Spring Boot starters are that declaration. A starter is a Maven or Gradle dependency that pulls a curated set of transitive libraries. It usually contains little or no code of its own. The value is the graph. `spring-boot-starter-web` brings MVC, an embedded Tomcat by default, Jackson, and validation support. `spring-boot-starter-data-jpa` brings Spring Data JPA, Hibernate, and related pieces. `spring-boot-starter-actuator` brings operational endpoints. Versions are managed by Boot's BOM — the dependency management that pins compatible releases so you typically omit version numbers on starters.
+Starters are dependency descriptors, not runtime containers. `spring-boot-starter-web` pulls a tested set of jars compatible with your Boot version — Spring MVC, embedded Tomcat, Jackson, validation API — so auto-configuration conditions become true *together*. The Boot dependency-management BOM (via `spring-boot-dependencies` or the parent POM) aligns versions. You choose features; Boot chooses compatible coordinates. That separation is the whole product pitch of starters.
 
 ```xml
+<!-- before: dependency hell -->
+<dependency>
+  <groupId>org.springframework</groupId>
+  <artifactId>spring-webmvc</artifactId>
+  <version>6.1.2</version>
+</dependency>
+<dependency>
+  <groupId>com.fasterxml.jackson.core</groupId>
+  <artifactId>jackson-databind</artifactId>
+  <version>2.15.0</version>
+</dependency>
+<!-- ...and twelve more... -->
+
+<!-- after -->
 <dependency>
   <groupId>org.springframework.boot</groupId>
   <artifactId>spring-boot-starter-web</artifactId>
 </dependency>
-<dependency>
-  <groupId>org.springframework.boot</groupId>
-  <artifactId>spring-boot-starter-data-jpa</artifactId>
-</dependency>
 ```
 
-With a Boot parent POM or the Boot dependency BOM imported, those two lines replace a fragile hand-picked list. Build the project and inspect the resolved tree: Tomcat, Jackson, Hibernate, and friends appear as transitives. Change Boot's version, and the curated set moves together. That is why onboarding a new service got faster — the "web stack" decision became one coordinate, not twelve.
+Walk the before/after. Hand versions look precise and are usually wrong relative to the Boot release train: Boot 3.x expects a specific Spring Framework line and a Jackson line tested against it. Mixing "latest Jackson" with "Boot's Spring" produces method mismatches at runtime — compile may still pass if your code does not call the missing method. The starter dependency omits `<version>` when the parent BOM manages it; Maven/Gradle resolves a coherent graph. Transitive jars appear in `mvn dependency:tree` under the starter — that tree *is* the classpath signal auto-config reads.
 
-Runtime connects straight back to auto-configuration. Put `spring-boot-starter-web` on the classpath and web-related auto-config classes see their `@ConditionalOnClass` checks succeed. Leave it off, and those classes stay inactive. Starters do not configure beans by themselves; they supply the jars that make conditions true. Think of starters as the shopping cart and auto-configuration as the kitchen that cooks what you bought.
+Runtime effect is indirect but real. With `spring-boot-starter-web` on the classpath, Boot's servlet web auto-configuration sees Tomcat and `DispatcherServlet` classes, starts an embedded server, registers MVC infrastructure beans, and configures HTTP message converters including Jackson if present. Without Jackson on the classpath, JSON `@RestController` methods fail at runtime when writing responses. Without version alignment, you might get a server that starts and explodes on the first JSON payload — symptom: `NoSuchMethodError` or `ClassNotFoundException` in converter setup, HTTP 500 on `/api/stations/{id}` while `/actuator/health` still looks fine. Starters keep classpath signaling intentional: add `starter-data-jpa` and you invite DataSource and JPA auto-config; remove `starter-web` and the embedded server should disappear.
 
-You can still customize. Exclude Tomcat and add Jetty if you want a different embedded server. Add a database driver beside the JPA starter so datasource auto-config has a driver class. Override a transitive version only when you must — and treat that as a conscious risk, because you stepped outside the BOM's tested combination.
+Common starters sketch a vocabulary: `spring-boot-starter-web`, `data-jpa`, `security`, `actuator`, `test`. Each is a menu item for a feature slice. `spring-boot-starter-test` brings JUnit, Mockito, AssertJ, and Spring Test — use it in test scope so production images stay lean. When you need only JDBC without JPA, prefer `starter-jdbc` over dragging Hibernate via `starter-data-jpa`.
 
-The misunderstanding that wastes time is "starters are frameworks." They are dependency aggregates. Another is adding both `spring-boot-starter-web` and `spring-boot-starter-webflux` "just in case" and then wondering why the app's reactive-versus-servlet story is confused. Choose the stack you mean. A third is pinning random library versions on top of the BOM until the classpath is unique to your laptop.
+Failure mode: new hire "fixes" a missing class by adding a second, differently versioned copy of a jar already on the tree. Symptom: duplicate classes on the classpath, non-deterministic which wins, subtle bugs in one environment. Maven's dependency mediation picked one version; an explicit wrong version forced another. Another failure: adding `starter-webflux` beside `starter-web` "to try reactive" — dual stacks, confused web-application-type deduction, larger image, surprising thread models.
 
-Once the classpath is coherent and auto-config can fire, you still need one application entry point that turns scanning, configuration, and auto-config import into a single annotation people actually type.
+Trade-offs. Starters trade fine-grained control for curated coherence — perfect for services; occasionally heavy if you only wanted one transitive and got fifteen. Excluding a transitive (`<exclusions>`) is valid when you replace embedded Tomcat with Jetty via `spring-boot-starter-jetty`, but each exclusion is a promise you understand the auto-config conditions you just changed. Pinning versions manually fights the BOM and reintroduces the PR that started this lesson.
 
-That entry point is `@SpringBootApplication`.
+After the new hire switches to `spring-boot-starter-web`, run `mvn dependency:tree | head` in review and look for a single Jackson and a single Spring MVC line managed by the Boot BOM. That tree is the artifact you are actually shipping. If a transitive from a random SDK pulls an older `jackson-databind`, resolve it with Boot's dependency management or an explicit BOM-aligned override — not by deleting the starter. Starters and the BOM are one system: the starter selects features; the BOM selects versions.
+
+Misconception unique to starters: "A starter contains the auto-configuration Java code for that feature." Auto-configuration mostly lives in `spring-boot-autoconfigure`. Starters primarily bring dependencies (and sometimes transitive config). Removing a starter removes jars; excluding an auto-config class is a different lever.
+
+The POM is clean. Controllers still fail to map because the main application class sits in `com.bikeshare` while controllers live in `com.bikeshare.api.web`, and someone set a custom scan base that missed them. `@SpringBootApplication` is three annotations fused — and the scan-base mistake hides in that fusion.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 20 (*Starter Dependencies*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

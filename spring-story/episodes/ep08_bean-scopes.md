@@ -11,56 +11,47 @@
 
 ## Full narration
 
-Bean definitions tell Spring what to build. They also need to say how long each instance should live — and how widely it should be shared.
+Incident channel, 19:40. Two guests booking the Harborview Hotel on different laptops somehow share a cart. Guest A selects a king ocean-view; Guest B refreshes and sees A's room with A's loyalty rate. Support screenshots prove it. Engineering finds `BookingCart` registered as the default singleton — one instance for the whole JVM — stuffed into a `@Controller` that was never meant to hold per-user state.
 
-Here is a bug that teaches scope better than a definition list. A team stores the current user's cart on a `@Component` service field. In development, one tester clicks around and everything looks fine. In production, two customers share a JVM. Cart lines bleed across sessions. Someone "fixed" it with `synchronized`, which only serialized the corruption. The object was a singleton — one instance for the whole container — pretending to be per-user state.
-
-What goes wrong without scopes is lifetime mismatch. Stateless services want one shared instance. Per-request scratchpads want a fresh object each HTTP call. Rare cases want a new instance every injection. If everything is accidentally singleton, mutable state becomes a cross-talk hazard. If everything is prototype, you waste memory and lose shared caches you actually needed.
-
-So the engineer asks: how does Spring control whether a definition yields one shared object or many?
-
-That control is bean scope. The default scope is singleton: one shared instance per container for that definition. Prototype creates a new instance every time the bean is retrieved or injected. In web-aware contexts, request scope gives one instance per HTTP request, session scope one per HTTP session, and application scope one per `ServletContext`. Spring also supports custom scopes when you need conversation or tenant boundaries.
+Scope is the answer to "how many instances, and over what boundary?" Spring's built-in scopes include singleton (one per container), prototype (new instance every retrieval), and, in web-aware contexts, request, session, and application. Default is singleton. That default is correct for stateless services and wrong for a mutable cart.
 
 ```java
 @Component
-@Scope(value = WebApplicationContext.SCOPE_REQUEST,
-       proxyMode = ScopedProxyMode.TARGET_CLASS)
-public class RequestCart {
-    private final List<LineItem> lines = new ArrayList<>();
+@Scope(value = WebApplicationContext.SCOPE_SESSION, proxyMode = ScopedProxyMode.TARGET_CLASS)
+public class BookingCart {
+    private final List<RoomHold> holds = new ArrayList<>();
 
-    public void add(LineItem item) {
-        lines.add(item);
-    }
-
-    public List<LineItem> lines() {
-        return List.copyOf(lines);
-    }
+    public void add(RoomHold hold) { holds.add(hold); }
+    public List<RoomHold> holds() { return List.copyOf(holds); }
+    public void clear() { holds.clear(); }
 }
 
-@Service
-public class CheckoutFacade {
-    private final RequestCart cart; // injected singleton-safe via scoped proxy
+@RestController
+public class BookingController {
+    private final BookingCart cart;
+    private final ReservationService reservations;
 
-    public CheckoutFacade(RequestCart cart) {
+    public BookingController(BookingCart cart, ReservationService reservations) {
         this.cart = cart;
+        this.reservations = reservations;
     }
 
-    public void addItem(LineItem item) {
-        cart.add(item);
+    @PostMapping("/cart/rooms")
+    public CartView addRoom(@RequestBody RoomHold hold) {
+        cart.add(hold);
+        return CartView.from(cart);
     }
 }
 ```
 
-Watch what happens at runtime. `CheckoutFacade` is a singleton, created once at startup. It cannot hold a raw request-scoped object created at startup — that request does not exist yet. Spring injects a scoped proxy instead. On each HTTP request, method calls on `cart` delegate to the `RequestCart` instance bound to that request. Customer A's `add` never touches Customer B's list. When the request ends, the request-scoped bean is discarded. Scope just saved you from shared mutable state without forcing `CheckoutFacade` itself to become request-scoped.
+Runtime for session scope with a scoped proxy. On context refresh Spring does not put one shared `BookingCart` into the controller. It injects a proxy. On each HTTP call, when the controller touches `cart.add`, the proxy resolves the real cart for the current HTTP session — creating one on first use — and delegates. Guest A's session id maps to cart instance A; Guest B gets cart instance B. When the session expires, that cart becomes eligible for destruction callbacks. Singleton `ReservationService` stays one shared instance, which is what you want for a stateless booking API client.
 
-Choose scopes with intent. Prefer singleton for thread-safe, stateless services and shared expensive resources like connection pools. Use request or session only for state that truly follows the web lifecycle. Use prototype sparingly — and remember a hard edge: when a singleton depends on a prototype without a proxy or `ObjectFactory`/`Provider`, it may capture one prototype instance at injection time and never see a fresh one again.
+Prototype scope would create a new cart on every `getBean` or injection point resolution — usually wrong for a cart you mutate across several requests. Request scope lives for one HTTP request only; useful for per-request buffers, useless for a multi-step booking wizard.
 
-A scope-specific misconception is "prototype means Spring destroys the instance for me." It does not fully manage prototype destruction the way it manages singleton destroy callbacks; you are closer to owning cleanup. Another is marking everything request-scoped "to be safe," which multiplies objects and breaks non-web use of the same types.
+Misconception unique to scopes: "Annotating `@Scope("session")` without a proxy is enough when injecting into a singleton." If a singleton controller receives a session-scoped object without `proxyMode` (or ObjectFactory/Provider), it may capture one session's instance at injection time and share it forever — the Harborview bug in a tuxedo. The proxy (or lookup API) re-resolves per call.
 
-Scope answers how many instances and for how long they are visible. It does not answer what Spring calls on the way in and out of that life — init hooks, post-processors, destroy callbacks. When your bean opens a file handle or registers a listener, you need the lifecycle sequence next.
+Carts are isolated again. The next outage is different: Redis connections for rate caching are created lazily on the first booking spike after deploy, and the pool warms under traffic instead of before it. Creation timing — not instance count — is now the problem.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 8 (*Bean Scopes*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

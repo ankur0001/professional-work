@@ -11,61 +11,67 @@
 
 ## Full narration
 
-Two-phase commit tried to make many resources behave like one database. For long business flows — book a flight, reserve a hotel, charge a card, email a confirmation — that medicine is often worse than the disease. Steps take seconds or minutes. Participants are other teams’ APIs. Locks cannot stay open across prepare forever. You need a different promise: each step commits locally, and if a later step fails, earlier steps run compensating actions that undo their business effect.
+Skip the coordinator fantasy for a moment and book a trip the way product actually sells it: flight seat, hotel night, rental car. Three services. Three local databases. A card charge at the end. You cannot hold XA locks across a hotel API that takes eight seconds and a car broker that times out on Tuesdays. You need a different promise — each step commits locally, and if a later step fails, earlier steps run compensating actions that undo their business effect.
 
 That is the saga pattern. Not one global transaction. A narrative of local transactions with explicit recovery.
 
-Say travel booking. Step one: reserve a seat — local commit in the inventory service. Step two: hold a hotel room — local commit in hotels. Step three: charge the card. If the charge fails, you do not “roll back” the seat the way JDBC rolls back a row. You call `releaseSeat` and `cancelHotelHold` — compensations that are themselves ordinary local transactions. The system may pass through visible intermediate states. Guests might briefly see a held seat that later frees. Saga trades immediate global consistency for availability and clearer failure handling across services.
+Step one: reserve the flight seat — local commit in inventory. Step two: hold the hotel room — local commit in hotels. Step three: reserve the car. Step four: charge the card. If the charge fails, you do not “roll back” the seat the way JDBC rolls back a row. You call `releaseSeat`, `cancelHotelHold`, and `releaseCar` — compensations that are themselves ordinary local transactions. Guests may briefly see a held seat that later frees. Saga trades immediate global consistency for availability and clearer failure handling across services.
 
 ```java
 @Service
 public class TripBookingSaga {
 
-    private final InventoryClient inventory;
+    private final FlightClient flights;
     private final HotelClient hotels;
+    private final CarClient cars;
     private final PaymentsClient payments;
 
     public TripBookingSaga(
-            InventoryClient inventory,
+            FlightClient flights,
             HotelClient hotels,
+            CarClient cars,
             PaymentsClient payments) {
-        this.inventory = inventory;
+        this.flights = flights;
         this.hotels = hotels;
+        this.cars = cars;
         this.payments = payments;
     }
 
     public BookingResult book(TripRequest request) {
-        SeatHold seat = inventory.reserveSeat(request.flightId(), request.seat());
+        SeatHold seat = flights.reserveSeat(request.flightId(), request.seat());
         HotelHold hotel = null;
+        CarHold car = null;
         try {
             hotel = hotels.holdRoom(request.hotelId(), request.nights());
+            car = cars.reserve(request.carClass(), request.pickup());
             payments.charge(request.customerId(), request.total());
-            return BookingResult.confirmed(seat, hotel);
+            return BookingResult.confirmed(seat, hotel, car);
         } catch (RuntimeException ex) {
+            if (car != null) {
+                cars.release(car.id());
+            }
             if (hotel != null) {
                 hotels.cancelHold(hotel.id());
             }
-            inventory.releaseSeat(seat.id());
+            flights.releaseSeat(seat.id());
             throw ex;
         }
     }
 }
 ```
 
-That sketch is orchestration: one component directs the steps and compensations. Choreography is the other style — each service listens for events and reacts. `SeatReserved` triggers hotel holding. `HotelHeld` triggers payment. `PaymentFailed` triggers `ReleaseSeat` and `CancelHotel`. Orchestration is easier to follow in one place. Choreography avoids a central boss but scatters the flow across consumers. Both are sagas if they share the compensation mindset.
+That sketch is orchestration: one component directs steps and compensations. Choreography is the other style — each service listens for events and reacts. `SeatReserved` triggers hotel holding. `HotelHeld` triggers car reservation. `PaymentFailed` triggers releases and cancels. Orchestration is easier to follow in one place. Choreography avoids a central boss but scatters the flow. Both are sagas if they share the compensation mindset.
 
-Spring does not ship a single `@Saga` annotation that solves distributed workflows for you. What Spring gives you are the building blocks: local `@Transactional` boundaries per service, messaging with Spring Kafka or AMQP, transactional outbox patterns so an event publish reliably follows a local commit, and application code or state machines that track saga progress. Libraries and platforms exist on top — but the idea you must own is independent of any one library: forward actions plus compensations, idempotent handlers, and timeouts.
+Spring does not ship a single `@Saga` annotation that finishes distributed workflows for you. Building blocks yes: local `@Transactional` per service, messaging, transactional outbox so an event publish reliably follows a local commit, and application code or state machines that track progress. Libraries exist on top. The idea you must own is independent of any one of them: forward actions plus compensations, idempotent handlers, and timeouts.
 
-Idempotency matters because compensations and retries duplicate. Releasing an already-released seat must be safe. Payments need clear capture versus void semantics. Store saga state — which steps succeeded — so a crash mid-flow can resume or compensate without guessing.
+Idempotency matters because retries duplicate. Releasing an already-released seat must be safe. Payments need clear capture versus void semantics. Persist saga state — which steps succeeded — so a crash mid-flow can resume or compensate without guessing.
 
-Misconceptions to kill early. Saga is not XA with friendlier branding; it deliberately allows temporary inconsistency. Compensation is not always the mechanical inverse of insert — canceling a shipped order may mean refund plus restock, not deleting history. And saga does not remove the need for local transactions; every step still wants a solid `@Transactional` boundary inside its service.
+Kill early misconceptions. Saga is not XA with friendlier branding; it deliberately allows temporary inconsistency. Compensation is not always the mechanical inverse of insert — canceling a started trip may mean refund plus restock, not deleting history. And saga does not remove local transactions; every step still wants a solid boundary inside its service.
 
-We have closed the transaction arc from one-method boundaries through nesting, isolation, rollback rules, XA limits, and sagas. Step back and notice a pattern that kept appearing: something intercepts method calls to start transactions, maybe later to log, authorize, or time them. That cross-cutting interception is not unique to transactions.
+We have closed the transaction arc from one-method boundaries through nesting, isolation, rollback rules, XA limits, and sagas. Step back and notice what kept intercepting method calls: begin transaction, maybe later log, authorize, or time. That cross-cutting interception is not unique to transactions.
 
-What modularizes those concerns so every service method does not copy-paste them? Aspect-oriented programming — and that is the door into the next phase.
+What modularizes those concerns so every harbor service method does not copy-paste them? Aspect-oriented programming.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 57 (*Saga Pattern*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

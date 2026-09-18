@@ -1,9 +1,9 @@
-# Episode 50 — Performance Tuning
+# Episode 50 — JPA Performance Tuning
 
 | Field | Value |
 |---|---|
 | Episode | 50 |
-| Title | Performance Tuning |
+| Title | JPA Performance Tuning |
 | Phase | Phase 4 — Spring Data JPA |
 | Catalog handbook lesson | 50 |
 | Spoken form | Continuous spoken lesson (narrative chain of thought) |
@@ -11,91 +11,82 @@
 
 ## Full narration
 
-JPA makes the happy path easy — and makes it easy to hide fifty SQL statements behind one repository call. Performance tuning in a Spring Data app is not a single annotation. It is a checklist you apply with evidence: measure SQL, then fix fetch shapes, batching, indexes, and context lifetime.
+The harbor schedule board takes four seconds to paint. The network is fine. The JVM is fine. SQL logging shows dozens of similar selects and wide entity graphs for a screen that only needs vessel name, berth code, and ETA. JPA performance tuning starts by measuring that gap — then applying batch size, entity graphs, and projections on purpose.
 
-Start with visibility. If you cannot see statements, you are guessing.
+Enable SQL logging (or a statement counter) in a lower environment and reproduce the board load. Count statements. Note payload width. Only then pick a tool.
 
-```properties
-spring.jpa.show-sql=false
-logging.level.org.hibernate.SQL=DEBUG
-logging.level.org.hibernate.orm.jdbc.bind=TRACE
-spring.jpa.properties.hibernate.generate_statistics=true
-```
-
-In staging, pair that with datasource metrics and a slow-query log on the database. Count statements per API request. A checkout that runs one select and one insert is healthy. A product list that runs one select plus one select per row is not — that pattern has a name waiting in the next episode.
-
-Fetch strategy is the first dial. Default lazy collections are correct for writes and detail screens you do not always need. For a read model that always shows order lines, use a dedicated query with `join fetch` or an `@EntityGraph`:
+**Batch size** reduces chatty lazy loads when you must keep associations lazy:
 
 ```java
-public interface OrderRepository extends JpaRepository<Order, Long> {
+@Entity
+@Table(name = "schedule_slots")
+public class ScheduleSlot {
 
-    @EntityGraph(attributePaths = "lines")
-    @Query("select o from Order o where o.id = :id")
-    Optional<Order> findDetailedById(@Param("id") Long id);
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Vessel vessel;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Berth berth;
+
+    private Instant eta;
 }
 ```
 
-Entity graphs keep the fetch plan on the repository method instead of forcing eager mapping on the entity forever. That separation matters: the same `Order` stays lean for admin updates and rich for detail views.
-
-Batching cuts round-trips on writes:
-
-```properties
-spring.jpa.properties.hibernate.jdbc.batch_size=50
-spring.jpa.properties.hibernate.order_inserts=true
-spring.jpa.properties.hibernate.order_updates=true
+```java
+@Entity
+@BatchSize(size = 25)
+public class Vessel { /* ... */ }
 ```
 
-When you `persist` fifty new `OrderLine` rows in one transaction, Hibernate can send them in JDBC batches. Identity generators often undermine batch inserts because the database must return keys immediately — sequences or UUIDs batch more cleanly. Match generator choice to write patterns.
+When the board touches twenty vessels’ lazy state, Hibernate can load them with fewer `WHERE id IN (...)` queries instead of twenty singles. Batch size is a blunt instrument — better than N singles, not always better than one intentional join.
 
-Pagination protects list endpoints:
-
-```java
-Page<Product> page = productRepository.findByActiveTrue(
-        PageRequest.of(pageNumber, 50, Sort.by("name")));
-```
-
-Never `findAll()` a production catalog table into memory because the UI "might need it." For scrolling APIs, prefer keyset pagination when offsets get deep — large `OFFSET` values make the database walk and discard rows.
-
-DTO projections and read-only transactions reduce work:
+**Entity graphs** declare what a use case needs up front:
 
 ```java
-@Transactional(readOnly = true)
-public List<ProductPriceView> listPrices() {
-    return productRepository.findAllProjectedBy();
-}
+public interface ScheduleSlotRepository extends JpaRepository<ScheduleSlot, Long> {
 
-public interface ProductPriceView {
-    String getSku();
-    BigDecimal getPrice();
+    @EntityGraph(attributePaths = {"vessel", "berth"})
+    @Query("select s from ScheduleSlot s where s.eta between :from and :to")
+    List<ScheduleSlot> findBoard(Instant from, Instant to);
 }
 ```
 
-`readOnly = true` hints the provider and the flush behavior: dirty checking can be lighter, and you signal intent. Interface or class-based projections avoid hydrating full entities when a screen needs three fields.
+The graph tells Hibernate to fetch `vessel` and `berth` with the slots for that board query — without marking the associations `EAGER` globally for every other use case.
 
-Indexes belong in the database, not only in hope. If you filter orders by `customer_email` and `status`, add a composite index that matches the query. Hibernate will not invent your indexing strategy. Explain plans tell you whether a Specification is doing a sequential scan on a million-row table.
-
-Clear the persistence context in bulk jobs:
+**Projections** shrink what comes back when the board does not need full entities:
 
 ```java
-for (int i = 0; i < imports.size(); i++) {
-    entityManager.persist(toEntity(imports.get(i)));
-    if (i % 50 == 0) {
-        entityManager.flush();
-        entityManager.clear();
-    }
+public interface ScheduleBoardRow {
+    String getVesselName();
+    String getBerthCode();
+    Instant getEta();
 }
+
+@Query("""
+        select v.name as vesselName,
+               b.berthCode as berthCode,
+               s.eta as eta
+        from ScheduleSlot s
+        join s.vessel v
+        join s.berth b
+        where s.eta between :from and :to
+        order by s.eta
+        """)
+List<ScheduleBoardRow> projectBoard(Instant from, Instant to);
 ```
 
-Without `clear()`, every imported entity stays managed and the first-level cache grows without bound.
+No managed graph. No accidental lazy navigation in the JSON serializer. Columns the screen needs — nothing more.
 
-Open-session-in-view deserves a conscious decision. Leaving the session open for the whole MVC request makes lazy loads in the view layer work — and hides N+1 until production traffic spikes. Many teams disable it (`spring.jpa.open-in-view=false`) and fetch explicitly inside transactional services.
+Other levers: pagination so the board cannot ask for a year of slots; read-only transactions for pure paints; avoiding Open Session in View when it turns rendering into a query engine; second-level cache only after you understand eviction. Indexes still matter — JPA will not invent an index on `eta` for you.
 
-Tuning gives you knobs. One anti-pattern still deserves its own episode because it is the most common ORM latency incident in the wild: one query for parents, then one query per parent for children.
+Marking every association `EAGER` "for performance" often makes writes and incidental loads worse. Caching entities without a plan recreates stale berth boards. Micro-optimizing flush modes before counting SQL is folklore.
 
-Episode Fifty-One — the N+1 Problem.
+Even a tuned board can hide a sharper anti-pattern: one query for manifests, then one query per manifest for cargo lines as a loop touches the collection. That classic explosion has a name — N+1 — and it deserves its own walkthrough with a real loop and a join-fetch fix.
 
 ## Source attribution
 
-Reference: `Spring_Framework_Handbook.html` — Lesson 50 (*Performance Tuning*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.
+Reference: `Spring_Framework_Handbook.html` — Lesson 50 (*JPA Performance Tuning*).

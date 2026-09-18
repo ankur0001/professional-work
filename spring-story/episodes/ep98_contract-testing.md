@@ -11,17 +11,22 @@
 
 ## Full narration
 
-Testcontainers proved your service talks to a real database. It did not prove that inventory still returns the JSON your Feign client deserializes after their team ships on Friday. End-to-end environments catch that late and flaky. Contract testing catches it earlier: consumer and provider agree on a document — requests and responses — and each side verifies against that document in isolation.
+Gate’s `BillingClient` expects `GET /tariffs/quote` to return `{ "amount": "108.00", "currency": "USD" }`. Billing renames `amount` to `total` on a Friday. Gate’s Feign decoder fails on Monday’s shift change. Neither side’s unit tests lied — they never shared a wire contract. Contract testing makes that share explicit: a pact or Spring Cloud Contract stub that billing must satisfy and gate can consume in CI.
 
-Spring Cloud Contract is the Spring-centric tooling for this. You write contracts — often Groovy or YAML DSL — that describe an HTTP interaction. From those contracts the framework can generate producer-side tests that fail if the controller no longer satisfies the spec, and stub runners that give the consumer a WireMock-like stub in tests so Feign clients keep working without the real provider process.
+With Spring Cloud Contract, billing authors a contract DSL; the build generates verification tests for the producer and stub jars for consumers. Gate’s tests run Feign against the stub, not against a hope.
 
 ```groovy
-// contracts/inventory/should_return_stock.groovy
+// billing-service contract: shouldReturnTariffQuote.groovy
 Contract.make {
-    description "stock by sku"
+    description("quote for container + hazard")
     request {
         method GET()
-        url "/stock/SKU-1"
+        urlPath("/tariffs/quote") {
+            queryParameters {
+                parameter("containerId", "MSCU123")
+                parameter("hazardClass", "IMDG_3")
+            }
+        }
     }
     response {
         status 200
@@ -29,53 +34,50 @@ Contract.make {
             contentType(applicationJson())
         }
         body([
-            sku      : "SKU-1",
-            available: 5
+                amount  : "108.00",
+                currency: "USD"
         ])
+        bodyMatchers {
+            jsonPath('$.amount', byRegex('[0-9]+\\.[0-9]{2}'))
+            jsonPath('$.currency', byEquality())
+        }
     }
 }
 ```
-
-On the producer (inventory), the build generates a test that performs `GET /stock/SKU-1` against the Spring context and asserts status and body fragments. If someone renames `available` to `qtyAvailable` without updating the contract, the producer build breaks — before consumers discover it in staging.
-
-On the consumer (order), `@AutoConfigureStubRunner` downloads or locates the stub jar built from those contracts and starts stubs on a port. Your Feign client points at that stub during tests.
 
 ```java
 @SpringBootTest
 @AutoConfigureStubRunner(
-        ids = "com.example:inventory-service:+:stubs:0",
+        ids = "com.harbor:billing-service:+:stubs:0",
         stubsMode = StubRunnerProperties.StubsMode.LOCAL)
-class OrderServiceContractTest {
+class GateBillingContractTest {
 
     @Autowired
-    InventoryClient inventory;
+    BillingClient billing;
 
     @Test
-    void readsStockFromStub() {
-        StockView stock = inventory.getStock("SKU-1");
-        assertEquals(5, stock.available());
+    void feignMatchesBillingStub() {
+        TariffQuote quote = billing.quote("MSCU123", "IMDG_3");
+        assertEquals("USD", quote.currency());
+        assertEquals(new BigDecimal("108.00"), quote.amount());
     }
 }
 ```
 
-The flow across teams becomes a pipeline: contracts live in the producer repo (or a shared contract repo), producer CI publishes stub artifacts, consumer CI runs against stubs at a known version. That is consumer-driven contract testing when consumers propose contracts; it is provider-driven when the provider publishes and consumers must follow. Either way, the artifact is the agreement, not a wiki screenshot of JSON.
+Producer side: billing’s CI runs the generated smoke tests against its controllers — if the stub says 200 with `amount`, the controller must still do that. Rename the JSON field without updating the contract and producer verification fails before merge. Consumer side: gate’s CI downloads stubs and exercises `BillingClient`. Breaking the contract breaks the build before the quay feels it. Walk the Friday rename with contracts in place: billing’s build turns red on verification; gate never ships a decoder that expects a missing field.
 
-Contracts also work for messaging — message inputs and outputs — which pairs cleanly with Spring Cloud Stream from earlier. The same idea holds: generate tests for the producer of the message and stubs for the listener side.
+Contracts are not end-to-end substitutes. They lock shapes and status codes at the boundary. Business sequencing — check-in then invoice — still needs integration or journey tests. Prefer dedicated client DTOs on both sides so contract fields do not drag JPA entities across jars. Version stub artifacts so gate can pin a known-good billing stub while billing develops the next incompatible change on a new contract file.
 
-Producer-side generated tests usually sit under `generated-test-sources` and run with the provider’s Spring context — often `@AutoConfigureMockMvc` style under the hood. When a generated test fails, read the contract first, then the controller mapping. The failure means the live API drifted from the agreed document; either fix the API or deliberately revise the contract and republish stubs so consumers can adapt in the same change train.
+Failure symptoms without contracts: Feign `DecodeException` at 06:00 after a billing deploy; each team’s green pipeline; blame traveling across Slack. With contracts too loose (`byRegex(".*")` on every field), the same outage returns because nothing forced `amount` to stay a money string. With stubs published once and never re-verified, drift accumulates silently until a consumer bumps the stub version.
 
-WireMock stubs from contracts are not an excuse to skip consumer logic tests. They freeze the HTTP conversation so your Feign mapping and domain branching can run quickly. Pair them with a few true integration tests against a real inventory in a shared environment when the risk warrants it.
+Trade-offs: consumer-driven contracts (Pact-style) put gate in charge of expectations; producer-first Contract DSL puts billing in charge of publishing stubs. Either works if both pipelines run. Contracts add build complexity; they pay off when multiple consumers (gate, scheduling, ops tooling) depend on billing’s HTTP shape. Do not contract every admin CRUD endpoint on day one — start with the tariff quote path that stops trucks when it breaks.
 
-A misconception is treating contracts as end-to-end tests. They do not prove business workflows across real deployments; they prove shape and status compatibility at the boundary. Another is duplicating every internal field in contracts until churn makes teams disable the suite — contract the fields consumers need. A third is never versioning stubs, so consumers silently float to incompatible producer stubs.
+Walk a coordinated change. Billing must add `degraded` to the quote JSON. Update the contract body and matchers first; regenerate stubs; fix gate’s DTO and Feign decoder; merge producer verification green; then consumers bump the stub version. Reversing that order — ship billing first — recreates Monday’s decoder failure with extra ceremony. Contracts are a change protocol, not only a test type.
 
-Today we used a contract to lock `GET /stock/SKU-1`, generate producer verification, and run the order Feign client against stubs — breaking builds on incompatible API changes before production does.
+A misconception is writing contracts so loose (`byRegex(".*")` everywhere) that they never fail. Another is generating stubs once and never re-running producer verification. A third is treating contracts as documentation only without wiring them into both pipelines.
 
-You can test units, slices, containers, and contracts and still fly blind in production if you cannot see live latency, error rates, and traffic. After confidence in the build comes telemetry in the running system.
-
-That telemetry starts with Micrometer.
+Green contracts and green tariff tests still leave a production question unanswered: how slow is `releaseGate`, for whom, since when? Phase 11 starts with meters, not dashboards.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 98 (*Contract Testing*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

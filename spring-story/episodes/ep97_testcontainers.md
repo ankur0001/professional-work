@@ -11,22 +11,19 @@
 
 ## Full narration
 
-Integration tests with H2 prove that your Spring wiring can talk to a database. They do not prove that your Flyway migration, native Postgres query, or `JSONB` column works on Postgres. Testcontainers starts real Docker containers from JUnit tests — databases, brokers, browsers — and exposes mapped ports so Spring can connect. The container lifecycle can follow a single test, a class, or a shared singleton across the suite.
-
-Here is a focused example: a real PostgreSQL database behind a Spring Data repository test.
+H2 forgives SQL that Postgres rejects. A `VesselRepository.findByImoNumber` that “works” on H2 can fail in the quay’s Postgres on a type, JSON function, or lock. Testcontainers starts a real `PostgreSQLContainer` for the test JVM, gives Spring JDBC URLs dynamically, and tears the container down after the class or suite.
 
 ```java
-@Testcontainers
 @SpringBootTest
-@ActiveProfiles("tc")
-class OrderRepositoryContainerIT {
+@Testcontainers
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+class VesselRepositoryIT {
 
     @Container
-    static PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:16-alpine")
-                    .withDatabaseName("orders")
-                    .withUsername("test")
-                    .withPassword("test");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("harbor")
+            .withUsername("harbor")
+            .withPassword("harbor");
 
     @DynamicPropertySource
     static void datasourceProps(DynamicPropertyRegistry registry) {
@@ -36,60 +33,49 @@ class OrderRepositoryContainerIT {
     }
 
     @Autowired
-    OrderRepository orders;
+    VesselRepository vessels;
 
     @Test
-    void savesAndFindsBySku() {
-        OrderEntity saved = orders.save(OrderEntity.newForSku("SKU-1"));
-        assertTrue(orders.findById(saved.getId()).isPresent());
-        assertEquals("SKU-1", orders.findBySku("SKU-1").orElseThrow().getSku());
+    void findsByImoNumber() {
+        vessels.save(Vessel.flag("9321483", "Pacific Trader"));
+
+        Optional<Vessel> found = vessels.findByImoNumber("9321483");
+
+        assertTrue(found.isPresent());
+        assertEquals("Pacific Trader", found.get().getName());
+    }
+
+    @Test
+    void unknownImoIsEmpty() {
+        assertTrue(vessels.findByImoNumber("0000000").isEmpty());
+    }
+
+    @Test
+    void uniqueImoConstraintSurfaces() {
+        vessels.save(Vessel.flag("9321483", "Pacific Trader"));
+        assertThrows(DataIntegrityViolationException.class,
+                () -> vessels.save(Vessel.flag("9321483", "Duplicate")));
     }
 }
 ```
 
-Narrate the run. Jupiter starts. The Testcontainers JUnit extension sees `@Container` and starts Postgres 16 in Docker. `@DynamicPropertySource` registers the ephemeral JDBC URL into Spring’s Environment before the context refreshes. Boot migrates schema (Flyway/Liquibase) against the real engine. The test saves and reads through JPA. After the class, the container stops. You exercised a real database without maintaining a shared snowflake CI database.
+Walk the lifecycle. JUnit starts the class. Testcontainers pulls (or reuses) `postgres:16-alpine`, waits for readiness, exposes a JDBC URL on a random host port. `@DynamicPropertySource` feeds Boot before the context refreshes — without it, Boot may still point at H2 from `application-test.yml` and you think you tested Postgres when you did not. Spring Data runs against real Postgres. Unique constraints, `timestamptz`, and JSONB operators behave as production. The container stops when the class ends — or lives longer with reuse enabled for local speed.
 
-Spring Boot 3.1+ also offers service connection support — `@ServiceConnection` on a container bean — to reduce manual property wiring for supported technologies. The idea is the same: container first, Spring connects to whatever host port Docker published.
-
-```java
-@Bean
-@ServiceConnection
-PostgreSQLContainer<?> postgresContainer() {
-    return new PostgreSQLContainer<>("postgres:16-alpine");
-}
+```yaml
+# optional: reuse across runs in local ~/.testcontainers.properties
+# testcontainers.reuse.enable=true
 ```
 
-That bean form shines in `@TestConfiguration` shared across several IT classes. Whether you use `@DynamicPropertySource` or `@ServiceConnection`, assert against behavior that H2 would lie about: a native query, a partial index migration, or `SKIP LOCKED` semantics.
+Use the same major version you run in production when practical. Flyway/Liquibase migrations should run in this test profile so schema matches what gate and scheduling deploy — a repository green against an entity-only schema that never applied migration `V42__berth_window.sql` is false comfort. Pair `@DataJpaTest` with Testcontainers when you want a repository slice without the full web stack — still real Postgres, narrower context, faster feedback on derived queries. If `@DataJpaTest` replaces your DataSource by default, keep `Replace.NONE` and the dynamic properties; otherwise you silently fall back to H2 and the whole point evaporates.
 
-Containers are not only for SQL. Kafka, LocalStack, Redis, and Selenium images cover messaging, cloud APIs, caches, and UI. Reuse patterns matter for speed: a static container per class is cheaper than per-method; Ryuk cleans up orphaned containers when the JVM exits. CI runners need Docker (or a compatible engine) available; without it, these tests fail at infrastructure, not assertion.
+Failure symptoms: CI agents without Docker cannot start containers — the suite fails loudly at environment setup, which is better than silent H2 substitution if you forbade replace. Parallel classes sharing one reused container without truncating tables produce cross-talk. Pinning `postgres:latest` means an upstream major bump breaks CI overnight; pin `16-alpine` or your prod minor. Slow first pull on cold agents dominates runtime — warm the image in the pipeline image cache. Another tell: tests pass locally on an Apple-silicon image tag and fail on CI’s amd64 agent because someone floated a platform-specific tag without a multi-arch digest.
 
-When migrations fail against Postgres but passed on H2, this is exactly the feedback you wanted — better in CI than after a Friday deploy. Read the container logs (`postgres.getLogs()`) when connection or SQLSTATE errors confuse you; the engine’s message is usually clearer than Spring’s wrapper.
+Trade-offs: fidelity versus speed. Not every tariff-math unit test deserves a container. Reserve Testcontainers for persistence, Flyway, locking, and SQL that has bitten you on H2. Kafka and Redis modules exist too when Cloud Stream or caches are the risk — same pattern, different `GenericContainer`. For `VesselRepository`, the unique-IMO test above is the kind of constraint H2 may soft-pedal depending on mode; Postgres is blunt, which is what you want before a quay deploy.
 
-Parallel CI needs enough Docker capacity. Sharing one container via a singleton pattern across test classes reduces churn:
+A misconception is treating Testcontainers as a replacement for unit tests of pure tariff math — containers are for infrastructure fidelity, not for every assertion. Another is sharing one container with mutable data across parallel classes without isolation. A third is pinning `postgres:latest` and wondering why CI broke on an upstream major bump.
 
-```java
-public abstract class PostgresSupport {
-    static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:16-alpine")
-                    .withReuse(true);
-    static {
-        POSTGRES.start();
-    }
-}
-```
-
-Reuse requires Testcontainers config enabling it and discipline about leftover schema — truncate or migrate cleanly between classes if tests are not transactional.
-
-A misconception is starting a new heavy container for every tiny test method until the suite takes longer than a lunch break — share containers where isolation allows. Another is using latest tags for database images so Monday’s CI differs from Friday’s; pin versions. A third is treating Testcontainers as a replacement for unit tests; keep Mockito-level tests for pure logic and reserve containers for boundary risk.
-
-Today we ran a Spring Boot test against a real Postgres started by Testcontainers, injected JDBC properties dynamically, and proved repository behavior on the engine you ship.
-
-Your database contract is one boundary. Another sits between services: the HTTP JSON shape order expects from inventory. Containers will not catch inventory renaming a field if your suite never involves both sides’ agreement.
-
-That agreement is Contract Testing.
+Repositories now meet real SQL. Service boundaries still break when gate’s Feign shape drifts from billing’s controller. Contract tests lock that wire format between teams. When both container SQL tests and contracts are green, you have proven persistence and the HTTP edge — still not the full booth journey, but far fewer Monday surprises than H2-plus-hope.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 97 (*Testcontainers*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

@@ -11,25 +11,27 @@
 
 ## Full narration
 
-Advice without aim is a firehose. Attach a logging `@Around` to `execution(* *(..))` and you will drown in noise, wrap infrastructure methods you never meant to touch, and pay proxy costs on hot paths that did not need them. Pointcuts are the aiming language: predicates that select join points so advice runs only where you intend.
+Someone ships a logging `@Around` with `execution(* com.harbor..*(..))`. Overnight the metrics bus melts. Repository `findById` calls, mapper methods, and gate services all sprout advice. Latency climbs. The advice body was harmless. The aim was not.
 
-In Spring AOP the dominant join point is method execution. The dominant expression language is AspectJ’s pointcut syntax, interpreted by Spring for proxy-based weaving.
+Pointcuts are the aiming language: predicates that select join points so advice runs only where you intend. In Spring AOP the dominant join point is method execution. The dominant expression language is AspectJ pointcut syntax, interpreted for proxy-based weaving.
+
+Narrow the harbor story so advice hits gate services — not repositories.
 
 ```java
 @Aspect
 @Component
-public class InventoryPointcutAspect {
+public class GatePointcutAspect {
 
-    @Pointcut("execution(* com.example.inventory..*Service.*(..))")
-    public void inventoryServices() {}
+    @Pointcut("execution(* com.harbor.gate..*Service.*(..))")
+    public void gateServices() {}
 
-    @Pointcut("@annotation(com.example.audit.Audited)")
+    @Pointcut("@annotation(com.harbor.audit.Audited)")
     public void auditedMethods() {}
 
-    @Pointcut("inventoryServices() && auditedMethods()")
-    public void auditedInventory() {}
+    @Pointcut("gateServices() && auditedMethods() && !within(com.harbor.gate..*Repository+)")
+    public void auditedGateOps() {}
 
-    @Around("auditedInventory()")
+    @Around("auditedGateOps()")
     public Object audit(ProceedingJoinPoint pjp) throws Throwable {
         AuditTrail.enter(pjp.getSignature().toShortString(), pjp.getArgs());
         try {
@@ -45,34 +47,33 @@ public class InventoryPointcutAspect {
 ```
 
 ```java
-public class StockService {
+public class GateReleaseService {
 
     @Audited
-    public void allocate(Sku sku, int qty) {
-        // ...
+    public ReleaseReceipt release(CargoId cargoId) {
+        // advised
+        return boom.open(cargoId);
     }
 
-    public int available(Sku sku) {
-        // not annotated — pointcut misses this method on purpose
-        return stockDao.count(sku);
+    public int queueDepth(GateId gateId) {
+        // not @Audited — pointcut misses on purpose
+        return queues.depth(gateId);
     }
 }
 ```
 
-Design the expressions like you design APIs. `execution` selects by method signature — return type, type pattern, name pattern, parameters. Double-dot `..` in a package pattern means any subpackage. `within(com.example.inventory..*)` restricts by type. `@annotation` selects methods carrying a given annotation — excellent when you want opt-in auditing instead of package-wide wrapping. `@within` matches types annotated with a marker. `bean(stockService)` can select by Spring bean name when that style fits. Combine with `&&`, `||`, and `!`. Named `@Pointcut` methods keep complex expressions readable and reusable — the example composes `inventoryServices` and `auditedMethods` into `auditedInventory`.
+Design expressions like APIs. `execution` selects by method signature. Double-dot `..` in a package pattern means any subpackage. `within` restricts by type. `@annotation` selects opt-in methods — excellent when you want auditing without wrapping every repository. `@within` matches types carrying a marker. `bean(gateReleaseService)` selects by bean name when that style fits. Combine with `&&`, `||`, and `!`. Named `@Pointcut` methods keep compositions readable — here `gateServices` and `auditedMethods` meet, and repositories are excluded so advice does not hit persistence methods by accident.
 
-Args binding ties matched parameters into advice parameters when types line up: `execution(* allocate(..)) && args(sku, qty)` lets advice declare `Sku sku, int qty`. Binding mistakes fail loudly at startup or at match time — better than silent no-ops if you notice early.
+Args binding ties matched parameters into advice when types line up: `execution(* release(..)) && args(cargoId)` lets advice declare `CargoId cargoId`. Binding mistakes fail loudly — better than silent no-ops if you notice early.
 
-What Spring AOP will not do: advise join points that proxies cannot see. Field access, constructor execution, and private method calls are AspectJ-complete features outside Spring’s proxy subset. Keep expectations matched to the weaving model you actually enabled.
+What Spring AOP will not do: advise join points proxies cannot see. Field access, constructors, and private method calls are AspectJ-complete features outside the proxy subset. Keep expectations matched to the weaving model you enabled.
 
-Pointcut mistakes show up as “my advice never runs” or “my advice runs too often.” Too narrow: wrong package, forgot `public`, mismatched argument patterns. Too wide: `execution(* *(..))` across the classpath. Another failure mode is matching self-invocations that never enter the proxy — the pointcut is fine; the call path is wrong. Test advice with integration tests that call through the Spring bean, not by constructing the target with `new`.
+Pointcut bugs show up as “advice never runs” or “advice runs too often.” Too narrow: wrong package, forgot `public`, mismatched arguments. Too wide: `execution(* *(..))` across the classpath. Another failure mode is matching self-invocations that never enter the proxy — the expression is fine; the call path is wrong. Test advice by calling through the Spring bean, not by constructing the target with `new`.
 
-So advice aims through pointcuts, and named compositions keep that aim maintainable. When two aspects both match the same method — security and transactions, metrics and auditing — a new problem appears: which advice runs first, and which runs closer to the target?
+So advice aims through pointcuts, and named compositions keep that aim maintainable. When security, transactions, and metrics all match the same gate method, a new problem appears: which advice runs first, and which runs closer to the target?
 
 That sequencing problem is aspect ordering.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 63 (*Pointcuts*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

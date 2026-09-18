@@ -11,78 +11,66 @@
 
 ## Full narration
 
-Derived repository method names are great until the question outgrows English. "Find orders for this email with status NEW that contain SKU-42 and were placed after Monday" becomes a method name nobody wants to read. JPQL — Jakarta Persistence Query Language — queries the entity model instead of the physical schema.
+Derived repository method names run out of breath. "Find manifests for vessel IMO-9312345 with arrival date on 2026-09-18" is still readable as a method. Add three more predicates and the name becomes a novel. JPQL lets you query the entity model — property names, associations — without writing table-column SQL by hand.
 
-JPQL looks like SQL with a different subject. You select entities and properties. You join associations by field name. Hibernate translates to SQL for your dialect.
+JPQL looks like SQL but speaks entities. You write `select m from Manifest m`, not `select * from manifests`. Fields are Java properties. Associations are navigated with dots or joins. Hibernate translates to SQL for your dialect.
 
 ```java
-public interface OrderRepository extends JpaRepository<Order, Long> {
+public interface ManifestRepository extends JpaRepository<Manifest, Long> {
 
     @Query("""
-            select distinct o from Order o
-            join o.lines line
-            where o.customerEmail = :email
-              and o.status = :status
-              and line.sku = :sku
+            select m from Manifest m
+            where m.vesselImo = :imo
+              and m.arrivalDate = :day
+            order by m.manifestNumber
             """)
-    List<Order> findOpenOrdersWithSku(
-            @Param("email") String email,
-            @Param("status") OrderStatus status,
-            @Param("sku") String sku);
+    List<Manifest> findByVesselAndDay(
+            @Param("imo") String imo,
+            @Param("day") LocalDate day);
 
     @Query("""
-            select o from Order o
-            left join fetch o.lines
-            where o.id = :id
+            select m from Manifest m
+            join m.lines line
+            where m.vesselImo = :imo
+              and line.weightKg >= :minWeight
             """)
-    Optional<Order> findWithLinesById(@Param("id") Long id);
+    List<Manifest> findWithHeavyLines(
+            @Param("imo") String imo,
+            @Param("minWeight") int minWeight);
 }
 ```
 
-Walk the first query. `from Order o` uses the entity name (defaults to the simple class name). `join o.lines line` navigates the `@OneToMany` field — not the table name `order_lines`. The `where` clause filters on entity properties. Parameters are bound by name. `distinct` helps when joins multiply parent rows in the result list.
+Parameter binding uses `:name` with `@Param`, or ordinal `?1` style. Prefer named parameters for harbor queries you will revisit at 3am. `join m.lines` navigates the association you mapped — you did not type `cargo_lines.manifest_id`.
 
-The second query introduces `join fetch`. That is not decoration. It tells Hibernate to load `lines` in the same select so later `order.getLines()` does not fire a second query. Without fetch, a lazy `lines` collection stays uninitialized until touched — and if you touch it in a loop across many orders, you invent the N+1 problem. Remember this pattern; Episode Fifty-One will put it under a microscope.
-
-Projection queries keep payloads small:
+Projection queries return what a screen needs without hydrating full graphs:
 
 ```java
-public interface OrderRepository extends JpaRepository<Order, Long> {
-
-    @Query("""
-            select new com.example.orders.OrderSummary(o.id, o.customerEmail, o.status, count(line))
-            from Order o
-            left join o.lines line
-            where o.customerEmail = :email
-            group by o.id, o.customerEmail, o.status
-            """)
-    List<OrderSummary> summarizeForCustomer(@Param("email") String email);
+public interface ManifestSummary {
+    String getManifestNumber();
+    String getVesselImo();
+    LocalDate getArrivalDate();
 }
 
-public record OrderSummary(Long id, String email, OrderStatus status, long lineCount) {}
+@Query("""
+        select m.manifestNumber as manifestNumber,
+               m.vesselImo as vesselImo,
+               m.arrivalDate as arrivalDate
+        from Manifest m
+        where m.vesselImo = :imo
+        """)
+List<ManifestSummary> summarizeForVessel(@Param("imo") String imo);
 ```
 
-Here you are not managing full `Order` aggregates — you are selecting a DTO constructor expression. Useful for read models and list screens. You cannot dirty-check a DTO; it is not an entity.
+`@Modifying` on an update/delete JPQL query marks it as a write. Bulk JPQL updates bypass the persistence context’s dirty checking for already-managed instances — clear the context if you mixed styles.
 
-Updates and deletes in JPQL are bulk operations:
+Native SQL with `nativeQuery = true` is an escape hatch when you need a database-specific hint. Prefer JPQL while the query stays in entity terms; drop to native when the dialect feature is the point.
 
-```java
-@Modifying(clearAutomatically = true)
-@Query("update Order o set o.status = :status where o.id in :ids")
-int markStatus(@Param("ids") Collection<Long> ids, @Param("status") OrderStatus status);
-```
+Read the vessel-and-day query against a real ops question: "show me everything for IMO-9312345 arriving today, ordered by manifest number." The JPQL states that in entity language. Hibernate emits the SQL with the real column names for your dialect. When you rename `arrivalDate` in Java, the query updates with the model — not with a buried `arrival_date` string in twelve native queries.
 
-Bulk JPQL skips the persistence context's usual per-entity lifecycle. Managed instances already loaded can go stale — hence `clearAutomatically`. Use bulk when you mean bulk; use entity mutation when you need lifecycle callbacks and dirty checking.
+Writing table columns inside JPQL (`manifest_number`) is a common failure — JPQL wants `manifestNumber`. Selecting entities and then filtering in Java loops is how N+1 and memory problems start. And treating JPQL as "string SQL with different keywords" misses the point: refactor a property name and your JPQL should follow the model, not the physical schema.
 
-Native queries (`nativeQuery = true`) speak SQL and column names. Reach for them when the dialect feature has no JPQL equivalent — window functions, vendor hints — not as a first reflex. Mixing native SQL with entity mapping requires care about what is returned and whether Hibernate can still manage the result.
-
-JPQL errors often show up as `PropertyReferenceException` or unexpected SQL. Turn on SQL logging and compare your mental join to the generated join. If you filter on a column that exists only in the database and not as a mapped field, JPQL cannot see it — map it or use native SQL deliberately.
-
-Static JPQL strings still struggle when the filter set is dynamic: maybe email, maybe status, maybe a date range, maybe none. String concatenation of JPQL is how injection and broken syntax sneak back in. The Criteria API builds queries as objects for those cases.
-
-Episode Forty-Five — Criteria API.
+JPQL is great when the query shape is known at compile time. When port-search filters appear and disappear at runtime — optional flag state, optional tonnage range, optional name fragment — string-concatenated JPQL gets unsafe and ugly. The Criteria API builds those predicates programmatically.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 44 (*JPQL*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

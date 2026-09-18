@@ -11,26 +11,24 @@
 
 ## Full narration
 
-Episode One left us with a promise: Spring assembles an object graph so your domain can stay plain Java. That promise only makes sense if you know what "Spring" actually is on the classpath — because Spring is not one giant JAR that does everything.
+The baggage-tracking system at Gate West started as one WAR. Tag scanners, carousel boards, lost-bag claims, overnight reconciliation — all in one deployable. Three years later, a carousel outage still forced a full redeploy of claims and reconciliation. The monolith was not just "big." It was one classpath, one restart boundary, and one blame surface.
 
-Picture a team shipping a nightly inventory reconciliation job. The job needs a container for wiring repositories and a mail client. Someone adds a dependency named vaguely "spring" and suddenly the build pulls web MVC, servlet APIs, and half a messaging stack the batch process will never call. Classpath size climbs. Version alignment gets fragile. Onboarding engineers cannot tell which modules are load-bearing and which arrived by accident. The failure mode is not a missing annotation. It is modular blindness.
+When the team finally split modules, Spring became the awkward part of the conversation. Someone had pulled a vague "spring" dependency into the reconciliation JAR and dragged servlet APIs, MVC, and messaging into a nightly batch that never served HTTP. Build times grew. On-call could not tell which Spring modules were load-bearing. The failure was modular blindness, not a missing annotation.
 
-So an engineer asks a precise question: which Spring modules do we actually depend on, and what job does each layer own?
+Spring Framework is layered on purpose. At the center sit `spring-core`, `spring-beans`, and `spring-context` — the core container that understands bean definitions, factories, and the application context. Optional rings attach when you need them: `spring-aop` for proxies, `spring-web` / `spring-webmvc` for HTTP, `spring-jdbc` / `spring-orm` / `spring-tx` for data access, `spring-test` for tests. You compose a stack the way you compose a meal: take the base, add only what you will eat.
 
-Spring Framework answers with a layered module architecture. At the center sits the core container — `spring-core`, `spring-beans`, and `spring-context`. That trio is where bean definitions, factories, and the application context live. Around it, optional modules attach when you need them: `spring-aop` for cross-cutting proxies, `spring-web` and `spring-webmvc` for HTTP, `spring-jdbc` / `spring-orm` / `spring-tx` for data access and transactions, `spring-test` for test support. You compose a stack the way you compose a meal — take the base, add only the courses you will eat.
-
-That modularity is the architecture lesson. A REST API can depend on `spring-webmvc` plus the container. A pure domain service library can depend on `spring-context` alone. A messaging worker can skip MVC entirely. Dependency direction matters: higher-level modules may rely on the container, but your business code should not sprawl into every Spring package just because it is available.
+For Gate West that meant three deployables with different Spring shapes. The scanner ingest service needed the container plus messaging. The carousel board needed webmvc. The overnight reconciliation job needed the container plus JDBC — and nothing from the web stack.
 
 ```java
-// Batch job: container + JDBC only — no web stack required
+// Reconciliation module: container + JDBC only — no webmvc on the classpath
 @Configuration
-@ComponentScan("com.acme.inventory")
-public class InventoryBatchConfig {
+@ComponentScan("com.gatewest.baggage.reconcile")
+public class BaggageReconcileConfig {
 
     @Bean
     DataSource dataSource() {
         HikariDataSource ds = new HikariDataSource();
-        ds.setJdbcUrl("jdbc:postgresql://db/inventory");
+        ds.setJdbcUrl("jdbc:postgresql://bags-db/reconcile");
         return ds;
     }
 
@@ -38,17 +36,20 @@ public class InventoryBatchConfig {
     JdbcTemplate jdbcTemplate(DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
+
+    @Bean
+    LostBagMatcher lostBagMatcher(JdbcTemplate jdbc) {
+        return new LostBagMatcher(jdbc);
+    }
 }
 ```
 
-When this configuration boots inside an `AnnotationConfigApplicationContext`, Spring loads container modules and JDBC support. It does not invent a `DispatcherServlet`. The architecture is doing work by absence: unused modules stay off the classpath, so the runtime stays honest about what the process is.
+At runtime the container does not care that this job never opens port 8080. It reads bean-definition metadata, registers types in a `BeanFactory`, and materializes the graph. `ApplicationContext` sits on top of that factory with events, messages, and resource loading — which the carousel UI will need later, and which the batch job may barely touch. Higher modules may depend on the container; your baggage domain should not sprawl into every Spring package just because a transitive dependency made it available.
 
-People often treat "Spring architecture" as a slide of colored boxes to memorize for interviews. Boxes without dependency stories are decoration. Another trap is assuming Boot starters erase the need to understand modules. Starters choose modules for you; they do not change what each module is for. When a transitive dependency surprises you, module literacy is how you diagnose it.
+Misconception unique to architecture: "If the app uses Spring, it uses Spring Web." False. Spring is a modular toolbox. A classpath that includes MVC in a headless reconciler is an architecture smell, not proof you needed a controller.
 
-Hold the mental map: core container first, then AOP, data, web, and test as optional rings. Once that map is clear, a deeper question appears. Inside the container modules themselves — who actually owns creating objects and deciding when they live? That ownership flip is Inversion of Control, and it is the next idea we need.
+After the split, Gate West could restart carousel boards without bouncing claims. But a quieter problem remained inside each module: services still constructed doctors of collaborators with `new`, and tests still fought construction order. Who actually owns object creation once the modules are drawn?
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 2 (*Spring Architecture*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

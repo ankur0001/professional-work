@@ -11,19 +11,14 @@
 
 ## Full narration
 
-Boot's architecture told you that auto-configuration is imported during startup. Now open that box. Why does adding a JDBC driver suddenly produce a `DataSource` bean you never declared?
+War story from the bike-share team, Tuesday. Diff adds one line to the Gradle build: the PostgreSQL JDBC driver. No Java changes. Restart. Startup dies: `Failed to configure a DataSource: 'url' attribute is not specified`. Nobody wrote a DataSource `@Bean`. Something else did — Boot auto-configuration — because a `DataSource` class became visible and no user bean of that type existed yet. The classpath spoke; Boot answered.
 
-Without auto-configuration, every service repeats the same platform wiring. You write a `@Configuration` class for Jackson. Another for the datasource. Another for MVC message converters. Copy those classes across ten microservices and you have ten slightly different "standard" setups — and a week of merge pain when the standard changes.
-
-The question that follows is precise: can the framework notice what is on the classpath and wire the obvious beans — unless the application already defined its own?
-
-Auto-configuration is Boot's answer. It is not magic beans appearing from nowhere. It is ordinary `@Configuration` classes packaged inside Boot, registered through `AutoConfiguration.imports` (or the older `spring.factories` entry), and guarded by conditions. `@ConditionalOnClass` checks that a type exists on the classpath. `@ConditionalOnMissingBean` backs off when you already defined that bean. `@ConditionalOnProperty` keys off configuration. Matching conditions activate the config class; failing conditions skip it.
-
-Picture a simplified slice of what Boot does for JDBC:
+Auto-configuration is conditional bean registration shipped with Boot. Candidate classes are listed under `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` (older Boot: `spring.factories`). Annotations like `@ConditionalOnClass`, `@ConditionalOnMissingBean`, `@ConditionalOnProperty` decide whether their `@Bean` methods fire. Your application code stays small; the classpath and Environment become signals. That is powerful and surprising in equal measure until you can read a condition evaluation report.
 
 ```java
-@Configuration(proxyBeanMethods = false)
-@ConditionalOnClass(DataSource.class)
+// Simplified idea of what Boot ships (not your app code)
+@AutoConfiguration
+@ConditionalOnClass({ DataSource.class, HikariDataSource.class })
 @EnableConfigurationProperties(DataSourceProperties.class)
 public class DataSourceAutoConfiguration {
 
@@ -35,31 +30,29 @@ public class DataSourceAutoConfiguration {
 }
 ```
 
-Read it as a contract. If `DataSource` is on the classpath, consider this configuration. If the user has not already declared a `DataSource` bean, create one from properties. Define your own `DataSource` `@Bean`, and Boot steps aside. That back-off is the design — opinionated defaults that yield to explicit application beans.
-
-Runtime behavior matches the contract. Start an app with `spring-boot-starter-web` and no database driver: you do not get a pool. Add H2 or Postgres drivers plus `spring.datasource.url`, and datasource auto-config can activate. Turn on debug for auto-config — `debug=true` or `--debug` — and Boot prints a condition evaluation report: positive matches, negative matches, and exclusions. That report is how you debug "why is this bean missing?" without guessing.
-
 ```yaml
-# application.yml — feeds DataSourceProperties used by auto-config
+# auto-configured DataSource still needs properties
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/orders
-    username: orders
-    password: secret
+    url: jdbc:postgresql://bikeshare-db/stations
+    username: share
+    password: ${DB_PASSWORD}
 ```
 
-Those properties do not create a datasource by themselves. Auto-configuration reads them when its conditions pass. Change the classpath or define a competing bean, and the outcome changes even if the YAML stays the same.
+Walk the simplified auto-config. `@ConditionalOnClass` means: only consider this configuration if `DataSource` and Hikari are loadable — adding the Postgres driver pulled those types onto the classpath (together with Boot's JDBC starter or transitive deps). `@EnableConfigurationProperties(DataSourceProperties.class)` binds `spring.datasource.*` into a typed properties object. `@Bean` + `@ConditionalOnMissingBean` means: create a DataSource *only if* the user did not already define one. `initializeDataSourceBuilder().build()` reads URL, username, password from those properties — empty URL is what triggered Tuesday's failure.
 
-People often treat auto-config as an all-or-nothing spell. It is a set of conditional configuration classes. You can exclude one with `spring.autoconfigure.exclude` or `@SpringBootApplication(exclude = ...)`. You can replace a bean and rely on `@ConditionalOnMissingBean`. You cannot "turn off Spring" by being confused — you override deliberately at the condition boundary.
+Runtime after the driver lands, step by step. During context refresh Boot loads auto-configuration import lists. Each candidate is evaluated against conditions. `DataSourceAutoConfiguration` matches on class presence. Inside, `@ConditionalOnMissingBean` searches the bean factory for an existing `DataSource` definition — none in the bike-share app — so the method is eligible. It builds from `DataSourceProperties`. Properties are empty for `url` → Boot fails fast with the familiar message. That fail-fast is kinder than a silent miswire to an in-memory default you did not want. Fixes: add `spring.datasource.url` (and credentials); or define your own `@Bean DataSource` so `@ConditionalOnMissingBean` skips; or exclude the auto-config class via `spring.autoconfigure.exclude` / `@SpringBootApplication(exclude=...)` if you truly have no database yet but need the driver for a batch tool on the same classpath. Debug with `--debug` or `ConditionEvaluationReport` logging to see matched and negative conditions.
 
-Another wrong mental model is "auto-config replaces my `@Configuration` classes." Your configuration still wins for product-specific beans. Auto-config covers the repetitive platform layer — ObjectMapper defaults, dispatcher setup, datasource scaffolding — so you spend attention on domain wiring.
+Failure mode symptoms beyond missing URL: you define a custom DataSource bean, but still see Boot trying to configure JPA against a second implicit pool — often because another auto-config keyed off different types, or your bean was not visible yet when conditions ran (rare with proper user config ordering, more common with unusual `BeanDefinition` tricks). Symptom of successful override: condition report shows `DataSourceAutoConfiguration` beans skipped due to `@ConditionalOnMissingBean`. Symptom of accidental activation: adding `starter-data-jpa` "for later" pulls driver + Hibernate and suddenly entity scanning and DDL expectations appear.
 
-Once you see that classpath clues drive which auto-config runs, a packaging question appears. Who decides which libraries land on that classpath in a coherent set of versions — so the conditions have something sensible to detect?
+Trade-offs. Auto-configuration collapses days of XML/Java infra into classpath conventions and keeps services consistent; it couples startup behavior to dependencies, so "just add a jar" is never free. Exclusions and custom beans restore control but require knowing which auto-config class owns the surprise. Prefer reading conditions over memorizing every `@Bean` Boot might create.
 
-That is the job of starter dependencies.
+One more runtime detail the bike-share team used after Tuesday: start with `--debug` and search the log for `DataSourceAutoConfiguration`. Positive matches show which nested configurations fired; negative matches show why an exclude or `@ConditionalOnMissingBean` skipped a bean. That report is how you prove "our `@Bean DataSource` suppressed Boot" without guessing. Auto-configuration is not a black box once you treat conditions as the API.
+
+Misconception unique to auto-configuration: "Auto-configuration runs before my `@Configuration` and always wins." Conditions like `@ConditionalOnMissingBean` are evaluated with user beans in mind; defining your own DataSource typically suppresses Boot's. The surprise is not that Boot overrides you — it is that Boot acts when you said nothing and the classpath said "database."
+
+The team now understands why the driver created a bean. The new hire still stares at a `pom.xml` with twenty-seven versioned Spring jars fighting each other. Curated dependency sets — starters — are how Boot teams avoid that hell on purpose.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 19 (*Auto Configuration*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

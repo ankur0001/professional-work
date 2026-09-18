@@ -11,43 +11,45 @@
 
 ## Full narration
 
-Dependency Injection told us collaborators arrive from the outside. That sentence still hides a machine. Somewhere, Spring must store bean recipes and hand back instances when asked. At the lowest public API, that machine is `BeanFactory`.
-
-Imagine you are debugging a CLI tool that embeds Spring only for wiring. You do not need HTTP events or message bundles yet. You need one honest question answered: given a name or a type, can the container produce the object? Without a factory abstraction, every module invents its own registry — static maps, service locators, thread-local holders. Those registries drift. Tests fight globals. Shutdown order becomes folklore.
-
-What breaks without a bean factory is consistency. Two libraries register "the" `Clock` differently. Lookups disagree on lazy versus eager. You cannot ask a single API "do you have this bean?" across the process.
-
-So the engineer asks: what is the minimal Spring interface that can create and retrieve managed objects?
-
-`BeanFactory` is that interface. It is the root of the Spring container hierarchy. You register bean definitions with it — or load them through a reader — then call `getBean`. Implementations such as `DefaultListableBeanFactory` hold the definition map, resolve dependencies, and cache singletons. Historically, a raw `BeanFactory` is lazy: it does not create singletons until something requests them. That laziness is useful for constrained environments and for understanding the plumbing without the full application runtime.
-
 ```java
-DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
+public static void main(String[] args) {
+    DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
+    XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
+    reader.loadBeanDefinitions(new ClassPathResource("freight-rate-beans.xml"));
 
-GenericBeanDefinition paymentDef = new GenericBeanDefinition();
-paymentDef.setBeanClass(StripePaymentClient.class);
-factory.registerBeanDefinition("paymentClient", paymentDef);
-
-GenericBeanDefinition checkoutDef = new GenericBeanDefinition();
-checkoutDef.setBeanClass(CheckoutService.class);
-checkoutDef.getConstructorArgumentValues()
-        .addIndexedArgumentValue(0, new RuntimeBeanReference("paymentClient"));
-factory.registerBeanDefinition("checkoutService", checkoutDef);
-
-CheckoutService checkout = factory.getBean("checkoutService", CheckoutService.class);
-checkout.checkout(Cart.sample());
+    RateCalculator calculator = factory.getBean("rateCalculator", RateCalculator.class);
+    Money quote = calculator.quote(Lane.of(args[0], args[1]), Weight.kg(args[2]));
+    System.out.println(quote);
+}
 ```
 
-Step through the run. First the factory only holds metadata — two definitions, no instances. The `getBean` call for `checkoutService` forces instantiation. Spring sees the constructor needs `paymentClient`, creates that bean, injects it, returns `CheckoutService`. A second `getBean("checkoutService")` returns the same singleton instance from the singleton cache. You just watched the factory's core contract: define, resolve, cache, return.
+That is the entire Spring footprint of a CLI freight-rate calculator ops runs from a laptop on the warehouse floor. No embedded Tomcat. No message source. No `@EventListener`. Just wiring: lane tariffs, fuel surcharges, a calculator. The team embedded Spring only because hand-rolled factories were becoming a second product — every new surcharge rule meant another `if` in a giant `FreightFactory` class, and every unit test had to mock construction order by hand.
 
-Most applications never touch `DefaultListableBeanFactory` directly. They use `ApplicationContext`, which builds on this foundation. Still, when logs say "bean factory" or you read container source, this is the floor. Misread it as "the class I inject into services." You almost never inject `BeanFactory` into domain code; doing so recreates the service-locator smell DI was meant to erase. Reach for it in infrastructure, bootstrapping, or learning the model — not inside `OrderService`.
+`BeanFactory` is that minimal contract. It is the root interface for accessing the Spring container's bean instances. You register bean definitions — class name, id, property values, constructor args — and ask for objects by name or type. `DefaultListableBeanFactory` is the workhorse implementation: it holds the definition registry, resolves dependencies, applies scopes, and caches singletons. Almost everything richer in Spring eventually asks this factory for objects; ApplicationContext does not replace it — it wraps more services around the same core.
 
-Another misconception: thinking `getBean` by string name is the normal application style. Names matter inside the container, but application code should prefer type-safe injection. String lookups are for the container's internals and for rare dynamic cases.
+Walk the freight CLI line by line. `new DefaultListableBeanFactory()` builds an empty registry and singleton cache — no beans yet, no classpath scanning. `XmlBeanDefinitionReader` is a metadata loader, not the calculator. `loadBeanDefinitions(new ClassPathResource("freight-rate-beans.xml"))` opens the XML from the classpath, parses each `<bean>` element into a `BeanDefinition` object, and registers it under its `id`. At this moment the factory knows *what* could exist; it has not necessarily constructed anything expensive if beans stay lazy. `getBean("rateCalculator", RateCalculator.class)` is the first demand: look up the definition named `rateCalculator`, check the singleton cache, miss, then create. Creation walks constructor arguments: the factory sees refs to `tariffTable` and `fuelSurcharge`, creates those first (loading `tariffs.csv` into memory for the table), injects them into `RateCalculator`, stores the result in the singleton cache, and returns it. `calculator.quote(...)` is ordinary Java — Spring is already out of the path. A second `getBean("rateCalculator")` returns the cached instance. When `main` exits, the JVM dies; there is no graceful context-close ceremony unless you add destroy callbacks yourself.
 
-`BeanFactory` can create beans. Production systems usually want more on day one: environment abstraction, event publication, internationalization, and eager failure if a singleton cannot start. That richer runtime is `ApplicationContext` — and it is the natural next layer above this factory floor.
+```xml
+<bean id="tariffTable" class="com.freight.TariffTable">
+    <constructor-arg value="classpath:tariffs.csv"/>
+</bean>
+<bean id="fuelSurcharge" class="com.freight.FuelSurchargePolicy"/>
+<bean id="rateCalculator" class="com.freight.RateCalculator">
+    <constructor-arg ref="tariffTable"/>
+    <constructor-arg ref="fuelSurcharge"/>
+</bean>
+```
+
+Each line of that XML is a `BeanDefinition` field in disguise. `id` is the lookup key. `class` is the implementation to instantiate. The `classpath:tariffs.csv` constructor arg becomes a string (or Resource, depending on conversion) passed into `TariffTable`'s constructor — the factory does not open the CSV until that bean is created. `ref="tariffTable"` is a dependency edge, not a nested object literal; the factory resolves edges by creating or reusing collaborators. Order of `<bean>` elements in the file does not have to match creation order — the dependency graph does.
+
+Failure mode that shows up on the warehouse floor: a typo in a `ref`, or a missing bean id. Symptom at `getBean("rateCalculator")` is `NoSuchBeanDefinitionException` or `UnsatisfiedDependencyException` naming the broken ref — often wrapped so the stack starts in `AbstractBeanFactory`. The CLI prints nothing useful to the quote path; it dies during wiring. Another symptom: `ClassPathResource` cannot find `freight-rate-beans.xml` → `BeanDefinitionStoreException` on `loadBeanDefinitions`, before any quote runs. Those failures are loud and early, which is what you want in a batch tool operators launch by hand.
+
+Trade-offs. A bare `BeanFactory` keeps the process tiny and understandable — ideal for CLIs, custom scopes experiments, and library code that must embed Spring without pulling application services. You pay for that thinness: no built-in i18n message source, no application-event multicaster, no Environment post-processors, no convenient `close()` lifecycle for the whole app unless you wire DisposableBean callbacks yourself. You also own bootstrap — readers, resource locations, when to call `getBean`. ApplicationContext buys those services and a standard refresh lifecycle at the cost of heavier startup and more moving parts.
+
+Misconception unique to BeanFactory: "BeanFactory is obsolete; only ApplicationContext matters." BeanFactory is not obsolete — it is the substrate. ApplicationContext extends it. Tools, custom scopes, and Boot internals still speak factory. Choosing ApplicationContext for an app does not erase the factory; it wraps richer services around the same getBean core.
+
+The warehouse CLI is happy. The pharmacy kiosk team next door is not — they need localized labels on the touchscreen, environment-specific drug catalog URLs, and a way to publish "prescription ready" events to a display board. A bare BeanFactory will wire their services, but it will not give them those application services for free. Something richer has to sit on top of the factory.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 5 (*BeanFactory*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

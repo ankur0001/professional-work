@@ -11,60 +11,62 @@
 
 ## Full narration
 
-A request body that parses as JSON can still be garbage. Validation belongs at the API boundary so bad data never becomes half-written state.
+Customs will reject a declaration long before a crane moves. Your API should do the same: a request body that parses as JSON can still be garbage, and that garbage must die at the edge.
 
-Without bean validation, controllers grow hand-written checks: null tests, length tests, regex tests, nested `if` blocks that return ad-hoc error maps. Rules drift between endpoints. Services re-check the same fields because they do not trust the controller. Spring’s integration with Jakarta Bean Validation gives you declarative constraints on DTOs and a standard failure path when those constraints fail.
+Without bean validation, customs controllers grow hand-written checks — null tests, HS-code length tests, nested `if` blocks that return ad-hoc error maps. Rules drift between "create declaration" and "amend declaration." Services re-check the same fields because they do not trust the controller. Spring’s integration with Jakarta Bean Validation gives you declarative constraints on DTOs and a standard failure path when those constraints fail.
 
-The pattern is simple to say and easy to miswire. Annotate the DTO. Put `@Valid` on the `@RequestBody` parameter. Let the framework run the validator before your method body executes. When validation fails, Spring throws `MethodArgumentNotValidException` instead of calling your method. You then map that exception to a 400-level response — often through `@ExceptionHandler` or a `@ControllerAdvice`, which the next episode owns in depth.
+Put the rules on the request type the controller accepts:
 
 ```java
-public class CreateOrderRequest {
+public record CustomsDeclarationRequest(
+        @NotBlank @Size(max = 32) String parcelId,
+        @NotBlank @Pattern(regexp = "\\d{6,10}") String hsCode,
+        @NotNull @DecimalMin("0.01") BigDecimal declaredValue,
+        @NotBlank @Size(min = 2, max = 2) String originCountry,
+        @NotEmpty List<@NotBlank String> contents
+) {}
+```
 
-    @NotNull
-    private Long customerId;
-
-    @NotBlank
-    private String sku;
-
-    @Min(1)
-    private int quantity;
-
-    // getters/setters or a compact constructor + accessors
-}
-
+```java
 @RestController
-@RequestMapping("/orders")
-public class OrderController {
+@RequestMapping("/customs/declarations")
+public class CustomsDeclarationController {
+
+    private final CustomsDesk desk;
+
+    public CustomsDeclarationController(CustomsDesk desk) {
+        this.desk = desk;
+    }
 
     @PostMapping
-    public ResponseEntity<OrderResponse> create(
-            @Valid @RequestBody CreateOrderRequest body) {
-        // only runs when constraints pass
-        return ResponseEntity.ok(orders.create(body));
+    public ResponseEntity<DeclarationResponse> submit(
+            @Valid @RequestBody CustomsDeclarationRequest body) {
+        DeclarationResponse saved = desk.accept(body);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 }
 ```
 
-Constraints compose. `@NotNull` rejects a missing reference. `@NotBlank` rejects null, empty, and whitespace-only strings. `@Min` and `@Max` bound numbers. `@Email`, `@Size`, and `@Pattern` cover common formats. For nested objects, put `@Valid` on the nested field so the cascade continues. For collections of nested DTOs, the same idea applies: validate elements, not only the list reference.
+`@Valid` is the switch that turns annotations into enforcement. Without it, Spring binds the JSON and your method runs even when `hsCode` is blank. With it, the `HandlerAdapter` validates before your method body executes. Failure throws `MethodArgumentNotValidException`. That exception is your signal — later lessons turn it into Problem+JSON; today, know that the edge rejected the payload before `CustomsDesk` saw it.
 
-Boot usually auto-configures a `LocalValidatorFactoryBean` when a validation implementation such as Hibernate Validator is on the classpath — typically via `spring-boot-starter-validation`. If `@Valid` appears to do nothing, check that dependency first. Also distinguish `@Validated` on a class (method-level validation with groups) from `@Valid` on a parameter (argument validation for MVC binding). For request bodies, `@Valid` on the parameter is the everyday tool.
+Nested objects and collections need care. Annotate nested beans with `@Valid` so constraints cascade. Use `@NotEmpty` on lists that must contain at least one content line. Group constraints when create and update rules differ. For query parameters and path variables, `@Validated` on the controller plus constraint annotations on method parameters covers the non-body cases.
 
-When `MethodArgumentNotValidException` fires, the exception carries a `BindingResult` with field errors: which property failed, which code, which default message. That is gold for building a consistent error payload — `field`, `rejectedValue`, `message` — instead of a stack trace. Do not catch it inside every controller method. Centralize the translation once.
+```java
+@GetMapping("/customs/declarations")
+public List<DeclarationResponse> search(
+        @RequestParam @NotBlank @Size(max = 32) String parcelId) {
+    return desk.findByParcel(parcelId);
+}
+```
 
-Groups and custom constraints appear when the same DTO is used in more than one operation. Create might require `sku`; patch might allow partial fields. Validation groups let you activate different constraint sets. Custom annotations backed by a `ConstraintValidator` capture domain rules that `@Pattern` cannot express cleanly — for example, "quantity must be a multiple of pack size." Keep those rules readable; a validator that opens a database connection on every request is usually the wrong layer for uniqueness checks that belong in the service transaction.
+Validation is structural honesty, not business policy. "HS code format looks right" belongs on the DTO. "This parcel is already cleared and cannot be redeclared" belongs in the domain service and should surface as a conflict, not as a bean-validation failure. Mixing those layers produces error messages nobody can route.
 
-Also separate binding errors from validation errors in your head. Type mismatches — sending `"abc"` for an `int` — fail during binding and surface as related but distinct exceptions. Constraint violations assume the value was bound and then judged. Clients experience both as "bad request," but your logs and tests should know which stage failed.
+People forget `@Valid` and then blame Bean Validation for "not working." Others put `@NotNull` on entity fields and expect every repository write to be protected — entities are not the API boundary. A third mistake is returning raw binding errors as a pile of field names with no stable envelope, so mobile customs apps cannot render a single error screen.
 
-A topic-specific misconception is validating only in the service and calling the controller "done." Services should still protect invariants, but transport-level shape belongs at the edge so HTTP clients get fast, uniform 400s. Another misconception is using `@Valid` without a validator on the classpath and concluding "annotations are decorative." A third is returning 200 with an errors array in the body for constraint failures — that fights every HTTP client convention.
+Malformed declarations now die at the controller. Controllers and services still throw other failures — unknown parcel ids, conflicts, unexpected bugs. The open craft is turning those exceptions into one coherent HTTP error model instead of a container HTML error page for a JSON client.
 
-So today we put declarative constraints on DTOs, required `@Valid` at the controller parameter, and named `MethodArgumentNotValidException` as the failure signal when the body is structurally wrong.
-
-That raises the broader question: validation is only one failure mode. Controllers and services throw many others — missing resources, conflicts, unexpected bugs. How does Spring turn those exceptions into a coherent HTTP error model instead of a container stack page?
-
-Exception handling is next.
+That craft is exception handling.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 32 (*Validation*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

@@ -11,50 +11,68 @@
 
 ## Full narration
 
-Component scanning filled the context with candidates. Then a wiring error appears that looks like a riddle: two beans implement `NotifyClient`, and three different annotations on the field all claim to inject "the" client.
+PR review, cargo finance module. Author injects with `@Autowired DataSource dataSource` and marks the OLTP pool `@Primary`. Reviewer insists on `@Resource(name = "reportingDataSource")` for the nightly export job. A third engineer pastes `@Inject` from a Jakarta tutorial and claims it is "more standard." The app has two beans of type `DataSource`: `oltpDataSource` and `reportingDataSource`. Which annotation wins is not taste — it is injection algorithm. Pick the wrong algorithm and the export job hammers the OLTP pool during a full-table manifest dump.
 
-A notification facade declares `@Autowired NotifyClient client` and fails with `NoUniqueBeanDefinitionException` because both `EmailNotifyClient` and `SmsNotifyClient` match by type. A teammate "fixes" it by switching to `@Resource` without changing names — and suddenly email wins because the field is named `emailNotifyClient` in another branch, or fails because the field name matches nothing. A third engineer brings `@Inject` from Jakarta and expects qualifier semantics that Spring's `@Autowired` taught them. Same injection goal; different matching rules; confused reviews.
-
-What goes wrong is treating the annotations as synonyms. They are not. The engineer asks: when I have multiple candidates, which annotation matches how — and which should this codebase standardize on?
-
-Spring understands all three. `@Autowired` is Spring's annotation: primary matching is by type, then qualifiers, with `@Primary` as a tie-breaker; `required` defaults to true. `@Inject` is the Jakarta/JSR-330 standard: also type-driven, with `@Named` for qualification; no `required` attribute like Spring's. `@Resource` is JSR-250: name-first matching — the field or setter name, or the `name` attribute — then type if needed. That name-first behavior is why `@Resource` feels magical or broken depending on whether your field name equals a bean name.
+Short rules of engagement. `@Autowired` (Spring) and `@Inject` (Jakarta/JSR-330) are type-driven first. If multiple candidates exist, Spring narrows with `@Qualifier`, `@Primary`, or — in some configurations — parameter/field names. `@Resource` (Jakarta/JSR-250) is name-driven first: default name is the field or setter name, then it falls back to type. For two DataSources, name-based selection is often the honest intent for "I want the reporting pool," while `@Primary` expresses "when someone asks for a DataSource without narrowing, give them OLTP."
 
 ```java
-@Service
-public class NotificationFacade {
-    private final NotifyClient email;
-    private final NotifyClient sms;
+@Configuration
+public class CargoDataConfig {
 
-    public NotificationFacade(
-            @Autowired @Qualifier("emailNotifyClient") NotifyClient email,
-            @Resource(name = "smsNotifyClient") NotifyClient sms) {
-        this.email = email;
-        this.sms = sms;
+    @Bean
+    @Primary
+    DataSource oltpDataSource() {
+        return DataSourceBuilder.create().url("jdbc:postgresql://oltp/cargo").build();
     }
 
-    public void push(User user, String body) {
-        email.send(user.email(), body);
-        sms.send(user.phone(), body);
+    @Bean
+    DataSource reportingDataSource() {
+        return DataSourceBuilder.create().url("jdbc:postgresql://report/cargo").build();
     }
 }
 
-@Component("emailNotifyClient")
-public class EmailNotifyClient implements NotifyClient { /* ... */ }
+@Service
+public class ManifestExportJob {
+    @Resource(name = "reportingDataSource")
+    private DataSource reportingDataSource;
 
-@Component("smsNotifyClient")
-public class SmsNotifyClient implements NotifyClient { /* ... */ }
+    public void run(LocalDate day) {
+        try (Connection c = reportingDataSource.getConnection()) {
+            // export manifests for day
+        } catch (SQLException e) {
+            throw new ExportFailedException(day, e);
+        }
+    }
+}
 ```
 
-At wiring time, Spring resolves the first constructor parameter by type `NotifyClient` narrowed by `@Qualifier("emailNotifyClient")`. The second uses `@Resource(name = "smsNotifyClient")`, which looks up that bean name directly. Both end as injected collaborators. If you dropped the qualifier on an `@Autowired` parameter, startup would fail on ambiguity. If you renamed the `@Resource` target bean without updating `name`, lookup would fail even though a compatible type still exists — name-first means the name matters.
+Walk the config. `oltpDataSource` method name becomes the default bean name; `@Primary` marks it as the preferred candidate for ambiguous type matches. `reportingDataSource` is a second bean of the same type without primary. On `ManifestExportJob`, `@Resource(name = "reportingDataSource")` skips the primary game: look up that exact name in the factory, inject that instance into the field. The `run` method opens a connection from whatever was injected — if you got reporting, heavy reads stay off OLTP; if you got OLTP by mistake, you will see lock contention and slow checkouts while exports run.
 
-For modern Spring style, prefer constructor injection without field annotations when there is a single candidate. When you must disambiguate, `@Autowired` with `@Qualifier` (or `@Primary` on the default bean) keeps the rules obvious. Use `@Resource` when you intentionally want name-based lookup, especially bridging older Java EE style. Use `@Inject` when you want a standards annotation for portability across DI containers — knowing Spring still performs the injection underneath.
+Modern Spring style for the same intent uses constructor injection plus `@Qualifier` — type match, then name, without field injection:
 
-The misconception to kill is "they all do the same thing, pick any." Matching order differs, attribute sets differ, and mixing them without a team rule makes failures harder to read. Another misconception: putting `@Autowired` on every constructor parameter "for clarity" when a single constructor already implies autowiring in modern Spring.
+```java
+@Service
+public class ManifestExportJob {
+    private final DataSource reporting;
 
-Stereotypes and injection annotations cover types you own. They do not help when you must assemble a `RestTemplate`, an `ObjectMapper`, or a vendor SDK you cannot annotate. That gap is why `@Configuration` classes exist as the home for explicit factory methods — which is where we go next.
+    public ManifestExportJob(@Qualifier("reportingDataSource") DataSource reporting) {
+        this.reporting = reporting;
+    }
+}
+```
+
+Here `@Autowired` is often implicit on a single constructor. Spring finds all `DataSource` beans, filters to those matching qualifier `reportingDataSource`, and injects that one. The field name `reporting` no longer has to match the bean name — the qualifier carries intent. That is clearer in reviews than relying on field-name defaults.
+
+Runtime resolution, step by step, for three common mistakes. Case A: `@Autowired DataSource dataSource` on the export job, no qualifier. Spring collects both beans by type, sees `@Primary` on OLTP, injects OLTP. Symptom: export traffic on the primary DB, `pg_stat_activity` shows long `SELECT` from the export user on oltp host, checkout latency climbs — no Spring error at startup. Case B: `@Resource` on a field named `reportingDataSource` without an explicit `name` attribute — still resolves by field name first, gets reporting even when OLTP is primary. Case C: `@Inject` with `@Named("reportingDataSource")` — behaves like type-plus-qualifier, similar to `@Autowired` + `@Qualifier`. Case D: `@Autowired` with field name `reportingDataSource` but no `@Qualifier` and multiple candidates — depending on Spring version and `spring.main`-era defaults, you may still get primary or an ambiguity failure; do not bet production on name fallback for `@Autowired`.
+
+Failure mode to drill in demos: ship Case A to staging. Startup is green. First nightly export coincides with peak booking. On-call sees OLTP CPU spike, not "wrong bean" in logs. Fix is `@Qualifier` or `@Resource(name=...)`, plus maybe removing accidental `@Primary` misuse if primary was only added to silence `NoUniqueBeanDefinitionException` without thinking about export jobs.
+
+Trade-offs. `@Autowired`/`@Inject` + `@Qualifier` keep constructor injection and Spring idioms; you must remember to qualify when duplicates exist. `@Primary` reduces noise for the common DataSource but is dangerous when secondary uses are silent. `@Resource` makes name-first intent obvious for fields/setters but pushes teams toward field injection and JSR-250 semantics that newcomers confuse with `@Autowired`. Prefer one house style: constructors + `@Qualifier` for multiple beans of one type; reserve `@Primary` for a true default; use `@Resource` when aligning with Jakarta name-based injection in mixed stacks.
+
+Misconception unique to these annotations: "`@Inject` and `@Autowired` are identical, and `@Resource` is just the Jakarta spelling of `@Autowired`." `@Inject` is close to `@Autowired` but lacks some Spring-specific features (for example `required` flag semantics differ). `@Resource` is not a synonym — name-first matching changes which bean you get when duplicates exist.
+
+Finance exports finally hit the reporting replica. A cinema ticketing team wants the opposite extreme: no component scan at all, only explicit `@Configuration` classes wiring the full-screen box office. How those configuration classes themselves are processed — enhanced, intercepted, singleton-guaranteeing — is the next mechanism to open.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 12 (*@Resource vs @Autowired vs @Inject*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

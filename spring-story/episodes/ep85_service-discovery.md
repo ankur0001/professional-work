@@ -11,75 +11,72 @@
 
 ## Full narration
 
-Config Server can tell `order-service` that payment lives at a logical name. It cannot tell you which of three payment pods is healthy at 14:07 after a rolling deploy. Hard-coded hosts die the moment you scale horizontally. Service discovery is the registry pattern: instances register themselves, clients look up instances by service id, and the registry tracks heartbeats so dead nodes disappear.
+Gate needs billing. At 06:00 there are three billing pods. At 06:12 one dies during a deploy. At 06:15 a fourth starts on a different node. If gate still dials `http://10.0.4.22:8080`, check-ins fail while healthy instances sit idle. Discovery answers a simple question: given the logical name `billing-service`, which live instances exist right now?
 
-In the Spring Cloud teaching stack, Netflix Eureka is the classic registry. You run a Eureka Server — another Boot app with `@EnableEurekaServer` — and each microservice becomes a Eureka Client that registers under `spring.application.name`. When order wants payment, it does not need the IP list in YAML. It asks Eureka for instances named `payment-service`, then picks one. Kubernetes DNS can replace Eureka in many production platforms; the Spring programming model still benefits from understanding discovery as a first-class idea, because gateways and load balancers plug into the same abstraction.
+A registry holds the catalog. Each instance registers on startup with host, port, health URL, and metadata. Clients — or a platform DNS layer — query the catalog and choose a target. In classic Spring Cloud demos that registry is Eureka. On Kubernetes, CoreDNS and Endpoints often play the same role; Spring Cloud Kubernetes can adapt the programming model. The pattern matters more than the brand: register, heartbeat, fetch, call by name.
+
+```yaml
+# billing-service
+spring:
+  application:
+    name: billing-service
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    metadata-map:
+      zone: quay-a
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+```
+
+```yaml
+# gate-service
+spring:
+  application:
+    name: gate-service
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka:8761/eureka/
+    registry-fetch-interval-seconds: 5
+```
 
 ```java
-@SpringBootApplication
-@EnableEurekaServer
-public class DiscoveryServerApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(DiscoveryServerApplication.class, args);
+@RestController
+class GateBillingProbe {
+    private final DiscoveryClient discovery;
+
+    GateBillingProbe(DiscoveryClient discovery) {
+        this.discovery = discovery;
+    }
+
+    @GetMapping("/debug/billing-instances")
+    List<String> billingInstances() {
+        return discovery.getInstances("billing-service").stream()
+                .map(si -> si.getHost() + ":" + si.getPort()
+                        + " zone=" + si.getMetadata().getOrDefault("zone", "?"))
+                .toList();
     }
 }
 ```
 
-```yaml
-# eureka-server
-server:
-  port: 8761
-eureka:
-  client:
-    register-with-eureka: false
-    fetch-registry: false
-```
+At runtime, billing heartbeats. Eureka (or your platform) marks it UP. Gate’s `DiscoveryClient.getInstances("billing-service")` returns the three healthy URIs. Higher-level clients — load-balanced WebClient, Feign, Gateway `lb://` URIs — consume that list so application code never embeds pod IPs. Self-preservation and lease timeouts matter: a flapping network should not empty the registry and black-hole the quay, but a dead pod that stops renewing must leave the catalog within tens of seconds or gate keeps selecting a corpse.
 
-The server often disables registering itself. Clients do the opposite: they register and fetch.
+Walk a deploy failure. Billing pod B2 stops heartbeats at 06:12. Until the lease expires, gate may still receive B2 in the instance list and open sockets that time out. Symptom at the booth: intermittent 504s on check-in while two other pods are fine. Your debug probe still shows three rows until expiry; after expiry it shows two, then three again when B4 registers. That timeline is why `registry-fetch-interval-seconds` and lease settings are operational knobs, not decoration. Too aggressive and you thrash; too slow and you serve dead IPs through a whole truck queue.
 
-```yaml
-# payment-service client
-spring:
-  application:
-    name: payment-service
-eureka:
-  client:
-    service-url:
-      defaultZone: http://discovery:8761/eureka/
-  instance:
-    prefer-ip-address: true
-```
+Health integration is not optional decoration. If billing’s `/actuator/health` goes DOWN because Postgres is unreachable, the registry should stop handing that instance to gate. Otherwise discovery lies and load balancers keep selecting a dying pod. Prefer-IP versus hostname, zone metadata, and secure-port flags show up the first time TLS or multi-AZ routing is real. Zone `quay-a` on the instance is how later load balancers prefer local billing when cross-quay latency hurts.
 
-Startup sequence matters. Payment service boots, contacts Eureka, sends instance metadata — host, port, health URL, maybe metadata maps for canaries. Eureka stores the lease. Periodically the client renews. If renewals stop, the instance eventually expires from the registry. Order service, also a client, periodically downloads the registry cache so lookups are local and fast. That cache is why discovery survives brief registry blips, and also why you can briefly see stale instances after a crash — TTLs and self-preservation mode are operational details worth reading before you page people.
+Trade-offs: a Java registry (Eureka) gives Spring-native metadata and demos that teach the model; Kubernetes DNS gives fewer moving parts if every service already lives in the cluster and you accept platform-shaped discovery. Mixing both without a clear owner — some Feign clients on DNS, some on Eureka — produces “works in staging, wrong host in prod” nights. Pick one source of truth for `billing-service` and make gate’s clients use it.
 
-How does application code use the registry? Rarely by calling Eureka APIs directly. Higher-level clients resolve a logical service id. RestTemplate with a `@LoadBalanced` bean turns `http://payment-service/charges` into a concrete instance URL. WebClient and OpenFeign do the same through Spring Cloud LoadBalancer. The discovery client is the source of candidates; the load balancer chooses among them.
+A misconception is hard-coding hostnames “temporarily” beside discovery and then shipping both paths — callers diverge and on-call cannot tell which URL is authoritative. Another is assuming discovery replaces load balancing; discovery gives you candidates, balancing chooses among them. A third is registering every batch job and one-off tool into the same registry namespace until `billing-service` returns noise.
 
-```java
-@Bean
-@LoadBalanced
-RestTemplate restTemplate() {
-    return new RestTemplate();
-}
+Gate can now ask for `billing-service` by name. Truckers on the public internet still should not open a VPN to every internal pod. Something at the edge must accept one hostname and route inward.
 
-// somewhere in order-service
-PaymentResult result = restTemplate.postForObject(
-        "http://payment-service/charges",
-        chargeRequest,
-        PaymentResult.class);
-```
-
-That `payment-service` host name is not DNS in the traditional sense when Eureka is in play. The load balancer interceptor recognizes it as a service id, asks discovery for instances, picks one, and rewrites the request. In Kubernetes-native setups, the same logical name might be a ClusterIP Service; Spring Cloud Kubernetes Discovery maps similarly so code can stay stable across platforms.
-
-Misconceptions cluster here. One is treating the registry as a deployment database and manually editing instance lists — discovery only works if registration is automatic and health-driven. Another is pointing every environment at one shared Eureka and then wondering why staging traffic finds prod instances; isolate registries per environment. A third is ignoring health checks: an instance that is “up” for Eureka but failing readiness will still receive traffic until you align Actuator health with registry semantics.
-
-Today we made instance location dynamic: a registry holds live service catalogs, clients register and fetch, and callers address logical names instead of brittle host lists. Config told services what to be; discovery tells them where peers are.
-
-Clients still should not call every internal service URL from browsers and mobile apps. You need a single front door that routes `/orders/**` and `/payments/**` to the right discovered backends, terminates cross-cutting concerns once, and hides the mesh of instances.
-
-That front door is the API Gateway.
+That edge is the API gateway.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 85 (*Service Discovery*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

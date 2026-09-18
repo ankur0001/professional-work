@@ -11,81 +11,58 @@
 
 ## Full narration
 
-Lifecycle states only make sense inside a room where Hibernate keeps its notes. That room is the persistence context — the first-level cache and unit of work for one `EntityManager` / Session.
+Inside one harbor booking request, you load `Booking` id 500 twice — once to authorize the trucker, once to attach a gate pass. Do you get two Java objects or one? In JPA, inside one persistence context, you get **one**. That identity guarantee is the persistence context’s quiet contract.
 
-Say you load a `Customer` twice by the same id inside one transaction:
-
-```java
-@Transactional
-public void demonstrateIdentity(Long customerId) {
-    Customer first = entityManager.find(Customer.class, customerId);
-    Customer second = entityManager.find(Customer.class, customerId);
-
-    // true — same managed instance from the persistence context
-    assert first == second;
-}
-```
-
-The second `find` does not hit the database again for that id. The persistence context already holds the managed instance. That is the first-level cache. It is mandatory, per context, and not the same thing as Hibernate's optional second-level cache we will meet later.
-
-Dirty checking lives here too. When an entity becomes managed, Hibernate keeps a snapshot. On flush it compares current values to the snapshot and queues `UPDATE` statements for what changed. You can mutate fields across several service method calls in the same transaction; one flush can write them together.
-
-Flush is the moment the context synchronizes with the database. Triggers include commit, explicit `flush()`, and auto-flush before certain queries so those queries see your pending changes. Flush mode defaults usually do the right thing; forcing `FlushModeType.COMMIT` can make queries miss unflushed writes and confuse people debugging "I set the status but the query still shows the old one."
+The persistence context is the first-level cache and the unit-of-work boundary. It tracks managed entities, their snapshots for dirty checking, and pending inserts, updates, and deletes until flush. In a typical Spring Boot app it is transaction-scoped: open when the transactional method starts, close when it ends. Open-session-in-view can stretch it across the whole web request — convenient for lazy reads, dangerous when it hides N+1 until production.
 
 ```java
 @Entity
-@Table(name = "customers")
-public class Customer {
+@Table(name = "bookings")
+public class Booking {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String email;
+    @Column(name = "reference_code", nullable = false, unique = true)
+    private String referenceCode;
 
-    @Column(nullable = false)
-    private String displayName;
+    @Column(name = "gate_pass_issued", nullable = false)
+    private boolean gatePassIssued;
 
-    protected Customer() {}
+    protected Booking() {}
 
-    public Customer(String email, String displayName) {
-        this.email = email;
-        this.displayName = displayName;
-    }
-
-    public void rename(String displayName) {
-        this.displayName = displayName;
+    public void issueGatePass() {
+        this.gatePassIssued = true;
     }
 }
 ```
 
 ```java
 @Transactional
-public void renameCustomer(Long id, String newName) {
-    Customer customer = customerRepository.findById(id).orElseThrow();
-    customer.rename(newName);
-    // no save() required — managed entity + dirty checking
-    // flush on commit writes UPDATE customers SET display_name = ? WHERE id = ?
+public void authorizeAndIssuePass(String referenceCode) {
+    Booking first = bookings.findByReferenceCode(referenceCode).orElseThrow();
+    Booking second = bookings.findById(first.getId()).orElseThrow();
+
+    // same persistence context → same instance
+    if (first != second) {
+        throw new IllegalStateException("identity broken inside one context");
+    }
+
+    second.issueGatePass();
 }
 ```
 
-That "no save required" rule only holds while the entity is managed inside an open persistence context. Spring's `@Transactional` typically binds one persistence context to the transaction. When the method ends successfully, flush and commit run. When it rolls back, the SQL is not committed — and the in-memory object may still show the new name even though the database does not. Never treat a managed Java instance as proof the row was stored after a failure.
+`first == second` is reference equality, not merely equal ids. Hibernate did not need a second SELECT for the `findById` after the entity was already managed — the context returned the tracked instance. Change fields through either variable; there is only one snapshot to dirty-check.
 
-Clear and detach matter under memory pressure or when you batch large imports. `entityManager.clear()` drops the entire first-level cache — every managed entity becomes detached. `detach(entity)` drops one. After clear, further field changes are not tracked until you merge or reload. Batch jobs that persist thousands of rows without clearing can balloon heap because every instance stays managed.
+Across transactions the guarantee disappears. A booking loaded in request A and a booking loaded in request B are different instances even for the same row. That is why detached-edit bugs from the previous lesson appear: people pass instances across contexts as if identity were global.
 
-Repeatable read inside one context is a subtlety. If another transaction commits a change to the same row, your managed instance may still show the old values until you refresh. `entityManager.refresh(customer)` reloads from the database and resets the snapshot. That is intentional isolation of the unit of work, not a bug — but it surprises people who expect every getter to be a live SELECT.
+`EntityManager.clear()` detaches all managed entities — useful in batch jobs, catastrophic mid-request if you still hold references you plan to dirty-check. `flush()` pushes SQL early without closing the context. `detach(entity)` removes one instance from tracking.
 
-Spring Data repositories do not replace the persistence context; they use it. `findById` returns managed instances inside a transaction. `save` on an already managed entity often just returns it after ensuring it is persisted. Out of a transaction, repository calls may open a short-lived context per call — which is why lazy loads and multi-step edits need an explicit transactional boundary. We will deepen that when we reach `@Transactional`; for now, treat "open context for the whole use case" as the rule of thumb.
+The persistence context is not the second-level cache, not the database session in the JDBC sense alone, and not "wherever Hibernate feels like remembering things." It is a well-defined map of managed entities tied to a unit of work. Believing two finds always mean two SELECTs misses the cache. Believing two finds across transactions share an instance misses the boundary.
 
-If you think the persistence context is "just a cache you can turn off," you misunderstand JPA. Without it there is no identity guarantee, no dirty checking, no unit of work. If you keep calling `save` after every setter "to be safe," you are fighting the model instead of using it.
-
-We have a room that tracks entities, caches by id, and flushes SQL. Typing `EntityManager` everywhere still hurts. Teams want a focused API: find by email, save a customer, delete by id — without reinventing DAOs.
-
-That appetite is exactly why Spring Data repositories exist — Episode Forty-Two.
+You understand the room managed entities live in. You still do not want every use case to inject `EntityManager` and write find/save by hand. Spring Data JPA repositories are the typed façade — and for vessels, that starts with `findByImoNumber`.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 41 (*Persistence Context*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

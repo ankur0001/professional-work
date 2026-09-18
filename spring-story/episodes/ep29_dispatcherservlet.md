@@ -11,39 +11,37 @@
 
 ## Full narration
 
-You have a Boot app that starts. An embedded Tomcat is listening. A client fires `GET /orders/42`. Something in your process has to catch that request, decide which Java method should run, call it, and turn the result into bytes on the wire. That something is not "Spring magic." It has a name: `DispatcherServlet`.
+A luggage scanner at the harbor gate pings your Boot process: `GET /luggage/TAG-8841`. Tomcat accepted the socket. Something inside the JVM still has to decide which Java method owns that tag, call it, and write JSON back. That center of gravity is not "Spring magic." It is `DispatcherServlet`.
 
-Before a front controller, teams often registered many servlets — one for orders, one for payments, one for admin pages. Each servlet reinvented the same chores: character encoding, security checks, exception pages, content-type negotiation. Change the error format in one place and forget another. That duplication is the pain the front-controller pattern removes. One servlet owns the HTTP pipeline. Handlers focus on the request they were meant to answer.
+Harbor teams used to register a servlet per concern — one for luggage tags, one for berth boards, one for customs forms. Each copy-pasted encoding, error pages, and content-type negotiation. Change the error shape in luggage and forget customs. The front-controller pattern collapses that duplication: one servlet owns the HTTP pipeline; handlers answer one kind of request.
 
-Spring MVC’s front controller is `DispatcherServlet`. In a Boot web app you rarely declare it by hand. `DispatcherServletAutoConfiguration` registers it, maps it (often to `/`), and gives it an order. Underneath, it is still a servlet. On every request it runs `doDispatch`. That method is the story you should be able to narrate without looking at a slide.
+In a Boot web app you rarely declare `DispatcherServlet` by hand. `DispatcherServletAutoConfiguration` registers it, usually mapped to `/`. Underneath it remains a servlet. Every request that reaches it runs `doDispatch`. If you can narrate `doDispatch`, you can debug a 404 without a slide deck.
 
-Walk the path out loud. An HTTP request arrives at the servlet container. The container hands it to `DispatcherServlet`. The servlet asks a `HandlerMapping`: given this URL, method, and headers, which handler should run? The mapping returns a `HandlerExecutionChain` — typically a controller method plus any interceptors. Next the servlet asks a `HandlerAdapter`: can you invoke this kind of handler? Controllers annotated with `@RequestMapping` are not called by raw reflection from the servlet. An adapter knows how to bind parameters, call the method, and wrap the return value. The adapter invokes the controller. The controller returns a view name, a `ModelAndView`, or — for REST — a body that will be written as JSON. The servlet finishes the response and the client sees status, headers, and body.
+Walk `GET /luggage/TAG-8841` through the chain. The HTTP request arrives at the servlet container. The container hands it to `DispatcherServlet`. The servlet asks a `HandlerMapping`: given this URL, verb, and headers, which handler should run? The mapping returns a `HandlerExecutionChain` — typically a controller method plus any interceptors. Next the servlet asks a `HandlerAdapter`: can you invoke this kind of handler? Annotated controllers are not called by raw reflection from the servlet. An adapter binds parameters, invokes the method, and wraps the return value. The adapter calls the controller. The controller returns a body — for luggage, a tag status payload — and the servlet finishes the response. The client sees status, headers, and bytes.
 
-That chain again, slower: HTTP request → `DispatcherServlet` → `HandlerMapping` → `HandlerAdapter` → controller → response. If you remember only one diagram from this episode, remember that.
+Say the pipeline once without ornament: HTTP request → `DispatcherServlet` → `HandlerMapping` → `HandlerAdapter` → controller → response. For luggage, that means `GET /luggage/{tag}` is claimed by a mapping, invoked through an adapter, and answered by a controller method. If you keep only one diagram from this lesson, keep that.
 
 ```java
-// Conceptual shape of doDispatch — not something you call yourself
+// Conceptual shape of doDispatch — not an API you call yourself
 // 1. resolve multipart if needed
 // 2. mappedHandler = getHandler(request)          // HandlerMapping
 // 3. ha = getHandlerAdapter(mappedHandler.getHandler())
 // 4. interceptors preHandle...
-// 5. mv = ha.handle(request, response, handler)   // invokes @Controller/@RestController
-// 6. processDispatchResult(...)                   // view render or @ResponseBody write
+// 5. mv = ha.handle(request, response, handler)   // invokes @RestController
+// 6. processDispatchResult(...)                   // @ResponseBody write for JSON
 // 7. interceptors postHandle / afterCompletion
 ```
 
-Notice the strategy split. `HandlerMapping` answers "which handler?" `HandlerAdapter` answers "how do I call it?" That is why the same servlet can drive a Thymeleaf page controller and a `@RestController` without becoming a god class. Pluggable strategies keep the core stable while the handler styles evolve.
+The strategy split matters. `HandlerMapping` answers "which handler?" `HandlerAdapter` answers "how do I call it?" That is why the same servlet can drive a Thymeleaf berth board and a luggage `@RestController` without becoming a god class. Pluggable strategies keep the core stable while handler styles evolve.
 
-Boot’s registration matters operationally. You can have more than one dispatcher for different URL prefixes, but the default is one dispatcher for the app. Filters still sit outside this story on the servlet filter chain. Interceptors sit inside the handler execution chain. We will separate those layers in later lessons. Today the point is the center of gravity: almost every Spring MVC request you care about passes through `doDispatch`.
+Operationally, Boot’s default is one dispatcher for the app. Filters still sit outside this story on the servlet filter chain. Interceptors sit inside the handler execution chain. Those layers get their own lessons. Today the point is the center: almost every Spring MVC request you care about passes through `doDispatch`.
 
-A topic-specific misconception here is treating `DispatcherServlet` as "the thing that does dependency injection" or confusing it with the application context itself. The servlet uses the web application context to find mappings and adapters. It does not create your `OrderService` graph. Another misconception is thinking every annotation on a controller is processed by the servlet directly. Mapping metadata is read at startup into handler mappings; invocation is delegated to an adapter at request time. If you only memorize "Boot auto-configures a dispatcher," you still cannot debug a 404. A 404 usually means no `HandlerMapping` claimed the request. A 415 or binding failure usually means the adapter and converters disagreed with the client. Those failures live on this pipeline.
+People sometimes treat `DispatcherServlet` as the thing that wires collaborators or as a synonym for the application context. Wrong layer. The servlet uses the web application context to find mappings and adapters. It does not assemble your luggage lookup graph. Another trap: assuming every controller annotation is interpreted at request time by the servlet itself. Mapping metadata is read at startup into handler mappings; invocation is delegated to an adapter when traffic arrives. Memorizing "Boot auto-configures a dispatcher" will not help you when `GET /luggage/TAG-8841` returns 404 — that usually means no `HandlerMapping` claimed the path. A 415 or binding failure usually means the adapter and converters disagreed with the client. Those failures live on this pipeline.
 
-So today we named the front door, walked the request path through mapping and adaptation into a controller, and saw why strategies keep MVC extensible. We did not yet ask how you author the handler methods themselves — what annotations turn a plain class into something `HandlerMapping` can find, and how a method claims `/orders/42`.
+We named the front door and walked luggage through mapping and adaptation into a controller. What we have not yet authored is the handler itself — the annotations that let `HandlerMapping` find a method for `/luggage/{tag}`, and how that method claims the verb and path.
 
-That unresolved question is where controllers begin.
+That craft is controllers.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 29 (*DispatcherServlet*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

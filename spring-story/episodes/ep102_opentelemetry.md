@@ -11,70 +11,63 @@
 
 ## Full narration
 
-Your Grafana panel says payment p99 jumped. Useful — and incomplete. Which hop inside the request burned the time: API gateway, checkout service, inventory, or the card network adapter? Metrics aggregate. Logs fragment. Distributed tracing follows one request across process boundaries and shows you the timeline.
+Grafana shows gate p95 climbing. Which span is guilty — gateway auth, gate’s `releaseGate`, Feign to billing, or billing’s SQL? OpenTelemetry (OTel) standardizes traces, metrics, and baggage so one check-in becomes a tree of spans you can open beside the Prometheus series that alerted you.
 
-OpenTelemetry — OTel — is the open standard for that instrumentation story. Traces, metrics, and logs share context ideas: a trace id, span ids, baggage. In Spring Boot 3 the Micrometer Observation API and the OTel bridge are the usual path. You depend on Micrometer Tracing with an OTel tracer, export via OTLP to a collector, and the collector fans out to Jaeger, Tempo, Zipkin, or a vendor backend.
-
-Picture a single checkout crossing three services. Gateway receives `POST /checkout`. Checkout service charges payment. Inventory service reserves stock. Without propagation, each service has a private span world. With W3C Trace Context headers — `traceparent` — the same trace id rides the HTTP calls. In a trace UI you see one tree: gateway span, checkout span, child payment span, sibling inventory span. The slow child lights up in red.
-
-Boot wiring at a high level looks like this:
-
-```xml
-<!-- Maven sketch — versions via Boot BOM -->
-<dependency>
-  <groupId>io.micrometer</groupId>
-  <artifactId>micrometer-tracing-bridge-otel</artifactId>
-</dependency>
-<dependency>
-  <groupId>io.opentelemetry</groupId>
-  <artifactId>opentelemetry-exporter-otlp</artifactId>
-</dependency>
-```
+In Spring Boot 3, Micrometer Tracing bridges to OTel (or Brave). Auto-instrumentation covers inbound HTTP and outbound clients. You export via OTLP to a collector, which fans out to your trace backend. Correlate by keeping stable metric names and span names around the same operation — `harbor.gate.release` as both timer and span name is deliberate. When names diverge (`releaseGate` in metrics, `GateReleaseService.accept` in traces), humans waste minutes joining worlds by timestamp alone.
 
 ```yaml
+# gate-service
 management:
   tracing:
     sampling:
-      probability: 1.0   # lab only; use lower in prod
+      probability: 0.25
   otlp:
     tracing:
       endpoint: http://otel-collector:4318/v1/traces
+  metrics:
+    tags:
+      application: gate-service
 ```
-
-HTTP server and WebClient/RestClient instrumentation often create spans for you once tracing is on the classpath. Custom work still needs an Observation or an explicit span around the business boundary you care about:
 
 ```java
 @Service
-public class InventoryClient {
-    private final RestClient http;
+public class GateReleaseService {
+    private final BillingClient billing;
+    private final GateLedger ledger;
     private final ObservationRegistry observations;
 
-    public Reservation reserve(Sku sku, int qty) {
-        return Observation.createNotStarted("inventory.reserve", observations)
-                .lowCardinalityKeyValue("sku.category", sku.category())
-                .observe(() -> http.post()
-                        .uri("/reservations")
-                        .body(new ReserveRequest(sku.code(), qty))
-                        .retrieve()
-                        .body(Reservation.class));
+    public GateReleaseService(BillingClient billing, GateLedger ledger,
+                              ObservationRegistry observations) {
+        this.billing = billing;
+        this.ledger = ledger;
+        this.observations = observations;
+    }
+
+    public CheckInResponse releaseGate(String gateId, TruckCheckIn req) {
+        return Observation.createNotStarted("harbor.gate.release", observations)
+                .lowCardinalityKeyValue("gate.id", gateId)
+                .observe(() -> {
+                    TariffQuote quote = billing.quote(req.containerId(), req.hazardClass());
+                    return ledger.record(gateId, req, quote);
+                });
     }
 }
 ```
 
-The Observation name becomes a span name. Low-cardinality keys become attributes you can filter on. The HTTP client span nests underneath when propagation works. If you see three disconnected traces instead of one tree, check headers on the wire and sampling decisions — a service sampling at zero percent produces silence that looks like a break.
+`Observation` is Boot’s preferred API: one abstraction can emit a timer and a span together when configured. `lowCardinalityKeyValue` mirrors the Micrometer tag rule. Follow a check-in. Gateway span (sampled) carries `traceparent` to gate. Gate’s Observation creates `harbor.gate.release` and nests the Feign client span. Billing continues the trace. In the UI you jump from a Grafana spike at 14:02 to traces in that window and sort by duration. When the breaker opens, child spans fail fast — the trace shows milliseconds, not a mystery hang. Exemplars (when enabled) can link a Prometheus histogram bucket back to a trace id; even without them, matching timestamps and operation names gets you close.
 
-Correlate with logs by including trace ids in the pattern (`traceId`, `spanId` via Micrometer Tracing’s MDC integration). Then a Grafana tempo panel and a log backend can jump between "this span" and "these log lines." Metrics still matter: use a trace to find the slow span type, then a Micrometer timer on that operation for fleet-wide percentiles.
+Sampling and cardinality rules return. 100% traces on the public gateway can drown the collector — symptom: rising export queue, dropped spans exactly when incidents happen. High-cardinality span attributes — raw plate numbers — create the same cost problem as metric tags. Put plates in application logs keyed by trace id instead.
 
-Propagation fails in boring ways. A `RestTemplate` built with `new` instead of a Boot-configured builder may omit interceptors. A message consumer that ignores trace headers starts a new root span for every event. Async work on a bare thread pool drops context unless you wrap the executor with context propagation. When the UI shows broken trees, check the client construction and the thread boundary before blaming the collector.
+Walk a missing-child failure. Gate spans exist; billing never appears. Causes: Feign client not using the instrumented factory; billing sampling at zero while gate samples; W3C vs B3 mismatch across a legacy hop; or a sidecar that strips `traceparent`. Fix by curling headers on a test check-in and confirming the outbound request carries the parent. Another failure: custom spans never `end()` in a finally path — leaks and skewed durations.
 
-Misconceptions thrash teams here. OTel is not a replacement for Micrometer counters; it complements them. One hundred percent sampling in production can drown collectors — tune probability and tail-based sampling at the collector. Putting high-cardinality ids on every span attribute recreates the Prometheus cardinality problem inside your trace backend.
+Trade-offs: the Java agent auto-instruments wide; Micrometer Observation gives explicit business spans with less surprise. Use both carefully — double instrumentation duplicates spans. Traces without RED metrics leave you blind between sampled requests; metrics without traces leave you blind on critical path. Keep both.
 
-Today we followed one checkout across services, wired OTLP export, and nested a custom Observation under HTTP spans. You can see where time goes. The next discipline is deciding what to change when the evidence says a pool is saturated or a query is hot — tuning from signals, not from folklore.
+When correlating from Grafana, filter traces by service `gate-service`, operation `harbor.gate.release`, and the spike’s time window; sort by duration descending. The top trace usually names the guilty child — billing SQL, DNS, or a retry storm — faster than reading three log files. If no traces appear in the window, check sampling and collector health before blaming the application.
 
-That is observability-driven performance work.
+A misconception is installing an OTel Java agent and never verifying Feign/WebClient propagation on the gate↔billing hop. Another is treating traces as a replacement for RED metrics — you need both. A third is custom spans around every getter until the waterfall is unreadable.
+
+You can see where time goes. The next discipline is deciding what to change when evidence says a method is hot or a pool is saturated — tuning from signals, not folklore.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 102 (*OpenTelemetry*).
-
-Narration technique: p99 without a culprit → OTel + Micrometer Tracing → cross-service trace walk → OTLP config → Observation code → sampling/cardinality pitfalls → bridge to performance tuning.

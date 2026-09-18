@@ -11,28 +11,32 @@
 
 ## Full narration
 
-Feign made `inventory.reserve(...)` look like a local method. Under load, that courtesy becomes a trap. Inventory is failing — timeouts, 503s, thread pool exhaustion on their side. Order service keeps calling. Every checkout thread blocks on a doomed HTTP call. Order’s own thread pool fills. Health checks fail. The gateway marks order unhealthy. Now a dependency outage has taken down a service that might have degraded gracefully. A circuit breaker exists to stop calling a failing dependency after a threshold, fail fast, and optionally run fallback logic while the dependency recovers.
+Billing’s p99 jumps from 80ms to 8 seconds. Without protection, every gate check-in thread blocks on Feign until the pool saturates. Trucks wait at the booth while healthy gate CPU sits in socket reads. A circuit breaker flips that failure mode: after enough errors or slow calls, the breaker opens, subsequent calls fail fast (or hit a fallback), and a half-open probe later checks whether billing recovered.
 
-The electrical metaphor is intentional. Closed circuit: calls flow to the remote system. Open circuit: calls short-circuit immediately without hitting the network. Half-open: a limited number of trial calls probe whether the dependency is healthy again; success closes the circuit, failure re-opens it. Spring Cloud CircuitBreaker provides an abstraction; Resilience4j is the common implementation on modern stacks. You can annotate methods with `@CircuitBreaker` from Spring Cloud CircuitBreaker or use Resilience4j annotations directly — same state machine idea.
-
-Watch a failing remote call open the circuit with a concrete service sketch.
+Spring Cloud CircuitBreaker provides an abstraction; Resilience4j is the usual implementation on Boot 3. Annotate the gate method that calls billing, or wrap the call programmatically. The important part is the state machine — closed, open, half-open — around the gate↔billing boundary. Closed means traffic flows and outcomes fill a sliding window. Open means the library short-circuits before the network. Half-open means a few trial calls decide whether to trust billing again.
 
 ```java
 @Service
-public class PaymentFacade {
-    private final PaymentClient paymentClient;
+public class GateReleaseService {
+    private final BillingClient billing;
+    private final GateLedger ledger;
+    private final TariffCache lastKnown;
 
-    public PaymentFacade(PaymentClient paymentClient) {
-        this.paymentClient = paymentClient;
+    public GateReleaseService(BillingClient billing, GateLedger ledger, TariffCache lastKnown) {
+        this.billing = billing;
+        this.ledger = ledger;
+        this.lastKnown = lastKnown;
     }
 
-    @CircuitBreaker(name = "payment", fallbackMethod = "chargeFallback")
-    public PaymentResult charge(ChargeCommand cmd) {
-        return paymentClient.charge(cmd); // Feign/WebClient — may time out or 503
+    @CircuitBreaker(name = "billingQuote", fallbackMethod = "quoteFallback")
+    public TariffQuote quoteOrDegrade(TruckCheckIn req) {
+        return billing.quote(req.containerId(), req.hazardClass());
     }
 
-    private PaymentResult chargeFallback(ChargeCommand cmd, Throwable ex) {
-        return PaymentResult.pendingRetry(cmd.orderId(), ex.getMessage());
+    @SuppressWarnings("unused")
+    private TariffQuote quoteFallback(TruckCheckIn req, Throwable ex) {
+        return lastKnown.find(req.containerId(), req.hazardClass())
+                .orElseThrow(() -> new BillingDegradedException("billing open; no cached tariff", ex));
     }
 }
 ```
@@ -41,30 +45,32 @@ public class PaymentFacade {
 resilience4j:
   circuitbreaker:
     instances:
-      payment:
-        slidingWindowSize: 10
+      billingQuote:
+        slidingWindowSize: 20
         failureRateThreshold: 50
-        waitDurationInOpenState: 5s
+        waitDurationInOpenState: 10s
         permittedNumberOfCallsInHalfOpenState: 3
-        automaticTransitionFromOpenToHalfOpenEnabled: true
+        slowCallDurationThreshold: 2s
+        slowCallRateThreshold: 50
+        recordExceptions:
+          - java.io.IOException
+          - feign.FeignException$InternalServerError
 ```
 
-Narrate a run. The first few `charge` calls hit payment and fail — timeouts count as failures when configured that way. Once ten calls sit in the sliding window and half or more have failed, the breaker opens. Call eleven does not wait on HTTP; it jumps to `chargeFallback` in milliseconds. Order can record a pending payment state instead of melting its threads. After `waitDurationInOpenState`, the breaker goes half-open. A few calls are allowed through. If payment is healthy again, the circuit closes. If they still fail, it opens once more.
+Walk a burst. Twenty quote calls, half time out past `slowCallDurationThreshold` or throw recorded exceptions. Failure or slow-call rate crosses 50%. The breaker opens. The next check-ins skip the network and enter `quoteFallback` — maybe a cached tariff with a `degraded=true` flag so the booth knows to reconcile later. After `waitDurationInOpenState`, a few calls probe half-open. If they succeed, the circuit closes; if not, it opens again. Gate capacity stays available for local ledger work even while billing burns.
 
-Integrate with Feign carefully. You can wrap Feign calls inside a service method that carries the circuit annotation, or use Resilience4j Feign capabilities depending on your stack version. The important design rule: the breaker wraps the remote boundary, not your entire domain transaction, unless you intentionally want that scope. Fallback signatures must match the original method plus a trailing `Throwable` (or specific exception types) so the proxy can dispatch correctly.
+Symptoms you can hear from ops: before the breaker, gate thread dumps show stacks stuck in Feign read; Tomcat’s pool fills; unrelated endpoints on the same JVM slow down. After a correct open, those stacks disappear and `resilience4j.circuitbreaker.state` (via Micrometer) shows OPEN while check-in latency drops to fallback time. If latency stays high with the breaker “enabled,” Feign’s connect/read timeouts are longer than the booth’s patience — the breaker never sees failures in time because threads are still waiting. Align client timeouts below user patience and below cascading budgets.
 
-Metrics and Actuator endpoints matter operationally. A breaker that opens should be visible — state transitions, failure rates — or on-call will only notice via customer complaints. Pair breakers with sensible timeouts; a breaker without timeouts still lets threads hang until the window fills slowly.
+Compose with Feign carefully. Fallbacks must be honest: returning a zero-amount invoice and writing nothing durable is hidden data loss, not resilience. Prefer explicit degraded responses, metrics on fallback invocations, and a runbook that says whether the booth may release on cached tariff. Ignore exceptions you should not trip on — a `400` for a bad hazard class is a client bug, not a reason to open the circuit for everyone.
 
-A misconception is setting thresholds so tight that normal blips permanently open the circuit, or so loose that the breaker never trips during a real outage. Another is a fallback that returns empty success and writes nothing durable — you have hidden data loss. A third is putting a circuit breaker on purely in-process calls “for consistency”; breakers earn their keep on unreliable boundaries: network, process, or shared resource contention.
+Trade-offs: a tight `failureRateThreshold` protects gate fast but flaps on blips; a loose threshold lets billing poison the booth longer. Per-dependency breakers (`billingQuote` vs `tideApi`) isolate blast radius; one global breaker couples unrelated outages. Fail-fast without a fallback returns errors quickly — sometimes that is better than a stale tariff — but the booth UX must match.
 
-Today we watched a payment remote call fail until a circuit opened, fail-fast to a fallback, and probe half-open for recovery — protecting order capacity when a dependency burns.
+A misconception is setting thresholds so tight that normal blips permanently open the circuit, or so loose that a real billing outage never trips it. Another is a fallback that looks like success in metrics while operators see no signal. A third is wrapping purely in-process calls “for consistency”; breakers earn their keep on unreliable boundaries — network, process, shared resource contention.
 
-When the breaker trips, you know *that* payment is unhealthy. You still may not know *which* hop across six services first slowed down for a single customer request. Logs without shared context will not tell you.
+Fail-fast at the billing hop stops the cascade. It does not tell you *which* hop in gateway→gate→billing ate the latency for one truck. For that you need a single trace id that survives process boundaries.
 
-That cross-process story is Distributed Tracing.
+Distributed tracing is next.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 89 (*Circuit Breaker*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

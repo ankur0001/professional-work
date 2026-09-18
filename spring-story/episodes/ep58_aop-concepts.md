@@ -11,58 +11,54 @@
 
 ## Full narration
 
-Open a typical service class before aspects arrive and you can predict the clutter. At the top of every method: log entry with arguments. Then a security check. Then maybe a timer. Then the real business lines. At the bottom: log exit, or log error in a catch that rethrows. Change the audit format and you edit two hundred methods. Forget the security check on one new endpoint and you ship a hole. The domain logic was never the hard part — the repeated rim around it was.
+Open `GateReleaseService` before anyone introduces aspects and you can predict the clutter. Log entry with truck plate and cargo id. Start a timer. Check that the operator may release this gate. Then — finally — the three lines that actually open the boom and stamp the release. On the way out: log duration, log errors, maybe write an audit row. Change the audit format and you edit every gate method. Forget the permission check on one overload and you ship a hole. The domain was never the hard part. The repeated rim was.
 
-Those repeated rims are cross-cutting concerns. Logging, security, transactions, metrics — they cut across modules instead of belonging to one feature package. Aspect-oriented programming exists to pull them into their own modules and apply them systematically.
+Those rims are cross-cutting concerns. Timing, audit, security, transactions — they cut across modules instead of belonging to one feature package. Aspect-oriented programming pulls them into their own modules and applies them systematically.
 
-Spring AOP does that with proxies and a small AspectJ-inspired programming model. You write an aspect: a class that packages pointcuts — where to intervene — and advice — what to run. At runtime, calls into a Spring bean hit a proxy first. If the join point matches, advice runs before, after, or around the real method.
+Spring AOP does that with proxies and a small AspectJ-inspired model. You write an aspect: pointcuts for where to intervene, advice for what to run. At runtime, calls into a Spring bean hit a proxy first. If the join point matches, advice runs before, after, or around the real method.
 
 ```java
 @Aspect
 @Component
-public class ServiceGuardAspect {
+public class HarborGateAspect {
 
-    private static final Logger log = LoggerFactory.getLogger(ServiceGuardAspect.class);
+    private static final Logger log = LoggerFactory.getLogger(HarborGateAspect.class);
 
-    private final PermissionChecker permissions;
+    private final GateAudit audit;
 
-    public ServiceGuardAspect(PermissionChecker permissions) {
-        this.permissions = permissions;
+    public HarborGateAspect(GateAudit audit) {
+        this.audit = audit;
     }
 
-    @Around("@within(org.springframework.stereotype.Service) && execution(public * *(..))")
-    public Object guard(ProceedingJoinPoint pjp) throws Throwable {
+    @Around("execution(* com.harbor.gate..*Service.release*(..))")
+    public Object timeAndAudit(ProceedingJoinPoint pjp) throws Throwable {
         String name = pjp.getSignature().toShortString();
-        log.info("enter {}", name);
-        permissions.assertAllowed(name);
-
         long start = System.nanoTime();
+        audit.enter(name, pjp.getArgs());
         try {
             Object result = pjp.proceed();
-            log.info("exit {} in {} ms", name, (System.nanoTime() - start) / 1_000_000);
+            audit.exit(name, (System.nanoTime() - start) / 1_000_000);
             return result;
         } catch (Throwable ex) {
-            log.warn("fail {}: {}", name, ex.toString());
+            audit.fail(name, ex);
             throw ex;
         }
     }
 }
 ```
 
-Speak the example. `@Aspect` marks the module. `@Around` advice wraps matching service methods. Before `proceed`, we log and enforce a permission check. After `proceed`, we log timing. On failure, we log and rethrow. The service methods themselves stay about invoices or reservations — no copy-pasted security or timing boilerplate. Transactions fit the same story: `@Transactional` is implemented with AOP infrastructure even when you never write `@Aspect` yourself.
+Speak the example. `@Aspect` marks the module. `@Around` wraps matching gate service release methods. Before `proceed`, we record entry. After, we record timing. On failure, we audit and rethrow. `GateReleaseService` methods stay about cargo and booms — no copy-pasted timers. `@Transactional` fits the same story: you may never write `@Aspect` yourself, yet transactions still ride AOP infrastructure.
 
-Hold a few vocabulary words so later episodes stay crisp. Join point: a moment you could intervene — in Spring AOP, primarily method execution. Pointcut: the predicate that selects join points. Advice: the code that runs. Aspect: the unit combining pointcut and advice. Weaving: applying aspects to targets — Spring usually weaves at runtime via proxies, not compile-time bytecode rewriting like full AspectJ.
+Hold the vocabulary so later episodes stay crisp. Join point: a moment you could intervene — in Spring AOP, primarily method execution. Pointcut: the predicate that selects join points. Advice: the code that runs. Aspect: pointcut plus advice. Weaving: applying aspects to targets — Spring usually weaves at runtime via proxies, not compile-time bytecode rewriting like full AspectJ.
 
-History helps expectations. AspectJ at Xerox PARC aimed at a rich join-point model. Spring AOP, arriving with the framework’s early years, chose a pragmatic subset: proxy-based, method-centric, friendly to plain Java config and annotations. You enable it with `@EnableAspectJAutoProxy` or, in Boot, by having spring-aop and aspectjweaver on the classpath with aspects as beans. `AnnotationAwareAspectJAutoProxyCreator` notices `@Aspect` beans and wraps matching targets.
+History sets expectations. AspectJ aimed at a rich join-point model. Spring AOP chose a pragmatic subset: proxy-based, method-centric, friendly to Java config and annotations. Enable it with `@EnableAspectJAutoProxy` or, in Boot, by having spring-aop and aspectjweaver on the classpath with aspects as beans. `AnnotationAwareAspectJAutoProxyCreator` notices `@Aspect` beans and wraps matching targets.
 
-What AOP is not: a replacement for clean module boundaries, or a place to hide core business rules. If the “aspect” is really domain policy that only one aggregate cares about, keep it in the domain. Use aspects for true cross-cuts. Also, Spring AOP will not advise private methods, self-invocations, or calls that never pass through the proxy — limits that become vivid once you see how proxies work.
+What AOP is not: a dump for core gate business rules, or a license to advise everything. If the rule is really “this cargo’s seal must match,” keep it in the domain. Use aspects for true cross-cuts. Spring AOP will not advise private methods, self-invocations, or calls that never pass through the proxy — limits that become vivid once you see how proxies work.
 
-We modularized logging, security, and transactional-style wrapping with an `@Aspect`. The remaining mystery is mechanical: what object actually sits in front of your bean and intercepts the call?
+We modularized timing and audit around harbor gate services. The mechanical mystery remains: what object actually sits in front of your transactional gate bean and intercepts the call?
 
-That object is a dynamic proxy — and understanding it unlocks the next episodes.
+That stand-in is a dynamic proxy.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 58 (*AOP Concepts*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

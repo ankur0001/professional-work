@@ -11,72 +11,69 @@
 
 ## Full narration
 
-A transaction that commits or rolls back correctly can still be wrong under concurrency. Two cashiers update the same seat inventory. A report reads a balance while a transfer is mid-flight. One session inserts a row that another session’s query “should not” have seen yet. Atomicity answered all-or-nothing. Isolation answers what concurrent readers and writers are allowed to observe of each other.
+Two clerks book berths for the same evening tide window. Clerk A counts free slots in quay 7 and sees three. Clerk B, a moment later, counts the same range and also sees three. Both assign. The schedule board briefly shows four vessels on three berths. Nobody rolled back. Atomicity held inside each transaction. Concurrent visibility did not.
 
-Databases define classic anomalies. A dirty read sees another transaction’s uncommitted change — change that might still roll back. A non-repeatable read means you select a row twice inside one transaction and get different committed values because a writer sneaked a commit between your reads. A phantom read means a range query returns a new row the second time because another transaction inserted into that range and committed.
+Isolation is the contract for what concurrent readers and writers are allowed to observe of each other.
 
-Isolation levels are the dials that trade correctness for throughput by allowing or forbidding those anomalies.
+Name the classic anomalies in berth language. A dirty read would see another clerk’s uncommitted assignment — one that might still vanish. A non-repeatable read means you re-read the same berth row inside one transaction and get a different committed value because someone else finished an update between your reads. A phantom read is the quay-7 story: a range query returns a new row the second time because another transaction inserted into that range and committed. Phantoms are how “three free berths” becomes a lie without any single row looking corrupted.
+
+Isolation levels are the dials that permit or forbid those anomalies, trading correctness for throughput.
 
 ```java
 @Service
-public class SeatHoldService {
+public class BerthBookingService {
 
-    private final SeatRepository seats;
+    private final BerthRepository berths;
 
-    public SeatHoldService(SeatRepository seats) {
-        this.seats = seats;
+    public BerthBookingService(BerthRepository berths) {
+        this.berths = berths;
     }
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public HoldId holdSeat(EventId eventId, String seatLabel, CustomerId customerId) {
-        Seat seat = seats.findByEventAndLabel(eventId, seatLabel)
-                .orElseThrow(() -> new SeatMissingException(seatLabel));
-
-        if (!seat.isOpen()) {
-            throw new SeatTakenException(seatLabel);
+    public AssignmentId assign(QuayId quay, Instant window, VesselId vessel) {
+        List<Berth> free = berths.findFreeInWindow(quay, window);
+        if (free.isEmpty()) {
+            throw new NoBerthAvailableException(quay, window);
         }
-
-        // another concurrent hold might still race depending on DB + locking
-        seat.holdFor(customerId);
-        seats.save(seat);
-        return HoldId.newId();
+        Berth chosen = free.getFirst();
+        chosen.assign(vessel, window);
+        berths.save(chosen);
+        return AssignmentId.newId();
     }
 }
 ```
 
 ```java
 @Service
-public class BalanceReportService {
+public class QuayBoardService {
 
-    private final AccountRepository accounts;
+    private final BerthRepository berths;
 
-    public BalanceReportService(AccountRepository accounts) {
-        this.accounts = accounts;
+    public QuayBoardService(BerthRepository berths) {
+        this.berths = berths;
     }
 
     @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
-    public Money availableBalance(AccountId id) {
-        return accounts.findById(id)
-                .orElseThrow(() -> new AccountNotFoundException(id))
-                .available();
+    public List<BerthSnapshot> board(QuayId quay, Instant window) {
+        return berths.findFreeInWindow(quay, window).stream()
+                .map(BerthSnapshot::from)
+                .toList();
     }
 }
 ```
 
-Name the four levels Spring exposes on `@Transactional`, matching JDBC’s vocabulary. `READ_UNCOMMITTED` permits dirty reads — almost never what you want for money or inventory. `READ_COMMITTED` blocks dirty reads; each statement sees only committed data, but two reads of the same row inside one transaction can disagree. Many production databases default here. `REPEATABLE_READ` keeps rows you already read stable for the rest of your transaction; phantoms may still appear depending on the engine. `SERIALIZABLE` is the strictest common setting: the system behaves as if transactions ran one after another, at the cost of locks, retries, or aborted transactions under contention.
+Spring exposes the JDBC vocabulary on `@Transactional`. `READ_UNCOMMITTED` allows dirty reads — almost never what harbor scheduling wants. `READ_COMMITTED` blocks dirty reads; each statement sees committed data, but two reads of the same row inside one transaction can disagree. Many engines default here. `REPEATABLE_READ` keeps rows you already read stable for the rest of the transaction; phantoms may still appear depending on the database. `SERIALIZABLE` aims at one-after-another behavior, paid for with locks, retries, or aborted transactions under contention.
 
-Spring does not invent these levels. It passes your choice to the `PlatformTransactionManager`, which sets isolation on the underlying connection when the transaction begins — if the database and driver honor it. Some engines silently upgrade or ignore unsupported levels. PostgreSQL, MySQL, and Oracle do not implement every textbook guarantee the same way. Always verify against your engine’s docs when you raise isolation for a hot path.
+Spring does not invent these guarantees. It asks the `PlatformTransactionManager` to set isolation on the connection when the transaction begins — if the driver and engine honor it. PostgreSQL, MySQL, and Oracle do not implement every textbook promise the same way. Raising isolation on a hot berth path without reading your engine’s docs is optimism, not safety.
 
-Why put isolation on the annotation at all? Because one service method may need a stricter contract than the connection pool default. Seat holds and double-booking fights often want stronger guarantees or explicit locking. A dashboard balance read may be fine at `READ_COMMITTED`. Declaring isolation next to the boundary documents intent for the next engineer who touches the method.
+Why declare isolation on the method at all? Because the connection pool default may be fine for a quay board read and too weak for an assignment that must not invent phantom capacity. Putting the level next to the boundary documents intent for the next engineer who touches concurrent booking.
 
-Misconceptions pile up quickly. People assume `REPEATABLE_READ` makes lost updates impossible without also thinking about how updates lock rows. Isolation is about read phenomena and scheduling; lost updates still need careful update patterns, version columns, or `SELECT … FOR UPDATE`. Others raise everything to `SERIALIZABLE` “to be safe,” then discover throughput cliffs and serialization failures that force application-level retries. Another trap: believing Spring’s isolation attribute alone fixes races visible in the UI. If two requests each read “seat open” before either writes, you still need a locking or constraint strategy — isolation is one tool in that kit, not the whole kit.
+Misconceptions cluster here. People assume `REPEATABLE_READ` alone prevents lost updates without locking or version checks — isolation addresses read phenomena; lost updates still need careful update patterns, `@Version`, or `SELECT … FOR UPDATE`. Others set everything to `SERIALIZABLE` “to be safe,” then drown in serialization failures. Another trap: believing the annotation alone fixes two requests that each read “three free” before either writes. You still need constraints or explicit locks. Isolation is one tool, not the whole kit.
 
-So we separated commit/rollback from concurrent visibility, named the anomalies, and saw how `@Transactional(isolation = …)` asks the database for a specific contract. We have not yet asked which exceptions should undo the work when something fails. Runtime failures roll back by default. Checked exceptions often do not. Business rules sometimes need the opposite of those defaults.
+We can commit cleanly and still be wrong under concurrency unless we name the visibility contract. The next knob is different: which exceptions should undo the work when a business rule fails as a checked type.
 
-Encoding “which failures are fatal” is rollback rules — next.
+Rollback rules encode that policy.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 54 (*Isolation Levels*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

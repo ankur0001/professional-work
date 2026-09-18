@@ -11,9 +11,7 @@
 
 ## Full narration
 
-JUnit runs the test. It does not invent stand-ins for your dependencies. Mockito does: it creates mock objects, stubs return values, and verifies interactions. In a Spring codebase, the classic unit-test move is to construct a service with mocked collaborators so you exercise branching logic without a database, without Feign, and without a Spring context.
-
-Take an order service that must check stock through a port and then persist. In production the port is a Feign client. In a unit test the port is a mock.
+`TariffCalculator` was pure. Real billing services are not: they ask a `DutyProvider` port for customs duty rates before summing the quote. In production that port may call a remote duty table. In a unit test you do not want that network. Mockito creates the stand-in, stubs returns, and verifies interactions while JUnit executes the real subject.
 
 ```java
 import org.junit.jupiter.api.Test;
@@ -27,98 +25,86 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class OrderServiceTest {
+class TariffServiceTest {
 
     @Mock
-    InventoryPort inventory;
+    DutyProvider duties;
 
     @Mock
-    OrderRepository orders;
+    TariffRepository tariffs;
 
     @InjectMocks
-    OrderService service;
+    TariffService service;
 
     @Test
-    void placesOrderWhenStockAvailable() {
-        when(inventory.getStock("SKU-1"))
-                .thenReturn(new StockView("SKU-1", 5));
-        when(orders.save(any(Order.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
+    void quotesInclusiveOfDuty() {
+        when(duties.rateFor("MSCU123", HazardClass.IMDG_3))
+                .thenReturn(DutyRate.of("0.08"));
+        when(tariffs.baseFor(HazardClass.IMDG_3))
+                .thenReturn(Money.of("100.00"));
 
-        Order placed = service.place(new PlaceOrderCommand("SKU-1", 2, "cust-9"));
+        Money quote = service.quote("MSCU123", HazardClass.IMDG_3);
 
-        assertEquals("SKU-1", placed.sku());
-        assertEquals(2, placed.qty());
-        verify(inventory).reserve(new ReserveRequest("SKU-1", 2));
-        verify(orders).save(any(Order.class));
+        assertEquals(Money.of("108.00"), quote);
+        verify(duties).rateFor("MSCU123", HazardClass.IMDG_3);
+        verify(tariffs).baseFor(HazardClass.IMDG_3);
+        verifyNoMoreInteractions(duties, tariffs);
     }
 
     @Test
-    void rejectsWhenInsufficientStock() {
-        when(inventory.getStock("SKU-1"))
-                .thenReturn(new StockView("SKU-1", 1));
+    void failsWhenDutyUnavailable() {
+        when(duties.rateFor(anyString(), any()))
+                .thenThrow(new DutyUnavailableException("duty table down"));
 
-        assertThrows(InsufficientStockException.class,
-                () -> service.place(new PlaceOrderCommand("SKU-1", 2, "cust-9")));
+        assertThrows(TariffQuoteException.class,
+                () -> service.quote("MSCU123", HazardClass.IMDG_3));
 
-        verify(inventory, never()).reserve(any());
-        verify(orders, never()).save(any());
+        verify(tariffs, never()).baseFor(any());
     }
 }
 ```
 
-Walk the first test. `@ExtendWith(MockitoExtension.class)` hooks Mockito into Jupiter. `@Mock` creates fake `InventoryPort` and `OrderRepository`. `@InjectMocks` builds `OrderService`, injecting those mocks via constructor or fields. `when(...).thenReturn(...)` stubs stock. The service runs real code paths. `verify` asserts that reserve and save happened. The second test stubs low stock, asserts the domain exception, and verifies the remote reserve never fired — exactly the regression you want when someone “refactors” and reserves before checking.
+Walk the first test. `@ExtendWith(MockitoExtension.class)` hooks Mockito into Jupiter. `@Mock` creates fake `DutyProvider` and `TariffRepository`. `@InjectMocks` builds `TariffService` with those mocks — it prefers constructor injection when the class is written that way, which is another reason constructor DI pays off. `when(...).thenReturn(...)` stubs duty and base. The service runs real branching: multiply, round, assemble money. `verify` asserts the port was consulted. `verifyNoMoreInteractions` catches a quiet second call someone added during a “cleanup” refactor. The second test stubs a duty outage, asserts the domain exception, and verifies the repository never ran — the regression you want when someone loads base rates before checking duty availability and then throws anyway.
 
-Prefer explicit construction when teaching juniors:
+Prefer explicit construction when teaching:
 
 ```java
 @Test
-void placesOrderWhenStockAvailable_manualWiring() {
-    InventoryPort inventory = mock(InventoryPort.class);
-    OrderRepository orders = mock(OrderRepository.class);
-    OrderService service = new OrderService(inventory, orders);
+void quotesInclusiveOfDuty_manualWiring() {
+    DutyProvider duties = mock(DutyProvider.class);
+    TariffRepository tariffs = mock(TariffRepository.class);
+    TariffService service = new TariffService(duties, tariffs);
 
-    when(inventory.getStock("SKU-1")).thenReturn(new StockView("SKU-1", 5));
-    when(orders.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
+    when(duties.rateFor("MSCU123", HazardClass.IMDG_3))
+            .thenReturn(DutyRate.of("0.08"));
+    when(tariffs.baseFor(HazardClass.IMDG_3))
+            .thenReturn(Money.of("100.00"));
 
-    Order placed = service.place(new PlaceOrderCommand("SKU-1", 2, "cust-9"));
-    assertEquals(2, placed.qty());
+    assertEquals(Money.of("108.00"), service.quote("MSCU123", HazardClass.IMDG_3));
 }
 ```
 
-Same collaborators, no `@InjectMocks` mystery. Use whichever style your team standardizes; both are Mockito. The point is the subject under test is real Java, and the port is a controlled fake.
-
-Argument matchers (`any`, `eq`) and captors refine verification when you care about the payload:
+Argument captors refine verification when the invoice payload matters:
 
 ```java
-ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
-verify(orders).save(captor.capture());
-assertEquals("cust-9", captor.getValue().customerId());
+ArgumentCaptor<DutyQuery> captor = ArgumentCaptor.forClass(DutyQuery.class);
+verify(duties).query(captor.capture());
+assertEquals("MSCU123", captor.getValue().containerId());
+assertEquals(HazardClass.IMDG_3, captor.getValue().hazardClass());
 ```
 
-Stubbing exceptions exercises failure branches without a real outage:
+Runtime failure modes of bad Mockito use show up as green tests that miss production bugs. Stubbing `any()` so widely that every path looks successful hides branching. Returning `null` from a mock where the production port never returns null turns NPEs into “flaky” CI. Over-verifying call order with `inOrder` couples tests to incidental sequencing. Strict stubbing (Mockito’s default with the Jupiter extension) failing on unused stubs is a feature — it catches tests that no longer mean what you think after a rename.
 
-```java
-when(inventory.getStock("SKU-1"))
-        .thenThrow(new InventoryUnavailableException("down"));
-```
+Spies wrap real objects; use them sparingly when you need a partial fake of a collaborator that is awkward to stub entirely. In Boot slice tests you will meet `@MockBean`, which places a Mockito mock inside the ApplicationContext. Same library, different lifecycle — the mock must satisfy every bean that injects that type for the context to start. This episode’s unit test never starts a context; that speed is the point when you are proving tariff math.
 
-Then assert that `OrderService` maps that into a domain failure or a retry decision — whichever your design promises. The mock’s job is to make the collaborator’s failure mode reproducible on every run.
+Trade-offs: mocks buy isolation and speed; they lie about serialization, SQL, and wire formats. Ports at the edge of the domain (`DutyProvider`) make mocking honest. Mocking types you do not own (HTTP clients, EntityManager) tends toward brittle stubbing — wrap them behind a narrow interface first.
 
-Strictness matters. Modern Mockito is strict about unused stubs; that is a feature — it catches tests that no longer mean what you think. Prefer constructor injection in the production class so `@InjectMocks` and manual `new OrderService(inventory, orders)` stay honest. Spies wrap real objects; use them sparingly when you must partially mock, not as a default.
+When a stub must simulate slow duty lookups, `thenAnswer` with a sleep is a last resort that makes unit tests flaky under load; prefer injecting a clock or a `DutyProvider` fake that returns immediately with a “stale” flag and keep timing tests at the integration layer. For void collaborators (audit publishers), `verify(publisher).publish(any())` beats asserting on log output.
 
-In Spring Boot tests you will later meet `@MockBean`, which places a Mockito mock *inside* the ApplicationContext. That is still Mockito under the hood, but the lifecycle belongs to Spring Test. Keep the distinction: this episode’s unit test never starts a context.
+A misconception is mocking `TariffService` itself. Mock `DutyProvider`; run the real service. Another is verifying every getter until tests mirror implementation noise. A third is elaborately faking types you do not own (HTTP containers, JDBC drivers) when a narrow port interface would make stubbing trivial.
 
-A misconception is mocking the class under test. Mock collaborators; run the real subject. Another is verifying every getter call until tests mirror implementation noise — verify state-changing interactions and meaningful outcomes. A third is using Mockito to fake types you do not own in elaborate ways (HTTP containers, JDBC drivers) when a narrower port interface would make stubbing trivial.
-
-Today we unit-tested `OrderService` by mocking `InventoryPort` and `OrderRepository`, stubbing stock, asserting domain behavior, and verifying reserve/save interactions — JUnit for execution, Mockito for collaborators.
-
-Some behavior only appears when Spring wires real beans, applies AOP proxies, or binds properties. Mocks alone will not load a `@Transactional` proxy or a `@ConditionalOnProperty` bean. For that you need the Spring TestContext Framework.
-
-That is Spring Test.
+Mocks prove branching. They do not load a `@RestController` advice chain or bind `@WebMvcTest` filters. For gate’s HTTP slice, you need the Spring TestContext Framework.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 94 (*Mockito*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

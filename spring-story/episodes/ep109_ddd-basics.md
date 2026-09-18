@@ -11,72 +11,66 @@
 
 ## Full narration
 
-Clean rings keep Spring out of the center. They do not tell you what belongs in that center when the business is genuinely complicated. CRUD entity graphs run out of honesty: an `Order` with forty nullable columns and a 2,000-line service class is not a model — it is a database mirror with aspirations. Domain-Driven Design gives language for the hard part: bounded contexts, ubiquitous language, aggregates, and domain events.
+CRUD honesty fails on the quay. A row named `berths` with columns `status` and `vessel_id` does not explain why two schedulers cannot both reserve B7 for overlapping windows, or why billing says “reserved” while the yard says “empty.” Domain-driven design starts with ubiquitous language and bounded contexts — then protects invariants inside aggregates like `Berth`.
 
-Start with bounded context, not with repositories. In a retail platform, "Customer" in marketing is not "Customer" in billing. Forcing one shared `CustomerEntity` across teams creates coupling disguised as reuse. Prefer separate models per context, integrated through explicit interfaces or events. Spring apps map cleanly to one deployable per context — or at least one package tree with a firewall between contexts.
-
-Ubiquitous language means the code uses the same words as the domain experts. If they say "authorize payment" and "capture payment," do not name methods `updateStatus`. Names in the core should sound like the business conversation.
-
-Aggregates cluster entities that must change together under one consistency boundary. An `Order` aggregate might own `OrderLine` value objects and enforce "cannot capture more than authorized." External references go by id — `CustomerId`, `SkuId` — not by holding another aggregate’s graph.
+In the scheduling context, people say *assign*, *reserve*, *release*, *conflict*, *tidal window*. In billing, the same physical quay might be *billable reservation* and *demurrage start*. Do not force one God model. Bounded contexts allow different models that integrate deliberately — often through events or anti-corruption adapters. When a ticket says “fix berth status,” ask which language the speaker is using before you touch a column.
 
 ```java
-public class Order {
-    private final OrderId id;
-    private OrderStatus status;
-    private final List<OrderLine> lines = new ArrayList<>();
-    private Money authorized;
+public class Berth {
+    private final BerthId id;
+    private BerthStatus status;
+    private ImoNumber occupiedBy;
+    private final List<ReservationWindow> reservations = new ArrayList<>();
 
-    public void authorize(Money amount) {
-        if (status != OrderStatus.DRAFT) {
-            throw new DomainException("Only draft orders authorize");
+    public BerthReserveResult reserve(ImoNumber imo, ReservationWindow window) {
+        if (status == BerthStatus.OUT_OF_SERVICE) {
+            return BerthReserveResult.rejected("berth out of service");
         }
-        this.authorized = amount;
-        this.status = OrderStatus.AUTHORIZED;
-    }
-
-    public void addLine(SkuId sku, int qty, Money unitPrice) {
-        if (status != OrderStatus.DRAFT) {
-            throw new DomainException("Cannot change lines after authorize");
+        boolean overlaps = reservations.stream().anyMatch(r -> r.overlaps(window));
+        if (overlaps) {
+            return BerthReserveResult.rejected("overlapping reservation");
         }
-        lines.add(new OrderLine(sku, qty, unitPrice));
-    }
-
-    public Money total() {
-        return lines.stream().map(OrderLine::lineTotal).reduce(Money.ZERO, Money::plus);
+        reservations.add(ReservationWindow.forImo(imo, window));
+        status = BerthStatus.RESERVED;
+        occupiedBy = imo;
+        return BerthReserveResult.accepted(new BerthReserved(id, imo, window));
     }
 }
 ```
-
-Repositories load and save whole aggregates, not arbitrary rows for UI convenience. In Spring Data terms that often means a repository per aggregate root, with mapping to JPA entities inside an adapter — the hexagonal split from two episodes ago.
-
-Domain events capture facts the rest of the system may care about: `OrderAuthorized`, `OrderShipped`. Publish them from the aggregate or the application service after a successful state change. Inside one process, Spring’s `ApplicationEventPublisher` is enough. Across services, you graduate to a broker — which is the next episode’s territory.
 
 ```java
 @Service
-public class AuthorizeOrderService {
-    private final OrderRepository orders;
+public class ReserveBerthService {
+    private final BerthRepository berths;
     private final ApplicationEventPublisher events;
 
     @Transactional
-    public void authorize(OrderId id, Money amount) {
-        Order order = orders.findById(id).orElseThrow();
-        order.authorize(amount);
-        orders.save(order);
-        events.publishEvent(new OrderAuthorized(id, amount));
+    public void reserve(BerthId id, ImoNumber imo, ReservationWindow window) {
+        Berth berth = berths.findById(id).orElseThrow();
+        BerthReserveResult result = berth.reserve(imo, window);
+        if (!result.accepted()) {
+            throw new BerthConflictException(result.reason());
+        }
+        berths.save(berth);
+        events.publishEvent(result.event());
     }
 }
 ```
 
-DDD is not mandatory for every screen. A simple settings CRUD does not need aggregates and event storms. Use DDD where rules, invariants, and language complexity justify it — usually the revenue and fulfillment cores.
+The aggregate root is `Berth`. Outside code does not sprinkle `reservations.add` on a list from a controller — it calls `reserve` so overlaps stay impossible to forget. Repositories load and save aggregates, not arbitrary rows for every join the UI wants. Domain events like `BerthReserved` speak the language of the context and become integration points later.
 
-Misconception: DDD means a folder named `domain` with the same anemic entities as before. Behavior-rich aggregates are the tell. Misconception: one giant enterprise-wide domain model. Bounded contexts exist because that dream fails.
+Walk a concurrency failure. Two schedulers load B7, both see no overlap, both call `reserve`, both save. Without optimistic locking (`@Version` on the aggregate) or a DB exclusion constraint on windows, you get a double booking that the domain method alone cannot see across transactions. DDD does not replace transactional discipline; it concentrates the rules where they belong and still needs persistence concurrency control. Symptom in ops: two vessels told they own B7; yard crane chaos; billing double-charges.
 
-Today we named contexts, practiced an aggregate that protects invariants, and published a domain event after commit-worthy work. Once facts need to leave the process — other services reacting without a synchronous chain — architecture shifts from request/response only to events as first-class integration.
+DDD is not mandatory ceremony for every screen. A simple reference-data editor for hazard codes may stay CRUD. Use aggregates where invariants hurt when violated — berth conflicts, gate release against unpaid invoices, tally counts that must match the manifest. Value objects (`BerthId`, `ImoNumber`, `Money`) kill primitive obsession — a method that accepts three `String`s will swap gate id and IMO eventually.
 
-That shift is event-driven architecture.
+Failure symptoms of anemic models: `BerthManager` services with all the ifs, entities that are bags of getters, and every new rule added in a controller “just this once.” Opposite ceremony: aggregates spanning half the quay graph so every reservation loads the world — keep aggregate boundaries tight around consistency needs, not around the ER diagram.
+
+Trade-offs: richer models cost design time and careful mapping to ORM. They pay off when rules change weekly and bugs are expensive. Ubiquitous language meetings sound soft; they prevent scheduling and billing from shipping incompatible meanings of “reserved.”
+
+A misconception is equating DDD with microservices — you can have rich aggregates in a modular monolith. Another is anemic “entities” that are only getters/setters with all rules in services named `*Manager`. A third is one enterprise-wide entity model shared by scheduling and billing until every change requires a committee.
+
+Once `BerthReserved` is a fact inside the process, the next pressure is letting billing react without a synchronous call from scheduling on every assignment. That shift is event-driven architecture.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 109 (*DDD Basics*).
-
-Narration technique: CRUD honesty failure → bounded context + language → aggregate code → repository/events → Spring publisher example → when not to use DDD → bridge to EDA.

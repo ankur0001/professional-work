@@ -11,79 +11,69 @@
 
 ## Full narration
 
-Logging levels, datasource URLs, and even entire beans need to change between laptop and production. Boot profiles are how one artifact wears those different outfits.
+Staging ferry checkout fails a payment smoke test — or rather, succeeds against the wrong place. The charge appears on the production merchant dashboard. Root cause: `application-prod.yml` held `payment.merchant-id: ferry_live_9f3`, and the staging Deployment set `SPRING_PROFILES_ACTIVE` empty. Only `application.yml` loaded, and someone had "temporarily" put the live merchant id in the default file during a firefight. Boot profiles were supposed to keep merchant IDs apart. Defaults betrayed them.
 
-You met profiles in Phase One as a Framework idea: `@Profile` on beans, active profiles in the Environment. Boot makes the day-to-day workflow concrete. Document defaults in `application.yml`. Put overrides in `application-dev.yml`, `application-staging.yml`, `application-prod.yml`. Activate with `spring.profiles.active`, an environment variable, or a command-line flag. Without that discipline, teams either hard-code environment checks in Java or maintain separate branches per deploy target — both rot.
-
-The question to hold: how do we activate a named set of property documents and beans so "prod" is a switch, not a rewrite?
-
-Boot's profile documents are loaded when their profile is active. Multiple profiles can be active; later sources still follow the Environment precedence rules you already saw. Group profiles can compose — for example a `cloud` group that includes `prod` and `kubernetes` — so activation stays declarative.
+Boot builds on Framework profiles with file conventions: `application.yml` plus `application-{profile}.yml`, multi-document YAML with `spring.config.activate.on-profile`, and profile groups. Active profiles select which documents join the Environment. The same artifact carries every profile's config; activation chooses the slice. Filename alone never means "we are in prod."
 
 ```yaml
-# application.yml
+# application.yml — safe defaults only
+payment:
+  merchant-id: ferry_dev_local
+  connect-timeout: 2s
+
+---
+# application-staging.yml
 spring:
-  application:
-    name: orders
-server:
-  port: 8080
-```
+  config:
+    activate:
+      on-profile: staging
+payment:
+  merchant-id: ferry_staging_4a1
 
-```yaml
-# application-dev.yml
-spring:
-  datasource:
-    url: jdbc:h2:mem:orders
-logging:
-  level:
-    com.acme.orders: DEBUG
-```
-
-```yaml
+---
 # application-prod.yml
 spring:
-  datasource:
-    url: jdbc:postgresql://db.prod.internal:5432/orders
-logging:
-  level:
-    com.acme.orders: INFO
+  config:
+    activate:
+      on-profile: prod
+payment:
+  merchant-id: ferry_live_9f3
 ```
-
-```bash
-java -jar orders.jar --spring.profiles.active=prod
-# or
-export SPRING_PROFILES_ACTIVE=prod
-```
-
-Beans participate too. A `@Profile("dev")` `@Bean` might expose an H2 console helper or a stub payments client. A `@Profile("prod")` bean supplies the real gateway. On startup Boot logs the active profiles — read that line every time you debug "wrong datasource." If the line says `dev` in a prod pod, stop looking at SQL and fix activation.
 
 ```java
-@Configuration
-public class PaymentsConfig {
+@ConfigurationProperties(prefix = "payment")
+public record PaymentProperties(String merchantId, Duration connectTimeout) {}
 
-    @Bean
-    @Profile("dev")
-    PaymentsClient stubPayments() {
-        return new StubPaymentsClient();
+@Service
+public class FerryPaymentClient {
+    private final PaymentGateway gateway;
+    private final PaymentProperties props;
+
+    public FerryPaymentClient(PaymentGateway gateway, PaymentProperties props) {
+        this.gateway = gateway;
+        this.props = props;
     }
 
-    @Bean
-    @Profile("prod")
-    PaymentsClient livePayments(PaymentsProperties props) {
-        return new HttpPaymentsClient(props);
+    public ChargeResult charge(Booking booking) {
+        return gateway.charge(props.merchantId(), booking.total());
     }
 }
 ```
 
-Default profiles cover the case when nothing is set — useful so local runs work out of the box. Prefer explicit activation in shared environments. Keep secrets out of profile files in git; combine profiles with external env vars for credentials. Profile-specific `application-prod.yml` can still say `password: ${DB_PASSWORD}` and let the platform inject the value.
+Walk the documents. Default `application.yml` holds only safe local values — never live merchant IDs. The staging document activates only when profile `staging` is on and overlays `payment.merchant-id`. Prod document likewise. `PaymentProperties` binds whatever won in the Environment after activation. `FerryPaymentClient.charge` passes `props.merchantId()` to the gateway — one code path, environment-selected credentials. Scrubbing defaults after the incident is as important as setting `SPRING_PROFILES_ACTIVE=staging` on the Deployment.
 
-The trap is proliferating micro-profiles until nobody knows what `spring.profiles.active=a,b,c,d` means. Another is using profiles for feature toggles that should be ordinary boolean properties — profiles shine for environment-shaped differences, not for every experiment. A third is forgetting that `@Profile` beans are skipped entirely when inactive, which can leave you with a missing bean definition error if no alternate bean exists for the active profile.
+Runtime with `SPRING_PROFILES_ACTIVE=staging`. Boot loads default documents, then staging overlays `payment.merchant-id` → `ferry_staging_4a1`. `PaymentProperties` binds that value at context refresh. Empty active profiles leave `ferry_dev_local` — or whatever unsafe value you left in defaults, which is how live ids leaked. Profile-specific beans (`@Profile("prod")` payment circuit breakers) register only when that profile is on. Groups like `spring.profiles.group.production=prod,metrics` activate a bundle with one name so ops sets a single token.
 
-When config, logging, and profile-specific beans are under control, you still have to ship the process. How does Boot turn this application into something you can `java -jar` — with dependencies nested and an embedded server inside?
+Failure mode symptoms: staging smoke test charge appears on prod merchant dashboard; `payment.merchant-id` in a secured env dump shows `ferry_live_9f3` while hostname is staging; `Environment.getActiveProfiles()` empty or unexpectedly `prod`. Another failure: both `staging` and `prod` active by misconfiguration — last-wins overlay rules and document order decide the merchant id; do not rely on "both" as a feature for payments. CI that never asserts active profiles on a staging deploy will miss this class of bug until money moves.
 
-That packaging model is the last Boot lesson before we open the web layer for real.
+Trade-offs. Boot profile documents keep one JAR for all environments and pair cleanly with `@ConfigurationProperties`; they concentrate risk in activation and default hygiene. Separate artifacts per environment avoid activation mistakes and multiply build pipelines. Prefer safe defaults + mandatory profile in non-local envs (fail startup if `prod`/`staging` missing when a property `app.require-profile=true`) over clever multi-profile bags for payment config.
+
+Compare Framework `@Profile` on beans with Boot's document overlays: both honor `spring.profiles.active`, but Boot adds the file/document convention so merchant IDs can live in YAML without alternate `@Bean` methods. The ferry bug was a document problem — wrong values in the default file — not a missing `@Profile` on a class. When both exist, activation still gates everything; Boot does not invent a profile from a hostname. Put live secrets and merchant IDs only in profile-specific documents or external mounts, and keep defaults harmless enough that an empty `SPRING_PROFILES_ACTIVE` cannot charge real cards. A staging smoke test that asserts `payment.merchant-id` starts with `ferry_staging_` catches this class of bug before money moves.
+
+Misconception unique to Boot profiles: "`application-prod.yml` is used automatically in production because the filename contains prod." Filename alone does nothing. Something must activate `prod` — env var, config server, or argument. Filename is a convention for which document binds when that profile is active.
+
+Merchant IDs stay in the right environments after defaults are scrubbed. Platform still ships a 180MB fat jar into every tram-timetable container layer, and image pulls dominate deploy time. How Boot packages that jar — fat versus layered — is the remaining deploy-shape problem.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 27 (*Profiles*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

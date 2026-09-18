@@ -11,50 +11,51 @@
 
 ## Full narration
 
-Profiles decide how the app behaves. Packaging decides what you actually copy to a server or container image — and Boot's answer is usually an executable JAR, not a hand-assembled WAR dropped into someone else's Tomcat.
+Before: tram timetable API image rebuild after a one-line Java change re-uploads ~170MB because the fat jar is one opaque layer. After: layered jar — dependencies in a lower Docker layer, application classes on top — and the same one-line change pushes a few megabytes. Cold starts in the cluster stop waiting on registry bandwidth every commit. Packaging is not a footnote after Boot; it is how the bike-adjacent tram service's deploy loop feels.
 
-Old enterprise delivery meant: build a WAR, install or allocate an application server, configure datasources in the server, deploy the WAR, hope versions of the server APIs matched. Horizontal scale meant more server installs. Local parity with production was wishful. Boot's bet is different: the application ships its dependencies and an embedded server; the unit of deployment is the process.
-
-So what does the build produce, what does the JAR contain, and how does `java -jar` know how to start Spring?
-
-The Spring Boot Maven Plugin (and the Gradle Boot plugin) repackage your project into an executable fat JAR — sometimes called an uber JAR. Inside, you will find your classes, a nested `BOOT-INF/lib` with dependency jars, `BOOT-INF/classes` for application classes and `application.yml`, and Boot loader classes at the root that understand that layout. The manifest points at `JarLauncher` (or a related launcher), which sets up a classloader for nested jars and then invokes your `main` — typically `SpringApplication.run`.
+Boot's packaging story centers on the executable "fat" jar: your classes plus dependencies plus a launcher (`JarLauncher`) that understands nested jars under `BOOT-INF`. `spring-boot-maven-plugin` / Gradle plugin builds it. Layered jars split that archive into named layers (dependencies, spring-boot-loader, snapshot-dependencies, application) so container tools can cache stable layers. Same runtime model; different layout for Docker's cache.
 
 ```xml
-<build>
-  <plugins>
-    <plugin>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-maven-plugin</artifactId>
-    </plugin>
-  </plugins>
-</build>
+<plugin>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-maven-plugin</artifactId>
+  <configuration>
+    <layers>
+      <enabled>true</enabled>
+    </layers>
+  </configuration>
+</plugin>
 ```
-
-```bash
-./mvnw -DskipTests package
-java -jar target/orders-0.0.1-SNAPSHOT.jar
-```
-
-Run `jar tf target/orders-*.jar | head` and read the layout: `BOOT-INF/`, `org/springframework/boot/loader/`, a `META-INF/MANIFEST.MF` with `Main-Class` and `Start-Class`. `Start-Class` is your `@SpringBootApplication` type. The loader's `Main-Class` boots the nested world. That is why a plain `jar` tool double-click mental model fails — this is a Boot-specific layout, not a flat classpath zip.
-
-WARs still exist. You can package a WAR for an external servlet container when a platform requires it. Many cloud-native teams still prefer the executable JAR (or a container image whose entrypoint runs that JAR) because the server version travels with the app. Layered JARs help Docker caching: dependencies in one layer, application classes in another, so rebuilds ship thinner diffs.
 
 ```dockerfile
+FROM eclipse-temurin:21-jre as builder
+WORKDIR /app
+COPY target/tram-timetable.jar app.jar
+RUN java -Djarmode=tools -jar app.jar extract --layers --destination extracted
+
 FROM eclipse-temurin:21-jre
-COPY target/orders-*.jar /app/orders.jar
-ENTRYPOINT ["java","-jar","/app/orders.jar"]
+WORKDIR /app
+COPY --from=builder /app/extracted/dependencies/ ./
+COPY --from=builder /app/extracted/spring-boot-loader/ ./
+COPY --from=builder /app/extracted/snapshot-dependencies/ ./
+COPY --from=builder /app/extracted/application/ ./
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
 ```
 
-DevTools should not ride along in that production JAR — packaging is where optional scopes prove their worth. Actuator, external config, and profiles all assume you can start this single artifact with different Environment inputs.
+Walk the Dockerfile. Builder stage copies the fat jar and runs Boot's layertools extract — producing directories per layer. Final image copies **dependencies** first (changes rarely), then loader, then snapshot deps, then **application** (changes every commit). Docker caches unchanged lower layers; only the application layer invalidates on a one-line Java edit. `ENTRYPOINT` still uses `JarLauncher`, which expects Boot's layout — you are not switching to `java -cp` manually. Order of `COPY` lines matters: put the most stable layers first.
 
-The misconception is "fat JAR means classpath hell forever." Nested jars are isolated by Boot's launcher; you still manage versions through the BOM. Another misconception is treating the plugin as optional decoration — without repackaging, `java -jar` on a thin JAR will not find dependencies. A third is editing files inside the built JAR on the server instead of using external configuration; that path fights immutability and auditability.
+Runtime launch. `JarLauncher` reads `BOOT-INF` layout, builds a classloader over nested dependency jars in `BOOT-INF/lib`, and invokes your `main`. Layer extract does not change that model — it only rearranges files for Docker cache. A classic thin jar plus external libs works too, but you own the classpath and entrypoint. Fat jar wins on "java -jar works." Layered fat jar wins on "java -jar works and containers cache." WAR deployment to an external Tomcat remains possible for shops that mandate it; you trade embedded-server simplicity for ops-standard application servers.
 
-You now have a process that starts, configures itself, and can be probed. The next pain shows up the moment HTTP enters the picture: a request hits the embedded server — who receives it first inside Spring, and how does it find the right controller method?
+Failure mode symptoms before layering: CI shows image push sizes ~equal to full jar every build; nodes pull slowly; deploys lag commits by minutes of bandwidth. After enabling layers but copying the fat jar as a single `COPY app.jar` in the final image, you gain nothing — layers must be extracted and copied separately. Another failure: tools that assume a plain jar with classes at the root (`jar tf` habits, some security scanners, naive classpaths) break on nested `BOOT-INF/lib` until they speak Boot's launcher. Symptom: `ClassNotFoundException` when someone runs `java -cp tram-timetable.jar com.tram.TimetableApp` instead of `java -jar` / JarLauncher.
 
-That front-controller story is the DispatcherServlet — and with it, Phase Three.
+Trade-offs. Fat jars optimize operator simplicity and local runs; large images and poor Docker cache are the cost. Layered jars add build/Dockerfile complexity and pay back on frequent deploys with stable dependencies. Native images and custom classpaths are further optimizations with steeper constraints — not required to fix the 170MB push problem. Keep the plugin's layer enablement aligned with a Dockerfile that actually uses extract output.
+
+Verify locally before trusting CI numbers: build the layered jar, run the extract command from the Dockerfile, and `du -sh` each extracted directory. Dependencies should dwarf `application`. If `application` is huge, you may be bundling frontend assets or fat test data into the main jar — fix that separately. Layering helps cache; it does not shrink what you put in the application layer.
+
+Misconception unique to packaging: "A Boot fat jar is a normal zip of .class files at the root like a plain Maven jar, so `jar tf` habits transfer unchanged." Nested `BOOT-INF/lib` jars are not flat on the launcher classpath the way a shaded uber-jar merges classes. Tools that expect a plain classpath layout break until they speak Boot's launcher.
+
+Timetable images shrink on the wire. The API still has to answer `GET` requests for stop times — and that means understanding what happens after Tomcat accepts a socket: the DispatcherServlet pipeline that turns a URL into a controller method. Packaging got the process started; request mapping decides whether the timetable responds.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 28 (*Packaging*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

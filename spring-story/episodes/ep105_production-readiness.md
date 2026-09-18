@@ -11,41 +11,50 @@
 
 ## Full narration
 
-Feature-complete is a product statement. Production-ready is an operations statement. You can demo checkout on a laptop and still be unsafe to expose to real traffic: no probes, secrets in the image, every Actuator endpoint on the public port, zero dashboards, and a single instance with sticky dreams of availability.
+Feature-complete is not go-live. Gate can release cargo in a demo and still fail Kubernetes probes, run migrations by hand on Friday, or lack a runbook when billing’s circuit opens. Production readiness is the gate checklist before the quay trusts the new Boot jar with real trucks.
 
-Production readiness is the gate where Phase 11’s tools become habits. Health for orchestrators. Metrics and traces for humans. Safe config. Resource limits. Rollback story. You are not collecting trophies — you are removing classes of three-in-the-morning failure.
-
-Start with Actuator honestly. Liveness and readiness are not the same. Liveness failure means restart the process. Readiness failure means stop sending traffic while the process may still be alive — database warmed up, caches primed, dependent check passed.
+Probes first. Liveness answers “should the platform kill and restart me?” Readiness answers “should I receive traffic?” Do not point both at a deep dependency check or a DB blip flaps the pod forever — symptom: restart loops during a brief Postgres blip while the process was fine.
 
 ```yaml
+# gate-service
 management:
   endpoint:
     health:
       probes:
         enabled: true
-      show-details: when_authorized
-  endpoints:
-    web:
-      exposure:
-        include: health,info,prometheus
+      group:
+        readiness:
+          include: readinessState,db
+        liveness:
+          include: livenessState
   server:
-    port: 8081   # management on a separate port
+    port: 8081   # management on a separate port when the mesh requires it
 ```
 
-Kubernetes probes hit `/actuator/health/liveness` and `/actuator/health/readiness` on the management port. Custom `HealthIndicator` beans should fail readiness when the app cannot do useful work — empty required config, migration not finished — not when a non-critical cache is cold.
+```yaml
+# kubernetes deployment fragment
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8081
+  periodSeconds: 10
+  failureThreshold: 3
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8081
+  periodSeconds: 5
+startupProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8081
+  failureThreshold: 30
+  periodSeconds: 5
+```
 
-Config and secrets: externalize with env vars or a secret store; never bake production credentials into the jar. Use profiles deliberately. Fail fast on missing required properties with `@ConfigurationProperties` validation. Logging: structured JSON in prod, correlation with trace ids, and levels that do not print payloads containing PII.
+Startup probes give Flyway and warm caches time before liveness kills a slow boot. Readiness removes the pod from Service endpoints while DB is down without restarting it. Liveness stays cheap — process alive, not “can I quote tariffs.”
 
-From earlier episodes, require a minimum observability bar before "go":
-
-- Micrometer business timers/counters on critical paths
-- Prometheus scrape working on the management port
-- A Grafana dashboard with traffic, errors, latency, saturation
-- Tracing sampled and reachable from that dashboard
-- Memory and GC panels watched under a load test
-- Alerts on SLO burn, not on every CPU blip
-
-Resilience is part of readiness. Timeouts on every remote call. Bulkheads or concurrency limits where one dependency can exhaust your threads. Circuit breakers where fail-fast beats pile-up. Graceful shutdown so in-flight requests finish when a pod receives SIGTERM:
+Migrations belong in the deploy pipeline — Flyway/Liquibase with clear ownership — not SSH and hope. A failed migration must fail the rollout, not leave half the fleet on schema V41. Observability bar: Micrometer timers on `releaseGate`, Prometheus scrape, Grafana panels with alerts, traces on the check-in path. Resilience bar: timeouts on Feign, breaker around billing, bounded AIS caches. Shutdown bar: graceful shutdown so in-flight check-ins finish when a pod drains.
 
 ```yaml
 server:
@@ -55,18 +64,20 @@ spring:
     timeout-per-shutdown-phase: 30s
 ```
 
-Capacity: set JVM and container limits that match, horizontal pod autoscaling on a meaningful metric, and a proven rollback — previous image, previous config map. A readiness review that cannot answer "how do we undo this deploy?" is incomplete. Prefer scaling on saturation or request rate tied to SLO burn, not on CPU alone when your bottleneck is a downstream pool.
+Walk a drain. SIGTERM arrives; Boot stops accepting new connections; in-flight `releaseGate` may finish within the timeout; then the process exits. Too short a timeout and you cut ledger writes mid-transaction. Too long and deploys stall. Align with kube `terminationGracePeriodSeconds`.
 
-Run a pre-prod drill once: kill a pod mid-request and confirm graceful shutdown drains connections; break the database and confirm readiness goes false while liveness stays true; scrape metrics from a fresh instance and open the Grafana dashboard cold. Paper checklists lie; drills tell the truth.
+Runbooks are part of the artifact. When `billingQuote` is open, who gets paged, what fallback is expected at the booth, how to verify recovery? Include the Grafana dashboard link, the breaker metric name, and the “cached tariff allowed?” answer. If that paragraph exists only in someone’s head, you are not ready. Rollback path for bad tariff config — previous ConfigMap, previous image — belongs beside the forward deploy steps.
 
-Misconception: a green `/actuator/health` means production-ready. Health can be shallow while your payment timer is missing and your scrape endpoint is firewalled wrong. Misconception: readiness is a one-time checklist at first launch. It is a living contract as dependencies and traffic shapes change. Misconception: "we have Kubernetes, so we are ready." Orchestration without probes, budgets, and observability only restarts confusion faster.
+Failure symptoms of false readiness: probes always UP while the ledger is read-only broken because health never checked what the booth needs; noisy probes disabled instead of fixed; go-live without a scrapable `/actuator/prometheus` so the first incident has no baseline; secrets still in the image.
 
-Today we closed Phase 11 by binding probes, management ports, observability bars, timeouts, and graceful shutdown into one gate. Once a service survives production, a different pressure appears: the codebase itself gets harder to change — controllers talk to SQL, domain rules scatter, every feature touches everything.
+Trade-offs: deep readiness checks catch dependency loss early and couple your traffic shape to that dependency’s blips — sometimes a degraded mode (accept check-in, queue invoice) is better than going NotReady. Document which choice the quay wants before night shift discovers it.
 
-That structural pain is where enterprise architecture begins — starting with the layered baseline most Spring teams already half-use.
+A go-live review that works: someone unfamiliar with the service follows the runbook to answer “billing breaker open — what do I do?” using only links in the artifact. If they need Slack archaeology, readiness failed. Same test for “rollback tariff ConfigMap” and “confirm Prometheus still scrapes after the new management port.”
+
+A misconception is equating “Deployed to prod” with readiness when readiness probes still return UP while the ledger is read-only broken. Another is disabling probes because they were noisy instead of fixing the check. A third is shipping without a rollback path for a bad tariff config refresh.
+
+Once a service survives production, a different pressure appears: the codebase itself gets harder to change — controllers talk to SQL, domain rules scatter, every feature touches everything. Phase 12 starts with the classic layered map of a harbor app, then tightens boundaries.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 105 (*Production Readiness*).
-
-Narration technique: feature-complete vs ready → probes and management port → observability bar → resilience/shutdown → misconceptions → bridge to layered architecture (Phase 12).

@@ -11,40 +11,43 @@
 
 ## Full narration
 
-Layered Spring apps often still let the framework sit in the middle of the onion. A "domain" class annotated with JPA and Jackson, a service that returns `ResponseEntity`, a repository interface that extends Spring Data in the same package as business rules — the layers have names, but the center is not isolated. Hexagonal architecture — ports and adapters — flips the gravity: the domain sits in the center; everything else plugs in around it.
+Layered Spring apps often still let the framework sit in the middle of the onion. A “domain” class annotated with JPA and Jackson, a service that returns `ResponseEntity`, a repository interface that extends Spring Data in the same package as release rules — the layers have names, but the center is not isolated. Hexagonal architecture — ports and adapters — flips the gravity for gate release: the domain sits in the center; HTTP, billing Feign, and JPA plug in around it.
 
-Alistair Cockburn’s idea is simple to say. The application core defines ports — interfaces for things it needs and things that drive it. Adapters implement those ports for HTTP, databases, message brokers, mail. The core never imports Spring Web. Spring remains the composition root that wires adapters to ports.
+Alistair Cockburn’s idea is concrete here. The application core defines ports — interfaces for what drives gate release and what release needs. Adapters implement those ports. The core never imports Spring Web. Boot remains the composition root that wires adapters to ports.
 
-Draw one hexagon for checkout:
+Draw one hexagon for gate release:
 
-- Driving (primary) port: `PlaceOrderUseCase` — what the outside world can ask the app to do.
-- Driven (secondary) ports: `OrderRepository`, `PaymentGateway` — what the app needs from the outside.
-- Adapters: `OrderController` (Spring MVC) drives the use case; `JpaOrderAdapter` and `StripePaymentAdapter` implement driven ports.
+- Driving (primary) port: `ReleaseGateUseCase` — what the booth can ask the app to do.
+- Driven (secondary) ports: `GateLedger`, `BillingPort` — what release needs from the outside.
+- Adapters: `GateController` (MVC) drives the use case; `JpaGateLedgerAdapter` and `BillingFeignAdapter` implement driven ports.
 
 ```java
 // domain + application core — no Spring Web imports
-public interface PlaceOrderUseCase {
-    Order place(PlaceOrderCommand command);
+public interface ReleaseGateUseCase {
+    GateRelease release(ReleaseGateCommand command);
 }
 
-public interface OrderRepository {
-    Order save(Order order);
-    Optional<Order> findById(OrderId id);
+public interface GateLedger {
+    GateRelease save(GateRelease release);
 }
 
-public class PlaceOrderService implements PlaceOrderUseCase {
-    private final OrderRepository orders;
-    private final PaymentGateway payments;
+public interface BillingPort {
+    TariffQuote quote(String containerId, HazardClass hazard);
+}
 
-    public PlaceOrderService(OrderRepository orders, PaymentGateway payments) {
-        this.orders = orders;
-        this.payments = payments;
+public class ReleaseGateService implements ReleaseGateUseCase {
+    private final GateLedger ledger;
+    private final BillingPort billing;
+
+    public ReleaseGateService(GateLedger ledger, BillingPort billing) {
+        this.ledger = ledger;
+        this.billing = billing;
     }
 
     @Override
-    public Order place(PlaceOrderCommand command) {
-        PaymentResult paid = payments.charge(command.total());
-        return orders.save(Order.create(command, paid));
+    public GateRelease release(ReleaseGateCommand command) {
+        TariffQuote quote = billing.quote(command.containerId(), command.hazard());
+        return ledger.save(GateRelease.open(command, quote));
     }
 }
 ```
@@ -52,52 +55,46 @@ public class PlaceOrderService implements PlaceOrderUseCase {
 ```java
 // adapter — Spring Web talks to the port only
 @RestController
-@RequestMapping("/orders")
-public class OrderController {
-    private final PlaceOrderUseCase placeOrder;
+@RequestMapping("/gates")
+public class GateController {
+    private final ReleaseGateUseCase releaseGate;
 
-    public OrderController(PlaceOrderUseCase placeOrder) {
-        this.placeOrder = placeOrder;
+    public GateController(ReleaseGateUseCase releaseGate) {
+        this.releaseGate = releaseGate;
     }
 
-    @PostMapping
-    public OrderResponse post(@Valid @RequestBody PlaceOrderRequest body) {
-        Order order = placeOrder.place(body.toCommand());
-        return OrderResponse.from(order);
+    @PostMapping("/{gateId}/check-ins")
+    public CheckInResponse post(@PathVariable String gateId,
+                                @Valid @RequestBody CheckInRequest body) {
+        GateRelease released = releaseGate.release(body.toCommand(gateId));
+        return CheckInResponse.from(released);
     }
 }
 ```
 
 ```java
-// adapter — persistence implements the driven port
-@Repository
-public class JpaOrderAdapter implements OrderRepository {
-    private final SpringDataOrderRepo springData;
+// adapter — Feign behind the driven port
+@Component
+public class BillingFeignAdapter implements BillingPort {
+    private final BillingClient client;
 
-    public JpaOrderAdapter(SpringDataOrderRepo springData) {
-        this.springData = springData;
+    public BillingFeignAdapter(BillingClient client) {
+        this.client = client;
     }
 
     @Override
-    public Order save(Order order) {
-        return springData.save(OrderEntity.fromDomain(order)).toDomain();
+    public TariffQuote quote(String containerId, HazardClass hazard) {
+        return client.quote(containerId, hazard.name());
     }
-    // ...
 }
 ```
 
-Boot’s job is wiring. A `@Configuration` class constructs `PlaceOrderService` with adapter beans, or you mark the core service with a thin stereotype if you accept a minimal Spring annotation in the application layer. The test payoff is immediate: unit-test `PlaceOrderService` with fakes for `OrderRepository` and `PaymentGateway` — no `@SpringBootTest` required for the core rule.
+Unit tests construct `ReleaseGateService` with fake `BillingPort` and `GateLedger` — no MockMvc required for tariff branching. Slice tests cover the MVC adapter. Production wiring is a `@Configuration` that binds interfaces to adapters. The hexagon is not a folder religion; it is dependency direction you can point at in review.
 
-Hexagonal is not "rewrite everything into six packages named port and adapter." It is dependency inversion at the boundaries that hurt. Start with the payment gateway and the web API; leave trivial read-only admin screens layered if they are stable.
+A misconception is drawing hexagons in Confluence while controllers still call Feign clients directly. Another is ports for every trivial getter until the core is an interface museum. A third is putting Spring Data interfaces in the domain package and declaring victory because the folder says `domain`.
 
-Misconception: hexagons forbid Spring. They forbid Spring in the core. Misconception: every interface needs an adapter hierarchy six types deep. One port, one implementation is enough until a second adapter exists.
-
-Today we put the domain in the center, showed a use-case port driven by MVC and implemented repositories as adapters, and kept Spring at the edges. Clean architecture pushes the same dependency rule further with explicit rings and use-case interactors — a sharpening of what you just saw.
-
-That sharpening is next.
+Hexagonal’s cousin names the same gravity with rings and an explicit dependency rule: source code dependencies point only inward. That formulation is Clean Architecture — and it sharpens what the gate domain may import.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 107 (*Hexagonal Architecture*).
-
-Narration technique: framework-in-the-middle pain → ports/adapters → core use case without Spring Web → MVC + JPA adapters → wiring/tests → misconceptions → bridge to clean architecture.

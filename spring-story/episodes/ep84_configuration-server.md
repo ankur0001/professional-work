@@ -11,18 +11,30 @@
 
 ## Full narration
 
-After you accept multiple Boot services, configuration becomes a product of its own. `order-service` needs a payment base URL. `payment-service` needs a merchant key. Both need logging levels that change during an incident. If each team edits its own `application-prod.yml` in git and hopes the values stay aligned, you will eventually debug a outage caused by one service still pointing at last quarter’s host. Centralized configuration exists to stop that drift.
+Thirty harbor services — gate pods, billing replicas, scheduling workers, tide adapters — each ship with an `application.yml`. The hazardous-goods surcharge changes on Monday. By Wednesday, nineteen replicas still quote the old rate. That drift is not a YAML taste problem. It is a source-of-truth problem.
 
-Spring Cloud Config Server is a Boot application whose job is to serve property sources to other Boot applications. Clients do not bake every environment value into their jar. They ask the Config Server at startup — and optionally refresh later — for a property set keyed by application name, profile, and label. The server itself usually reads from a Git repository, though you can back it with the filesystem, Vault, or other backends. Git is the common teaching path because reviews, history, and rollbacks already exist there.
+Spring Cloud Config Server is a Boot app that serves property sources from a backend — usually Git — keyed by application name, profile, and optional label (branch or tag). Clients bootstrap, ask the server for their properties, and merge them over local defaults. One Git commit updates the fleet’s view of tariff rules when clients refresh or restart.
 
-Stand up the server side first in your head. You add `spring-cloud-config-server`, annotate the application with `@EnableConfigServer`, and point it at a Git URI. The repo might contain files named `order-service.yml`, `order-service-prod.yml`, `payment-service.yml`, and a shared `application.yml` for defaults. When a client named `order-service` with profile `prod` asks for config, the server composites those files in a defined order and returns a JSON (or other) property payload.
+```yaml
+# config-repo/billing-service-prod.yml
+harbor:
+  tariff:
+    base-per-teu: 42.50
+    hazardous-surcharge: 18.00
+    currency: USD
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh
+```
 
 ```java
 @SpringBootApplication
 @EnableConfigServer
-public class ConfigServerApplication {
+public class HarborConfigServer {
     public static void main(String[] args) {
-        SpringApplication.run(ConfigServerApplication.class, args);
+        SpringApplication.run(HarborConfigServer.class, args);
     }
 }
 ```
@@ -34,39 +46,42 @@ spring:
     config:
       server:
         git:
-          uri: https://git.example.com/platform/config-repo.git
+          uri: https://git.harbor.example/config-repo.git
           default-label: main
 server:
   port: 8888
 ```
 
-On the client, modern Boot (2.4+) prefers `spring.config.import` over the older bootstrap context. You declare something like `spring.config.import=optional:configserver:http://localhost:8888` and set `spring.application.name=order-service`. The Config Data API imports remote properties into the Environment early enough for the rest of auto-configuration to see them. `optional:` keeps local developer laptops from failing hard when the server is down; production often omits optional so missing config is loud.
+On the client, import the config and name the application so the server can find `billing-service-prod.yml`:
 
 ```yaml
-# order-service application.yml
+# billing-service
 spring:
   application:
-    name: order-service
+    name: billing-service
   config:
     import: "optional:configserver:http://config-server:8888"
   profiles:
     active: prod
 ```
 
-Walk a property lookup. Order service asks for `payment.base-url`. The Environment may contain local defaults, then profile-specific local files, then Config Server property sources. Precedence rules matter: remote overrides are deliberate when you want ops to change behavior without rebuilding jars; local overrides are deliberate when a developer needs to force a value. Know which side wins in your setup, or you will chase ghosts.
+```java
+@ConfigurationProperties(prefix = "harbor.tariff")
+public record TariffProperties(BigDecimal basePerTeu,
+                               BigDecimal hazardousSurcharge,
+                               String currency) {}
+```
 
-Refresh is the second half of the story. Changing a Git file does not automatically rewrite every running JVM. Historically, `/actuator/refresh` or Spring Cloud Bus propagated updates to beans annotated with `@RefreshScope`. Those beans are re-created with new property values. Not every bean is refresh-safe — connection pools and thread pools need care. Many teams treat Config Server as startup-time truth and redeploy for sensitive changes. Both strategies are valid; pick one consciously.
+Walk the path. Billing starts, resolves `spring.application.name` and the active profile, GETs the Config Server, receives property sources, and binds `TariffProperties`. Gate and scheduling do the same for their own files in the same repo. Operators change `hazardous-surcharge` in Git; a controlled refresh or rolling restart picks it up. Secrets still belong in a secret store or sealed files — Config Server can integrate, but dumping passwords into a public Git history is not “centralized,” it is a leak.
 
-A misconception is using Config Server as a secret dump without access control. Merchant keys in a wide-open Git repo behind an unauthenticated config endpoint are a breach waiting to happen. Encrypt secrets, restrict the server, or integrate a secret manager. Another misconception is stuffing huge binary or environment-specific infrastructure into config files until the repo becomes unreadable. Keep config boring: URLs, timeouts, feature flags, credentials references. A third is forgetting `spring.application.name`, then wondering why the server returns empty or wrong documents — the name is the primary lookup key.
+Refresh is optional and operational. `@RefreshScope` beans rebuild when `/actuator/refresh` fires (or via a bus). Prefer restart-on-config for rare tariff cuts if your platform already rolls pods safely. Live refresh without discipline produces “half the fleet on old rules” during the window.
 
-So today we replaced copy-pasted YAML with a Config Server backed by Git, showed how a client imports remote property sources by application name and profile, and marked refresh as an operational choice rather than magic.
+A misconception is treating Config Server as a replacement for environment-specific secrets management — it is a property distribution mechanism, not a vault. Another is stuffing every service’s entire YAML into one mega-file so nobody can review a billing-only change. A third is marking `config.import` as required in laptops that cannot reach the server, then wondering why local boot fails — `optional:configserver:` exists for a reason.
 
-Services can now agree on configuration. They still have a different problem the moment instances scale: which host and port is the living `payment-service` right now, and how does a caller learn that without a spreadsheet of IPs?
+Tariff rules now have a home. The next failure mode appears the moment gate must call billing and the host list is no longer a Compose alias you typed by hand.
 
-That is Service Discovery.
+Services need a way to find each other by name.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 84 (*Configuration Server*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

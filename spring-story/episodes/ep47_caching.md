@@ -11,68 +11,65 @@
 
 ## Full narration
 
-Inside one transaction, the persistence context already caches by id. That first-level cache does not help the next HTTP request, the next pod, or the next transaction that loads the same product catalog entry ten thousand times a day. Caching in the JPA conversation means knowing which layer you are talking about — and what invalidation you just signed up for.
+The vessel directory is mostly read. Planners open the same IMO profile dozens of times an hour. Without a cache, every open is a SELECT. With a cache that never evicts, a renamed vessel stays wrong until someone restarts the pod. Spring’s cache abstraction sits between those failure modes: cache directory reads; evict on update.
 
-Three layers show up in Spring Data apps. The **persistence context** (first-level) is mandatory and per unit of work. Hibernate's **second-level cache** is optional, shared across sessions in the same JVM (or clustered with a provider), keyed by entity id and region. Spring's **`@Cacheable`** abstraction sits above repositories or services and can use Caffeine, Redis, or another `CacheManager` — it caches method results, not necessarily managed entities.
-
-Start with second-level caching for a mostly-read reference entity:
+Enable caching with `@EnableCaching` and a `CacheManager` — Boot will autoconfigure simple or Redis-backed managers depending on the classpath. Then declare stereotypes on the service that owns vessel directory access:
 
 ```java
-@Entity
-@Table(name = "product_categories")
-@jakarta.persistence.Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class ProductCategory {
+@Service
+public class VesselDirectory {
 
-    @Id
-    private String code;
+    private final VesselRepository vessels;
 
-    @Column(nullable = false)
-    private String displayName;
+    public VesselDirectory(VesselRepository vessels) {
+        this.vessels = vessels;
+    }
 
-    protected ProductCategory() {}
+    @Cacheable(cacheNames = "vesselsByImo", key = "#imoNumber")
+    @Transactional(readOnly = true)
+    public VesselView findByImo(String imoNumber) {
+        return vessels.findByImoNumber(imoNumber)
+                .map(VesselView::from)
+                .orElseThrow(() -> new VesselNotFoundException(imoNumber));
+    }
 
-    public ProductCategory(String code, String displayName) {
-        this.code = code;
-        this.displayName = displayName;
+    @CacheEvict(cacheNames = "vesselsByImo", key = "#imoNumber")
+    @Transactional
+    public void rename(String imoNumber, String newName) {
+        Vessel vessel = vessels.findByImoNumber(imoNumber).orElseThrow();
+        vessel.rename(newName);
+    }
+
+    @CacheEvict(cacheNames = "vesselsByImo", allEntries = true)
+    @Transactional
+    public void importRegistryBatch(List<VesselDraft> drafts) {
+        // bulk import — safer to clear the directory cache wholesale
+        drafts.forEach(d -> vessels.save(d.toEntity()));
     }
 }
 ```
 
-```properties
-spring.jpa.properties.hibernate.cache.use_second_level_cache=true
-spring.jpa.properties.hibernate.cache.region.factory_class=jcache
-```
+`@Cacheable` runs the method on a miss and stores the return value under the key. On a hit, the method body — and the SELECT — do not run. `@CacheEvict` removes stale entries when the directory changes. Key design matters: IMO number is a natural key; evicting the wrong key leaves ghosts.
 
-After enabling a cache provider, `entityManager.find(ProductCategory.class, "HOME")` can skip the database when the region holds that id. Collections and associations need their own cache configuration if you expect collection caching — caching the parent alone does not magically cache lazy children.
-
-Query cache is a separate switch. It stores query result id lists, then resolves entities through the second-level cache. Stale query cache entries are a classic footgun when underlying tables change and regions are not invalidated carefully. Prefer second-level entity caching for reference data before enabling query cache globally.
-
-Spring Cache often fits repository read methods better when you want explicit keys and TTLs:
+What you cache matters as much as whether you cache. Prefer immutable views or DTOs over managed entities. Caching a managed `Vessel` and then mutating it across threads and transactions is a source of subtle corruption stories. TTL and maximum size belong in the `CacheManager` configuration so a forgotten key cannot grow forever.
 
 ```java
-public interface ProductRepository extends JpaRepository<Product, Long> {
-
-    @Cacheable(cacheNames = "productsBySku", key = "#sku")
-    Optional<Product> findBySku(String sku);
-
-    @CacheEvict(cacheNames = "productsBySku", key = "#result.sku")
-    <S extends Product> S save(S entity);
+@Bean
+CacheManager cacheManager() {
+    CaffeineCacheManager manager = new CaffeineCacheManager("vesselsByImo");
+    manager.setCaffeine(Caffeine.newBuilder()
+            .maximumSize(5_000)
+            .expireAfterWrite(Duration.ofMinutes(10)));
+    return manager;
 }
 ```
 
-Here the cache stores the method return value. Evict on save so the next read misses and reloads. If you cache entities and then mutate them outside a clear eviction story, you serve ghosts. Prefer caching immutable snapshots or DTOs when the object graph is rich.
+Walk a hit. First `findByImo("IMO-9312345")` runs the repository SELECT and stores `VesselView` under that key. The next ten planner clicks return the cached view — SQL log stays quiet. Anya renames the vessel; `@CacheEvict` drops the key; the following read misses and reloads. Without eviction, the directory lies with the old name until TTL or restart.
 
-What should you cache? Stable reference data: categories, country codes, tax rates. Hot product reads with disciplined eviction. What should you not cache first? Highly transactional balances, rows that change every second, or entire aggregates "because findAll is slow" — fix the query and indexes first.
+Caching is not a substitute for an index on `imo_number`. It is not a license to skip eviction. And `@Cacheable` on a private method inside the same class will not fire — Spring AOP proxies intercept external calls, the same self-invocation trap you will see with transactions. Caching `Optional` misses can also pin "not found" answers; decide whether unknown IMOs should be cached at all.
 
-Concurrency strategies on Hibernate's `@Cache` matter. `READ_ONLY` suits immutable reference data. `READ_WRITE` allows updates with soft locking semantics. `NONSTRICT_READ_WRITE` trades stricter consistency for speed. Choose based on how wrong a slightly stale category name is versus a slightly stale inventory count — those are different businesses.
-
-Caching does not remove concurrency collisions on writes. Two transactions can still load the same `Product` price, change it, and overwrite each other. When lost updates hurt, you need a version column and optimistic locking — not a bigger cache.
-
-Episode Forty-Eight — Optimistic Locking.
+Directory reads can now be cheap without lying after updates. Concurrent clerks still collide when two of them edit the same berth capacity at once. Detecting that collision without locking the row for the whole human think-time is optimistic locking.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 47 (*Caching*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

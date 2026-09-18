@@ -11,52 +11,53 @@
 
 ## Full narration
 
-An `ApplicationContext` on refresh does not invent beans from vibes. It reads descriptions — recipes — and materializes objects from them. Those recipes are bean definitions.
+The PR title is "register Stripe and Adyen from plugins.yml." The reviewer leaves one comment in red: "We are not scanning `@Component` on vendor jars we do not control. Metadata only." The author wanted to drop annotated classes on the classpath and hope component scan invents beans. The marketplace platform loads payment plugins from YAML that marketing and partnerships can edit without a rebuild of every adapter class.
 
-Suppose your team needs two `DataSource` beans: one for commands, one for read replicas. Both are the same Java type. If the container only knew "create a DataSource," it could not tell them apart, could not set different JDBC URLs, and could not mark one primary. Or imagine a legacy report generator that must start after the schema-migrator bean finishes. Without metadata for depends-on, startup order becomes race-shaped luck.
+That fight is about bean definitions. A bean definition is the recipe Spring holds before any instance exists: bean name, class (or factory method), scope, constructor arguments, property values, lazy flag, depends-on, primary, init/destroy method names, and more. Instances are cakes. Definitions are recipes. You can have a recipe with zero cakes baked yet — and you can register a recipe for a class that lives in a jar you must not component-scan.
 
-When definitions are missing or vague, you get ambiguous injection, wrong property values, or beans that never appear because nothing registered them. The engineer asks: what information does Spring store about a bean before the instance exists?
-
-A `BeanDefinition` is that information. It is not the live object. It is metadata: bean class (or factory method), scope, whether it is lazy, constructor argument values, property values, init and destroy method names, primary flag, depends-on relationships, and role hints. XML `<bean>`, `@Component` stereotypes, and `@Bean` methods all end as bean definitions in a registry. Different authoring styles; one runtime model.
-
-```java
-AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-DefaultListableBeanFactory registry = context.getDefaultListableBeanFactory();
-
-GenericBeanDefinition writerDs = new GenericBeanDefinition();
-writerDs.setBeanClass(HikariDataSource.class);
-writerDs.setAttribute("role", "writer");
-MutablePropertyValues writerProps = new MutablePropertyValues();
-writerProps.add("jdbcUrl", "jdbc:postgresql://primary/app");
-writerProps.add("username", "app");
-writerDs.setPropertyValues(writerProps);
-writerDs.setPrimary(true);
-registry.registerBeanDefinition("writerDataSource", writerDs);
-
-GenericBeanDefinition readerDs = new GenericBeanDefinition();
-readerDs.setBeanClass(HikariDataSource.class);
-MutablePropertyValues readerProps = new MutablePropertyValues();
-readerProps.add("jdbcUrl", "jdbc:postgresql://replica/app");
-readerProps.add("username", "app_ro");
-readerDs.setPropertyValues(readerProps);
-registry.registerBeanDefinition("readerDataSource", readerDs);
-
-context.refresh();
-
-DataSource primary = context.getBean(DataSource.class); // writer — marked primary
-DataSource reader = context.getBean("readerDataSource", DataSource.class);
+```yaml
+# plugins.yml — marketplace payment adapters
+plugins:
+  - id: stripeCheckout
+    className: com.market.payments.StripeCheckoutPlugin
+    apiKeyProp: stripe.api-key
+  - id: adyenCheckout
+    className: com.market.payments.AdyenCheckoutPlugin
+    apiKeyProp: adyen.api-key
 ```
 
-Before `refresh`, the registry holds two definitions and zero pooled connections. During refresh, Spring instantiates from each definition, applies property values, and caches singletons. Type-based lookup for `DataSource` resolves to the primary writer. The reader is still available by name. The definition carried identity and configuration that the class alone could not express.
+```java
+@Configuration
+public class PaymentPluginRegistrar {
 
-You rarely register `GenericBeanDefinition` by hand in modern apps — component scanning and `@Bean` methods do it — but understanding definitions explains otherwise mysterious behavior. Why does a `@Bean` method name become the default bean name? Because the definition's id came from the method. Why does `@Lazy` change startup? Because the definition's lazy flag changed. Why do `BeanFactoryPostProcessor`s feel powerful? Because they rewrite definitions before any instance exists.
+    @Bean
+    BeanDefinitionRegistryPostProcessor paymentPlugins(Environment env) {
+        return registry -> {
+            List<PluginSpec> specs = PluginSpec.load("classpath:plugins.yml");
+            for (PluginSpec spec : specs) {
+                GenericBeanDefinition def = new GenericBeanDefinition();
+                def.setBeanClassName(spec.className());
+                def.setScope(BeanDefinition.SCOPE_SINGLETON);
+                ConstructorArgumentValues args = new ConstructorArgumentValues();
+                args.addIndexedArgumentValue(0, env.getRequiredProperty(spec.apiKeyProp()));
+                def.setConstructorArgumentValues(args);
+                registry.registerBeanDefinition(spec.id(), def);
+            }
+        };
+    }
+}
+```
 
-Do not confuse the definition with the singleton instance. Changing a field on a live bean does not change the recipe. Conversely, editing XML or Java config changes definitions on the next refresh, not the heap objects already created. Another trap: assuming every Java class in the project automatically has a definition. Only what you register — scan, `@Bean`, or XML — becomes a bean.
+Runtime order matters. During context bootstrap, Spring collects bean definitions into a `BeanDefinitionRegistry` — the same `DefaultListableBeanFactory` wears that hat. Sources of definitions include XML readers, `@Configuration` class parsing, component scanning, and programmatic registration. `BeanDefinitionRegistryPostProcessor` beans run early, after the registry exists but before most ordinary beans are instantiated. In this registrar, each YAML row becomes a `GenericBeanDefinition`: `setBeanClassName` stores a string so the class need not be loadable at registration time the way a hard-coded `Class<?>` literal would; `setScope` marks singleton; constructor args capture the resolved API key string from Environment. `registerBeanDefinition(spec.id(), def)` puts the recipe under `stripeCheckout` or `adyenCheckout`. Only later, when something needs those beans — an autowired `List<PaymentPlugin>`, a lookup by name, or singleton pre-instantiation at end of refresh — does the factory read each definition, load the class, invoke the constructor with the indexed argument, and cache the singleton. Change YAML, restart, new recipe set. No `@Component` on Stripe's SDK required; no vendor package added to `@ComponentScan`.
 
-Definitions answer what to build and with which settings. They also carry a quiet field you will feel the moment shared mutable state appears: scope. How many instances should this definition produce — one for the whole container, one per request, or a fresh object every lookup? That question is bean scopes, and it is waiting as soon as your recipe is more than a class name.
+Walk a failure that QA hits when YAML drifts. Typo in `className` → `CannotLoadBeanClassException` or `ClassNotFoundException` wrapped when the definition is first instantiated, not when the YAML was parsed — registration succeeded with a bad string. Missing `stripe.api-key` → `getRequiredProperty` fails inside the post-processor and context refresh aborts before Tomcat accepts traffic; that is the loud failure you want. Duplicate `id` with an existing bean → `BeanDefinitionStoreException` / override behavior depending on `allowBeanDefinitionOverriding`. Registering after ordinary singleton instantiation has already begun is too late for this post-processor contract — wrong extension point, and the new names never appear in early autowiring. Another symptom: partnerships edits YAML to point at a class that exists but whose constructor signature no longer matches the indexed args — `BeanCreationException` naming the plugin id, with a nested constructor mismatch.
+
+Trade-offs. Programmatic definitions give marketplace teams a metadata-driven plugin surface without scanning untrusted jars. You own validation: bad YAML becomes a startup incident unless you schema-check before `registerBeanDefinition`. Component scanning is simpler for first-party code you control; it is the wrong tool when the class lives in a vendor artifact annotated for someone else's product. XML `<bean>` elements are the same metadata idea in a different syntax — the registry does not care how the `BeanDefinition` object was born.
+
+Misconception unique to bean definitions: "The `@Component` class is the bean definition." The annotation is a signal that a scanner should create a definition. The definition is a separate metadata object living in the registry. Two definitions can point at the same class with different names, scopes, or constructor args — `stripeCheckout` and `stripeCheckoutSandbox` might share a class and differ only in property values. Removing the annotation does not remove a definition you registered by hand. Another misconception: "Registering a definition creates the instance." Registration stores the recipe; creation happens on demand or during singleton pre-instantiation.
+
+Partnerships ships a third plugin next week. QA files a nastier bug first: two hotel-booking browsers share one shopping cart bean, and guest A's room selection appears in guest B's checkout. The recipes are fine. The scope on the cart definition is wrong.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 7 (*Bean Definition*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

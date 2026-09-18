@@ -11,11 +11,11 @@
 
 ## Full narration
 
-Spring Cloud gave you patterns. Patterns without tests are folklore. Phase 10 starts underneath Spring’s test annotations, at the engine that discovers methods, runs them, and reports pass or fail: JUnit 5, also called JUnit Jupiter for the programming model, with a Vintage engine for old JUnit 4 classes if you still have them. Maven Surefire or Gradle’s test task launches the JUnit Platform; the Platform finds engines; Jupiter finds your `@Test` methods.
+Harbor Cloud patterns without tests are folklore. Phase 10 starts underneath Spring’s `@WebMvcTest` and `@SpringBootTest`, at the engine that discovers methods, runs them, and reports pass or fail: JUnit 5 — Jupiter for the programming model, Vintage only if you still carry JUnit 4. Maven Surefire or Gradle’s test task launches the JUnit Platform; the Platform finds engines; Jupiter finds your `@Test` methods.
 
-Hold three verbs for the whole episode: discovery, execution, reporting. Discovery: the engine scans the test classpath for classes that contain Jupiter test APIs — `@Test`, `@ParameterizedTest`, `@TestFactory`, nested `@Nested` types. Execution: for each test method, Jupiter creates an instance (per-method by default), runs lifecycle callbacks, invokes the method, and records outcomes. Reporting: the Platform publishes events — started, skipped, successful, failed, aborted — that Surefire prints and CI systems parse.
+Hold three verbs for the whole episode: discovery, execution, reporting. Discovery scans the test classpath for Jupiter APIs — `@Test`, `@ParameterizedTest`, `@TestFactory`, `@Nested`. Execution creates an instance (per-method by default), runs lifecycle callbacks, invokes the method, records outcomes. Reporting publishes events — started, skipped, successful, failed, aborted — that Surefire prints and CI parses.
 
-Here is a real unit test for a pure pricing component — no Spring context yet — so you can hear those three verbs in one file.
+Here is a real unit test for tariff math — pure Java, no Spring context — so you can hear those verbs in one file.
 
 ```java
 import org.junit.jupiter.api.*;
@@ -24,69 +24,63 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class PricingServiceTest {
+class TariffCalculatorTest {
 
-    PricingService pricing;
+    TariffCalculator calculator;
 
     @BeforeEach
     void setUp() {
-        pricing = new PricingService(new PercentageDiscountPolicy());
+        calculator = new TariffCalculator(new StandardSurchargePolicy());
     }
 
     @Test
-    @DisplayName("applies ten percent discount to subtotal")
-    void appliesDiscount() {
-        Money result = pricing.total(Money.of("100.00"), CustomerTier.GOLD);
-        assertEquals(Money.of("90.00"), result);
+    @DisplayName("applies hazardous surcharge on top of base TEU rate")
+    void appliesHazardousSurcharge() {
+        Money result = calculator.quote(Money.of("100.00"), HazardClass.IMDG_3);
+        assertEquals(Money.of("118.00"), result);
     }
 
-    @ParameterizedTest(name = "subtotal={0}, tier={1} -> {2}")
+    @ParameterizedTest(name = "base={0}, hazard={1} -> {2}")
     @CsvSource({
-            "100.00, GOLD, 90.00",
-            "100.00, SILVER, 95.00",
-            "100.00, BRONZE, 100.00"
+            "100.00, NONE, 100.00",
+            "100.00, IMDG_3, 118.00",
+            "100.00, IMDG_1, 140.00"
     })
-    void tierMatrix(String subtotal, CustomerTier tier, String expected) {
-        assertEquals(Money.of(expected), pricing.total(Money.of(subtotal), tier));
+    void hazardMatrix(String base, HazardClass hazard, String expected) {
+        assertEquals(Money.of(expected), calculator.quote(Money.of(base), hazard));
     }
 
     @Test
-    void rejectsNullSubtotal() {
+    void rejectsNullBase() {
         assertThrows(IllegalArgumentException.class,
-                () -> pricing.total(null, CustomerTier.GOLD));
+                () -> calculator.quote(null, HazardClass.NONE));
     }
 
     @AfterEach
     void tearDown() {
-        pricing = null;
+        calculator = null;
     }
 }
 ```
 
-Discovery: Surefire asks Jupiter for tests in `PricingServiceTest`. Jupiter finds `appliesDiscount`, three parameterized invocations from `tierMatrix`, and `rejectsNullSubtotal`. Execution: `@BeforeEach` runs before each invocation; assertions verify totals; `assertThrows` verifies the guard. Reporting: a failure in `appliesDiscount` prints the display name, expected versus actual, and a stack trace pointing at the assertion line — not at the build tool. CI marks the build red from that report.
+Discovery: Surefire asks Jupiter for tests in `TariffCalculatorTest`. Jupiter finds `appliesHazardousSurcharge`, three parameterized invocations from `hazardMatrix`, and `rejectsNullBase`. Execution: `@BeforeEach` builds a fresh calculator; assertions check money; `assertThrows` verifies the guard. Reporting: a failure in `appliesHazardousSurcharge` prints the display name, expected versus actual, and a stack trace at the assertion line — CI goes red from that report, not from a vague “build failed.”
 
-Lifecycle annotations shape execution. `@BeforeAll` / `@AfterAll` run once per class (methods must be static unless you change the lifecycle). `@BeforeEach` / `@AfterEach` run around every test. `@Disabled` skips discovery’s selected method and reports it skipped, not passed. Assumptions (`Assumptions.assumeTrue`) abort a test as skipped when an environment prerequisite is missing — different from a failure.
+Lifecycle annotations shape execution. `@BeforeAll` / `@AfterAll` run once per class (static unless you change the lifecycle). `@BeforeEach` / `@AfterEach` wrap every test. `@Disabled` skips and reports skipped, not passed. `Assumptions.assumeTrue` aborts as skipped when an environment prerequisite is missing — different from failure.
 
 ```java
 @Test
-void onlyOnCi() {
-    Assumptions.assumeTrue("true".equals(System.getenv("CI")));
-    // expensive check that should not fail local laptops
+void onlyWhenTariffFixturePresent() {
+    Assumptions.assumeTrue(Files.exists(Path.of("src/test/resources/tariff-fixture.json")));
+    // load fixture-backed scenario
 }
 ```
 
-Extensions are Jupiter’s plugin model. `@ExtendWith` registers extensions for parameter resolution, callbacks, or callbacks around tests. Mockito’s Jupiter extension and Spring’s `SpringExtension` both plug in here — which is why later episodes feel like “annotations that work with JUnit,” not a separate runner universe like old `SpringJUnit4ClassRunner`.
+Extensions are Jupiter’s plugin model. `@ExtendWith` registers parameter resolvers and callbacks. Mockito’s Jupiter extension and Spring’s `SpringExtension` plug in here — which is why later harbor tests feel like “annotations that work with JUnit,” not a separate runner universe like old `SpringJUnit4ClassRunner`.
 
-A misconception is treating green bars as proof of production readiness when tests only cover happy paths. Another is sharing mutable static state across tests and then chasing order-dependent failures — Jupiter may run in parallel if you enable it. A third is asserting on log lines or wall-clock sleeps instead of state and return values; flaky reports train teams to ignore CI.
+A misconception is treating green bars as proof the booth is safe when tests only cover happy-path TEU math. Another is sharing mutable static tariff tables across tests and chasing order-dependent failures — Jupiter may run in parallel if you enable it. A third is asserting on log lines or `Thread.sleep` instead of return values; flaky reports train teams to ignore CI.
 
-Today we watched JUnit 5 discover real test methods, execute them with lifecycle hooks and assertions, and report failures with names CI can surface — the foundation every Spring test annotation sits on.
-
-Your `PricingService` was self-contained. Most Spring services are not: they call repositories, Feign clients, clocks, or payment gateways. You need those collaborators under your control without starting the real network.
-
-That control is Mockito.
+JUnit runs the method. It does not invent stand-ins for `DutyProvider` when tariff logic depends on a port. That is Mockito’s job.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 93 (*JUnit 5*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

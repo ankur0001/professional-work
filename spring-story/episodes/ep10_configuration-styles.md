@@ -11,45 +11,47 @@
 
 ## Full narration
 
-Lifecycle hooks only help if Spring knows which classes are beans and how they connect. Teams have argued for years about the best way to write that knowledge down.
+Before: `bank-batch-context.xml` at 2,400 lines, last touched in 2012, wiring a nightly clearing job with property placeholders nobody dares rename. After the first migration slice: a `@Configuration` class for the new ledger writer, still importing the old XML for the parts that work. The bank does not get a greenfield rewrite. It gets coexistence — and Spring has always been built for that mid-history reality.
 
-Walk into a codebase from 2008 and you may find a thousand-line `applicationContext.xml` where every service is a `<bean>` element. Walk into a 2016 service and you find `@Component` on every class plus a few XML leftovers. Walk into a modern library integration and you find `@Configuration` classes with `@Bean` methods wrapping third-party types. Same container underneath. Three dialects for declaring intent. Mixing them without a policy produces dual sources of truth: a bean defined in XML and again in Java, or a scan that silently duplicates an XML id.
+Spring accepts multiple configuration styles because teams arrive mid-flight. XML bean definitions, Java `@Configuration` / `@Bean` methods, component scanning of stereotype annotations, and Groovy DSL in some stacks. They all produce bean definitions that land in the same `BeanDefinitionRegistry`. Style is presentation; the registry is the truth. Migrating means changing how definitions are *authored*, not inventing a second container.
 
-What goes wrong is not that XML is evil or annotations are magic. What goes wrong is unclear authorship — nobody knows where to look, reviews miss wiring, and refactors break the silent second definition. The engineer asks: how should we express bean definitions so the team can read and change them safely?
-
-Spring supports three primary configuration styles. XML configuration declares beans in documents the container loads. Annotation-driven configuration puts stereotypes like `@Component`, `@Service`, and `@Repository` on classes and relies on discovery. Java-based configuration uses `@Configuration` classes with `@Bean` factory methods — type-safe, refactorable in the IDE, and excellent for objects you do not own. Modern Spring applications lean on Java config plus annotations; XML remains for legacy islands and some externalized wiring.
-
-```java
-// Java config style — explicit, refactor-friendly
-@Configuration
-public class NotificationConfig {
-
-    @Bean
-    NotificationClient notificationClient(Environment env) {
-        return new SendGridClient(env.getRequiredProperty("sendgrid.api-key"));
-    }
-
-    @Bean
-    OrderNotifier orderNotifier(NotificationClient client) {
-        return new OrderNotifier(client);
-    }
-}
-
-// Equivalent idea in annotation style elsewhere:
-// @Service class OrderNotifier { ... }
-// discovered by component scanning instead of an @Bean method
+```xml
+<!-- still in production for the 2012 clearing reader -->
+<bean id="clearingFileReader" class="com.bank.batch.ClearingFileReader">
+    <property name="directory" value="${clearing.inbox}"/>
+    <property name="charset" value="UTF-8"/>
+</bean>
 ```
 
-When this `NotificationConfig` is registered with an `AnnotationConfigApplicationContext`, Spring turns each `@Bean` method into a bean definition, invokes the methods at the right time, and injects `notificationClient` into `orderNotifier`. Rename the method in the IDE and the bean name updates with you. Compare that to hunting string ids in XML. For `SendGridClient` — a type you do not control — `@Bean` is the natural style because you cannot put `@Component` on a third-party class without wrapping it.
+```java
+@Configuration
+@ImportResource("classpath:bank-batch-context.xml")
+public class LedgerMigrationConfig {
 
-Style choice is contextual. Prefer stereotypes and scanning for your own application services. Prefer `@Bean` methods for infrastructure and external types. Keep XML only when migrating or when a legacy module still speaks it. You can combine styles in one context, but pick a default and document exceptions.
+    @Bean
+    LedgerWriter ledgerWriter(DataSource dataSource) {
+        return new JdbcLedgerWriter(dataSource);
+    }
 
-A misconception here is "annotations replaced the need to understand configuration." Annotations are one authoring style that still produces bean definitions. Another is copying every bean into both XML and Java "to be sure," which creates conflicts and duplicate definitions.
+    @Bean
+    ClearingJob clearingJob(ClearingFileReader reader, LedgerWriter writer) {
+        return new ClearingJob(reader, writer);
+    }
+}
+```
 
-Annotation style only scales if Spring can find the annotated classes. That discovery mechanism — component scanning — is the next piece. Without it, `@Service` is just a comment the compiler ignores.
+Walk the migration code. `@Configuration` marks `LedgerMigrationConfig` as a definition source. `@ImportResource("classpath:bank-batch-context.xml")` tells the context: while processing this Java config, also run an XML reader against that file and merge those definitions into the *same* registry. `ledgerWriter(DataSource dataSource)` is a factory method — Spring calls it when the `ledgerWriter` bean is needed, injecting whatever `DataSource` bean already exists (often still declared in XML or a shared infra config). `clearingJob(...)` asks for `ClearingFileReader` and `LedgerWriter` by type; the reader still comes from the XML `id="clearingFileReader"`, the writer from the `@Bean` method. Constructor args do not care which style authored the collaborator. `${clearing.inbox}` in XML still resolves through the Environment when the reader bean is created — placeholders are not "XML-only magic"; they are property resolution against the same Environment the Java side uses.
+
+Runtime during a nightly run after the first slice. Context refresh registers definitions from XML and from `@Bean` methods. If both styles accidentally define the same bean id, you get an override or a conflict depending on settings — a real migration hazard. Instantiation of `ClearingJob` triggers creation of `clearingFileReader` (XML path: property injection of directory and charset) and `ledgerWriter` (Java path: `new JdbcLedgerWriter`). The job runs; file lines become ledger rows. You can move one bean at a time: delete the XML `<bean>` for a collaborator, add a `@Bean`, redeploy, watch the clearing job. Component scanning can join later for *new* services under a controlled base package — another producer of definitions, not a mandate to delete XML overnight.
+
+Failure mode with symptoms ops actually see: two definitions for `clearingFileReader` — one left in XML, one added as `@Bean` with the same name — and `spring.main.allow-bean-definition-overriding` false. Startup fails with `BeanDefinitionOverrideException` naming the id. Or overriding is allowed, the wrong implementation wins, and clearing silently writes with a stub reader that always returns empty files: job "succeeds," ledger stays flat, business thinks the inbox was empty. Another symptom of mixed-style confusion: XML still references `ref="oldLedgerWriter"` after you renamed the Java `@Bean` method to `ledgerWriter` — `NoSuchBeanDefinitionException` at job creation, stack rooted in `AbstractBeanFactory.resolveDependency`.
+
+Trade-offs. XML keeps working systems alive and is explicit about every wire; it loses IDE rename safety and grows hostile past a few hundred beans. Java config wins on navigation, refactoring, and type checking, but method-call semantics inside `@Configuration` classes need care (full vs lite mode — later). Component scanning minimizes ceremony and maximizes "who registered this?" surprises when packages are wide. Coexistence via `@ImportResource` is the pragmatic path for banks; purity is a rewrite fantasy.
+
+Misconception unique to configuration styles: "XML configuration does not support constructor injection or strong typing, so it is unsafe by nature." XML can express constructor args and factory methods; the real costs are tooling, refactor safety, and readability. Java config wins on IDE navigation and compile-time checks — not because XML is incapable of wiring.
+
+Halfway migrated, a cargo multi-module build introduces a new style hazard: component scan base packages so wide that test utilities become production beans. The question shifts from XML versus Java to what scanning actually picks up.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 10 (*Configuration Styles*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

@@ -11,75 +11,81 @@
 
 ## Full narration
 
-You can be production-ready operationally and still drown in structural mud. Controllers open JDBC connections. Entities serialize straight to JSON with lazy-loading landmines. One "util" package imports everything. Phase 12 starts here because most Spring codebases already gesture at layers — and then violate them under deadline pressure.
+Gate is ops-ready and still structurally muddy: controllers call repositories, tariff rules sit in a `@RestController`, JPA entities serialize straight to truckers. Layered architecture is the classic Spring map — web → service → persistence — with dependency arrows pointing inward toward the domain, not outward toward frameworks.
 
-Layered architecture organizes the app into horizontal bands with a one-way dependency rule: outer/upper layers may call inward/downward; domain and persistence must not reach up into web concerns. In a typical Spring Boot service the bands are web (controllers, DTOs), application/service (use cases, transactions), domain (model, rules), and persistence (repositories, JPA entities). Names vary; the direction does not.
-
-Why bother? Without layers, every change fans out. Swap JSON field names and you break SQL. Write a unit test and you boot Tomcat. Circular package dependencies appear because nothing forbade them. Layers give a default map for where code goes when the team is moving fast.
-
-Spring encourages this map with stereotypes and package layout:
+In a harbor app the packages usually look like:
 
 ```text
-com.example.checkout
-  web          → @RestController, request/response DTOs
-  service      → @Service, @Transactional use cases
-  domain       → Order, Money, domain services (often pure Java)
-  persistence  → Spring Data repositories, @Entity types
+com.harbor.gate
+  web          // controllers, HTTP DTOs
+  service      // GateReleaseService, tariff orchestration
+  domain       // GateRelease, TruckCheckIn value types
+  persistence  // Spring Data repositories, JPA entities
 ```
 
 ```java
 @RestController
-@RequestMapping("/orders")
-public class OrderController {
-    private final OrderService orders;
+@RequestMapping("/gates")
+public class GateController {
+    private final GateReleaseService releases;
 
-    public OrderController(OrderService orders) {
-        this.orders = orders;
+    public GateController(GateReleaseService releases) {
+        this.releases = releases;
     }
 
-    @PostMapping
-    public OrderResponse place(@Valid @RequestBody PlaceOrderRequest req) {
-        Order placed = orders.place(req.toCommand());
-        return OrderResponse.from(placed);
+    @PostMapping("/{gateId}/check-ins")
+    ResponseEntity<CheckInResponse> checkIn(@PathVariable String gateId,
+                                            @Valid @RequestBody CheckInRequest body) {
+        CheckInResponse response = releases.releaseGate(gateId, body.toCommand());
+        return ResponseEntity.accepted().body(response);
     }
 }
 
 @Service
-public class OrderService {
-    private final OrderRepository repo;
-    private final PaymentGateway payments;
+public class GateReleaseService {
+    private final GateLedgerRepository ledger;
+    private final BillingClient billing;
+
+    public GateReleaseService(GateLedgerRepository ledger, BillingClient billing) {
+        this.ledger = ledger;
+        this.billing = billing;
+    }
 
     @Transactional
-    public Order place(PlaceOrderCommand cmd) {
-        PaymentResult paid = payments.charge(cmd.total());
-        return repo.save(Order.create(cmd, paid));
+    public CheckInResponse releaseGate(String gateId, TruckCheckIn cmd) {
+        TariffQuote quote = billing.quote(cmd.containerId(), cmd.hazardClass());
+        GateRelease saved = ledger.save(GateRelease.open(gateId, cmd, quote));
+        return CheckInResponse.from(saved);
     }
 }
 ```
 
-Notice the translation at the boundary. The controller speaks HTTP DTOs. The service speaks domain types and commands. The repository speaks persistence. Mapping costs a few lines and saves you from exposing `@Entity` graphs as API contracts — a classic layered failure mode when a lazy collection serializes after the session closes.
+Discipline at the boundary: HTTP DTOs in `web`, domain commands in `service`/`domain`, JPA entities stay in `persistence` unless you consciously accept the coupling. Walk a leak. `GateRelease` entity gains a `Lazy` collection; Jackson serializes it on the way out; a trucker GET triggers `LazyInitializationException` or an accidental N+1. The layered fix is a dedicated `CheckInResponse` assembled in the service — not “open session in view” as architecture. Another leak: controller injects `GateLedgerRepository` and duplicates release rules for a “quick” admin path until two definitions of release diverge at 2am.
 
-Enforce the rule mechanically when you can. ArchUnit tests that `..web..` may depend on `..service..` but `..domain..` must not depend on `..web..` or `..persistence..` catch drift in CI. Package-by-layer is not the only option — package-by-feature also works — but each feature still needs an internal dependency direction.
+ArchUnit can enforce “web does not import persistence” when code review fatigue sets in.
 
 ```java
 @ArchTest
-static final ArchRule domain_does_not_depend_on_web =
-        noClasses().that().resideInAPackage("..domain..")
-                .should().dependOnClassesThat().resideInAPackage("..web..");
+static final ArchRule webMustNotTouchPersistence =
+        noClasses().that().resideInAPackage("..web..")
+                .should().dependOnClassesThat().resideInAPackage("..persistence..");
+
+@ArchTest
+static final ArchRule servicesDoNotReturnResponseEntity =
+        noClasses().that().resideInAPackage("..service..")
+                .should().dependOnClassesThat().resideInAPackage("org.springframework.http..");
 ```
 
-Transactions usually live on the service layer — `@Transactional` on use-case methods — so controllers stay free of persistence session concerns. Repositories return domain objects or entities that the service maps; controllers never inject `EntityManager` "just this once."
+Runtime and team symptoms of layer collapse: every feature touches four packages for one field rename; mobile breaks when a JPA column rename ships because the entity was the API; transactional boundaries unclear because repositories are called from controllers without a service. Layers still help onboarding — most Spring developers can navigate web/service/persistence in minutes — but package names without dependency direction are cosplay.
 
-Limits appear as the domain grows. Layers do not by themselves stop framework types from leaking downward: a domain module that imports `Pageable` or `HttpServletRequest` is still coupled. Layers also tempt anemic models — entities as bags of getters and all rules in services. Those pressures push teams toward hexagonal and clean variations next.
+Trade-offs: strict layering adds mapping boilerplate (DTO ↔ domain ↔ entity). That cost buys independent change rates: HTTP can version while persistence evolves. For tiny admin CRUD, a thinner path may be fine — document the exception so gate release does not copy it. A single `service` package that absorbs everything becomes a dumping ground; split by capability (`release`, `tariff`, `ais`) before you invent microservices to escape the ball of mud.
 
-Misconception: "we have `@RestController` and `@Service`, so we have architecture." Stereotypes without dependency direction are naming, not structure. Misconception: more layers always help. Four clear bands beat seven bands of pass-through methods that only forward calls.
+Onboarding test: a new engineer should find “where does check-in authorization live?” in one service method, not half in the controller and half in a repository `@Query`. When that answer takes a tour of four packages with duplicated ifs, layers have already collapsed regardless of folder names. Fix by moving policy inward and leaving web as translation — status codes, JSON, validation annotations — not berth or tariff rules.
 
-Today we set the baseline map, showed DTO-at-boundary discipline, and admitted where layers leak. When the pain is "domain should not know Spring Web or JPA at all," you need ports, adapters, and an inside that stays pure.
+A misconception is renaming packages without changing dependencies and calling it architecture. Another is a single `service` package that becomes a dumping ground for everything not named controller. A third is forbidding DTOs “to move faster” and then breaking mobile clients when a JPA field rename ships.
 
-That reshaping is hexagonal architecture.
+When the pain is “domain must not know Spring Web or JPA at all,” layers need ports, adapters, and an inside that stays pure. That tightening is hexagonal architecture around gate release — same harbor check-in story, stricter arrows, fewer excuses for a controller that speaks SQL.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 106 (*Layered Architecture*).
-
-Narration technique: ops-ready but structurally muddy → dependency direction → package map + controller/service code → ArchUnit → limits of layers → bridge to hexagonal.

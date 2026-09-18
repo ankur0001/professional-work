@@ -11,49 +11,58 @@
 
 ## Full narration
 
-Every Boot tutorial starts with one annotation on the main class. Treat it as a composition, not a lucky charm — because when scanning misses a package, that annotation is usually where the story went wrong.
+Failing test output from the bike-share CI:
 
-Imagine a service where controllers live under `com.acme.orders.web` and the main class sits in `com.acme.orders`. Everything starts. Move the main class to `com.acme.bootstrap` "to keep startup separate," leave components under `com.acme.orders`, and suddenly mappings vanish. No compile error. Just empty request mappings and a quiet 404. The team blames MVC. The real issue was the default scan root.
+```
+MockMvc returned 404 for GET /api/stations/42
+Bean count for StationController: 0
+```
 
-The practical question: what does `@SpringBootApplication` actually enable, and where does component scanning begin?
+The controller class has `@RestController`. The starter-web is on the classpath. The slice test even looks right. Root cause: `@SpringBootApplication(scanBasePackages = "com.bikeshare.service")` on the main class — written during a "only scan services" cleanup — excludes `com.bikeshare.api.web` where controllers live. Auto-configuration still runs. Component scan does not see the controllers. Fusion hid the knob that was turned.
 
-`@SpringBootApplication` is a composed annotation. It layers three jobs. `@SpringBootConfiguration` marks the class as a source of bean definitions — Boot's specialization of `@Configuration`. `@EnableAutoConfiguration` triggers the import of auto-configuration classes we just studied. `@ComponentScan` turns on classpath scanning for `@Component`, `@Service`, `@Repository`, `@Controller`, and the rest — by default from the package of the annotated class downward.
+`@SpringBootApplication` is a composed annotation. It combines `@SpringBootConfiguration` (a `@Configuration` specialization for the application), `@EnableAutoConfiguration`, and `@ComponentScan` with defaults. One annotation on the main class enables Java config of the app itself, Boot auto-config, and scanning of the main class package and subpackages. When you override one attribute, you are not "tweaking Boot" in the abstract — you are changing one of those three meta-annotations' behavior.
 
 ```java
-package com.acme.orders;
+package com.bikeshare;
 
-@SpringBootApplication
-public class OrdersApplication {
+@SpringBootApplication // default scan: com.bikeshare..*
+public class BikeShareApi {
     public static void main(String[] args) {
-        SpringApplication.run(OrdersApplication.class, args);
+        SpringApplication.run(BikeShareApi.class, args);
+    }
+}
+
+// package com.bikeshare.api.web — found by default scan
+@RestController
+@RequestMapping("/api/stations")
+public class StationController {
+    private final StationDirectory directory;
+
+    public StationController(StationDirectory directory) {
+        this.directory = directory;
+    }
+
+    @GetMapping("/{id}")
+    public StationView get(@PathVariable long id) {
+        return StationView.from(directory.require(id));
     }
 }
 ```
 
-Place that class in `com.acme.orders` and scanning covers `com.acme.orders..*`. Controllers, services, and `@Configuration` classes in that tree are candidates. Auto-configuration still imports from Boot's list. Your main method hands the annotated class to `SpringApplication.run`, which uses it as both configuration source and scan anchor.
+Walk the happy path. `BikeShareApi` lives in `com.bikeshare`. Default `@ComponentScan` uses that package as base, so `com.bikeshare.api.web.StationController` is a candidate, becomes a bean, and MVC maps `GET /api/stations/{id}`. `SpringApplication.run(BikeShareApi.class, args)` registers that class as a configuration source: `@SpringBootConfiguration` makes it a configuration class; `@EnableAutoConfiguration` imports auto-config; scan finds the controller and `StationDirectory` under `service` packages. Constructor injection on the controller is ordinary DI once the bean exists.
 
-When the default is wrong, be explicit. Narrow or widen scan bases. Exclude an auto-config class that fights your environment. Keep the composition honest instead of sprinkling duplicate enable annotations.
+Runtime of the broken knob. `scanBasePackages = "com.bikeshare.service"` replaces the default base package list. Only types under `com.bikeshare.service` are scanned. Auto-configuration still creates `DispatcherServlet`, handler mappings infrastructure, embedded Tomcat. Zero `StationController` beans → no request handler for `/api/stations/42` → MockMvc 404. Actuator health may still be UP. That split — infrastructure up, application handlers missing — is the characteristic symptom of scan-base mistakes. Putting the main class in a deliberately chosen root package is a structural decision; narrowing scan without moving controllers is how empty handler maps look "healthy" while HTTP dies.
 
-```java
-@SpringBootApplication(
-    scanBasePackages = "com.acme.orders",
-    exclude = { DataSourceAutoConfiguration.class }
-)
-public class OrdersApplication { }
-```
+Failure mode variants: main class in `com.bikeshare.Bootstrap` under a deep package while controllers sit in `com.bikeshare.api` — default scan never climbs *up* to siblings. Symptom same 404. Or `@SpringBootApplication(exclude = DataSourceAutoConfiguration.class)` misunderstood as "exclude scanning" — different attribute, different meta-annotation. Or a `@WebMvcTest(StationController.class)` that does not use the right `@Import` / `@ContextConfiguration` and fails for test-slice reasons unrelated to production scan — check whether production `beans` endpoint lists the controller before blaming MockMvc.
 
-That form says: scan the orders tree even if this class lives elsewhere, and do not auto-configure a datasource — perhaps tests supply one, or this process is not a DB owner. You can achieve similar effects with `@ComponentScan` and `@EnableAutoConfiguration` written out separately. Prefer the composed form for clarity unless you need a non-default mix.
+Trade-offs. Composition keeps main classes one line and onboarding short; it also hides three mechanisms behind one name, so debugging requires unpacking the composition. Explicit `@ComponentScan` / `@EnableAutoConfiguration` on a `@Configuration` class is more verbose and clearer for unusual layouts (multiple modules, selective auto-config). Prefer moving the main class to the right package over maintaining long `scanBasePackages` arrays that drift as modules grow.
 
-Runtime behavior is easy to verify. Start the app with debug logging for `org.springframework.context` and watch which packages are scanned. Hit a mapped endpoint. If the handler is missing, check package placement before rewriting controller annotations. Also remember: `@SpringBootApplication` does not replace your domain `@Configuration` classes. It is the root that discovers them and imports Boot's defaults beside them.
+Unpack the composition when debugging the next 404. Open `@SpringBootApplication`'s declaration: you will see `@SpringBootConfiguration`, `@EnableAutoConfiguration`, and `@ComponentScan` as meta-annotations. Attributes like `scanBasePackages`, `exclude`, and `excludeName` are `@AliasFor` mappings onto those meta-annotations — not mysterious Boot-only flags. When CI says bean count zero for a controller, ask which of the three composed behaviors you changed. Auto-config exclusion never removes a `@RestController` from the scan; scan narrowing never disables DataSource auto-config. Separating those mental models turns a fused annotation back into three levers you can reason about.
 
-A frequent mistake is treating the annotation as "Boot mode on" with no package consequences. Another is stacking `@SpringBootApplication`, `@EnableAutoConfiguration`, and `@ComponentScan` redundantly until nobody knows which attribute wins. A third is putting the main class in a root package so scanning walks the entire classpath including third-party noise — slow startup and surprising bean definitions.
+Misconception unique to `@SpringBootApplication`: "It only enables auto-configuration; scanning is separate and optional." Scanning is included. Disabling or narrowing it without moving controllers is how empty contexts look healthy while HTTP dies.
 
-Knowing the entry annotation is half the configuration story. The other half is typed, validated settings for *your* product — not only `spring.*` keys Boot already understands.
-
-That leads to configuration properties: binding your own prefix into a dedicated object.
+Controllers map again. Configuration is still a mess of `@Value("${freight.rate.base}")` scattered across constructors in a related rates module. Typed binding — `@ConfigurationProperties` — is the next cleanup that keeps Environment values honest as a group.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 21 (*@SpringBootApplication*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

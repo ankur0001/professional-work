@@ -11,88 +11,87 @@
 
 ## Full narration
 
-An `Order` aggregate protects write invariants — authorize before capture, lines frozen after authorize. The customer support screen wants a denormalized page: order header, payment status, shipment tracking, loyalty points, last five notes. Forcing that screen through the write aggregate produces either N+1 queries, bloated aggregates, or transactions that lock too much. CQRS — Command Query Responsibility Segregation — separates the write model from the read model on purpose.
+Write berth assignments under row locks and overlap rules. The schedule board wants a denormalized view: berth, vessel name, ETA, tide window, billing status — refreshed for operators who refresh every few seconds. One normalized write model serving both jobs creates lock contention and ugly queries. CQRS — Command Query Responsibility Segregation — separates the write path from the read model.
 
-Command side: validate and mutate aggregates, emit events. Query side: answer reads from models shaped for screens — SQL views, separate tables, Redis documents, Elasticsearch. The two sides can share a database in a mild form or use different stores in a strong form. Mild CQRS is often enough in a modular Spring monolith.
+Commands go through the `Berth` aggregate. Queries hit a projection built for the board.
 
 ```java
-// write model — commands only
 @RestController
-@RequestMapping("/orders")
-public class OrderCommandController {
-    private final AuthorizeOrderService authorize;
+@RequestMapping("/berths")
+public class BerthCommandController {
+    private final ReserveBerthService reserve;
 
-    @PostMapping("/{id}/authorize")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void authorize(@PathVariable OrderId id, @RequestBody AuthorizeRequest body) {
-        authorize.authorize(id, body.amount());
+    @PostMapping("/{berthId}/reservations")
+    ResponseEntity<Void> reserve(@PathVariable String berthId,
+                                 @Valid @RequestBody ReserveRequest body) {
+        reserve.reserve(BerthId.of(berthId), body.imo(), body.window());
+        return ResponseEntity.accepted().build();
     }
 }
 
-// read model — queries only
 @RestController
-@RequestMapping("/order-views")
-public class OrderQueryController {
-    private final OrderViewRepository views;
+@RequestMapping("/schedule-board")
+public class ScheduleBoardQueryController {
+    private final ScheduleBoardQuery query;
 
-    @GetMapping("/{id}")
-    public OrderSupportView get(@PathVariable String id) {
-        return views.findSupportView(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    @GetMapping
+    List<ScheduleBoardRow> board(@RequestParam String quay) {
+        return query.rowsForQuay(quay);
     }
 }
 ```
 
 ```java
-public interface OrderViewRepository {
-    Optional<OrderSupportView> findSupportView(String orderId);
-}
-
-// projection updated from events
 @Component
-public class OrderViewProjector {
-    private final OrderViewJdbc views;
+public class ScheduleBoardProjector {
+    private final JdbcTemplate jdbc;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void on(OrderAuthorized event) {
-        views.markAuthorized(event.orderId().value(), event.amount());
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void on(OrderShipped event) {
-        views.attachTracking(event.orderId().value(), event.trackingNumber());
+    public void on(BerthReserved event) {
+        jdbc.update("""
+                insert into schedule_board_view (berth_id, imo, window_start, window_end, status)
+                values (?,?,?,?, 'RESERVED')
+                on conflict (berth_id) do update
+                set imo = excluded.imo,
+                    window_start = excluded.window_start,
+                    window_end = excluded.window_end,
+                    status = 'RESERVED'
+                """,
+                event.berthId().value(),
+                event.imo().value(),
+                event.window().start(),
+                event.window().end());
     }
 }
 ```
 
 ```sql
--- read table shaped for the support screen
-CREATE TABLE order_support_view (
-  order_id        TEXT PRIMARY KEY,
-  status          TEXT NOT NULL,
-  authorized_amt  NUMERIC,
-  tracking_number TEXT,
-  loyalty_points  INT,
-  updated_at      TIMESTAMPTZ NOT NULL
+-- read model tailored to the board
+create table schedule_board_view (
+  berth_id text primary key,
+  imo text,
+  vessel_name text,
+  window_start timestamptz,
+  window_end timestamptz,
+  status text,
+  billing_state text
 );
 ```
 
-Reads become simple SELECTs. Writes stay strict. Consistency between them is eventual unless you update the read model in the same transaction — possible when both share a DB, harder when the read side is another technology.
+Operators query `schedule_board_view` without touching the write aggregate’s reservation collection. Billing state can update from `BerthReserved` consumers without blocking `reserve`. Observe projection lag — a Micrometer gauge of “seconds behind last write” — so on-call knows when the board lies. Walk a lag incident: write succeeds at T0; projector stalls; board still shows EMPTY; a second scheduler tries to reserve; write model correctly rejects overlap while the board confused the human. The fix is lag alerts and honest UI (“updated 12s ago”), not putting board queries back on the locked aggregate.
 
-Spring Data fits naturally: one repository style for aggregates, another for query objects or JOINs via JDBC templates. Do not expose write entities on query controllers "just this once" — that once becomes the permanent API.
+CQRS is a spectrum. Mild CQRS is a SQL view or upsert table updated after commit in the same database. Strong CQRS is separate stores and eventual consistency you must explain to operators. Start mild when the schedule board hurts; do not duplicate every entity “for purity.” Projector tests matter: feed `BerthReserved` and `BerthReleased` fixtures and assert row shape — without them, read and write drift until the board invents berths.
 
-CQRS is not required everywhere. A settings page with three fields can use one model. Adopt CQRS where read shapes and write invariants diverge painfully — support consoles, search, personalized feeds. Event sourcing is optional and heavier; CQRS does not demand event sourcing, though they pair often. When you do both, the event store is the write log and projections become the query models — powerful, and a bigger operational commitment than a single SQL view.
+Failure symptoms: two models with duplicated business rules (board “validates” overlaps in SQL while `Berth.reserve` also does — they diverge). Commands that query the read model to make decisions — you just coupled consistency to lag. Event sourcing assumed mandatory — you can project from domain events without storing the full event log as source of truth.
 
-Watch lag. A Micrometer gauge or a `updated_at` age on the projection tells on-call whether support is looking at stale data. Without that signal, every "wrong status in the UI" ticket becomes a ghost hunt across write and read paths.
+Trade-offs: faster, simpler reads and concentrated write invariants versus eventual consistency and more moving parts. For a board that refreshes every few seconds, seconds of lag are often acceptable; for a gate release decision, do not read a stale projection to authorize cargo. Keep authorization and invariants on the command side.
 
-Misconception: CQRS means microservices. You can CQRS inside one deployable. Misconception: every query must be eventually consistent. Same-database projections updated in-transaction keep read-your-writes for many flows. Misconception: the write model may never be queried. Admin tools sometimes need a careful get-by-id on the aggregate; the split is about default paths and screen shapes, not a religious ban.
+When billing_state on the board updates from a separate consumer, design for partial rows: vessel name may fill in after a lookup, billing_state after invoice open. The UI should render “pending” rather than invent defaults that look like unpaid. Projector idempotency matters here too — replaying `BerthReserved` must upsert, not insert a second board row for B7.
 
-Today we split command and query controllers, projected an `order_support_view` from domain events, and kept the write aggregate focused. Patterns only earn trust when they survive messy production constraints — traffic, people, legacy, and tradeoffs.
+A misconception is equating CQRS with event sourcing — you can project from domain events without storing the full event log as the source of truth. Another is two models that drift with no projector tests. A third is using CQRS as an excuse for duplicate incoherent business rules on both sides; commands own invariants, queries own presentation.
 
-The last episode is where those patterns meet case studies and the series closes.
+Patterns earn trust when they survive messy production constraints — traffic, people, legacy, and tradeoffs. The last episode synthesizes three harbor postmortems from the whole series. There is no further handbook lesson after that.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 111 (*CQRS*).
-
-Narration technique: write vs support-screen conflict → CQRS definition → separate controllers → projector + SQL view → when to use → misconceptions → bridge to case studies / series close.

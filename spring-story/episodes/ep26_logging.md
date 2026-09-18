@@ -11,55 +11,69 @@
 
 ## Full narration
 
-DevTools shortens the restart loop. Logging decides whether each restart — and each production incident — teaches you something or buries you.
+02:00. Ferry-booking logs in the aggregator. Four pods. A customer says checkout charged twice. You search the booking reference and get fragments: one line from pod A at payment start, nothing from the gateway callback, an ERROR on pod C without a booking id, a stack trace on pod B for an unrelated sailing. Missing correlation IDs turn a distributed request into archaeology. Boot's default console pattern is fine for a laptop; it is not an incident strategy for multi-pod ferry checkout.
 
-Every Boot app logs. The failure mode is not "no logs." It is the wrong shape of logs: Hibernate SQL at DEBUG in production melting disks, your package silent at ERROR while a payment bug hides, or three logging facades fighting because someone added Log4j config beside Logback beside `System.out`. Teams also hard-code levels in code and then redeploy to "turn on debug."
+Boot's default logging uses Logback behind SLF4J, with `logging.level.*` and `logging.pattern.*` properties, and optional `logback-spring.xml` for profiles and advanced appenders. The framework lesson is not "how to print." It is structured, correlatable output that survives multi-pod reality — and the MDC (Mapped Diagnostic Context) as the carrier for per-request identifiers on a thread.
 
-So how does Boot want you to configure loggers, levels, and formats — centrally, externally, and without fighting the starter defaults?
-
-Spring Boot's logging starter (pulled in transitively by other starters) sets up a default logging system — typically Logback for servlet stacks — with console output and sensible root levels. You configure through `application.yml` / properties, environment-specific overrides, or a `logback-spring.xml` when you need full control. Prefer Boot's `logging.level.*` keys for everyday work. Use the XML (or Log4j2 config) when you need custom appenders, JSON encoding, or intricate routing.
-
-```yaml
-logging:
-  level:
-    root: INFO
-    com.acme.orders: DEBUG
-    org.hibernate.SQL: WARN
-  pattern:
-    console: "%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
+```xml
+<!-- logback-spring.xml -->
+<configuration>
+  <springProperty scope="context" name="app" source="spring.application.name"/>
+  <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+      <providers>
+        <timestamp/>
+        <pattern>
+          <pattern>
+            {"app":"${app}","level":"%level","corr":"%X{correlationId}","msg":"%message"}
+          </pattern>
+        </pattern>
+        <stackTrace/>
+      </providers>
+    </encoder>
+  </appender>
+  <root level="INFO">
+    <appender-ref ref="JSON"/>
+  </root>
+</configuration>
 ```
 
-Runtime behavior is immediate on the next log event after Environment bind — and with Actuator or Cloud tooling you can sometimes adjust levels at runtime, but start by getting file-based config right. Your application code should log through SLF4J:
-
 ```java
-@Service
-public class OrderService {
-    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
+@Component
+public class CorrelationFilter extends OncePerRequestFilter {
+    public static final String HEADER = "X-Correlation-Id";
 
-    public Order place(Cart cart) {
-        log.debug("placing order for cart {}", cart.id());
+    @Override
+    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res,
+                                    FilterChain chain) throws ServletException, IOException {
+        String cid = Optional.ofNullable(req.getHeader(HEADER))
+            .filter(s -> !s.isBlank())
+            .orElse(UUID.randomUUID().toString());
+        MDC.put("correlationId", cid);
+        res.setHeader(HEADER, cid);
         try {
-            return repo.save(Order.from(cart));
-        } catch (DataAccessException ex) {
-            log.error("failed to persist order for cart {}", cart.id(), ex);
-            throw ex;
+            chain.doFilter(req, res);
+        } finally {
+            MDC.remove("correlationId");
         }
     }
 }
 ```
 
-Notice the facade: `LoggerFactory` from SLF4J, not a direct Logback API in domain code. Boot chooses the backend. You keep the facade so tests and future backend swaps stay calm. Log placeholders use `{}` — not string concatenation — so DEBUG messages skip formatting when the level is disabled.
+Walk the filter and encoder. `OncePerRequestFilter` guarantees one execution per dispatch. Read `X-Correlation-Id` if a gateway already set it; otherwise mint a UUID. `MDC.put("correlationId", cid)` stores the value on the current thread. `res.setHeader` returns the id to clients and support tools. `try/finally` with `MDC.remove` prevents leaks onto pooled threads — a classic bug where later requests inherit someone else's correlation id. The Logback pattern `%X{correlationId}` pulls from MDC into JSON as `corr`. `springProperty` reads `spring.application.name` so every line names the ferry service.
 
-Profile-specific logging is a common production pattern. Keep `com.acme.orders` at DEBUG in `application-local.yml`, INFO in `application-prod.yml`. Ship correlation-friendly patterns when you later add request IDs. Avoid logging secrets: tokens, passwords, and full card payloads do not belong in INFO lines no matter how helpful they feel during a firefight.
+Runtime for one checkout. Request enters pod A; filter assigns id `c-9f3`. Payment service logs "charging" with `corr=c-9f3`. WebClient/Feign to the payment gateway should forward `X-Correlation-Id` — if it does not, the callback lands on pod C with a *new* id and your aggregator cannot join charge and callback. With propagation, refund decision logs share `c-9f3` across pods. Without MDC, Boot's nice default console pattern still leaves you string-matching timestamps and booking refs that half the lines omit. `logging.level.com.ferry=DEBUG` raises detail for one package without recompiling; Actuator's loggers endpoint can change levels live when secured — useful at 02:00 if you already have correlation.
 
-The misconception is configuring logging only inside the IDE console filter and never in the app config — then production looks nothing like your laptop. Another is enabling `org.springframework` at TRACE "temporarily" and leaving it on until the cluster spends its budget on log ingestion. A third is mixing `System.out.println` into services "just for now" until those prints become the only signal anyone trusts.
+Failure mode symptoms: duplicate charge investigation finds four unrelated `corr` values for one customer journey — header not propagated on outbound calls, or MDC cleared too early, or async work (`@Async`, reactive) lost MDC because it changed threads without copying context. Symptom of MDC leak: support searches one id and sees fragments of other customers' checkouts on the same pod. Symptom of `logging.level.root=DEBUG` in prod during panic: disk full, log pipeline lag, real ERROR lines drowned — and sometimes added latency from logging volume.
 
-Levels and packages often need to differ by environment. That is the same profile machinery you met in fundamentals — now applied the Boot way, with `application-{profile}` documents and `spring.profiles.active` as the switch.
+Trade-offs. JSON + correlation costs a dependency and filter discipline; it buys queryable incidents. Text patterns are easier to read in a terminal and worse in aggregators. Putting booking ids only in free-text messages fails when the message format changes; first-class MDC fields stay stable. Sampling debug logs or using traces (later episodes) handles volume better than permanent DEBUG.
 
-Boot profiles are next: activating sets of config and beans for local, test, and prod without forking the codebase.
+One ferry-specific discipline: log the booking reference as an MDC field too (`MDC.put("bookingRef", ...)` once the ref exists), not only inside message strings. Aggregators index fields; they do not reliably parse prose. Correlation id joins hops; booking ref joins business. Together they turn "charged twice" from four pods into two queries instead of a scavenger hunt.
+
+Misconception unique to logging in Boot: "Setting `logging.level.root=DEBUG` in production is the responsible way to 'get more detail' during an incident." It floods disks, hides the signal, and can itself cause latency. Prefer targeted packages, already-correlated IDs, and metrics/traces for volume.
+
+Checkout archaeology becomes a single query on `corr`. Finance still deploys the same ferry artifact to staging and prod with different payment merchant IDs — and last week staging charged the prod merchant because the Boot profile document never activated. Profile-specific YAML in Boot packaging is the next seam to tighten.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 26 (*Logging*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

@@ -11,95 +11,104 @@
 
 ## Full narration
 
-Unit tests prove a class. Slice tests prove a layer. Integration tests prove that several real pieces cooperate: HTTP in, security filters, service logic, persistence out — or messaging round trips — with as few doubles as the risk requires. In Spring terms that often means `@SpringBootTest` with a running web environment, test properties, and either an embedded database or an external one the suite can reach.
-
-```java
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("integration")
-class OrderCheckoutIntegrationTest {
-
-    @LocalServerPort
-    int port;
-
-    @Autowired
-    TestRestTemplate rest;
-
-    @Autowired
-    OrderRepository orders;
-
-    @Test
-    void checkoutPersistsAndReturnsAccepted() {
-        PlaceOrderRequest body = new PlaceOrderRequest("SKU-1", 1, "cust-9");
-
-        ResponseEntity<OrderResponse> response = rest.postForEntity(
-                "http://localhost:" + port + "/orders",
-                body,
-                OrderResponse.class);
-
-        assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
-        assertTrue(orders.findById(response.getBody().id()).isPresent());
-    }
-}
-```
-
-`RANDOM_PORT` starts the embedded server on an ephemeral port; `@LocalServerPort` injects it. `TestRestTemplate` or `WebTestClient` exercises the real stack including filters and converters. That catches wiring bugs `@WebMvcTest` will never see: a security rule that blocks POST, a `Filter` that mishandles content types, a missing bean that only appears when the full configuration loads.
-
-Integration scope is a judgment call. Some teams include Testcontainers-backed Postgres in what they call integration tests; others reserve that name for in-process Boot tests with H2 and use “contract” or “component” for containerized suites. Agree on vocabulary in the team. The technical point is the same: more real collaborators, slower feedback, higher confidence about wiring.
+A green `@WebMvcTest` can still hide a broken `@Transactional` boundary or a security matcher that rejects the booth scanner. Integration tests load more of the real Boot application — often with `@SpringBootTest` and `MockMvc` or a random-port `TestRestTemplate` — and exercise the gate release flow as collaborators wire together.
 
 ```java
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(TestSecurityConfig.class)
-class OrderSecurityIntegrationTest {
+@ActiveProfiles("test")
+class GateReleaseFlowIT {
 
     @Autowired
     MockMvc mockMvc;
 
-    @Test
-    @WithMockUser(roles = "CUSTOMER")
-    void customerCanPlaceOrder() throws Exception {
-        mockMvc.perform(post("/orders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                            {"sku":"SKU-1","qty":1,"customerId":"cust-9"}
-                            """))
-                .andExpect(status().isAccepted());
+    @Autowired
+    GateLedgerRepository ledger;
+
+    @MockBean
+    BillingClient billing;
+
+    @BeforeEach
+    void stubBilling() {
+        when(billing.quote(anyString(), anyString()))
+                .thenReturn(new TariffQuote(Money.of("108.00"), "USD"));
+        when(billing.createInvoice(any()))
+                .thenReturn(new InvoiceAck("INV-9", InvoiceStatus.OPEN));
+        ledger.deleteAll();
     }
 
     @Test
-    void anonymousIsUnauthorized() throws Exception {
-        mockMvc.perform(post("/orders")
+    @WithMockUser(roles = "GATE_OPERATOR")
+    void operatorCanReleaseThroughHttp() throws Exception {
+        mockMvc.perform(post("/gates/G12/check-ins")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+                        .content("""
+                                {"containerId":"MSCU123","hazardClass":"IMDG_3","plate":"SGP-4421"}
+                                """))
+                .andExpect(status().isAccepted());
+
+        assertTrue(ledger.findByContainerId("MSCU123").isPresent());
+        verify(billing).createInvoice(any(InvoiceRequest.class));
+    }
+
+    @Test
+    void anonymousIsRejected() throws Exception {
+        mockMvc.perform(post("/gates/G12/check-ins")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"containerId":"MSCU123","hazardClass":"NONE","plate":"SGP-4421"}
+                                """))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(roles = "GATE_OPERATOR")
+    void billingFailureSurfacesAsProblemJson() throws Exception {
+        when(billing.quote(anyString(), anyString()))
+                .thenThrow(new BillingUnavailableException("billing down"));
+
+        mockMvc.perform(post("/gates/G12/check-ins")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"containerId":"MSCU999","hazardClass":"IMDG_3","plate":"SGP-9"}
+                                """))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.title").exists());
+
+        assertTrue(ledger.findByContainerId("MSCU999").isEmpty());
     }
 }
 ```
 
-Here the server may stay mock-based (`MockMvc`) while security and validation still run for real. That middle ground is still integration: multiple framework subsystems, one process.
+Read what is real and what is faked. Spring Security, MVC, the ledger repository, and transactional proxies are real. Billing stays a `@MockBean` so the test does not need a live billing pod — you are proving gate’s flow, not billing’s SQL. Assert side effects in the ledger, not only HTTP 202. The billing-failure case proves the transactional boundary: no ledger row when quoting dies mid-flow. Anonymous access must fail if the booth scanner is supposed to authenticate.
 
-Compare the pyramid out loud. Lots of Mockito unit tests for branching. Fewer Spring slices for MVC and JPA mapping. Still fewer random-port integration tests for security and filter order. Rare full-environment journeys. If your pyramid is upside down — everything is `@SpringBootTest` — builds slow down and failures become harder to localize.
-
-Messaging integrations deserve the same honesty. An `@SpringBootTest` that publishes to an embedded broker — or a Testcontainers Kafka in the next episode — and waits until a listener writes a row proves the binder wiring that unit-mocked `Consumer` beans never see. Use Awaitility with a clear condition on the repository rather than `Thread.sleep(2000)` that flakes on slow CI agents.
+Random-port style catches serialization and client configuration that MockMvc can miss:
 
 ```java
-await().atMost(Duration.ofSeconds(5))
-        .untilAsserted(() ->
-                assertTrue(orders.findById(orderId).isPresent()));
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class GateReleaseHttpIT {
+
+    @Autowired
+    TestRestTemplate http;
+
+    @Test
+    void healthIsUp() {
+        ResponseEntity<String> response = http.getForEntity("/actuator/health", String.class);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+}
 ```
 
-Flakes appear when integration tests share mutable resources — fixed ports, shared database rows, timing on async listeners. Prefer random ports, transactional rollback or unique keys per test, and deterministic waits on messaging. Clean `@DirtiesContext` is a last resort when a test poisons the cached context; overuse destroys suite speed.
+Keep integration profiles pointed at isolated databases — embedded, ephemeral containers, or per-job schemas. Shared staging schemas make parallel CI jobs collide and produce ghosts: one job deletes rows another just asserted. `@DirtiesContext` is a blunt hammer when bean state leaks; prefer cleanup in `@BeforeEach` and immutable test data ids. Transactional tests that roll back automatically are convenient until you assert on data visible only after commit — know whether your test transaction wraps the HTTP call.
 
-A misconception is replacing unit tests with integration tests because “they catch more.” They catch different things and cost more CPU. Another is asserting only HTTP 200 without checking side effects in the database or outbox table — you have tested a stubbed smile. A third is pointing integration profiles at shared staging services so parallel CI jobs collide.
+Runtime cost is the trade-off you feel. Full context startup dominates wall time; context caching across classes helps when configurations match. Too many unique `@MockBean` sets break that cache and CI slows for invisible reasons. Symptom: “integration suite used to be four minutes, now twenty” after every test class invented its own mock set. Another runtime tell: a test passes with MockMvc but fails on `RANDOM_PORT` because a filter only runs on the real servlet path, or because JSON dates serialize differently through `TestRestTemplate`’s message converters.
 
-Today we widened the lens: Boot on a random port, real HTTP calls, security-aware MockMvc flows, and discipline around shared state — confidence in wiring, not only in isolated classes.
+Security and transactions are why this layer exists. `@WithMockUser` proves matchers; it does not prove JWT parsing. If gate’s booth scanners send bearer tokens, add at least one test that builds a signed test token — or accept that token wiring lives in a narrower security test. For `@Transactional` on `releaseGate`, assert both the happy ledger write and the empty ledger after a mid-flow billing failure; that is the integration bug `@WebMvcTest` will never see.
 
-H2 will forgive SQL that Postgres rejects. JSONB, locking, and sequences differ across engines. When the integration risk is the database itself, an embedded substitute is not enough.
+A misconception is replacing unit tests with integration tests because “they catch more.” They catch different things and cost more CPU. Another is asserting only status codes without ledger side effects. A third is `@MockBean` on so many types that the test no longer integrates anything meaningful.
 
-That gap is why Testcontainers exists.
+Mocked billing and in-memory stores still skip the SQL dialect you ship. When `VesselRepository` must prove derived queries against real Postgres, reach for Testcontainers. Keep a short matrix in the team’s head: Mockito for tariff branches, `@WebMvcTest` for JSON and validation, `@SpringBootTest` for security-plus-ledger wiring, containers for SQL truth — each layer answers a different lie the previous one can tell.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 96 (*Integration Testing*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

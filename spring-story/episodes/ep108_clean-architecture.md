@@ -11,63 +11,71 @@
 
 ## Full narration
 
-Hexagonal gave you a center and adapters. Clean Architecture — Robert C. Martin’s rings — says the same dependency rule with a stricter vocabulary: source code dependencies point inward. Enterprise business rules sit at the center. Frameworks, UI, and databases are outer details. An inner circle never knows the name of a type declared in an outer circle.
+Hexagonal said ports and adapters for gate release. Clean Architecture — Robert C. Martin’s rings — states the dependency rule bluntly: source code dependencies point only inward. The domain must not import Spring Web. Controllers, Feign, and JPA may depend on the domain; the domain depends on nothing from those frameworks.
 
-Map the rings onto a Spring codebase without drowning in ceremony.
+Map the rings onto the harbor gate service:
 
-1. **Entities** — enterprise rules: `Order`, `Money`, invariants. Pure Java.
-2. **Use cases** — application rules: `PlaceOrderInteractor`, input/output models. Pure Java, depends only on entities and outbound ports.
-3. **Interface adapters** — controllers, presenters, gateways that convert between use-case models and outer formats.
-4. **Frameworks & drivers** — Spring MVC, JPA, the actual Postgres driver, the servlet container.
-
-The practical difference from a loose hexagon is often the request/response models. Use cases do not accept HTTP DTOs or return JPA entities. They accept input data objects and return output data objects. Adapters map both ways.
+1. **Entities** — `GateRelease`, `HazardClass`, money invariants.
+2. **Use cases** — `ReleaseGateInteractor`, input/output models. Pure Java; depends only on entities and outbound ports.
+3. **Interface adapters** — MVC controllers, presenters, JPA gateways, Feign billing adapters.
+4. **Frameworks & drivers** — Spring Boot, the servlet container, Postgres drivers.
 
 ```java
-public record PlaceOrderInput(String customerId, List<LineInput> lines) {}
-public record PlaceOrderOutput(String orderId, String status) {}
+public record ReleaseGateInput(String gateId, String containerId, HazardClass hazard) {}
+public record ReleaseGateOutput(String releaseId, String status, Money charged) {}
 
-public class PlaceOrderInteractor {
-    private final OrderRepository orders;
-    private final PaymentGateway payments;
+public class ReleaseGateInteractor {
+    private final GateLedger ledger;
+    private final BillingPort billing;
 
-    public PlaceOrderOutput execute(PlaceOrderInput input) {
-        Order order = Order.create(input);
-        payments.charge(order.total());
-        Order saved = orders.save(order);
-        return new PlaceOrderOutput(saved.id().value(), saved.status().name());
+    public ReleaseGateInteractor(GateLedger ledger, BillingPort billing) {
+        this.ledger = ledger;
+        this.billing = billing;
+    }
+
+    public ReleaseGateOutput execute(ReleaseGateInput input) {
+        TariffQuote quote = billing.quote(input.containerId(), input.hazard());
+        GateRelease saved = ledger.save(GateRelease.open(input, quote));
+        return new ReleaseGateOutput(saved.id(), saved.status().name(), quote.amount());
     }
 }
 ```
 
 ```java
 @RestController
-public class PlaceOrderController {
-    private final PlaceOrderInteractor interactor;
+@RequestMapping("/gates")
+public class ReleaseGateController {
+    private final ReleaseGateInteractor interactor;
 
-    @PostMapping("/orders")
-    public ResponseEntity<OrderHttpResponse> place(@RequestBody OrderHttpRequest http) {
-        PlaceOrderOutput out = interactor.execute(http.toInput());
-        return ResponseEntity.accepted().body(OrderHttpResponse.from(out));
+    public ReleaseGateController(ReleaseGateInteractor interactor) {
+        this.interactor = interactor;
+    }
+
+    @PostMapping("/{gateId}/check-ins")
+    ReleaseGateResponse post(@PathVariable String gateId,
+                             @Valid @RequestBody CheckInRequest body) {
+        ReleaseGateOutput out = interactor.execute(body.toInput(gateId));
+        return ReleaseGateResponse.from(out);
     }
 }
 ```
 
-Transaction boundaries usually sit in an adapter or a thin application wrapper annotated with `@Transactional`, not inside the entity. The interactor stays free of Spring stereotypes if you construct it in configuration. That purity is the point: you can move the use case to another runtime without dragging MVC annotations with it.
+Where does `@Transactional` live? Often on the adapter or a thin application service around the interactor — not on domain entities. The dependency rule cares about imports: if `GateRelease.java` contains `import org.springframework.web.bind.annotation...`, you broke the ring regardless of folder names. ArchUnit can assert that `..domain..` does not depend on `org.springframework.web..` or `org.springframework.data..`.
 
-Clean Architecture overlaps heavily with hexagonal. Teams argue about diagrams more than about dependency direction. Use clean rings when you need a shared language for "who may import whom" across a large codebase; use hexagonal language when ports/adapters communicate better to your team. Do not implement both as duplicate folder trees for the same service.
+Walk a violation that bites at runtime. An entity annotated with both JPA and Jackson live on the wire; a lazy field serializes after the session closes; truckers see 500s. Clean’s pressure is to keep `GateRelease` free of those annotations so adapters map explicitly. Another violation: use case imports `FeignException` and branches on HTTP status — billing transport details leaked inward; prefer a domain `BillingUnavailable` mapped at the adapter.
 
-Where Spring fights you: Spring Data repository interfaces and `@Entity` classes want to be the model. Resist by keeping domain entities separate from JPA entities when the model is non-trivial, or accept a pragmatic compromise on simple CRUD screens and reserve strict rings for the core revenue path. Dogma that doubles every type for a three-field admin form is not clean — it is ceremony.
+Clean and hexagonal overlap heavily in Spring shops. Use whichever vocabulary your team shares; enforce the same arrow: frameworks outward, policy inward. Pragmatism still applies — not every admin CRUD screen needs a full interactor ceremony on day one. Carve rings where change and risk concentrate: gate release, tariff quoting, berth assignment. Composition root remains Spring: `@Configuration` beans wire `ReleaseGateInteractor` with JPA and Feign adapters at the outer ring.
 
-Testing is where the rings pay rent. An interactor test constructs the class with fakes and asserts output records — no `@SpringBootTest`. Adapter tests use `@WebMvcTest` or Data JPA slices against the outer ring only. If every test boots the full context to prove a total calculation, the dependency rule is only a slide.
+Failure symptoms of cargo-cult Clean: package names copied from a blog while entities still import Spring Web; every class named `*Impl` twice; use cases that are pass-throughs with no policy — ceremony without benefit. Opposite failure: a “pragmatic” domain that absorbs controllers until tests need MockMvc to prove money rounding.
 
-Misconception: clean architecture means no Spring Boot. Boot is an excellent outer ring. Misconception: more interfaces equal more cleanliness. Interfaces at real boundaries beat interfaces between every package. Misconception: entities must be immutable records always. Immutability helps; invariants enforced by methods matter more than the record keyword.
+Trade-offs: more types and mappers versus a domain you can unit-test with plain `new` and fakes. Teams new to the harbor often start layered and extract rings when Spring imports appear in core. Do not rewrite the whole monolith overnight for purity points.
 
-Today we enforced the inward dependency rule, separated use-case IO from HTTP, and placed Spring in the outer ring. Boundaries protect structure — but they do not invent a language for complex business rules. When "Order" means different things to billing and warehouse teams, you need domain modeling vocabulary.
+A practical gate: can `ReleaseGateInteractorTest` run without `@SpringBootTest`? If yes, the ring is earning its keep. If every policy test needs MockMvc and a DataSource, Spring has crept inward and the dependency rule is theater. Fix imports first; rename packages second.
 
-That vocabulary is DDD basics.
+A misconception is “Clean Architecture means no Spring.” Spring is an excellent outer-ring composition root. Another is copying package templates from a blog without moving imports. A third is putting JPA annotations on entities “temporarily” until temporary becomes the permanent domain model.
+
+Rings protect dependency direction. They do not by themselves give you a shared language for berth capacity, reservations, and what “assigned” means to scheduling versus billing. That language work is domain-driven design around the `Berth` aggregate.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 108 (*Clean Architecture*).
-
-Narration technique: rings + dependency rule → Spring mapping → interactor + HTTP adapter → transactional placement → hex overlap → pragmatism → bridge to DDD.

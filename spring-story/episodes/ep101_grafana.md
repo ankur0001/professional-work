@@ -11,36 +11,79 @@
 
 ## Full narration
 
-Prometheus can answer any PromQL question you type. At three in the morning nobody wants to invent the question from scratch. Grafana is where scrape data becomes a shared operational picture: panels, variables, alert rules hanging off the same queries your on-call already trusts.
+At 03:10 the quay lead does not want to invent PromQL. They want a dashboard titled Gate Release that already shows p95 duration, error ratio, and request rate for the last hour. Grafana turns scraped series into that shared picture — panels, variables for `gate_id`, and alerts that fire on the same queries you trust.
 
-Connect Grafana to Prometheus as a data source — URL of the Prometheus server, nothing Spring-specific there. Then build a dashboard around the meters you actually emit. For the checkout service from the Micrometer episode, start narrow. One row for traffic and success. One row for latency. One row for saturation. Resist the urge to paste thirty JVM panels on day one.
+Provision a datasource and a starter dashboard as code so every environment matches:
 
-A practical starter layout for `checkout-service`:
+```yaml
+# grafana/provisioning/datasources/prometheus.yml
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+```
 
-| Panel | PromQL sketch | Why it exists |
-|---|---|---|
-| Requests in flight / rate | `sum(rate(http_server_requests_seconds_count{application="checkout-service"}[5m]))` | Are we busy? |
-| Checkout success ratio | `sum(rate(checkout_succeeded_total[5m])) / sum(rate(checkout_started_total[5m]))` | Is business OK? |
-| Payment p99 | `histogram_quantile(0.99, sum(rate(checkout_payment_duration_seconds_bucket[5m])) by (le))` | Where does time go? |
-| JVM heap used | `jvm_memory_used_bytes{area="heap"}` | Are we near OOM? |
-| Tomcat threads / DB pool | pool gauges from Boot | Are we saturated? |
+```json
+{
+  "title": "Harbor Gate Release",
+  "panels": [
+    {
+      "title": "Gate release p95",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(harbor_gate_release_duration_seconds_bucket{application=\"gate-service\"}[5m])))"
+        }
+      ]
+    },
+    {
+      "title": "Release error ratio",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "1 - (sum(rate(harbor_gate_release_succeeded_total[5m])) / sum(rate(harbor_gate_release_started_total[5m])))"
+        }
+      ]
+    },
+    {
+      "title": "HTTP 5xx rate (gate)",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{application=\"gate-service\",status=~\"5..\"}[5m]))"
+        }
+      ]
+    },
+    {
+      "title": "Billing breaker open",
+      "targets": [
+        {
+          "expr": "resilience4j_circuitbreaker_state{name=\"billingQuote\",state=\"open\"}"
+        }
+      ]
+    }
+  ]
+}
+```
 
-Dashboard JSON in a repo beats click-ops. Export the dashboard, store it next to the service, and provision it so every environment sees the same panels. Variables for `application` and `env` keep one dashboard reusable across services that share naming conventions — which is why those Micrometer common tags mattered. A folder structure that mirrors your domain — `checkout`, `inventory`, `payments` — beats one endless list titled "Spring apps."
+Walk an on-call use. Page fires on error ratio. Open Gate Release, set time range to “last 1 hour,” glance p95 and 5xx, then the breaker panel. If breaker is open and p95 collapsed, fail-fast is working and billing is the dependency. If breaker is closed and p95 climbed with Feign client timers high, billing is slow but still accepting — capacity or DB. That story only works if panels share the same PromQL you alert on. Divergent ad-hoc queries in a laptop JSON file produce “green dashboard, red alert” arguments.
 
-Walk an incident with the dashboard open. Traffic rate flat, success ratio down: look at error panels and logs. Success ratio fine, payment p99 up: open the latency row and jump to traces for that operation name. Heap climbing while latency is fine: you are early on a memory problem — Episode 104 territory — and the panel still earned its keep by showing the ramp.
+Alerting belongs on the same expressions. A rule on error ratio > 2% for five minutes pages the gate on-call; a rule on p95 > 2s warns before trucks queue visibly. Variables like `$gate` rewrite queries to `gate_id="$gate"` when you have a manageable set of booths — not when every temporary lane becomes a label explosion. Folder permissions matter: quay leads need view; only platform edits provisioning.
 
-Alerts belong next to panels, not in a separate tribal wiki. Example: page if payment p99 stays above two seconds for five minutes, or if success ratio drops below 0.95. Grafana can evaluate PromQL and notify Slack or PagerDuty. The skill is choosing signals that mean customer harm, not every blip on a CPU graph. Burn-rate alerts on SLOs beat "CPU > 80%" pages that train on-call to ignore noise.
+Grafana cannot invent meters Spring never recorded. If `harbor.gate.release.duration` is missing, the panel stays empty and the honesty falls back to Micrometer placement. Dashboards are views over instrumentation, not a substitute for it. Empty panels at go-live are a readiness defect, not a Grafana bug.
 
-Spring’s role here is upstream honesty. Grafana cannot invent a `checkout.payment.duration` timer you never registered. Bad tag cardinality makes every panel slow. Missing `application` tags make variables useless. When a panel is empty, debug in order: is the meter recorded, is `/actuator/prometheus` exposing it, is Prometheus scraping the right target, is the PromQL label matcher wrong? Units matter too — a panel that treats `_seconds` as milliseconds will invent a crisis.
+Failure symptoms: twenty pretty panels, zero alerts; screenshot-driven ops when the only dashboard lives on someone’s desktop; mixed billing and gate on one overloaded row until nobody knows which SLO burned; auto-refresh so aggressive it hammers Prometheus during an incident. Another: templating on high-cardinality labels until the variable dropdown times out.
 
-A misconception is treating a pretty JVM dashboard as application observability. Heap graphs without business timers leave you knowing the GC ran while checkout failed for a different reason. Another misconception is one giant org-wide dashboard. Prefer service dashboards with a small RED/USE core — rate, errors, duration; utilization, saturation, errors — then deep-links into traces when latency spikes.
+Trade-offs: few golden signals (RED — rate, errors, duration — plus dependency state) beat a wall of vanity charts. Provisioning-as-code keeps staging and prod aligned; UI-only edits drift. Link panels to runbooks and trace UIs so the next click after “p95 high” is not a blank search box.
 
-So today we turned scraped series into an operable checkout dashboard, tied alerts to the same queries, and put the burden back on good Micrometer names. Metrics answer "how much" and "how often." They still struggle with "what happened on this one request as it crossed four services?"
+During a booth backup, the quay lead should change only the time range and maybe `$gate`. If they must edit PromQL mid-incident, the dashboard failed its job. Keep a “debug” row collapsed by default — Hikari pending, Feign client timers, breaker state — for engineers without cluttering the first viewport operators see.
 
-That request-shaped story is OpenTelemetry’s home ground.
+A misconception is building twenty pretty panels with no alerts and calling the service observable. Another is screenshot-driven ops — dashboards that only exist in a laptop JSON file. A third is mixing billing and gate on one overloaded row until nobody knows which SLO burned.
+
+Metrics answer how much and how often. They still struggle with what happened on *this* truck’s check-in as it crossed gateway, gate, and billing. That is traces correlated with the same meters — OpenTelemetry’s territory.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 101 (*Grafana*).
-
-Narration technique: PromQL at 3am → Grafana as shared picture → starter panel table → provisioning/alerts → Spring upstream honesty → bridge to distributed traces.

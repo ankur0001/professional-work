@@ -11,72 +11,73 @@
 
 ## Full narration
 
-Load-balanced WebClient works. You still end up repeating URIs, verb choices, and DTO decoding in every caller. OpenFeign — via Spring Cloud OpenFeign — offers a different surface: declare a Java interface that mirrors the remote HTTP API, annotate methods like a controller in reverse, and let a runtime proxy turn method calls into HTTP requests. The interface becomes your anti-corruption layer for a remote service.
+Every gate class that quotes a tariff should not re-encode the same GET path, query params, and JSON binding. OpenFeign — through Spring Cloud OpenFeign — lets gate declare a `BillingClient` interface that mirrors billing’s HTTP API. A runtime proxy turns method calls into load-balanced requests. The interface becomes the anti-corruption layer between gate’s domain and billing’s wire format.
 
-Enable it on the Boot application with `@EnableFeignClients`, then write a client interface. The `name` (or `value`) attribute is the service id used with discovery and load balancing. Method annotations use Spring MVC annotations in the Spring Cloud integration, so the vocabulary matches what you already know from controllers.
+Enable clients on the Boot application, then write the interface. The `name` attribute is the service id discovery and load balancing already understand.
 
 ```java
-@FeignClient(name = "inventory-service")
-public interface InventoryClient {
+@SpringBootApplication
+@EnableFeignClients
+public class GateServiceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(GateServiceApplication.class, args);
+    }
+}
 
-    @GetMapping("/stock/{sku}")
-    StockView getStock(@PathVariable("sku") String sku);
+@FeignClient(name = "billing-service")
+public interface BillingClient {
 
-    @PostMapping("/reservations")
-    ReservationResult reserve(@RequestBody ReserveRequest request);
+    @GetMapping("/tariffs/quote")
+    TariffQuote quote(@RequestParam("containerId") String containerId,
+                      @RequestParam("hazardClass") String hazardClass);
+
+    @PostMapping("/invoices")
+    InvoiceAck createInvoice(@RequestBody InvoiceRequest request);
 }
 ```
 
 ```java
 @Service
-public class OrderService {
-    private final InventoryClient inventory;
-    private final OrderRepository orders;
+public class GateReleaseService {
+    private final BillingClient billing;
+    private final GateLedger ledger;
 
-    public OrderService(InventoryClient inventory, OrderRepository orders) {
-        this.inventory = inventory;
-        this.orders = orders;
+    public GateReleaseService(BillingClient billing, GateLedger ledger) {
+        this.billing = billing;
+        this.ledger = ledger;
     }
 
-    public Order place(PlaceOrderCommand cmd) {
-        StockView stock = inventory.getStock(cmd.sku());
-        if (stock.available() < cmd.qty()) {
-            throw new InsufficientStockException(cmd.sku());
-        }
-        inventory.reserve(new ReserveRequest(cmd.sku(), cmd.qty()));
-        return orders.save(Order.from(cmd));
+    public CheckInResponse accept(String gateId, TruckCheckIn req) {
+        TariffQuote quote = billing.quote(req.containerId(), req.hazardClass());
+        InvoiceAck invoice = billing.createInvoice(
+                new InvoiceRequest(req.containerId(), quote.amount(), gateId));
+        return ledger.record(gateId, req, quote, invoice);
     }
 }
 ```
 
-Read that carefully. `OrderService` depends on `InventoryClient` the same way it would depend on a local port. There is no URL string in the service. At runtime, Feign creates a JDK proxy for the interface. A call to `getStock("SKU-9")` becomes an HTTP GET to a chosen `inventory-service` instance at `/stock/SKU-9`, with encoders and decoders handling JSON. If you set `url` on `@FeignClient` instead of relying on `name`, you bypass discovery — useful for third-party APIs, wrong for internal mesh services you want balanced.
+Read the dependency direction. `GateReleaseService` depends on `BillingClient` the way it would depend on a local port. No URL string lives in the service. At runtime, Feign builds a JDK proxy. `quote("MSCU123", "3")` becomes a GET to a chosen `billing-service` instance at `/tariffs/quote?...`. Encoders and decoders handle JSON. Setting `url` on `@FeignClient` bypasses discovery — fine for a third-party tide vendor, wrong for internal billing you want balanced across three pods.
 
-Configuration hooks matter in production. You can set connect and read timeouts, log request/response bodies at a chosen level, and plug request interceptors that attach authorization headers. Error decoders map HTTP 404 or 409 into domain exceptions instead of generic Feign failures. Contract mismatches — client expects a field the server renamed — still fail at runtime; Feign does not invent schema evolution for you.
+Production knobs matter. Connect and read timeouts, logger levels for bodies, request interceptors for service-to-service tokens, and error decoders that map HTTP 409 into `TariffConflictException` keep failures typed. Contract drift — billing renames `hazardClass` — still fails at runtime; Feign does not invent schema evolution.
 
 ```java
 @FeignClient(
-        name = "inventory-service",
-        configuration = InventoryFeignConfig.class,
-        fallback = InventoryClientFallback.class)
-public interface InventoryClient {
+        name = "billing-service",
+        configuration = BillingFeignConfig.class,
+        fallback = BillingClientFallback.class)
+public interface BillingClient {
     // ...
 }
 ```
 
-Fallbacks hint at the next resilience story. A fallback class provides substitute behavior when the remote call fails. Treat fallbacks as deliberate degraded mode — cached stock, empty reservations queue, fail-soft — not as silent sweeps that hide outages from operators.
+Fallbacks hint at the resilience story ahead. A fallback is deliberate degraded mode — last-known tariff, queue-for-later invoice — not a silent success that hides an outage from the booth supervisor.
 
-Testing Feign clients without the network usually means stubbing the interface in unit tests, or using WireMock / Spring Cloud Contract stubs in slice tests. Do not feel obligated to hit a real inventory process to prove that `OrderService` branches correctly — that is what the Mockito episode will formalize. Do feel obligated to verify the contract of the HTTP shape somewhere, or Friday’s rename will surprise you.
+A misconception is generating a Feign method for every billing controller endpoint and then chatting in loops from gate; design coarser remote operations. Another is sharing billing’s JPA entities as Feign DTOs across jars until the services cannot deploy independently. A third is forgetting Feign is blocking by default in many setups — if gate is WebFlux end to end, evaluate WebClient instead of forcing Feign onto the event loop.
 
-A misconception is generating dozens of Feign clients that mirror every internal controller method and then calling them in chatty loops. You still design APIs for remote use: coarser operations, fewer round trips. Another is sharing the server’s entity classes as Feign DTOs across jars until services cannot deploy independently; prefer dedicated client DTOs. A third is forgetting that Feign is blocking by default in many setups — if your stack is WebFlux-reactive end to end, evaluate whether Feign fits or whether WebClient should remain the client.
+Declarative clients make the gate↔billing hop easy. Easy remote calls also make cascading failure easy. When billing starts timing out, do gate threads keep piling into a dead dependency until every booth freezes?
 
-Today we replaced hand-built HTTP calls with a declarative Feign interface bound to a service id, wired it into an order service like a normal collaborator, and noted timeouts, error decoding, and fallbacks as the production knobs.
-
-Declarative clients make remote calls easy — which means cascading failure becomes easy too. When inventory starts timing out, do order threads keep piling into a dead dependency until the whole checkout fleet saturates?
-
-That failure mode is why Circuit Breaker exists.
+That failure mode is why circuit breakers exist.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 88 (*Feign Client*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

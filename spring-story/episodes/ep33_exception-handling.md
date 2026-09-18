@@ -11,66 +11,78 @@
 
 ## Full narration
 
-Failures will happen on live traffic. Exception handling decides whether clients see chaos or a deliberate error model.
+A trucker app asks for parcel `PRC-90210`. The id does not exist. What should the JSON look like — and will every other missing-id path in the harbor API look the same?
 
-Without a shared approach, each controller catches exceptions differently. One returns a string. Another returns a Map. A third lets Tomcat render an HTML error page to a JSON client. Operators cannot alert on status codes consistently. Spring MVC gives you structured hooks: `@ExceptionHandler` on a controller, `@ControllerAdvice` (or `@RestControllerAdvice`) for application-wide handlers, and `ResponseEntityExceptionHandler` as a base when you want to customize framework exceptions such as bind failures.
+Without a shared approach, each controller invents an answer. One returns a string. Another returns a Map. A third lets Tomcat render an HTML error page to a JSON client. Operators cannot alert on status codes consistently. Spring MVC gives you structured hooks: `@ExceptionHandler` on a controller, `@RestControllerAdvice` for application-wide handlers, and `ResponseEntityExceptionHandler` as a base when you want to customize framework exceptions such as bind failures.
 
-Start with a domain exception that means something. `OrderNotFoundException` is clearer than a bare `RuntimeException("missing")`. Throw it from the service when an id does not exist. Then translate it once to HTTP 404 with a stable body shape.
+Start from a domain signal and a stable error shape — Problem+JSON style fields work well even if you keep a simple record:
 
 ```java
-public class OrderNotFoundException extends RuntimeException {
-    private final long orderId;
+public class ParcelNotFoundException extends RuntimeException {
+    private final String parcelId;
 
-    public OrderNotFoundException(long orderId) {
-        super("Order not found: " + orderId);
-        this.orderId = orderId;
+    public ParcelNotFoundException(String parcelId) {
+        super("Unknown parcel: " + parcelId);
+        this.parcelId = parcelId;
     }
 
-    public long getOrderId() {
-        return orderId;
+    public String getParcelId() {
+        return parcelId;
     }
 }
+```
 
+```java
+public record ApiProblem(
+        String type,
+        String title,
+        int status,
+        String detail,
+        String instance
+) {}
+```
+
+```java
 @RestControllerAdvice
-public class ApiExceptionHandler {
+public class HarborExceptionAdvice {
 
-    @ExceptionHandler(OrderNotFoundException.class)
-    public ResponseEntity<ApiError> notFound(OrderNotFoundException ex) {
-        ApiError body = new ApiError("ORDER_NOT_FOUND", ex.getMessage());
+    @ExceptionHandler(ParcelNotFoundException.class)
+    public ResponseEntity<ApiProblem> unknownParcel(ParcelNotFoundException ex,
+                                                    HttpServletRequest request) {
+        ApiProblem body = new ApiProblem(
+                "https://api.harbor.example/problems/parcel-not-found",
+                "Parcel not found",
+                404,
+                ex.getMessage(),
+                request.getRequestURI());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> invalid(MethodArgumentNotValidException ex) {
-        String details = ex.getBindingResult().getFieldErrors().stream()
+    public ResponseEntity<ApiProblem> invalid(MethodArgumentNotValidException ex,
+                                              HttpServletRequest request) {
+        String detail = ex.getBindingResult().getFieldErrors().stream()
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
                 .collect(Collectors.joining("; "));
-        ApiError body = new ApiError("VALIDATION_FAILED", details);
+        ApiProblem body = new ApiProblem(
+                "https://api.harbor.example/problems/validation",
+                "Request validation failed",
+                400,
+                detail,
+                request.getRequestURI());
         return ResponseEntity.badRequest().body(body);
     }
 }
-
-public record ApiError(String code, String message) {}
 ```
 
-`@RestControllerAdvice` combines `@ControllerAdvice` with `@ResponseBody` semantics, so returned objects become JSON like a REST controller. Handler methods can take the exception, the request, and other injectable arguments. Prefer a small catalog of problem codes your clients can switch on — not a dump of exception class names that change when you refactor packages.
+Controllers stay thin: throw `ParcelNotFoundException` when a lookup misses; do not build error maps inline. Advice owns status and envelope. Validation failures from the previous lesson become first-class citizens of the same bridge — clients parse one shape for "bad customs JSON" and "unknown parcel id."
 
-Validation failures connect directly here. Episode 32 ended with `MethodArgumentNotValidException`. The advice above shows the natural home for that translation: one place, one 400 shape, every `@Valid` endpoint inherits it. Binding failures, missing path variables, and unsupported media types have related framework exceptions you can handle the same way.
+`@ResponseStatus` on an exception type can set the code, but a status without a body is a weak contract for mobile clients. Prefer advice that always returns the shared problem type. Local `@ExceptionHandler` methods on a single controller are fine for controller-specific cases; application-wide policy belongs on `@RestControllerAdvice` so luggage, parcels, and customs do not diverge.
 
-Decide what must not leak. Stack traces, SQL text, and internal hostnames belong in logs, not in API bodies. Log the unexpected with a correlation id. Return a generic 500 payload to the client. For expected business conflicts — duplicate create, stale update — use 409 or 422 with a clear code rather than a generic 500.
+Wrapping every controller method in try/catch "for safety" scatters policy and guarantees inconsistency. Returning different JSON shapes per exception type with no shared fields forces every client to write N parsers. Swallowing exceptions and returning 200 with `"success": false` teaches clients to ignore HTTP — reverse that habit early.
 
-Handler precedence matters when advice classes multiply. More specific exception types win over broader ones. `@RestControllerAdvice(assignableTypes = …)` or base-package filters can scope advice to one API surface if a monolith hosts several. Avoid a catch-all `Exception` handler that returns 400 for everything — that hides outages. Catch-all should be 500, logged loudly, and rare in healthy traffic.
-
-`ResponseEntityExceptionHandler` is worth knowing when you customize Spring’s own exceptions — missing request body, method not supported, media type not acceptable — without reimplementing every case from scratch. Extend it in your advice and override only the methods you care about. That keeps framework errors and domain errors in one vocabulary.
-
-A topic-specific misconception is wrapping every controller method in try/catch "for safety." That scatters policy and guarantees inconsistency. Another is using only `@ResponseStatus` on exception types and assuming the body will be useful — status alone is not a contract. A third is letting advice return different JSON shapes per exception type with no shared fields, so clients cannot write one error parser.
-
-So today we built a central error bridge: domain and framework exceptions enter, stable `ApiError` payloads and status codes leave, with validation failures as a first-class citizen of that bridge.
-
-Cross-cutting work is not only about failures after a controller runs. Some concerns must wrap the request before Spring MVC even picks a handler — encoding, security filters, correlation ids at the servlet boundary. That layer is the servlet `Filter` chain.
+Failures now have a deliberate model. Some concerns still must wrap the request *before* Spring MVC even picks a handler — encoding, security filters, correlation ids at the servlet boundary. That layer is the servlet `Filter` chain.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 33 (*Exception Handling*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

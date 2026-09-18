@@ -11,67 +11,63 @@
 
 ## Full narration
 
-Binary uploads are not another string field. Multipart requests carry file parts, size limits, and streaming concerns that ordinary `@RequestBody` JSON does not.
+A shipping clerk attaches a bill of lading — a PDF — to a cargo booking. The browser does not send JSON. It sends `multipart/form-data`: fields plus a binary part. If your controller still expects `@RequestBody`, the adapter will not bind what you think.
 
-Teams hit the pain quickly. A client sends `multipart/form-data` with a file and a few text fields. A naive servlet reads the whole body into memory and collapses under a large PDF. Or the developer expects `@RequestBody byte[]` and wonders why binding fails. Spring MVC integrates multipart resolving so controller methods can declare `MultipartFile` parameters and keep the rest of the MVC model — validation, advice, interceptors — intact.
-
-In Boot, multipart support is on by default for servlet apps. Properties such as `spring.servlet.multipart.max-file-size` and `spring.servlet.multipart.max-request-size` define ceilings. When a request’s content type is multipart, `DispatcherServlet` uses a `MultipartResolver` early in `doDispatch` so the request becomes a multipart-aware wrapper before handler binding.
+Spring MVC treats multipart as a first-class request shape on the dispatcher path. Before handler invocation, `DispatcherServlet` can resolve a multipart request into a wrapped request the adapter understands. Boot auto-configures a `MultipartResolver` when servlet multipart support is enabled. You bind parts with `MultipartFile` (or `Part`) alongside ordinary form fields.
 
 ```java
 @RestController
-@RequestMapping("/orders")
-public class OrderAttachmentController {
+@RequestMapping("/cargo/bookings")
+public class BillOfLadingController {
 
-    private final AttachmentStorage storage;
+    private final BillOfLadingStore store;
 
-    public OrderAttachmentController(AttachmentStorage storage) {
-        this.storage = storage;
+    public BillOfLadingController(BillOfLadingStore store) {
+        this.store = store;
     }
 
-    @PostMapping(path = "/{id}/attachments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<AttachmentMeta> upload(
-            @PathVariable long id,
-            @RequestPart("file") MultipartFile file,
-            @RequestPart(value = "note", required = false) String note) throws IOException {
+    @PostMapping(path = "/{bookingId}/bill-of-lading", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<BolUploadResponse> upload(
+            @PathVariable String bookingId,
+            @RequestPart("document") MultipartFile document,
+            @RequestPart(value = "notes", required = false) String notes) throws IOException {
 
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+        if (document.isEmpty()) {
+            throw new IllegalArgumentException("bill of lading PDF is required");
+        }
+        String original = document.getOriginalFilename();
+        if (original == null || !original.toLowerCase(Locale.ROOT).endsWith(".pdf")) {
+            throw new IllegalArgumentException("only PDF bills of lading are accepted");
         }
 
-        String storedKey = storage.store(
-                id,
-                file.getOriginalFilename(),
-                file.getContentType(),
-                file.getInputStream());
-
-        return ResponseEntity.accepted()
-                .body(new AttachmentMeta(storedKey, file.getSize(), note));
+        BolUploadResponse saved = store.save(bookingId, document.getBytes(), original, notes);
+        return ResponseEntity.accepted().body(saved);
     }
 }
-
-public record AttachmentMeta(String key, long size, String note) {}
 ```
 
-Read the method as a contract. The path identifies the order. The part named `file` is the binary. An optional text part `note` rides along. `MultipartFile` gives you the original filename, content type, size, and an `InputStream`. Prefer streaming into storage over `file.getBytes()` when files can be large. Return `202 Accepted` or `201 Created` depending on whether processing is async or the resource is immediately addressable.
+`@RequestPart` names the multipart field. `MultipartFile` gives you bytes, size, content type, and the client-supplied filename. Treat that filename as hostile metadata — never concatenate it straight into a filesystem path. Prefer generated storage keys and store the original name as data.
 
-Security and hygiene are part of the lesson, not optional footnotes. Never trust `getOriginalFilename()` as a filesystem path — sanitize or discard it and invent your own object key. Validate content types against an allow-list when the product requires it. Virus scanning and async processing often belong behind the API, not inside the controller thread. Empty files and missing parts should become 400s, not 500s.
+Size limits are production essentials, not afterthoughts:
 
-When limits are exceeded, resolvers throw multipart exceptions that your exception advice can translate into clear 413-style responses. Configure limits deliberately per environment: local demos can be generous; production edges should match CDN or gateway limits so failures happen at a predictable layer.
+```yaml
+spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+```
 
-Multiple files use either repeated parts or `List<MultipartFile>`. Mixed forms combine text fields and files in one request — useful for "upload plus metadata" without a second round trip. For very large objects, consider direct-to-object-storage uploads with pre-signed URLs so the app server never sees the bytes; your Spring endpoint then only records metadata. That architecture is still "file upload" from the product view, even when `MultipartFile` is not on the hot path.
+When a clerk uploads a 40MB scan, the container should reject early with a clear error rather than buffering until the heap suffers. Align gateway limits, Boot multipart limits, and reverse-proxy body sizes so the failure mode is intentional.
 
-Temporary storage location matters under load. Boot can spill multipart data to disk; ensure the temp directory has space and is cleaned. Streaming to S3 or similar while the request is open reduces local disk pressure but needs careful timeout settings.
+Streaming large files through `getBytes()` is fine for small PDFs and wrong for multi-hundred-megabyte transfers — use `getInputStream()` and stream to object storage. Virus scanning and content-type sniffing belong in the store or a dedicated pipeline; trusting `Content-Type` from the client alone is not enough.
 
-A topic-specific misconception is treating uploads as Base64 fields inside JSON "to keep one content type." That inflates payloads and often hides size problems until memory fails. Another is writing temp files to a shared disk without cleanup and calling it a storage strategy. A third is binding `MultipartFile` on a `@RequestBody` method — parts use `@RequestPart` or `@RequestParam`, not JSON body binding.
+On the dispatcher path, multipart resolution happens before the adapter invokes your method — remember the early step in `doDispatch`. If resolution fails because the body is not multipart or exceeds limits, your controller never runs; advice and error handling still should return a JSON problem, not an HTML container page.
 
-So today we wired a multipart endpoint with `MultipartFile`, named the resolver step on the dispatcher path, and called out size limits and filename distrust as production essentials.
+People bind multipart with `@RequestBody` and blame Jackson. Others disable size limits "temporarily" for a demo and leave them off. A third trap is writing uploads into a directory inside the fat JAR’s working tree without cleanup — disks fill, pods restart, bookings look fine until storage fails.
 
-You can now map controllers, speak REST, validate, handle errors, wrap with filters and interceptors, and accept files. The remaining craft is less "which annotation" and more "which habits keep an API livable for years."
-
-REST best practices close that gap.
+Uploads now fit the MVC model. The broader craft around the stack you already have — resource-oriented URLs, disciplined statuses, paginated collections, DTO boundaries, and idempotent creates for parcels — is REST best practice, not another annotation.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 36 (*File Upload*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

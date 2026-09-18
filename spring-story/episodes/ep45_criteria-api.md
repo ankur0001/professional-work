@@ -11,89 +11,62 @@
 
 ## Full narration
 
-JPQL is excellent when the query shape is fixed. Real admin screens are not fixed. A product search might filter by name, by price range, by category, by "only in stock" — any subset of those, depending on what the user typed. Building that with string-concatenated JPQL is fragile. The Criteria API builds the same query with Java objects: types, predicates, and compilers that fail before the database does.
+A port-search screen starts with three optional filters: flag state, minimum gross tonnage, and a name fragment. On Monday the planner uses only the name box. On Tuesday all three. If you concatenate JPQL strings for each combination, you either miss a combination or invite injection-shaped bugs. The Criteria API builds the same query tree in Java, predicate by predicate, at runtime.
 
-Criteria code is verbose. That verbosity is the point — every join and predicate is explicit.
+Criteria is verbose on purpose. You get a typesafe-ish query graph from the `EntityManager` (or from a custom repository fragment). Bootstrapped metamodels can make paths fully typesafe; even without them, structured predicates beat string soup.
 
 ```java
-@Repository
-public class ProductSearchRepository {
+public List<Vessel> search(PortVesselFilter filter) {
+    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+    CriteriaQuery<Vessel> query = cb.createQuery(Vessel.class);
+    Root<Vessel> vessel = query.from(Vessel.class);
 
-    private final EntityManager entityManager;
+    List<Predicate> predicates = new ArrayList<>();
 
-    public ProductSearchRepository(EntityManager entityManager) {
-        this.entityManager = entityManager;
+    if (filter.flagState() != null && !filter.flagState().isBlank()) {
+        predicates.add(cb.equal(
+                cb.lower(vessel.get("flagState")),
+                filter.flagState().toLowerCase(Locale.ROOT)));
+    }
+    if (filter.minGrossTonnage() != null) {
+        predicates.add(cb.greaterThanOrEqualTo(
+                vessel.get("grossTonnage"),
+                filter.minGrossTonnage()));
+    }
+    if (filter.nameContains() != null && !filter.nameContains().isBlank()) {
+        predicates.add(cb.like(
+                cb.lower(vessel.get("name")),
+                "%" + filter.nameContains().toLowerCase(Locale.ROOT) + "%"));
     }
 
-    public List<Product> search(ProductFilter filter) {
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Product> query = cb.createQuery(Product.class);
-        Root<Product> product = query.from(Product.class);
+    query.where(predicates.toArray(Predicate[]::new));
+    query.orderBy(cb.asc(vessel.get("name")));
 
-        List<Predicate> predicates = new ArrayList<>();
-
-        if (filter.nameContains() != null && !filter.nameContains().isBlank()) {
-            predicates.add(cb.like(
-                    cb.lower(product.get("name")),
-                    "%" + filter.nameContains().toLowerCase() + "%"));
-        }
-        if (filter.minPrice() != null) {
-            predicates.add(cb.greaterThanOrEqualTo(product.get("price"), filter.minPrice()));
-        }
-        if (filter.maxPrice() != null) {
-            predicates.add(cb.lessThanOrEqualTo(product.get("price"), filter.maxPrice()));
-        }
-        if (Boolean.TRUE.equals(filter.inStockOnly())) {
-            predicates.add(cb.greaterThan(product.get("stockQuantity"), 0));
-        }
-
-        query.select(product)
-                .where(predicates.toArray(Predicate[]::new))
-                .orderBy(cb.asc(product.get("name")));
-
-        return entityManager.createQuery(query).getResultList();
-    }
+    return entityManager.createQuery(query).getResultList();
 }
-
-public record ProductFilter(
-        String nameContains,
-        BigDecimal minPrice,
-        BigDecimal maxPrice,
-        Boolean inStockOnly) {}
 ```
 
-Follow the pieces. `CriteriaBuilder` factories predicates and expressions. `CriteriaQuery` is the query definition. `Root` is the from clause — here `Product`. Each optional filter adds a `Predicate` only when present. Empty predicate list means "all products," which is a conscious product decision, not an accident of a broken WHERE clause.
+Each optional filter adds a `Predicate` only when present. An empty predicate list means "all vessels" — decide whether that is allowed for your screen. `CriteriaBuilder` supplies `equal`, `like`, `greaterThanOrEqualTo`, conjunctions, and disjunctions. Joins exist when you need cargo or berth associations in the filter.
 
-String attribute names like `product.get("price")` still fail at runtime if you typo. Metamodel classes generate `Product_.price` static fields for compile-time safety:
+Wire this behind a custom repository fragment so controllers never see `EntityManager`:
 
 ```java
-predicates.add(cb.greaterThanOrEqualTo(product.get(Product_.price), filter.minPrice()));
+public interface VesselRepository
+        extends JpaRepository<Vessel, Long>, VesselRepositoryCustom {}
+
+public interface VesselRepositoryCustom {
+    List<Vessel> search(PortVesselFilter filter);
+}
 ```
 
-Enable JPA metamodel generation in your build when Criteria becomes a regular tool. The first time a refactor renames `price` and the metamodel breaks the compile, you will not miss string paths.
+Walk one Monday query. Only `nameContains = "pacific"` is set. The predicate list holds a single `like` on lowercased `name`. Hibernate emits one SELECT with one WHERE clause. On Tuesday, flag state and tonnage join in — same Java method, wider WHERE, still no string concatenation of JPQL fragments.
 
-Joins work the same object way:
+Criteria shines for dynamic port search. It is heavy for a static `findByImoNumber` — use a derived method or JPQL there. Generating the JPA static metamodel (`Vessel_.flagState`) removes magic strings in `get("flagState")` and catches renames at compile time; invest in that when Criteria becomes common in the codebase.
 
-```java
-CriteriaQuery<Order> query = cb.createQuery(Order.class);
-Root<Order> order = query.from(Order.class);
-Join<Order, OrderLine> line = order.join("lines", JoinType.INNER);
-predicates.add(cb.equal(line.get("sku"), sku));
-query.select(order).distinct(true).where(...);
-```
+People rebuild Criteria for every fixed query and drown in boilerplate. Others paste user input into `cb.literal(...)` paths incorrectly — still bind and compare through the API rather than inventing SQL fragments. A third trap is creating a new `EntityManager` manually in a Spring app instead of injecting one and participating in the transactional persistence context.
 
-You can `fetch` with Criteria too (`order.fetch("lines", JoinType.LEFT)`) when the use case needs initialized collections. Same rule as JPQL: fetch when you will touch children, not by default on every search.
-
-Criteria also powers dynamic updates and bulk deletes, though teams usually keep those as JPQL for readability. Where Criteria dominates is search forms, report filters, and multi-tenant predicates composed from several optional clauses.
-
-The downside is ceremony. For a one-line `findByEmail`, a derived query wins. For a fixed three-way join everyone knows by heart, JPQL in `@Query` wins. Reach for Criteria when the predicate set is data-dependent. If you write Criteria for every repository method "for consistency," you trade clarity for uniformity.
-
-Even Criteria repositories tend to accumulate duplicated predicate blocks — "active customer," "in stock," "placed after." Spring Data Specifications wrap Criteria predicates into composable, reusable pieces that plug into `JpaSpecificationExecutor`.
-
-That composition is Episode Forty-Six.
+Dynamic filters work. When the same building blocks recur — "is hazardous," "in port SGSIN" — you want composable, named pieces you can `and` together in tests and in services. Spring Data Specifications are that vocabulary on top of Criteria.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 45 (*Criteria API*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

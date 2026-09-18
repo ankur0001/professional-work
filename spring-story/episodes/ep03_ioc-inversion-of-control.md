@@ -11,51 +11,45 @@
 
 ## Full narration
 
-We know Spring is modular. Now look at what happens inside the container modules when an application starts — because that is where control quietly changes hands.
+Breakpoint on line 41 of `AppointmentScheduler.book`. The hospital's outpatient desk is stuck on a flaky integration test, so you step into the constructor chain. `new DoctorDirectory(...)`, then `new RoomBoard(...)`, then `new SmsNotifier(new TwilioClient(System.getenv("TWILIO_KEY")))`. Three frames later you are configuring a vendor SDK inside a domain type that was supposed to be about appointment slots.
 
-Open a checkout flow written the old way. `CheckoutService` constructs a `StripeClient`, an `InventoryClient`, and an `EmailNotifier` in its fields. Each collaborator opens connections, reads secrets from environment variables, and maybe starts a background thread. The service thinks it is "just business logic," but it has become the composer, the configurator, and the lifecycle owner of half the system. Unit tests either hit real Stripe or invent brittle subclasses. Swapping email for a queue means editing the service. Shutdown is somebody's afterthought.
+That stack trace is Inversion of Control explained by its absence. Control of creation still lives in the business class. Every collaborator birth, every config lookup, every concrete type choice is decided by `AppointmentScheduler` itself.
 
-What goes wrong is not Java syntax. What goes wrong is who holds the baton. The application code is conducting creation, wiring, and teardown. That is the cost Inversion of Control exists to remove.
+IoC flips the ownership. The scheduler stops being the composer. It declares what it needs — a directory of doctors, a room board, a notifier — and something outside constructs and supplies those parts. In Spring, that outside force is the container. Your code becomes a musician with a clear part; the container runs the orchestra.
 
-An engineer staring at that class usually asks: can something else own construction and lifecycle so my service only owns checkout rules?
-
-Inversion of Control, in Spring's sense, means yes. The container — not your constructors — decides when objects are created, how long they live, and when they are destroyed. Your types declare what they are and what they need. The framework runs the assembly line. Hollywood principle, said plainly: don't call the framework to look things up; the framework calls you into existence when the graph is ready.
+Before IoC, the hospital code looked like this in spirit: the scheduler knew Twilio existed, knew which environment variable held the key, and knew that rooms were backed by a JDBC board. Tests could not book a slot without standing up SMS. Swapping the notifier for an in-memory stub meant editing production construction paths.
 
 ```java
-public class CheckoutService {
-    private final PaymentClient payments;
-    private final InventoryClient inventory;
-    private final EmailNotifier email;
+public class AppointmentScheduler {
+    private final DoctorDirectory doctors;
+    private final RoomBoard rooms;
+    private final AppointmentNotifier notifier;
 
-    // No `new` of collaborators. IoC: the container constructs this
-    // after it has already constructed the dependencies.
-    public CheckoutService(PaymentClient payments,
-                           InventoryClient inventory,
-                           EmailNotifier email) {
-        this.payments = payments;
-        this.inventory = inventory;
-        this.email = email;
+    public AppointmentScheduler(
+            DoctorDirectory doctors,
+            RoomBoard rooms,
+            AppointmentNotifier notifier) {
+        this.doctors = doctors;
+        this.rooms = rooms;
+        this.notifier = notifier;
     }
 
-    public Receipt checkout(Cart cart) {
-        inventory.reserve(cart.lines());
-        PaymentResult paid = payments.charge(cart.total());
-        email.sendReceipt(paid);
-        return Receipt.of(paid);
+    public Booking book(PatientId patient, Specialty specialty, LocalDate day) {
+        Doctor doctor = doctors.findAvailable(specialty, day);
+        Room room = rooms.allocate(doctor, day);
+        Booking booking = Booking.of(patient, doctor, room, day);
+        notifier.confirm(booking);
+        return booking;
     }
 }
 ```
 
-Watch the runtime story. On context refresh, Spring reads bean definitions, instantiates `PaymentClient`, `InventoryClient`, and `EmailNotifier` according to their definitions, then calls the `CheckoutService` constructor with those instances. Your `checkout` method never asks a registry where payment lives. Control of creation inverted: the container called your constructor; you did not call `new` on the world.
+Read the runtime story carefully. When the container starts, it creates `DoctorDirectory`, `RoomBoard`, and an `AppointmentNotifier` implementation first (or on demand, depending on laziness). Then it invokes the scheduler constructor with those instances. `book` never calls `new` on its collaborators. If a test passes a fake notifier, confirmation becomes a list append. If production passes an SMS adapter, patients get texts. Same scheduler bytecode either way.
 
-IoC is broader than Dependency Injection. DI is the usual mechanism Spring uses to supply collaborators once the container owns creation. You can have inversion without calling it DI — think template methods or callback-driven frameworks — but in Spring day-to-day work, IoC shows up as the container owning the object graph. People blur the words. Keep them stacked: IoC is who is in charge; DI is how dependencies arrive.
+Misconception unique to IoC: "IoC means I must never write `new` anywhere." No. Domain values — `Booking`, `PatientId`, a temporary `ArrayList` inside an algorithm — are still yours to construct. IoC targets the wiring of long-lived collaborators and infrastructure, not every object that exists for three lines.
 
-A misconception specific to IoC is "if I still write `new` for a value object, I broke Spring." You did not. Inversion targets application components with lifecycle and wiring needs — services, repositories, gateways — not every `Money` or `LineItem` record. Another misconception is that IoC means your code never runs first. Your `main` method still starts the process; after that, the container takes over the component graph.
-
-So the container owns creation. That still leaves a sharp follow-up: once the container creates objects, how do those objects actually receive the collaborators they declare? That mechanism — Dependency Injection — is the everyday skill we open next.
+The hospital team can finally unit-test slot logic without Twilio. What they still argue about in code review is the how of supply: constructor parameters versus setters versus field injection, and who decides which notifier implementation lands in that constructor. That mechanism has a name of its own.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 3 (*IoC (Inversion of Control)*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

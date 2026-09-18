@@ -11,53 +11,48 @@
 
 ## Full narration
 
-Some work must run before Spring MVC wakes up — and sometimes after the response is committed. Servlet filters sit on the container’s filter chain for exactly that reason.
+At 02:17 the customs API drops a request somewhere between the load balancer and a controller. Ops asks for a correlation id. If that id only appears after `DispatcherServlet` maps a handler, you have already lost the misses — static asset 404s, rejected auth, paths that never matched. Correlation belongs earlier: on the servlet filter chain.
 
-Imagine you need a correlation id on every request, including static asset misses and calls that never reach a controller. Or you need to reject an unauthenticated call before `DispatcherServlet` spends time on mapping. Or you must wrap the request to enforce UTF-8 encoding. Those concerns are not controller problems. They are servlet-pipeline problems. The Jakarta Servlet `Filter` API is the standard hook: `doFilter(request, response, chain)`.
-
-The chain is literal. The container holds an ordered list of filters, then the target servlet — in our case usually `DispatcherServlet`. Filter A calls `chain.doFilter`, which enters Filter B, which eventually reaches the servlet, which produces a response, then the stack unwinds back through the filters. That means a filter can work on the way in, on the way out, or both. It can also short-circuit by not calling `chain.doFilter` and writing its own response.
+Filters sit on the container’s filter chain, outside Spring MVC’s handler story. The Jakarta Servlet `Filter` API is the standard hook: `doFilter(request, response, chain)`. You wrap, reject, or decorate, then either call `chain.doFilter` to continue or write a response and stop. For a customs API, the classic early job is ensuring every request carries `X-Request-Id` before security and MVC spend time on the call.
 
 ```java
 @Component
-@Order(1)
-public class CorrelationIdFilter extends OncePerRequestFilter {
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class RequestIdFilter extends OncePerRequestFilter {
 
-    public static final String HEADER = "X-Correlation-Id";
+    public static final String HEADER = "X-Request-Id";
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
+        String incoming = request.getHeader(HEADER);
+        String requestId = (incoming == null || incoming.isBlank())
+                ? UUID.randomUUID().toString()
+                : incoming.trim();
 
-        String cid = request.getHeader(HEADER);
-        if (cid == null || cid.isBlank()) {
-            cid = UUID.randomUUID().toString();
+        response.setHeader(HEADER, requestId);
+        MDC.put("requestId", requestId);
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            MDC.remove("requestId");
         }
-        response.setHeader(HEADER, cid);
-        request.setAttribute(HEADER, cid);
-
-        filterChain.doFilter(request, response);
     }
 }
 ```
 
-Prefer `OncePerRequestFilter` in Spring apps when you want the body to run once per request dispatch and avoid double work on forwards. Registering as a `@Component` lets Boot pick it up; `@Order` influences relative order among Spring-registered filters. For security, Spring Security installs its own filter chain — another reminder that filters are the native place for authentication gates that must wrap the dispatcher.
+`OncePerRequestFilter` keeps the logic from running twice on forwards. `@Order` with highest precedence puts the filter early so later security filters and `DispatcherServlet` inherit the id on the response and in MDC logs. If the client already sent `X-Request-Id`, honor it; otherwise mint one. Either way, the outbound header is set even when no controller ever runs.
 
-Contrast this carefully with what comes next. Filters do not know which controller method will run. They see `HttpServletRequest` and `HttpServletResponse`. They run for any servlet mapping they are attached to, including paths that later 404 inside MVC. They are the right tool for raw HTTP concerns: compression wrappers, CORS at the edge, TLS-related headers, early rejects, request logging that must include non-MVC traffic.
+Mental model the chain: incoming request → your filters (in order) → `DispatcherServlet` → … → response unwinds back through filters. Encoding filters, compression filters, and Spring Security’s filter chain all live here. They do not receive a `HandlerMethod`. They do not know whether `/customs/declarations` mapped. That ignorance is a feature when you need work for every HTTP exchange.
 
-Ordering bugs are common. If Filter A wraps the response for metrics and Filter B short-circuits auth, metrics may miss denied calls — or count them twice — depending on order. Draw the chain on paper when behavior surprises you: container filters, Spring Security’s filter chain, your `OncePerRequestFilter` beans, then `DispatcherServlet`. Boot’s `FilterRegistrationBean` gives explicit control when `@Order` alone is not enough.
+Registering filters in Boot is usually `@Component` plus optional `FilterRegistrationBean` when you need URL patterns or an explicit name. Ordering matters: a security filter that rejects before your request-id filter runs will leave ops without the header on 401s — put identity-of-request first when that is the ops contract.
 
-Request wrapping is another filter specialty. Need to read the body twice — once for a signature check, once for MVC binding? A wrapping filter that caches the input stream is the servlet-native approach. Controllers and interceptors should not invent that mechanism.
+Filters are not interceptors with a different annotation. If you need the chosen handler method, model attributes, or MVC-specific pre/post hooks tied to mapped controllers, you want a `HandlerInterceptor`. Forgetting `filterChain.doFilter` and wondering why controllers never run is another classic. Heavy customs business rules in a filter bypass validation, advice, and the programming model you just built — keep filters thin and mechanical.
 
-A topic-specific misconception is using filters as a substitute for Spring MVC interceptors because "they feel the same." They are not the same layer. If you need the handler method, model attributes, or MVC-specific pre/post hooks tied to mapped controllers, you want a `HandlerInterceptor`, not a servlet filter. Another misconception is forgetting to call `filterChain.doFilter` and wondering why controllers never run. A third is doing heavy business logic in filters — you bypass the programming model of controllers, validation, and advice.
-
-So today we placed filters on the servlet chain, walked in-and-out behavior, and built a correlation-id filter as a concrete early-pipeline example that does not depend on controller mapping.
-
-That leaves a gap. What if you need cross-cutting behavior that *does* know the chosen handler — timing only mapped controller calls, adding model attributes for views, or applying rules based on handler annotations? That is interceptor territory.
+You can stamp every customs call with a request id before MVC wakes up. What if you need cross-cutting behavior that *does* know the chosen handler — timing only mapped admin console methods, or rules based on handler annotations? That is interceptor territory.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 34 (*Filters*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

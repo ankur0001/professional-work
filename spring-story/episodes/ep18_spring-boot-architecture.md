@@ -11,24 +11,22 @@
 
 ## Full narration
 
-You already know why Boot exists. The next gap is sharper: when you call `SpringApplication.run`, what actually happens — in order — before your first controller can answer?
+Breakpoint on `SpringApplication.run` for the bike-share API. One docking-station service, one fat jar, one `main`. You step over the call and watch phases fire: bootstrap listeners, Environment prepared, ApplicationContext created, beans refreshed, embedded Tomcat started, `ApplicationRunner` beans executed. Cold start is not a blur — it is a pipeline. Boot's architecture is that pipeline plus the opinions that fill it in.
 
-Teams that skip this map treat Boot like a black box. Something fails at startup, the log dumps a stack of auto-config class names, and nobody can say whether the Environment, the context, or the embedded server is the broken piece. Architecture is the antidote. It turns the shortcut into a pipeline you can reason about.
-
-Ask it the way an engineer asks it on a bad Monday: if Boot is not a second framework, what are the moving parts of one Boot process, and who owns each phase?
-
-Spring Boot's runtime architecture is a deliberate sequence layered on the Framework you already studied. `SpringApplication` is the orchestrator. It prepares an `Environment`, creates an `ApplicationContext`, imports auto-configuration, refreshes the context so beans exist, starts an embedded web server when the classpath says "web," and publishes lifecycle events so listeners can react. Your `@SpringBootApplication` class is the entry metadata. The Framework still owns beans, DI, and MVC. Boot owns the opinions and the startup choreography.
-
-Walk the sequence without magic language. First the Environment: command-line args, `application.properties` or YAML, OS environment variables, and profile activation land in one property abstraction. Second, context creation: typically a `AnnotationConfigServletWebServerApplicationContext` for servlet apps, or a reactive equivalent. Third, sources and auto-configuration: Boot loads your configuration classes and conditionally imports auto-config classes discovered from the classpath. Fourth, refresh: bean definitions are processed, singletons are created, and injection happens — the same ApplicationContext refresh you already know, now with Boot's imported config in the mix. Fifth, the web server: if Tomcat, Jetty, or Undertow is present and web auto-config activates, Boot starts an embedded container and registers the dispatcher. Sixth, readiness: `ApplicationReadyEvent` and related events fire so you can run post-start hooks.
+Spring Boot is not a separate DI container. It is an opinionated layer on Spring Framework that builds an `ApplicationContext` for you, auto-configures common infrastructure when the classpath looks right, embeds a web server when you need HTTP, and packages runnable artifacts. `SpringApplication` is the conductor. Auto-configuration classes are the sheet music that plays only when conditions match. Starters are curated dependency sets that make those conditions true on purpose.
 
 ```java
 @SpringBootApplication
-public class OrdersApplication {
+public class BikeShareApi {
     public static void main(String[] args) {
-        SpringApplication app = new SpringApplication(OrdersApplication.class);
+        SpringApplication app = new SpringApplication(BikeShareApi.class);
         app.addListeners(event -> {
-            if (event instanceof ApplicationReadyEvent) {
-                System.out.println("context ready — server listening");
+            if (event instanceof ApplicationEnvironmentPreparedEvent e) {
+                System.out.println("env ready, active=" +
+                    Arrays.toString(e.getEnvironment().getActiveProfiles()));
+            }
+            if (event instanceof ContextRefreshedEvent) {
+                System.out.println("context refreshed — beans ready");
             }
         });
         app.run(args);
@@ -36,18 +34,18 @@ public class OrdersApplication {
 }
 ```
 
-That snippet is not about printing a line. It shows that startup is evented. You can observe phases. You can also call `SpringApplication.run(OrdersApplication.class, args)` and get the same pipeline with less ceremony. Either way, the architecture is Environment → context → auto-config import → refresh → embedded server → ready.
+Walk the experiment. `new SpringApplication(BikeShareApi.class)` records the primary source — your `@SpringBootApplication` class — without starting anything yet. `addListeners` hooks the pipeline so you can observe phases; `ApplicationEnvironmentPreparedEvent` fires once profiles and property sources exist but before most beans. `app.run(args)` executes the full cold-start sequence and blocks until the embedded server is up (for a web app) or until non-web runners finish.
 
-Compare that to plain Spring. You might build a WAR, drop it into an external Tomcat, and wire a `DispatcherServlet` yourself. Boot inverts the packaging: the process is the unit of deployment, and the server is a library inside the JAR. Same servlet model underneath. Different ownership of bootstrap.
+Runtime cold-start timeline for a docking lookup, slower on purpose. First, `SpringApplication` deduces web application type from the classpath: servlet stack present → SERVLET; WebFlux without servlet → REACTIVE; neither → NONE. It starts a bootstrap context for early logging configuration and `SpringApplicationRunListener`s. It prepares the Environment: loads `application.yml`, applies profile documents, attaches command-line args from `args`, publishes environment-prepared events — this is when your listener can print active profiles. It prints the banner. It creates the matching `ApplicationContext` implementation (`AnnotationConfigServletWebServerApplicationContext` for servlet). It loads sources: `BikeShareApi` plus auto-configuration imports triggered by `@EnableAutoConfiguration` inside `@SpringBootApplication`. It refreshes the context: bean definition loading, `BeanFactoryPostProcessor`s, singleton pre-instantiation — DataSource, MVC infrastructure, your `StationDirectory` if scanned. It creates and starts the embedded web server, publishing started/ready events. `ApplicationRunner` / `CommandLineRunner` beans run. Only then does `GET /stations/{id}` hit a `DispatcherServlet` backed by beans Boot mostly assembled without an XML file from 2012.
 
-One trap is thinking "architecture" means memorizing every class in `org.springframework.boot`. You need the pipeline and the seams: where properties enter, where conditions decide beans, where the server starts, where you override. Another trap is blaming Boot when a bean fails to wire — often the Framework refresh is doing exactly what it always did; Boot only decided which definitions to import.
+Failure mode with symptoms on cold start: classpath includes a JDBC driver and Hikari, but no `spring.datasource.url`. Auto-config registers a DataSource bean; refresh fails with `Failed to configure a DataSource: 'url' attribute is not specified`. The stack points at auto-configuration, not your application package — which is the architecture lesson: Boot inserted a definition you did not write because the classpath signaled "database." Another failure: wrong web type deduction after accidentally adding both servlet and reactive starters — confusing context type and "which stack am I on?" debugging. Listeners that throw during environment prepare abort startup before any controller exists; symptom is a short log ending at bootstrap, no Tomcat port bind.
 
-Hold that last seam carefully. The import step is where Boot stops looking like a launcher and starts looking like conditional configuration. If you cannot see which auto-config classes activated and why, the rest of Phase Two stays foggy.
+Trade-offs. The pipeline removes dozens of manual assembly steps and standardizes startup across services; it also concentrates "magic" into phases you must learn to observe (`--debug`, condition reports, startup events). Hand-building an `AnnotationConfigApplicationContext` is clearer for teaching BeanFactory, but slower for shipping APIs. Boot's opinions (embedded server, auto-config, fat jar) are defaults you can override — excluding auto-config, providing your own `SpringApplication` customizers, switching to WAR deployment — each override costs knowledge of which phase you are interrupting.
 
-That fog is the next lesson: auto-configuration itself — conditions, back-off, and how classpath clues become real beans.
+Misconception unique to Boot architecture: "Boot replaces Spring Framework — learning Framework concepts is optional." Boot orchestrates Framework. When auto-config surprises you, you debug bean definitions, conditions, and the context — Framework vocabulary — not a magical Boot-only machine.
+
+The bike-share API is up in seconds on a laptop. A developer adds `postgresql` driver "just for later" and suddenly a DataSource bean appears and fails startup because no URL is set. Who created that bean without a `@Bean` method in the application package?
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 18 (*Spring Boot Architecture*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

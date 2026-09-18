@@ -11,23 +11,23 @@
 
 ## Full narration
 
-Picture a warehouse reservation that must touch three tables in one business action. You decrement available stock. You insert a reservation row. You write an audit ledger entry so finance can prove what happened. If stock decrements and then the reservation insert fails — maybe a unique constraint, maybe a transient outage — you cannot leave the inventory permanently short. Those three writes need one outcome: all committed, or all undone.
+The warehouse page shows twelve units of SKU-4401. A picker confirms a reservation for eight. Somewhere between the click and the toast, the stock row decrements, the reservation insert dies on a unique constraint, and the ledger never writes. Morning inventory is short by eight with no reservation to explain it. Three tables participated. Only one kept the change.
 
-That is a transaction boundary. Not a framework slogan. A contract with the database: begin, do work, commit on success, roll back on failure.
+That is the unit-of-work problem in warehouse language: stock, reservation, and ledger must share one fate.
 
-Teams used to write that contract by hand. Open a connection. `setAutoCommit(false)`. Try the three statements. `commit()`. On any failure, `rollback()`, and hope every path remembered to close the connection. Copy that try/catch into every service method that touches more than one table. Miss one catch branch and you leak connections or leave half-applied state. The ceremony dwarfed the business rules.
+Before Spring drew the boundary for you, teams scripted it by hand. Borrow a connection. Disable auto-commit. Decrement stock. Insert the reservation. Append the ledger. Commit — or roll back and close, on every failure path, including the ones nobody remembered. Miss a branch and you leak connections or strand half-applied inventory. The ceremony outgrew the business rule.
 
-Spring’s answer is declarative: mark the boundary, let the infrastructure own begin, commit, and rollback.
+Declarative transactions flip the ownership. You mark the boundary. Infrastructure begins, commits, and rolls back.
 
 ```java
 @Service
-public class ReservationService {
+public class WarehouseReservationService {
 
     private final StockRepository stockRepository;
     private final ReservationRepository reservationRepository;
     private final LedgerRepository ledgerRepository;
 
-    public ReservationService(
+    public WarehouseReservationService(
             StockRepository stockRepository,
             ReservationRepository reservationRepository,
             LedgerRepository ledgerRepository) {
@@ -51,28 +51,27 @@ public class ReservationService {
         Reservation reservation = Reservation.open(warehouse, sku, qty);
         reservationRepository.save(reservation);
 
+        // mid-failure here (constraint, transient error) must undo stock + reservation
         ledgerRepository.append(LedgerEntry.reserved(reservation.id(), sku, qty));
         return reservation.id();
     }
 }
 ```
 
-Read the method as a spoken story. Enter `reserve`. Spring starts a transaction and binds the JDBC connection or JPA `EntityManager` to the current thread. Decrement stock. Persist the reservation. Append the ledger. If every step succeeds, Spring commits when the method returns. If `InsufficientStockException` or any other runtime failure escapes, Spring rolls back — stock decrement, reservation insert, and ledger append all disappear together.
+Walk the method as a spoken clock. Enter `reserve`. The proxy starts a transaction and binds the JDBC connection or JPA `EntityManager` to the thread. Stock decrements. Reservation persists. Ledger appends. Return normally and Spring commits — all three tables agree. Throw `InsufficientStockException`, or fail on the ledger insert after stock already changed in memory, and Spring rolls back. The decrement, the reservation row, and any ledger attempt vanish together. Atomicity is the point; the annotation is how you name the boundary.
 
-Without `@Transactional`, each repository `save` can auto-commit on its own connection. You might persist the stock change, then fail on the reservation, and wake up to inventory that no longer matches reality. The annotation is the boundary that restores atomicity across those steps.
+Strip `@Transactional` and each `save` can auto-commit on its own connection. Stock sticks. Reservation fails. Ledger is silent. The warehouse lies. With the annotation, mid-method failure is not “best effort cleanup.” It is rollback.
 
-Under the hood, Spring does not rewrite your bytecode for this feature in the common path. It wraps the bean in a proxy. A call through the proxy hits a `TransactionInterceptor`. The interceptor reads attributes from `@Transactional`, asks a `PlatformTransactionManager` to get or create a transaction, invokes your method, then commits or rolls back. `TransactionSynchronizationManager` keeps the resource — connection or persistence context — tied to the thread for the duration of that boundary.
+Under the hood this is proxy plus interceptor, not a rewrite of your class file on the common path. A call through the bean proxy hits `TransactionInterceptor`. Attributes from `@Transactional` feed a `PlatformTransactionManager`. The manager begins or joins work; your method runs; commit or rollback follows. `TransactionSynchronizationManager` keeps the resource tied to the thread for that boundary.
 
-A few details matter in production conversations. The default rollback policy is runtime exceptions and errors — checked exceptions do not roll back unless you say so. Self-invocation bypasses the proxy: if `reserve` calls another `@Transactional` method on `this`, that inner annotation is invisible. Read-only flags hint the manager and sometimes the persistence provider that you intend queries only. And the same annotation works across JDBC, JPA, and MyBatis as long as a transaction manager is configured for the resource you use.
+Defaults matter when you debug. Runtime exceptions and errors roll back; checked exceptions do not unless you say so. Self-invocation skips the proxy — `this.reserve(...)` from inside the same class never sees the interceptor. `readOnly = true` is a hint for reads, not a magic shield. The same annotation spans JDBC, JPA, and MyBatis when the right manager is configured.
 
-One misconception is treating `@Transactional` as “make this method talk to the database.” It does not open a repository for you. It scopes a unit of work. Another is sprinkling it on every private helper. Advice applies to external calls through the proxy, not to every method on the class file.
+One misconception: treating `@Transactional` as “this method may touch the database.” It scopes a unit of work; repositories still do the talking. Another: sprinkling it on private helpers and expecting advice to fire. External calls through the proxy count. Internal ones do not.
 
-So we named the boundary, walked a multi-step reservation that must succeed or vanish together, and saw the proxy plus interceptor own begin, commit, and rollback. But the story is incomplete the moment one transactional method calls another. Does the inner call join the outer transaction, or does it demand a brand-new one that can commit even if the outer work later fails?
+We drew the warehouse boundary so stock, reservation, and ledger commit or disappear together. Nested collaborators change the story: does an inner call join that boundary, or open a second one that can survive when the outer work fails?
 
-That nested-call question is propagation — and it is where the next episode starts.
+Propagation is how Spring answers that nesting question.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 52 (*@Transactional*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

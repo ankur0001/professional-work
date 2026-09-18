@@ -11,52 +11,58 @@
 
 ## Full narration
 
-The latency panel looked fine until the pod restarted every forty minutes. Grafana’s heap gauge climbed like a staircase. GC pause metrics spiked near the top of each ramp. That is not a "buy a bigger node" story first — it is a memory story: what retains objects, how large the live set is, and whether native memory or the heap is the real pressure.
-
-Start with the meters you already exposed. `jvm.memory.used` and `jvm.memory.max` by area. GC overhead and pause timers. When using a modern collector, allocation rate matters as much as heap size — high allocation with a stable live set is a different problem than a growing old generation. Micrometer’s JVM binders give you the graphs; heap dumps give you the names.
-
-A Spring-specific leak pattern: unbounded caches. `@Cacheable` without eviction, a home-grown `ConcurrentHashMap` as a "quick cache," or a Caffeine cache with maximum size left unset. Another: listening to application events or WebSocket sessions without deregistration. Another: Hibernate persistence contexts or open sessions held across long HTTP calls, pinning entities.
+Gate’s heap chart looks like a staircase: climb, small drop, higher climb, OOMKill. Latency was fine until the pod died. The suspect in this harbor is an unbounded AIS position cache — every vessel ping retained “for the map,” nothing ever evicted. Memory optimization starts with meters, then dumps, then a bounded structure.
 
 ```java
-@Bean
-public CacheManager cacheManager() {
-    CaffeineCacheManager manager = new CaffeineCacheManager("productBySku");
-    manager.setCaffeine(Caffeine.newBuilder()
-            .maximumSize(10_000)
-            .expireAfterWrite(Duration.ofMinutes(10))
-            .recordStats());
-    return manager;
+// the leak pattern
+@Service
+public class AisPositionCache {
+    private final Map<String, Position> byMmsi = new ConcurrentHashMap<>();
+
+    public void onMessage(AisUpdate update) {
+        byMmsi.put(update.mmsi(), update.position()); // grows without bound
+    }
 }
 ```
 
-`recordStats()` plus Micrometer cache metrics lets you see hit rate and eviction. A cache that never evicts and always grows is a leak with good intentions.
-
-Watch payload and collection sizes in your own code. Loading `findAll()` into a list for a report, mapping entities to DTOs that embed large blobs, or buffering entire multipart uploads in memory will show up as allocation spikes under load. Stream, page, or spill to disk when the domain allows it.
-
 ```java
-@Transactional(readOnly = true)
-public void exportPrices(Consumer<PriceRow> out) {
-    int page = 0;
-    Page<PriceRow> slice;
-    do {
-        slice = prices.findAll(PageRequest.of(page++, 500));
-        slice.forEach(out);
-    } while (slice.hasNext());
+// bounded replacement
+@Service
+public class AisPositionCache {
+    private final Cache<String, Position> byMmsi = Caffeine.newBuilder()
+            .maximumSize(50_000)
+            .expireAfterWrite(Duration.ofMinutes(30))
+            .recordStats()
+            .build();
+
+    public AisPositionCache(MeterRegistry registry) {
+        registry.gauge("harbor.ais.cache.size", byMmsi, Cache::estimatedSize);
+        registry.gauge("harbor.ais.cache.hitRate", byMmsi,
+                c -> c.stats().hitRate());
+    }
+
+    public void onMessage(AisUpdate update) {
+        byMmsi.put(update.mmsi(), update.position());
+    }
 }
 ```
 
-Container memory limits interact with the JVM. If the cgroup limit is 512Mi and the heap is set as if the machine had 8Gi, you get OOMKills that look mysterious in app logs. Prefer container-aware heap settings (modern JDKs help) and leave headroom for metaspace, direct buffers, and thread stacks. Direct `ByteBuffer` use and Netty arenas can exhaust native memory while the heap graph looks calm — another reason to watch more than one panel.
+Read JVM gauges first: `jvm.memory.used` for heap pools, GC pause timers, and your custom `harbor.ais.cache.size`. If the cache size metric tracks the staircase, you found the villain without a dump. When you need proof, capture a heap dump on OOM (`-XX:+HeapDumpOnOutOfMemoryError`) or via `jcmd` and look for `ConcurrentHashMap` retaining millions of `Position` instances — often reachable from a static or a long-lived `@Service`. Soft/weak references are not a strategy by themselves — bounds and TTLs are. After bounding, watch hit rate: a bound so tight the yard map thrashes is a different incident (CPU + Feign refetch), not success.
 
-How to investigate: capture a heap dump on OOM (`-XX:+HeapDumpOnOutOfMemoryError`) or via Actuator/`jcmd` in a safe environment. Dominator trees in Eclipse MAT or VisualVM answer "what retains what?" Class histograms answer "how many of these?" If the dump points at a Spring bean you expected to be a tiny singleton holding a giant map, you found the bug.
+Container cgroups matter. A JVM that believes it has the node’s RAM will not GC as a 512Mi limit requires. Prefer container-aware heap settings on modern JDKs (`UseContainerSupport` is default on recent releases) and set requests/limits intentionally. Symptom of mismatch: pod killed by the node while heap graphs look “only 40% used” because the JVM’s max heap exceeded the cgroup. Native memory (direct buffers, metaspace, compressed class space) can kill a pod while heap looks calm — different tools (`Native Memory Tracking`, allocator profiles), same discipline of evidence.
 
-Misconception: "GC tuning flags will fix a leak." They can delay the crash. Fix retention. Misconception: "more heap always helps." Oversized heaps make full GCs rarer but longer and hide leaks until traffic peaks.
+Paging exports and large bill-of-lading byte arrays in memory deserve the same skepticism: stream to disk or object storage; do not buffer an entire PDF fleet in a `byte[]` list. Hibernate session caches and “open EntityManager in view” surprises retain graphs longer than a request needs — close the persistence context at the boundary you designed.
 
-Today we tied heap gauges to Spring cache and paging habits, respected container limits, and treated dumps as evidence. Metrics, traces, memory hygiene — you have the operational lenses. What remains is bundling them into a definition of "ready to serve production traffic," not merely "feature complete."
+Walk the fix timeline. Deploy Caffeine bounds; `harbor.ais.cache.size` plateaus near 50k; heap sawtooth returns to a healthy GC pattern; OOMKills stop. If size plateaus but heap still climbs, you have a second retainer — continue with a dump instead of raising the cache again. Raising `-Xmx` alone without a bound postpones the kill and takes neighboring pods with you when the node pressures.
 
-That checklist is production readiness.
+Trade-offs: larger heaps absorb spikes and lengthen GC pauses; smaller heaps fail fast. Off-heap caches move pressure without removing the need for bounds. Eviction by size versus time depends on whether stale AIS is useless after thirty minutes regardless of map cardinality.
+
+After an OOMKill, pull the dump from the crashed container’s volume or an object-store hook before the node reaps disk. Annotate the incident with `harbor.ais.cache.size` at kill time and the dominant retained type from the dump analyzer. That pair — metric plus dump class — is what stops the next “raise the heap” argument in the postmortem.
+
+A misconception is “raising the heap” as the first fix for an unbounded cache — you postponed the OOM and raised the blast radius. Another is enabling every Spring cache region with eternal TTLs. A third is ignoring cache hit/miss metrics after bounding, so you never see whether the bound is too tight for the yard map.
+
+Metrics, traces, memory hygiene — you have operational lenses. What remains is bundling them into a definition of ready to serve production traffic, not merely feature complete.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 104 (*Memory Optimization*).
-
-Narration technique: staircase heap → meters then dumps → Spring leak patterns → Caffeine bounds → paging export → cgroup/native caveats → bridge to readiness.

@@ -11,47 +11,45 @@
 
 ## Full narration
 
-A circuit breaker told you payment was failing. A customer still opens a ticket: “Checkout hung for eight seconds, then said try again.” Order logs show a slow call. Inventory logs show nothing obvious. Gateway logs show 200s. Without a shared request identity across those processes, you are correlating by timestamp and prayer. Distributed tracing gives each request a trace id, each hop a span, and a timeline you can render in Zipkin, Jaeger, or another backend.
+A trucker reports check-in took forty seconds. Gateway logs look fine. Gate logs show a slow billing call. Billing logs show a slow DB. Without shared identifiers, those three files are three novels. Distributed tracing stitches them: one trace id for the whole check-in, one span per hop, parent-child links across gateway → gate → billing.
 
-In modern Spring, Micrometer Tracing is the façade, often with Brave or OpenTelemetry as the bridge, and Spring Boot Actuator plus a reporter shipping spans somewhere useful. Older materials say Spring Cloud Sleuth; the ideas — trace id, span id, baggage, propagation over HTTP headers — remain. When order calls inventory over Feign or WebClient, instrumentation injects headers such as `traceparent` (W3C) or B3 headers. Inventory’s filter reads them and continues the same trace. Your log pattern should include the trace id so a single grep stitches the story.
+In modern Spring, Micrometer Tracing with an OpenTelemetry or Brave bridge propagates context over HTTP. Boot instruments servlet/WebFlux requests and outbound clients — RestTemplate, WebClient, Feign — so W3C `traceparent` (or B3) headers ride along. You rarely hand-roll headers; you verify they appear and that your sampler is intentional. When a hop is missing from the waterfall, the usual culprit is an outbound client built without the instrumented builder — a plain `WebClient.create()` that never inherited the observation filter.
 
 ```yaml
-# order-service
+# gate-service & billing-service
 management:
   tracing:
     sampling:
-      probability: 1.0   # demos; use lower in hot prod
-  zipkin:
-    tracing:
-      endpoint: http://zipkin:9411/api/v2/spans
-
+      probability: 1.0   # demos; lower in hot prod
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
 logging:
   pattern:
     level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
 ```
 
-Walk one checkout. Gateway creates a root span for `POST /api/orders`. It forwards to order-service with propagation headers. Order starts a child span for the controller, then another for `InventoryClient.reserve`, then another for `PaymentClient.charge`. Payment slows for 2.4 seconds — that span’s timing lights up in the UI. You see the critical path without SSH into three boxes. If the circuit breaker opens, you still see spans that failed fast versus spans that timed out, which is how you distinguish “protected” from “still hanging.”
-
 ```java
 @Service
-public class CheckoutService {
-    private final InventoryClient inventory;
-    private final PaymentClient payment;
-    private final Tracer tracer; // Micrometer Tracing API
+public class GateReleaseService {
+    private final BillingClient billing;
+    private final GateLedger ledger;
+    private final Tracer tracer;
 
-    public CheckoutService(InventoryClient inventory,
-                           PaymentClient payment,
-                           Tracer tracer) {
-        this.inventory = inventory;
-        this.payment = payment;
+    public GateReleaseService(BillingClient billing, GateLedger ledger, Tracer tracer) {
+        this.billing = billing;
+        this.ledger = ledger;
         this.tracer = tracer;
     }
 
-    public void checkout(CheckoutCommand cmd) {
-        Span span = tracer.nextSpan().name("checkout-domain").start();
+    public CheckInResponse accept(String gateId, TruckCheckIn req) {
+        Span span = tracer.nextSpan().name("gate.accept").start();
         try (Tracer.SpanInScope ws = tracer.withSpan(span)) {
-            inventory.reserve(cmd.toReserve());
-            payment.charge(cmd.toCharge());
+            span.tag("gate.id", gateId);
+            span.tag("container.id", req.containerId());
+            TariffQuote quote = billing.quote(req.containerId(), req.hazardClass());
+            return ledger.record(gateId, req, quote);
         } finally {
             span.end();
         }
@@ -59,22 +57,20 @@ public class CheckoutService {
 }
 ```
 
-Most HTTP and messaging instrumentation is automatic once dependencies are on the classpath. Manual spans are for domain phases that matter to you — “fraud-check”, “allocate-inventory” — when the auto spans are too coarse. Baggage can carry business keys like `customerId` across services; use it sparingly, and never put secrets in baggage or logs.
+Follow one check-in. Gateway creates root span `http POST /api/gates/G12/check-ins`. Gate continues the trace on inbound because `traceparent` arrived, adds `gate.accept`, Feign starts a child span for `GET billing-service/tariffs/quote`. Billing’s inbound span nests under that child. In a trace UI you see where the forty seconds went — connection wait, SQL, or a circuit-open fail-fast that returns in milliseconds. Breaker opens that finish in 2ms look different from 8s timeouts; traces make that visible without guessing. Log lines carrying `%X{traceId}` let you jump from a booth complaint ticket to the exact waterfall when the trucker gives you a time window.
 
-Sampling is an operational dial. One hundred percent sampling is perfect for a demo and expensive at peak traffic. Production often samples a fraction of successful requests and keeps error traces more aggressively. Wrong sampling makes traces look healthy while customers burn.
+Sampling is policy. `probability: 1.0` is fine for a staging quay; production usually samples a fraction and always keeps error traces if your stack supports it. High-cardinality tags — raw truck plate on every span — explode storage the same way metric tags do. Prefer low-cardinality dimensions (`gate.id`, `hazard.class`) and put unique identifiers in logs correlated by trace id.
 
-Messaging needs the same discipline. When Spring Cloud Stream publishes `OrderPlaced`, the binder instrumentation should continue the producer’s trace into the consumer’s process; otherwise async hops become orphan roots and your timeline lies. Clock skew across hosts can also make span waterfalls look impossible — trust relative durations inside a service more than absolute wall clocks across regions.
+Failure symptoms without tracing discipline: three teams each swear their service was fine; MTTR stretches while someone greps by approximate timestamp; a missing child span makes billing look instantaneous when Feign was never instrumented. With tracing but bad clocks, skew across pods confuses duration math — keep NTP healthy. With 100% sampling on a hot gateway, the collector lags and operators lose the tool during the incident they need it for.
 
-A misconception is equating tracing with logging. Logs are event text; traces are timed directed graphs of spans. You want both, linked by trace id. Another is enabling tracing without propagating headers through the gateway — then every service starts a new root and the graph shatters. A third is collecting traces but never opening the UI during incidents; unused observability is décor.
+Trade-offs: full tracing everywhere is expensive; metrics alone cannot show critical path across processes. Start with ingress + inter-service HTTP, add custom spans where business methods hide time (`gate.accept`, `ledger.record`), and leave getter noise out of the waterfall. Baggage can carry a check-in correlation across hops, but treat it as carefully as headers — do not put secrets in baggage.
 
-Today we followed one checkout across gateway, order, inventory, and payment as a single trace, propagated ids over HTTP, and tied breaker behavior to what spans reveal about fail-fast versus timeout.
+A misconception is equating “we added a correlation id filter years ago” with full distributed tracing; a log field without parent/child spans does not give you a critical path. Another is enabling 100% sampling on a hot gateway and surprising the collector budget. A third is forgetting outbound Feign instrumentation and wondering why gate spans never show billing children.
 
-Tracing shows pain. The next step is a fuller toolkit for preventing that pain at the call boundary — retries, rate limiters, bulkheads, and the circuit breaker you already met — under one library name you will see in Spring docs constantly.
+Traces explain one request. Resilience still needs more than open/closed: retries with backoff, rate limits against a flaky tide vendor, bulkheads so tide threads cannot starve gate’s billing pool.
 
-That library is Resilience4j.
+That toolbox is Resilience4j beyond the single breaker annotation.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 90 (*Distributed Tracing*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

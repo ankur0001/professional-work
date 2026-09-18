@@ -11,52 +11,62 @@
 
 ## Full narration
 
-You shipped the feature. Tests are green. Contracts hold. Then a pager goes off at two in the morning: checkout feels slow. Someone asks, "how slow, for whom, since when?" and the best answer in the room is a screenshot of a log line. That gap — between "something feels wrong" and "we can prove it" — is why Phase 11 starts with metrics, not with dashboards.
+Contracts are green. Then the pager fires: gate release feels slow on quay B. Someone asks “how slow, for which gate, since when?” and the best answer is a screenshot of a log line. That gap — between “booths are backed up” and “we can prove it” — is why Phase 11 starts with metrics.
 
-Micrometer is Spring’s vendor-neutral metrics facade. You write against `MeterRegistry`. Boot wires a registry for you. Exporters — Prometheus, Datadog, CloudWatch, and others — plug in based on classpath and configuration. Your service code stays about counters and timers, not about a particular monitoring vendor’s SDK.
+Micrometer is Spring’s vendor-neutral metrics facade. You write against `MeterRegistry`. Boot wires a registry. Exporters — Prometheus, Datadog, CloudWatch — plug in from classpath and config. Gate code stays about counters and timers, not about a vendor SDK. Swap the registry binder and the same `harbor.gate.release.duration` name still means the same thing in the next backend.
 
-Think in four meter types you will actually use. A `Counter` only goes up: payments charged, retries attempted, cache misses. A `Timer` records both how long something took and how often it ran — perfect for a service method. A `Gauge` samples a current value: queue depth, active sessions, heap used. A `DistributionSummary` captures sizes or amounts that are not durations — payload bytes, items per batch. Most business instrumentation starts with Counter and Timer.
-
-Here is the shape you want on a checkout path. Inject the registry, name the meters with stable names and low-cardinality tags, and record where the work happens — not in a filter that only sees HTTP status.
+Four meter types you will actually use: `Counter` (only up — releases started, billing fallbacks), `Timer` (duration and count — perfect around `releaseGate`), `Gauge` (current value — open booth sessions, queue depth), `DistributionSummary` (sizes that are not time — bytes on bill-of-lading uploads). Business instrumentation usually starts with Counter and Timer. Gauges need a lasting reference to the thing they observe — a cache, a queue — or they report stale nonsense after GC.
 
 ```java
 @Service
-public class CheckoutService {
-    private final PaymentGateway gateway;
-    private final Counter checkoutStarted;
-    private final Counter checkoutSucceeded;
-    private final Timer paymentTimer;
+public class GateReleaseService {
+    private final BillingClient billing;
+    private final GateLedger ledger;
+    private final Counter releaseStarted;
+    private final Counter releaseSucceeded;
+    private final Counter releaseFailed;
+    private final Timer releaseTimer;
 
-    public CheckoutService(PaymentGateway gateway, MeterRegistry registry) {
-        this.gateway = gateway;
-        this.checkoutStarted = registry.counter("checkout.started");
-        this.checkoutSucceeded = registry.counter("checkout.succeeded");
-        this.paymentTimer = registry.timer("checkout.payment.duration");
+    public GateReleaseService(BillingClient billing, GateLedger ledger, MeterRegistry registry) {
+        this.billing = billing;
+        this.ledger = ledger;
+        this.releaseStarted = registry.counter("harbor.gate.release.started");
+        this.releaseSucceeded = registry.counter("harbor.gate.release.succeeded");
+        this.releaseFailed = registry.counter("harbor.gate.release.failed");
+        this.releaseTimer = registry.timer("harbor.gate.release.duration");
     }
 
-    public Receipt checkout(Cart cart) {
-        checkoutStarted.increment();
-        PaymentResult paid = paymentTimer.record(() -> gateway.charge(cart.total()));
-        checkoutSucceeded.increment();
-        return Receipt.from(paid);
+    public CheckInResponse releaseGate(String gateId, TruckCheckIn req) {
+        releaseStarted.increment();
+        try {
+            CheckInResponse response = releaseTimer.record(() -> {
+                TariffQuote quote = billing.quote(req.containerId(), req.hazardClass());
+                return ledger.record(gateId, req, quote);
+            });
+            releaseSucceeded.increment();
+            return response;
+        } catch (RuntimeException ex) {
+            releaseFailed.increment();
+            throw ex;
+        }
     }
 }
 ```
 
-Read the names carefully. `checkout.started` and `checkout.succeeded` let you compute a success ratio. `checkout.payment.duration` isolates the gateway call from the rest of the request. Tags belong on dimensions you will filter by later — `region`, `payment_method` — not on unbounded values like user id or cart id. High-cardinality tags explode time series and bill you in storage and query cost.
+Read the names. `harbor.gate.release.started` versus `succeeded` versus `failed` yields success and error ratios without scraping HTTP alone. `harbor.gate.release.duration` isolates the booth-critical method — including billing wait if that call sits inside the timer. Tags belong on low-cardinality dimensions you will filter — `gate.id` only if you have dozens of gates, not thousands of truck plates. High-cardinality tags explode time series and bill you in storage; the failure symptom is a TSDB that crawls and a sudden cost alert, not a clear stack trace in gate.
 
-Boot already gives you a lot for free. With Actuator and Micrometer on the classpath you typically get JVM metrics, HTTP server request timers, and often datasource pool gauges without writing a line. Custom meters sit beside those. The `MetricsEndpoint` under Actuator can show a snapshot for debugging. Production scraping usually goes through a dedicated registry format — and that is the next episode’s job.
+Boot already exposes JVM meters, HTTP server timers, and often datasource pool gauges when Actuator and Micrometer sit on the classpath. Custom business meters sit beside those. `@Timed` can wrap a method via AOP; prefer explicit registry use when the timer must surround only the billing hop inside `releaseGate` while excluding JSON serialization, or the opposite — include everything the booth feels. Common meters for Resilience4j and Hikari appear automatically once those libraries integrate; wire them before inventing parallel names.
 
-Annotations exist too. `@Timed` on a bean method can wrap timing when AOP is enabled. Prefer explicit registry use when the metric must sit around one collaborator call, not the whole method, or when you need counters that are not durations. Own the placement; do not sprinkle `@Timed` hoping the right story appears.
+Walk an incident with meters present. Quay B reports backup. `harbor.gate.release.duration` p95 jumped at 14:02; `release.failed` rate flat; Hikari pending climbs on billing, not gate. You already know to look at billing capacity before rewriting gate controllers. Without business timers you only see generic HTTP latency and argue about the gateway.
 
-A frequent mistake is treating Micrometer as "Prometheus annotations." Micrometer is the API. Prometheus is one backend. Another mistake is measuring only HTTP status codes and calling that observability. Latency percentiles on the payment hop, error counters by failure type, and saturation gauges on the thread pool tell you where to look. Status codes alone tell you that customers are unhappy.
+Trade-offs: too few meters and you fly blind; too many tagged series and you blind the store. Name consistently (`harbor.<context>.<operation>.<metric>`). Prefer ratios from counters over “current error boolean” gauges that miss spikes between scrapes.
 
-So today we named the facade, practiced Counter and Timer on a real service method, and drew the line between free JVM/HTTP meters and intentional business meters. Numbers in a process are still trapped in that process. The open question is how an outside system pulls them on a schedule and stores them as time series you can query across pods.
+A misconception is treating Micrometer as “Prometheus annotations.” Micrometer is the API; Prometheus is one backend. Another is measuring only HTTP status codes and calling that observability — percentiles on `releaseGate` and fallback counters tell you where to look. A third is tagging every meter with `containerId` until cardinality melts the TSDB.
+
+Numbers in a process are still trapped in that process. The open question is how an outside system pulls them on a schedule across gate pods.
 
 That pull model is Prometheus.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 99 (*Micrometer*).
-
-Narration technique: outage question → Micrometer facade → meter types → Timer/Counter on CheckoutService → cardinality warning → free Boot meters → misconceptions → bridge to scrape/export.

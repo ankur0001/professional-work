@@ -11,48 +11,62 @@
 
 ## Full narration
 
-OpenTelemetry showed a span that spent eight hundred milliseconds inside `InventoryClient.reserve`. Someone’s first instinct is to "add a cache" or "bump the heap." Stop. Performance tuning in an observable Spring system starts from evidence: which signal moved, which resource is saturated, what experiment will falsify the guess.
+Resist the folklore fix. Gate p95 is high; someone proposes “rewrite in WebFlux” before reading a single span. Performance tuning in a Spring harbor stack starts from signals: RED metrics on `releaseGate`, saturation gauges on pools, traces for critical path, and — when CPU is the villain — a flame graph that names the hot method.
 
-Use a simple triage order. Latency up with error rate flat often means slow dependency or lock contention. Latency up with error rate up means failures and retries. CPU pegged with healthy latency elsewhere means hot code or excessive serialization. Threads or DB connections exhausted means you are queueing — more replicas may hide the bug for a week and then amplify it.
+Triage in order. Is it error rate or latency? If latency, is it time in gate code, time in Feign to billing, or time in billing SQL? Micrometer HTTP timers and your `harbor.gate.release.duration` split edge versus business method. Traces confirm. Only then profile. Skipping steps is how teams spend a week on reactive rewrites while billing’s connection pool was the whole story.
 
-Read Boot’s free meters before inventing new ones. `http.server.requests` timers by URI and status. HikariCP gauges: active, idle, pending. Tomcat or Netty thread pool metrics. JVM CPU and GC pause metrics. Pair them with the custom business timers from Episode 99. If `checkout.payment.duration` is fine but HTTP p99 is not, the waste is in your own service — serialization, chatty repositories, or synchronous fan-out.
-
-A concrete Spring-shaped example. Trace shows ten sequential `RestClient` calls to inventory for a cart with ten lines. Fix the algorithm, not the JVM flags:
-
-```java
-// Before: N remote calls
-for (CartLine line : cart.lines()) {
-    inventory.reserve(line.sku(), line.qty());
-}
-
-// After: one batch reserve — one span, one round-trip
-inventory.reserveAll(cart.lines());
+```text
+# illustrative async-profiler / continuous profiling readout (gate pod)
+harbor.gate.release
+  ├─ BillingClient#quote          62%
+  │    └─ waiting on socket       58%
+  ├─ GateLedger#record            18%
+  └─ Jackson serialize             9%
 ```
 
-Another evidence-backed fix: connection pool too small under load. Pending threads climb on the Hikari gauge while DB CPU is idle. Raising `maximum-pool-size` carefully — and fixing leaks that hold connections across remote calls — is tuning. Blindly setting the pool to five hundred is not.
+Here the flame is not a Java hot loop — it is waiting on billing. The fix might be caching non-hazard quotes, batching, or raising billing capacity — not rewriting gate’s controllers. A different flame that shows `TariffCalculator.quote` burning CPU on every request might mean an accidental O(n²) surcharge table scan. Socket wait versus CPU burn demand opposite remedies; the profile distinguishes them when metrics only say “slow.”
+
+```java
+// before: N sequential Feign calls for a multi-container truck
+for (String containerId : req.containerIds()) {
+    billing.quote(containerId, req.hazardClass());
+}
+
+// after: one remote operation when the contract allows
+billing.quoteMany(new BulkQuoteRequest(req.containerIds(), req.hazardClass()));
+```
+
+Walk the before/after with numbers. Six containers at 80ms each is ~480ms of Feign alone on the critical path; one bulk quote at 120ms changes the booth math without touching WebFlux. If the contract cannot bulk yet, parallel calls with a bounded executor help — and need a bulkhead so you do not stampede billing. Measure again on the same Grafana panels; anecdotes are not acceptance criteria.
+
+Pool tuning follows gauges, not vibes:
 
 ```yaml
 spring:
   datasource:
     hikari:
       maximum-pool-size: 20
-      connection-timeout: 3000
+      leak-detection-threshold: 20s
+  cloud:
+    openfeign:
+      client:
+        config:
+          billing-service:
+            connectTimeout: 200
+            readTimeout: 800
 ```
 
-Jackson and payload shape show up in traces as time spent in the MVC adapter after the service returns. Huge entity graphs serialized as JSON, or `OpenEntityManagerInView` holding a session open while the view lazily loads associations, look like "Spring is slow" when the design is chatty. Close the session before rendering, map to slim DTOs, and confirm with SQL counts per request.
+If `hikaricp_connections_pending` climbs while CPU is idle, enlarge carefully or shorten queries — do not guess. Feign timeouts that exceed user patience keep threads stuck; timeouts that are far below billing p99 manufacture errors. Load-test after each change with a realistic check-in mix — multi-container trucks, hazard classes, cold caches — and watch the same Grafana panels that page you. A laptop profile with an empty billing stub will not show socket wait.
 
-Cache only what the metrics justify. A Micrometer cache hit ratio that sits at five percent means you cached the wrong key or the wrong TTL. `@Cacheable` without hit/miss meters is optimism. GC thrashing after a "performance" change often means you cached huge object graphs — memory is the next episode for a reason.
+Failure modes of folklore tuning: more replicas that each still fan out N Feign calls; JVM flag churn before fixing N+1 or unbounded retries; caching without eviction that trades latency for the memory incident in the next episode; “optimize Jackson” when 58% of the flame is socket wait.
 
-Load tests belong after you have a hypothesis. Reproduce with a realistic mix, watch the same Grafana dashboard you use in prod, change one variable, compare. If you cannot show a before/after on p99 and error rate, you did not finish the tuning loop. Keep a short runbook: hypothesis, meter or span that should move, change, result. That document prevents the next engineer from re-tuning the same pool by folklore.
+Trade-offs: caching tariff quotes helps non-hazard traffic and risks stale rates for IMDG changes — key by hazard and version the tariff table. Vertical scaling buys time; chatty APIs return when traffic multiplies. Prefer eliminating round trips over micro-optimizing serializers.
 
-A hard misconception: "we need virtual threads" or "we need WebFlux" as the first move. Sometimes yes; often the span points at an N+1 query or a missing index — cheaper fixes. Another misconception: optimizing average latency while SLO is about p99. Customers live in the tail. A third: scaling pods horizontally when each pod’s connection pool is already saturating the database — you scaled the queue, not the bottleneck.
+Document each change with before/after p95 on the same panel and the same load-test script. If you cannot show the number, you did not finish the tuning — you only shipped a hypothesis. Rollback is part of tuning: a bulk endpoint that regresses billing CPU should revert while you redesign the query.
 
-Today we practiced reading RED and saturation signals, fixing a sequential remote fan-out, and adjusting a pool from gauges rather than folklore. When the bad signal is heap growth, GC thrashing, or native memory, the tuning lens narrows further.
+A misconception is equating “more replicas” with a fix when each replica still makes the same chatty Feign fan-out. Another is tuning JVM flags before fixing an N+1 or unbounded retry storm. A third is trusting a local laptop profile when production waits on a different billing region.
 
-Memory deserves its own pass.
+When the bad signal is heap growth, GC thrash, or native memory, the lens narrows further — memory optimization with dumps and cache bounds.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 103 (*Performance Tuning*).
-
-Narration technique: resist folklore → triage from signals → Boot meters → batch remote calls example → pool tuning → load-test loop → misconceptions → bridge to memory.

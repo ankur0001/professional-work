@@ -11,22 +11,53 @@
 
 ## Full narration
 
-Resilience4j makes synchronous remote calls safer. It does not change the fact that synchronous calls couple availability: if inventory is slow, order still waits unless you designed an asynchronous boundary. Messaging flips the conversation. Order publishes an event. Inventory consumes it later. The broker absorbs spikes. Spring Cloud Stream exists so your code talks to channels and functions while a binder talks to Kafka, RabbitMQ, or another broker — swap binders without rewriting business listeners.
+When scheduling assigns berth B7 to vessel IMO 9321483, billing needs a reservation signal and the yard board needs a redraw. Synchronous fan-out from scheduling couples availability: if billing is down, does the berth assignment roll back? Messaging flips the shape. Scheduling publishes `BerthChanged` events; consumers react on their own clocks.
 
-The modern programming model leans on Spring Cloud Function. You define beans that are `Supplier`, `Function`, or `Consumer`, and Stream binds them to destinations. A supplier can poll or produce messages; a function transforms; a consumer processes. Configuration maps those beans to topics or queues through binder-specific properties.
+Spring Cloud Stream binds your functions (or suppliers/consumers) to a broker through a binder — Kafka and RabbitMQ are the common ones. You write a `Function`, `Consumer`, or `Supplier` bean; configuration maps it to destinations. The business code stays about events, not about Kafka producer APIs. That separation is the point: swap binders in a test or migrate brokers without rewriting `applyReservation`.
 
 ```java
+public record BerthChanged(
+        String berthId,
+        String imoNumber,
+        Instant changedAt,
+        String reason) {}
+
 @Configuration
-public class OrderStreamConfig {
+public class BerthStreamConfig {
 
     @Bean
-    public Supplier<OrderPlaced> orderPlacedSupplier(OrderEventBuffer buffer) {
-        return buffer::poll;
+    Supplier<BerthChanged> berthChangedSupplier(BerthChangeQueue outbound) {
+        return outbound::poll; // illustrative; often you use StreamBridge
     }
 
     @Bean
-    public Consumer<OrderPlaced> reserveInventory(InventoryService inventory) {
-        return event -> inventory.reserve(event.sku(), event.qty(), event.orderId());
+    Consumer<BerthChanged> billingOnBerthChanged(BillingProjection projection) {
+        return event -> projection.applyReservation(event);
+    }
+
+    @Bean
+    Consumer<BerthChanged> yardBoardOnBerthChanged(YardBoardCache board) {
+        return event -> board.redraw(event.berthId(), event.imoNumber());
+    }
+}
+```
+
+```java
+@Service
+public class BerthAssignmentService {
+    private final BerthRepository berths;
+    private final StreamBridge bridge;
+
+    public BerthAssignmentService(BerthRepository berths, StreamBridge bridge) {
+        this.berths = berths;
+        this.bridge = bridge;
+    }
+
+    @Transactional
+    public void assign(String berthId, String imoNumber) {
+        berths.save(BerthAssignment.of(berthId, imoNumber));
+        bridge.send("berthChanged-out-0",
+                new BerthChanged(berthId, imoNumber, Instant.now(), "ASSIGNED"));
     }
 }
 ```
@@ -34,48 +65,35 @@ public class OrderStreamConfig {
 ```yaml
 spring:
   cloud:
-    function:
-      definition: orderPlacedSupplier;reserveInventory
     stream:
       bindings:
-        orderPlacedSupplier-out-0:
-          destination: orders.placed
-        reserveInventory-in-0:
-          destination: orders.placed
-          group: inventory
+        berthChanged-out-0:
+          destination: berth.changed
+        billingOnBerthChanged-in-0:
+          destination: berth.changed
+          group: billing
+        yardBoardOnBerthChanged-in-0:
+          destination: berth.changed
+          group: yard-board
       kafka:
         binder:
           brokers: kafka:9092
 ```
 
-In one service you might only produce; in another, only consume. The `group` consumer property gives competing consumers — multiple inventory instances share work. Without a group, pub-sub semantics can deliver to every instance depending on binder defaults; know which you want.
+Walk the flow. Scheduling commits the assignment and sends to `berth.changed`. Billing’s consumer group processes the event into an invoice projection. Yard board’s separate group redraws independently. Two groups mean two independent offsets — billing lag does not freeze the yard board. If billing is down, messages wait in the topic; scheduling does not block the crane operator’s UI on billing’s health. Idempotent consumers matter — at-least-once delivery will redeliver; `applyReservation` must tolerate duplicates by natural key (`berthId` + window) or an event id store.
 
-Error handling and partitioning are where Stream stops being a demo. Failed messages can go to dead-letter destinations after retries. Partition keys keep all events for one `orderId` on the same partition so consumers can process in order per key. Idempotent consumers matter because at-least-once delivery is common: processing the same `OrderPlaced` twice must not double-reserve stock. That is domain design, not a binder switch.
+Publishing inside a transaction without an outbox can still lose messages if the process dies after commit and before send — or send before commit and leak phantoms. Symptom of the first: berth shows ASSIGNED in scheduling DB, billing never invoices until a replay tool runs. Symptom of the second: billing opens an invoice for a reservation that rolled back. Treat “after commit + outbox” as the production upgrade path when loss is unacceptable — write the event row with the assignment, relay asynchronously, delete or mark published.
 
-```java
-@Bean
-public Function<OrderPlaced, InventoryReserved> allocate() {
-    return event -> {
-        // pure-ish transform useful in stream pipelines
-        return InventoryReserved.of(event.orderId(), event.sku());
-    };
-}
-```
+Failure modes to operate: poison messages that throw forever need a DLQ binding, or one bad payload stalls a partition. Schema changes on `BerthChanged` need compatibility discipline — adding optional fields is safer than renaming `imoNumber` on Friday. Consumer concurrency helps throughput; it also reorders relative to single-thread assumptions inside a projection.
 
-Compared with raw `KafkaTemplate`, Stream reduces boilerplate and standardizes binding names. Compared with Feign, Stream changes the consistency story: you trade immediate response for eventual processing. Checkout might return “accepted” after persisting an outbox row and publishing, while inventory catches up. Distributed transactions across HTTP become sagas or outbox patterns across events — territory you touched conceptually in earlier architecture lessons; Stream is one transport for those designs.
+Trade-offs: messaging decouples availability and scales fan-out, at the cost of eventual consistency and harder request/response UX. Check-in still wants a synchronous answer. Events shine for facts many systems must learn. Payload size: publish ids and let billing fetch details inside its context when payloads would drag vessel master data across the bus.
 
-Transactional outbox is the companion pattern when you must not lose “OrderPlaced” after committing the order row. Write the event to an outbox table in the same database transaction as the order, then a poller or CDC publisher feeds Stream. Skipping that and publishing over the network mid-transaction is how you get orders without events — or events without orders — under partial failure.
+A misconception is treating Cloud Stream as “Kafka with annotations” and ignoring consumer groups; without groups, competing consumers do not share work the way you expect. Another is dumping huge payloads on the bus instead of ids and letting consumers fetch details. A third is assuming messaging deletes the need for APIs — check-in still wants request/response; events shine for fan-out facts.
 
-A misconception is putting Stream and Feign on every path “because Cloud.” Prefer HTTP when the caller needs the answer to continue; prefer events when fire-and-forget or fan-out fits. Another is forgetting consumer groups and then watching every pod process every message. A third is assuming the binder guarantees exactly-once end-to-end business processing — broker exactly-once and your idempotency keys are different layers.
+Cloud patterns alone do not prove gate release or tariff math. Phase 10 starts under Spring’s test annotations, at the engine that discovers methods, runs them, and reports pass or fail.
 
-Today we bound functions to Kafka destinations, separated producer and consumer roles, and marked delivery semantics and idempotency as part of the design — completing the main Spring Cloud pattern tour from config through messaging.
-
-Look at what we built across this phase: many moving parts, each able to break in subtle ways. Before those services face production traffic, you need confidence in small units and in assembled slices. That confidence starts with the test runner almost every Spring project already sits on.
-
-That runner is JUnit 5.
+That engine is JUnit 5.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 92 (*Spring Cloud Stream*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

@@ -11,66 +11,97 @@
 
 ## Full narration
 
-Last episode your `CheckoutService` recorded timers and counters into a `MeterRegistry`. Those meters live in memory inside each JVM. Restart the pod and the in-process counters reset. Scale to twenty replicas and you have twenty private notebooks. You need a system that scrapes each instance, stores samples over time, and lets you ask "what was p99 payment duration across the fleet at 14:02?"
+`GateReleaseService` records timers into a `MeterRegistry`. Restart a pod and in-process counters reset. Scale to twelve gate replicas and you have twelve private notebooks. Prometheus scrapes each instance, stores samples over time, and lets you ask what p95 `harbor.gate.release.duration` was across the fleet at 14:02.
 
-Prometheus is that system for many Spring shops. It is a time-series database and scraper. It pulls — it does not wait for your app to push every sample — on an interval you configure. Your Boot app’s job is to expose a text exposition endpoint Prometheus understands. Micrometer’s Prometheus registry formats your meters into that exposition.
-
-Wire it with the usual Boot pieces. Add the Actuator starter and the Micrometer Prometheus registry dependency. Expose the prometheus endpoint. Keep management endpoints on a dedicated port or tightly authorize them in production.
+Boot exposes a scrape endpoint when `micrometer-registry-prometheus` is on the classpath and Actuator exposes it:
 
 ```yaml
-# application.yml
+# gate-service
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus,metrics
+        include: health,info,prometheus
   endpoint:
     prometheus:
       enabled: true
   metrics:
     tags:
-      application: checkout-service
-      env: prod
+      application: gate-service
+    distribution:
+      percentiles-histogram:
+        harbor.gate.release.duration: true
 ```
 
-With `micrometer-registry-prometheus` on the classpath, Actuator serves something like `GET /actuator/prometheus`. Hit it locally and you should see lines such as `checkout_payment_duration_seconds_bucket` and `jvm_memory_used_bytes` — name mangling and unit suffixes are part of the Prometheus convention. Micrometer timers become `_seconds` histograms or summaries depending on configuration. Prefer histograms when you need accurate percentiles via `histogram_quantile`; summaries compute quantiles in-process and are harder to aggregate across replicas.
+A scrape returns text like:
 
-Secure the scrape path. In production, put management endpoints on port `8081`, restrict network access to the Prometheus scrape identity, or require authentication. Exposing every Actuator route on the public `8080` alongside your API is a common foot-gun.
+```text
+# HELP harbor_gate_release_duration_seconds
+# TYPE harbor_gate_release_duration_seconds histogram
+harbor_gate_release_duration_seconds_bucket{application="gate-service",gate_id="G12",le="0.5"} 790.0
+harbor_gate_release_duration_seconds_bucket{application="gate-service",gate_id="G12",le="1.0"} 820.0
+harbor_gate_release_duration_seconds_count{application="gate-service",gate_id="G12"} 842.0
+harbor_gate_release_duration_seconds_sum{application="gate-service",gate_id="G12"} 126.3
+harbor_gate_release_started_total{application="gate-service"} 900.0
+harbor_gate_release_succeeded_total{application="gate-service"} 842.0
+```
 
-Prometheus itself needs a scrape job pointed at your instances. In Kubernetes that often means a PodMonitor or ServiceMonitor; in a simple lab it is a static target:
+Micrometer turns dots into underscores and appends `_total` for counters, `_seconds` for timers. If you curl the endpoint and do not see `harbor_gate_release_*`, the meter never registered or the scrape hits a different pod than the one you exercised. Walk that check during deploy: port-forward one gate pod, `curl localhost:8081/actuator/prometheus | grep harbor_gate`, confirm series before wiring alerts.
+
+Wire Prometheus to the gate pods:
 
 ```yaml
-# prometheus.yml (scrape config sketch)
+# prometheus.yml
 scrape_configs:
-  - job_name: checkout-service
+  - job_name: harbor-gate
     metrics_path: /actuator/prometheus
     scrape_interval: 15s
-    static_configs:
-      - targets: ["checkout:8080"]
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: ["harbor"]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: gate-service
 ```
 
-Walk the loop once. App records a payment timer. Micrometer updates the in-memory Prometheus meter. Fifteen seconds later Prometheus GETs `/actuator/prometheus`. Samples land in TSDB. You query with PromQL: `histogram_quantile(0.99, sum(rate(checkout_payment_duration_seconds_bucket[5m])) by (le))`. That query is how "feels slow" becomes a number with a time window.
+PromQL for gate latency and error ratio:
 
-Common tags from Boot — `application`, `env`, and often instance identity — let you group without rewriting every meter. MeterFilters can deny high-cardinality tag keys before they escape. If a developer tags by `userId`, you will feel it in Prometheus cardinality long before the dashboard looks pretty. A practical filter denies known-dangerous keys and enforces a naming prefix so one team’s `orders` counter does not collide with another’s.
+```promql
+# p95 release duration across gate pods
+histogram_quantile(
+  0.95,
+  sum by (le) (
+    rate(harbor_gate_release_duration_seconds_bucket{application="gate-service"}[5m])
+  )
+)
 
-```java
-@Bean
-MeterFilter denyUserIdTags() {
-    return MeterFilter.deny(id -> id.getTags().stream()
-            .anyMatch(t -> t.getKey().equals("userId")));
-}
+# failure ratio from started vs succeeded counters
+1 -
+(
+  sum(rate(harbor_gate_release_succeeded_total[5m]))
+  /
+  sum(rate(harbor_gate_release_started_total[5m]))
+)
 ```
 
-Relabeling and recording rules on the Prometheus side can precompute expensive queries — for example a recording rule for checkout success ratio — so dashboards stay snappy. That is still downstream of honest exposition from the app.
+Read the queries carefully. `rate` needs a range at least several scrape intervals — `[5m]` on a 15s scrape is sane; `[15s]` flaps. Divide by started, not by a raw counter without `rate`, or restarts look like error spikes. `histogram_quantile` needs histogram buckets (`percentiles-histogram: true`); a summary cannot do accurate server-side p95 across instances the same way. Sum by `le` before quantile so you aggregate pods correctly.
 
-Do not confuse Actuator’s `/actuator/metrics` JSON browse UI with the Prometheus scrape endpoint. The JSON endpoint is for humans and quick checks. Scrapers want the Prometheus text format. Also do not push application metrics into logs and call it done; logs and metrics answer different questions, and scrape-based metrics aggregate across replicas cleanly when the exposition is correct.
+Timers in Micrometer become histograms or summaries depending on config; prefer histograms when you need `histogram_quantile`. Protect the scrape endpoint — it should not be world-readable on the public gateway. Cardinality discipline from the Micrometer episode applies here: one unbounded label turns a scrape into a cost incident; Prometheus will still try to ingest until retention and memory hurt.
 
-Today we connected Micrometer’s in-process meters to a scrape target, exposed `/actuator/prometheus`, and sketched the PromQL path from timer buckets to a percentile. Raw PromQL in a black terminal is powerful and still hard to live in during an incident. Operators need panels, time ranges, and shared dashboards.
+Failure symptoms: scrape only one replica via a mistaken Service monitor and the dashboard lies about fleet health; alert on absolute counter values and page every process restart; expose `/actuator/prometheus` on the trucker hostname and leak internal series. Another: `up{job="harbor-gate"} == 0` after a path rename to `/actuator/metrics` — wrong path, silent gap in graphs.
 
-That visualization layer is Grafana.
+Trade-offs: shorter scrape intervals catch spikes faster and cost more; longer intervals miss brief booth storms. Recording rules precompute expensive gate queries for dashboards; they add indirection. Keep raw series for forensics.
+
+Alerting hygiene belongs next to scrape config. Page on `up == 0` for the harbor-gate job when all pods vanish; warn when a single pod’s scrape fails while siblings succeed — that is a pod or network partition, not necessarily a fleet outage. Keep runbook links beside the PromQL so 03:10 does not start with reinventing `histogram_quantile`.
+
+A misconception is scraping only one gate pod and calling it fleet health. Another is alerting on raw counter values instead of rates. A third is exposing `/actuator/prometheus` through the trucker-facing gateway without auth.
+
+Raw PromQL in a black terminal is powerful and miserable during a 3am booth backup. Operators need panels, shared time ranges, and a dashboard that already knows the gate queries. Save the exploratory PromQL for engineering; promote the survivors into Grafana and recording rules once they have earned a page.
+
+That shared picture is Grafana.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 100 (*Prometheus*).
-
-Narration technique: trapped in-process meters → Prometheus pull model → Boot exposure → scrape config → PromQL example → cardinality/endpoint pitfalls → bridge to dashboards.

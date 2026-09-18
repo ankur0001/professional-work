@@ -1,76 +1,93 @@
 # Narration technique (Spring Story)
 
-Use **EP01, EP04, and EP17** as the **narrative quality benchmark**, but do not mechanically copy their sentence patterns, analogies, or transition phrases.
+Use **EP01, EP04, and EP17** as the **narrative quality benchmark**, but do **not** copy their sentence patterns, analogies, or transition phrases.
 
-Extract the underlying teaching technique.
-
----
-
-## The goal
-
-Every episode should have the same *level* of:
-
-* narrative continuity
-* descriptive explanation
-* conceptual depth
-* practical examples
-* code walkthrough (when code clarifies the idea)
-* natural questions
-* cause-and-effect reasoning
-* learner-oriented explanation
-
-Episodes should not all *sound* identical.
+The gold standard is **natural, topic-specific, example-driven teaching** — not a shared outline with the topic name swapped in.
 
 ---
 
-## How concepts appear
+## Final tests (required)
 
-Every new concept should feel necessary because of something the learner just encountered.
+1. Remove the headings. Read the episode aloud.  
+   Does it sound like an experienced Spring instructor teaching **this** concept, or like a template with a different topic inserted?
 
-1. Establish a situation
-2. Make the learner notice a problem
-3. Ask the question that naturally follows
-4. Introduce the Spring concept as the answer
-5. Use examples as part of that reasoning — not pasted after a definition
+2. Replace the topic name with another Spring concept.  
+   Would most of the narration still work? If **yes**, rewrite — it is too generic.
+
+3. Delete the code sample.  
+   Does the surrounding story still mention runtime details that only make sense for **this** mechanism? If not, the example is ornamental.
 
 ---
 
-## Examples and code
+## What every episode must determine
 
-Preferred flow:
+1. What real application situation makes **this exact** Spring mechanism necessary?
+2. What goes wrong or becomes difficult without it?
+3. What question would an engineer naturally ask at that moment?
+4. How does Spring solve **that** specific problem?
+5. What concrete example demonstrates it (domain chosen for this episode — see `SCENARIO_MAP.md`)?
+6. What Java/Spring (or YAML/PromQL/HTTP) artifact demonstrates it?
+7. What happens when that artifact runs?
+8. What misconception is most likely for **this** concept?
+9. What new problem naturally leads to the next episode?
 
-**Narrative → explanation → example → code → walkthrough → learner question → deeper explanation → connection → next problem**
+---
 
-Interview checkpoints and practice drills are optional. Do not interrupt the lesson just to include them.
+## Anti-template rules
+
+**Forbidden as a recurring skeleton** (occasional natural use of similar English is fine; cloning the same spine across episodes is not):
+
+* "Here is the pain this lesson exists to remove."
+* "So the natural question becomes..."
+* "At a practical level..."
+* "Spring's design choice is deliberate."
+* "Once you accept the feature..."
+* "As you practice..."
+* "A common misunderstanding is to memorize..."
+* "Today we walked through..."
+* "The next natural question is waiting in Episode N — Title."
+* Identical "Narration technique: situation → problem → ..." footers on every file
+
+**Do not** end with a mechanical episode announcement. Create an unresolved engineering problem instead.
+
+**Do not** reuse OrderService / CheckoutService / generic DI examples unless the episode *is* about DI and `SCENARIO_MAP.md` assigns that domain.
+
+**Do** vary openings (incident, failing test, PR review, debugger, cold-start log, pager) so consecutive episodes do not sound the same.
+
+---
+
+## Examples must be topic-specific
+
+| Concept | Example must show |
+|---|---|
+| DispatcherServlet | HTTP request → mapping → adapter → controller → response |
+| @Transactional | Multi-step DB work + rollback boundary |
+| Authentication | Request with credentials/token → SecurityContext |
+| JUnit 5 | Real test discovery, execution, reporting |
+| JPA / N+1 | Entity/repository/SQL — not bean wiring |
+| Feign | Declarative HTTP client interface to a named service |
+
+If you could paste the same `OrderService` constructor-injection snippet into five different episodes, none of them is done.
 
 ---
 
 ## Depth and pacing
 
-Runtime guidance: floor **4 minutes**, soft aim **~10–12**, ceiling **15**.
+Runtime guidance: floor **~4 minutes**, soft aim **~8–12**, ceiling **~15**.
 
-When a concept is complex, slow down. If a detail belongs later, create curiosity and defer it.
-
----
-
-## Continuity check
-
-At every topic change, verify there is a reason to move forward:
-
-> Given what we just learned, what problem or question would naturally make the learner want this next?
+Complex topics: spend time on runtime behavior, failure modes, and trade-offs.  
+Simple topics: stay concise.  
+**Never pad** to hit a word count — but never ship a definition stub either.
 
 ---
 
-## Final test
+## Continuity
 
-> If I remove the headings, does this still sound like one person naturally teaching the learner for ~10 minutes?
+The beginning should connect to what the learner already knows.  
+The ending should create a genuine problem that makes the next episode necessary.
 
-If yes, the narration is working.
+---
 
-## Gold standards gate
+## Goal
 
-Review these three first:
-
-* `episodes/ep01_why-spring.md`
-* `episodes/ep04_dependency-injection.md`
-* `episodes/ep17_why-spring-boot.md`
+Same *level* of continuity, depth, integrated examples, code walkthrough, and cause-and-effect reasoning as EP01 / EP04 / EP17 — **not** the same sound.

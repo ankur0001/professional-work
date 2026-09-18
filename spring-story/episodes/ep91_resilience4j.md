@@ -11,82 +11,85 @@
 
 ## Full narration
 
-The circuit breaker episode showed one Resilience4j module in action. Resilience4j is broader than that tripwire. It is a lightweight fault-tolerance library built for Java functional style — decorators you compose around a `Supplier` or a method — and Spring Boot starters wire those decorators into annotations and metrics. Where Netflix Hystrix was the old Cloud demo default, Resilience4j is the usual modern choice: circuit breaker, retry, rate limiter, bulkhead, and time limiter as separate, composable operators.
+Circuit breakers protect gate from a dead billing dependency. The tide API is a different beast: intermittent 503s, bursty rate limits, and a vendor that hates connection stampedes. Resilience4j gives you composable decorators — retry, rate limiter, bulkhead, time limiter, circuit breaker — you can stack around that call without reinventing thread pools in every service.
 
-Think in layers around one remote call. A time limiter bounds how long you are willing to wait. A retry absorbs transient blips with backoff — only on idempotent operations. A circuit breaker stops calling after sustained failure. A bulkhead limits concurrent calls so one dependency cannot consume every thread in your pool. A rate limiter protects a fragile peer (or yourself) from stampedes. You do not enable all five everywhere. You pick the combination that matches the failure mode.
+Scheduling asks the tide service for predicted height before confirming a berth. Wrap the client:
 
 ```java
 @Service
-public class InventoryResilientClient {
-    private final InventoryClient feign;
+public class TideForecastService {
+    private final TideApiClient tides;
 
-    public InventoryResilientClient(InventoryClient feign) {
-        this.feign = feign;
+    public TideForecastService(TideApiClient tides) {
+        this.tides = tides;
     }
 
-    @CircuitBreaker(name = "inventory")
-    @Retry(name = "inventory")
-    @Bulkhead(name = "inventory")
-    @TimeLimiter(name = "inventory")
-    public CompletableFuture<StockView> stock(String sku) {
-        return CompletableFuture.supplyAsync(() -> feign.getStock(sku));
+    @RateLimiter(name = "tideApi")
+    @Bulkhead(name = "tideApi")
+    @Retry(name = "tideApi")
+    @CircuitBreaker(name = "tideApi", fallbackMethod = "cachedTide")
+    @TimeLimiter(name = "tideApi")
+    public CompletableFuture<TideReading> forecast(String stationId, Instant at) {
+        return CompletableFuture.supplyAsync(() -> tides.fetch(stationId, at));
+    }
+
+    @SuppressWarnings("unused")
+    private CompletableFuture<TideReading> cachedTide(String stationId, Instant at, Throwable ex) {
+        return CompletableFuture.completedFuture(TideReading.degraded(stationId, at));
     }
 }
 ```
 
 ```yaml
 resilience4j:
-  timelimiter:
+  ratelimiter:
     instances:
-      inventory:
-        timeoutDuration: 2s
-  retry:
-    instances:
-      inventory:
-        maxAttempts: 3
-        waitDuration: 200ms
-        retryExceptions:
-          - java.io.IOException
-          - feign.RetryableException
+      tideApi:
+        limitForPeriod: 10
+        limitRefreshPeriod: 1s
+        timeoutDuration: 200ms
   bulkhead:
     instances:
-      inventory:
-        maxConcurrentCalls: 20
+      tideApi:
+        maxConcurrentCalls: 5
+        maxWaitDuration: 100ms
+  retry:
+    instances:
+      tideApi:
+        maxAttempts: 3
+        waitDuration: 200ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - org.springframework.web.client.ResourceAccessException
+          - com.harbor.tide.TideTransientException
+        ignoreExceptions:
+          - com.harbor.tide.TideStationUnknownException
+  timelimiter:
+    instances:
+      tideApi:
+        timeoutDuration: 1s
   circuitbreaker:
     instances:
-      inventory:
-        slidingWindowSize: 20
-        failureRateThreshold: 50
+      tideApi:
+        slidingWindowSize: 30
+        failureRateThreshold: 40
 ```
 
-Annotation order and async return types deserve respect. TimeLimiter often expects a `CompletionStage` so it can cancel or complete exceptionally when the budget expires. Retry should not blindly wrap non-idempotent POSTs that charge cards twice. Bulkhead rejection is a success for system stability even when it feels like a failure to the caller — surface a clear exception or fallback. Micrometer binds Resilience4j metrics so dashboards show retry counts, breaker states, and bulkhead rejections next to your traces from the previous episode.
+Read the composition as a story. Rate limiter refuses to stampede the vendor — when the bucket is empty, callers fail in ~200ms instead of opening fifty sockets. Bulkhead caps concurrent tide calls so scheduling’s other threads keep working on berth conflicts that do not need tide. Retry absorbs blips with bounded attempts and backoff; `TideStationUnknownException` is ignored so you do not thrash on permanent 404s. Time limiter kills hung calls at one second. Circuit breaker opens when the vendor is truly down and routes to `cachedTide`. Annotation order and aspect ordering matter — measure once in a test that the stack behaves the way you draw it on the whiteboard. A common surprise: retry outside the breaker retries into an open circuit; the inverse ordering changes incident shape.
 
-Programmatic decoration is useful when annotations fight you:
+Walk symptoms. Without rate limiting, a berth storm during fog season triggers vendor `429`s and then a connection storm when every scheduler retries at once. With bulkhead alone, five tide calls run and the sixth fails fast — scheduling UI stays responsive for non-tide actions. Micrometer binds Resilience4j metrics automatically when the dependency is present: retry success/failure, bulkhead rejected calls, breaker state. Those series belong next to your gate timers in the same scrape job. If `resilience4j_bulkhead_rejected_calls` climbs while CPU is idle, you are protecting the vendor correctly and may need more capacity or a wider bulkhead — a deliberate trade-off, not an automatic “raise the limit.”
 
-```java
-CircuitBreaker cb = circuitBreakerRegistry.circuitBreaker("inventory");
-Retry retry = retryRegistry.retry("inventory");
+Trade-offs: retries help idempotent GETs of tide height; they are dangerous on non-idempotent POSTs that book a berth side effect. Semaphore bulkheads are light; thread-pool bulkheads isolate better and cost threads. Timeouts that are shorter than the vendor’s p99 create self-inflicted failure rates. Cached fallbacks keep the quay moving with stale tide data — label them degraded so operators do not treat them as truth for deep-draft vessels.
 
-Supplier<StockView> supplier = CircuitBreaker
-        .decorateSupplier(cb, () -> feign.getStock(sku));
-supplier = Retry.decorateSupplier(retry, supplier);
-StockView view = supplier.get();
-```
+Name each Resilience4j instance after the dependency (`tideApi`, `billingQuote`), not after the calling class, so metrics and runbooks stay portable when scheduling refactor moves the call site. Shared names across unrelated vendors accidentally couple their breaker state — a tide outage should not open billing’s breaker because someone reused `remoteCalls`.
 
-That style makes composition order obvious — decorate carefully, outermost versus innermost changes which operator sees which failures.
+A misconception is retrying non-idempotent POSTs until you double-book berths — retries need idempotent semantics or idempotency keys. Another is unbounded retries without jitter that amplify an outage. A third is one global bulkhead for every remote system so tide contention starves billing calls that deserved isolation.
 
-Rate limiters deserve a concrete picture. If a partner API allows one hundred requests per second, a `RateLimiter` on your side sheds excess locally instead of earning HTTP 429 storms. Combined with a bulkhead, you protect both the partner and your own thread pool. Combined with tracing, you can see a spike of rate-limiter rejections as a span attribute or metric and tell “we throttled ourselves” from “they were down.”
+HTTP and resilience cover request/response paths. Some harbor facts should not wait for a synchronous call: a berth assignment changed, and billing and the yard display both need to know without gate orchestrating them.
 
-A misconception is copying a single YAML block across every client with identical thresholds. Payment and product-catalog have different SLAs; tune per dependency. Another is retrying on every exception type including business 400s — retries should target transient infrastructure failures. A third is assuming Resilience4j replaces timeouts in the HTTP client; configure both so you are not waiting on a socket longer than the time limiter intends.
-
-Today we treated Resilience4j as a toolbox — time limit, retry, bulkhead, rate limit, circuit breaker — composed around remote calls, with metrics feeding the same operational picture tracing opened.
-
-Not every collaboration should be a synchronous HTTP round trip. Sometimes order should publish “OrderPlaced” and let inventory react when it can, without holding a Tomcat thread across the network. That shift from request/response to messages is the next Spring Cloud chapter.
-
-That chapter is Spring Cloud Stream.
+That push model is messaging with Spring Cloud Stream.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 91 (*Resilience4j*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

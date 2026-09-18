@@ -11,74 +11,62 @@
 
 ## Full narration
 
-Filters speak Servlet. Interceptors speak Spring MVC: handlers, handler mappings, and the lifecycle around controller invocation.
+Filters speak Servlet. Interceptors speak Spring MVC: handlers, handler mappings, and the lifecycle around controller invocation. The port operations console makes that distinction concrete — you want timing on `/admin/**` handler methods, not on every static asset and health ping.
 
-Recall the dispatcher pipeline. After `HandlerMapping` resolves a `HandlerExecutionChain`, that chain includes interceptors. `DispatcherServlet` calls `preHandle` on each interceptor before the `HandlerAdapter` invokes the controller. After a successful invocation it calls `postHandle`. After completion — including when an exception was thrown — it calls `afterCompletion`. That is a different timeline from the servlet filter chain, and a different example set.
-
-Use interceptors when the cross-cutting concern needs MVC context. Examples: measure how long a mapped controller method took; reject requests to handlers missing a custom annotation; add common model attributes for view controllers; enforce tenancy rules based on the chosen handler type. Do not use them to replace servlet-level authentication that must run even when no handler exists — that remains filter work.
+Recall the dispatcher pipeline. After `HandlerMapping` resolves a `HandlerExecutionChain`, that chain includes interceptors. `DispatcherServlet` calls `preHandle` on each interceptor before the `HandlerAdapter` invokes the controller. After a successful invocation it calls `postHandle`. After completion — including when an exception was thrown — it calls `afterCompletion`. That timeline is inside MVC, after a handler was chosen.
 
 ```java
-public class HandlerTimingInterceptor implements HandlerInterceptor {
+public class AdminTimingInterceptor implements HandlerInterceptor {
 
-    private static final String START = "timing.start";
+    private static final Logger log = LoggerFactory.getLogger(AdminTimingInterceptor.class);
+    private static final String START = AdminTimingInterceptor.class.getName() + ".start";
 
     @Override
-    public boolean preHandle(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler) {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
+                             Object handler) {
         request.setAttribute(START, System.nanoTime());
-        return true; // false would abort the chain before the controller
+        return true;
     }
 
     @Override
-    public void afterCompletion(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler,
-            Exception ex) {
-        Long start = (Long) request.getAttribute(START);
-        if (start == null) {
-            return;
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
+                                Object handler, Exception ex) {
+        Object start = request.getAttribute(START);
+        if (start instanceof Long nanos) {
+            long tookMs = (System.nanoTime() - nanos) / 1_000_000;
+            String handlerLabel = handler instanceof HandlerMethod hm
+                    ? hm.getBeanType().getSimpleName() + "#" + hm.getMethod().getName()
+                    : String.valueOf(handler);
+            log.info("admin handler={} status={} tookMs={} error={}",
+                    handlerLabel, response.getStatus(), tookMs, ex != null);
         }
-        long tookMs = (System.nanoTime() - start) / 1_000_000;
-        String handlerName = (handler instanceof HandlerMethod hm)
-                ? hm.getBeanType().getSimpleName() + "#" + hm.getMethod().getName()
-                : String.valueOf(handler);
-        // log: handlerName, tookMs, status, ex
-    }
-}
-
-@Configuration
-public class WebMvcConfig implements WebMvcConfigurer {
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new HandlerTimingInterceptor())
-                .addPathPatterns("/orders/**")
-                .excludePathPatterns("/orders/health");
     }
 }
 ```
 
-Notice what this example knows that the correlation-id filter did not: the `handler` object, often a `HandlerMethod` naming the controller type and method. Path patterns are MVC path patterns, not servlet filter URL mappings. Returning `false` from `preHandle` stops the controller from running and skips later interceptors’ `preHandle` — you become responsible for the response.
+```java
+@Configuration
+public class PortConsoleWebConfig implements WebMvcConfigurer {
 
-`postHandle` runs only after a successful controller return, before the view is rendered (for view-based MVC). For `@RestController` APIs, `afterCompletion` is often the more useful hook because there is no view phase in the classic sense. Always treat `afterCompletion` as the place to clean up thread-locals or timing state, because it runs on the exceptional path too when the dispatcher triggers it.
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new AdminTimingInterceptor())
+                .addPathPatterns("/admin/**")
+                .excludePathPatterns("/admin/health");
+    }
+}
+```
 
-A second interceptor example clarifies annotation-driven gates. Suppose only methods marked `@Audited` should emit domain audit events. In `preHandle`, cast `handler` to `HandlerMethod`, look for the annotation, and stash a flag. In `afterCompletion`, if the flag is set and `ex` is null, write the audit record. That logic cannot live cleanly in a servlet filter because the filter never receives the handler method metadata. Path patterns on the registry still help: apply the interceptor only under `/orders/**` so unrelated actuators stay quiet.
+Path patterns on the registry are the point of this lesson’s scenario: only `/admin/**` pays the timing tax. Berth boards and public parcel GETs stay quiet. Returning `false` from `preHandle` aborts the chain — useful for annotation-driven gates, dangerous if you forget to write a response.
 
-Keep interceptors light. Database work in `preHandle` on every request becomes a latency tax. Prefer reading request attributes set by an earlier filter — for example a correlation id — rather than recomputing them.
+A second interceptor pattern clarifies why filters cannot replace this layer. Suppose only methods marked `@Audited` should emit console audit events. In `preHandle`, cast `handler` to `HandlerMethod`, look for the annotation, and stash a flag. In `afterCompletion`, if the flag is set and `ex` is null, write the audit record. A servlet filter never receives that handler method metadata.
 
-A topic-specific misconception is registering a "filter-like" interceptor and expecting it to see 404s for unmapped URLs. If no handler was mapped, your interceptor never entered the chain. Another is stuffing security authentication solely into an interceptor and leaving non-dispatcher routes unprotected. A third is mutating the response body in `postHandle` for REST controllers and fighting message converters — prefer controller advice or filters for raw body wrapping.
+`postHandle` runs only after a successful handler return and before the view is rendered — less useful for pure `@RestController` JSON, still useful for adding model attributes on view controllers. Prefer `afterCompletion` for timing and cleanup because it runs on success and failure.
 
-So today we separated layers with different examples: servlet filters for early HTTP wrapping, MVC interceptors for handler-aware hooks, with timing around `/orders/**` as the concrete interceptor case.
+Registering the same logic as both a filter and an interceptor "just in case" doubles work and muddies logs. Putting security authentication solely in an interceptor also fails closed paths that never map — authentication that must run even when no handler exists remains filter work. And measuring every path under `/**` recreates the noise you avoided by scoping to `/admin/**`.
 
-One more request shape still sits outside ordinary JSON bodies. Clients upload files — invoices, images, CSVs — as multipart streams with size limits and different binding rules. How does Spring expose that without making you parse MIME by hand?
-
-File upload is that story.
+Servlet filters cover early HTTP wrapping; MVC interceptors cover handler-aware hooks. One request shape still sits outside ordinary JSON bodies: clients upload files — bill-of-lading PDFs — as multipart streams with size limits and different binding rules. How Spring exposes that without hand-parsing MIME is next.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 35 (*Interceptors*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

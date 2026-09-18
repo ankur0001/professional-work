@@ -11,13 +11,9 @@
 
 ## Full narration
 
-Actuator helps you observe a running process. DevTools helps you survive the hours before that process is worth observing — the local edit-compile-restart loop.
+LiveReload flickers on the museum ticket purchase page for the third time in a minute. A designer changed CSS. DevTools restarted the context. The WebSocket reload hits before Thymeleaf finishes compiling. Another save. Another restart. The developer disables LiveReload in frustration, then wonders why classpath changes no longer restart anything. DevTools is a power tool for local feedback — not a production dependency, and not magic that understands design-tool save storms on a ticket UI.
 
-Picture a developer changing a single `@GetMapping` path. Without help, they stop the JVM, rebuild, start again, wait for context refresh, then click the browser. Do that sixty times a day and the feedback loop becomes the product. Some teams bolt on external reloaders with uneven Spring awareness. Others just live with the pain and ship slower.
-
-Is there a Boot-aware development mode that restarts quickly when application classes change — and stays out of production classpaths?
-
-Spring Boot DevTools is that mode. Add `spring-boot-devtools` with a development-only dependency scope. On the classpath in local runs, it watches application classes and resources. When it detects a change, it performs a restart that reloads the application classloader while keeping a base classloader for third-party jars. That split is why restart is faster than a cold JVM launch: Boot does not reload Spring itself from scratch every time — it reloads your code.
+Spring Boot DevTools watches the classpath for changes, triggers a fast application restart using two classloaders (base jars stay loaded; project classes reload), and can push browser LiveReload events. It disables some caching for templates in development. Exclude the dependency from production builds — optional Maven dependency and `runtimeOnly` patterns exist so the fat jar you ship does not carry the restart agent.
 
 ```xml
 <dependency>
@@ -27,27 +23,32 @@ Spring Boot DevTools is that mode. Add `spring-boot-devtools` with a development
 </dependency>
 ```
 
-In Gradle, use a development-only configuration so the jar never ships to production. Runtime behavior: save a controller, trigger a compile (IDE auto-build or build tool), DevTools notices, logs a restart, and the context comes back with the new mapping. Static resources can update with live reload in the browser when the LiveReload server is enabled. Property defaults also shift slightly under DevTools — for example template caches disable so UI edits show up — which is convenient locally and wrong for production perf tests.
-
 ```yaml
-# application-local.yml — only for laptop profiles
+# application-local.yml
 spring:
+  thymeleaf:
+    cache: false
   devtools:
+    livereload:
+      enabled: true
     restart:
-      additional-paths: src/main/java
-      exclude: static/**,public/**
+      additional-exclude: static/**,public/**
 ```
 
-Tune excludes when generated files or static assets cause noisy restarts. Disable restart entirely if you are debugging a lifecycle issue and need a stable JVM. Remote DevTools exists for specialized setups; most teams only need local restart and should not expose remote restart over the network casually.
+Walk the local config. `thymeleaf.cache: false` ensures template edits are visible without relying only on restart. `livereload.enabled: true` opens the LiveReload server that browsers (with an extension or injected script) listen to. `restart.additional-exclude: static/**,public/**` is the museum fix: CSS and static asset saves should *not* trigger a full application restart — only a browser refresh if LiveReload remains on. Java and template class changes still restart the context. `<optional>true</optional>` helps keep DevTools from being pulled transitively into downstream modules.
 
-The wrong belief is "DevTools belongs in the production fat jar." It does not. Keep it optional / development-only, and verify your packaging excludes it. Another wrong belief is that DevTools replaces proper tests — it speeds manual feedback; it does not prove correctness. A third is expecting hot-swap of every change: structural signature changes still need restart; DevTools accelerates that restart, it does not turn Java into a dynamic scripting language.
+Runtime while building the museum UI. Save a Java controller → DevTools detects classpath change → restart classloader discards project classes and rebuilds the ApplicationContext faster than a cold JVM start, but still re-runs bean creation, `@PostConstruct`, and connection setup. Save a static CSS file under an excluded path → no restart; LiveReload can refresh the browser alone. Leave static files inside the restart trigger set and every CSS save pays a full context reboot — the flicker loop that burned the designer. Remote DevTools exists for updating a remote app; treat it as a security surface requiring secrets, not a default for shared environments.
 
-Faster restarts still leave you staring at console noise. When something fails, you need controlled, environment-aware logging — levels, loggers, and Boot's logging defaults — not a wall of undifferentiated INFO.
+Failure mode symptoms: context restart thrash — logs show repeated "Restarting application" on every autosave from an IDE or design tool writing static files; browser flashes white; in-progress form state on the ticket page resets; local H2 database re-creates empty because the embedded bean was rebuilt. Another failure: DevTools accidentally on the production classpath — unexpected restart behavior or LiveReload port open; always verify the production image's dependency tree. Disabling LiveReload in the browser extension while leaving restart triggers wide still restarts on CSS if excludes are wrong — people blame LiveReload for restart cost when the restart watcher is the real bill.
 
-That is the logging lesson next.
+Trade-offs. DevTools shortens the edit-refresh loop for server-side UI work and small API tweaks; it is not a substitute for JRebel/HotSwap when you need true method replacement without resetting singletons. Stateful beans, in-memory databases, and warm caches reset on every restart — externalize local Postgres if you need durable local data across restarts. Turn DevTools off when diagnosing timing bugs that only appear under steady state.
+
+Classloader split, briefly: the "base" loader holds dependency jars that rarely change; the "restart" loader holds your `target/classes`. On restart, only the restart loader is discarded and rebuilt, which is why DevTools feels faster than killing the JVM — Hibernate jars do not reload. Your `@Service` singletons do. Museum ticket sessions stored only in an in-memory bean vanish; designer CSS excludes avoid paying that tax for static edits. Knowing which loader owns a class explains why a dependency bump still needs a full stop/start while a controller tweak does not.
+
+Misconception unique to DevTools: "DevTools restart is the same as hot-swap / HotSwap agent / JRebel class redefinition." It is a restart of the application context with a clever classloader split — faster than killing the JVM, slower and broader than swapping one method body. Stateful beans reset. In-memory H2 re-creates unless you externalize it.
+
+The ticket UI iteration speed is acceptable again. At 02:00 the ferry-booking on-call channel pastes four log lines from four pods with no shared request id — DevTools will not help. Logging strategy and correlation will.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 25 (*DevTools*).
-
-Narration technique: situation → problem → question → Spring’s answer → integrated example/code walkthrough → misunderstanding → next natural question. Not a definition dump.

@@ -11,68 +11,67 @@
 
 ## Full narration
 
-`OrderAuthorized` fired inside one JVM. Warehouse, loyalty, and notification still need to react. If checkout synchronously calls all three over HTTP, you couple availability and latency: any slow peer stretches the request, any down peer breaks the purchase path. Event-driven architecture loosens time coupling — producers emit facts; consumers react on their own clocks.
+Synchronous fan-out hurts. After `Berth.reserve` succeeds, scheduling used to call billing over Feign, then the yard board, then notifications. If billing was down, did the reservation roll back? Event-driven architecture decouples that timeline: scheduling publishes `BerthReserved`; billing and others consume when they can.
 
-In Spring, you have two ranges. In-process: `ApplicationEventPublisher` and `@EventListener` (optionally `@TransactionalEventListener` to publish after commit). Across processes: messaging with Spring for RabbitMQ, Kafka, or Spring Cloud Stream. Same idea — facts travel; different delivery guarantees.
-
-Prefer domain events that name what happened, not commands dressed as events. `OrderAuthorized` is a fact. `SendEmail` is a command — put it on a command topic or call a service if you own that workflow. Consumers should be idempotent; at-least-once delivery will duplicate.
+Distinguish in-process events from broker events. Spring’s `ApplicationEventPublisher` notifies listeners inside the same JVM — useful for clearing caches or updating a local projection. Cross-service decoupling needs a broker (Kafka via Cloud Stream, for example) and delivery rules you can operate. Mixing them without care — a transactional listener that assumes local and remote are the same — is how phantom invoices appear.
 
 ```java
-public record OrderAuthorized(OrderId orderId, Money amount, Instant at) {}
+public record BerthReserved(BerthId berthId, ImoNumber imo, ReservationWindow window) {}
 
-@Component
-public class LoyaltyOnOrderAuthorized {
-    private final LoyaltyAccounts loyalty;
-
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void on(OrderAuthorized event) {
-        loyalty.accrue(event.orderId(), event.amount());
-    }
-}
-```
-
-`AFTER_COMMIT` matters. If you listen in the same transaction and the commit fails, side effects may already have escaped. If you publish to Kafka before the DB commits, consumers may see an order that rolled back. Outbox patterns exist for a reason: write the event to an outbox table in the same transaction as the aggregate, then a relay publishes to the broker.
-
-```java
 @Service
-public class AuthorizeOrderService {
-    private final OrderRepository orders;
-    private final Outbox outbox;
+public class ReserveBerthService {
+    private final BerthRepository berths;
+    private final ApplicationEventPublisher publisher;
 
     @Transactional
-    public void authorize(OrderId id, Money amount) {
-        Order order = orders.findById(id).orElseThrow();
-        order.authorize(amount);
-        orders.save(order);
-        outbox.enqueue(new OrderAuthorized(id, amount, Instant.now()));
+    public void reserve(BerthId id, ImoNumber imo, ReservationWindow window) {
+        Berth berth = berths.findById(id).orElseThrow();
+        BerthReserveResult result = berth.reserve(imo, window);
+        if (!result.accepted()) {
+            throw new BerthConflictException(result.reason());
+        }
+        berths.save(berth);
+        publisher.publishEvent(result.event());
+    }
+}
+
+@Component
+public class BerthReservedAfterCommitListener {
+    private final StreamBridge bridge;
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void on(BerthReserved event) {
+        bridge.send("berthReserved-out-0", event);
     }
 }
 ```
-
-Cross-service consumers use Spring Cloud Stream or a `KafkaListener`. Keep the payload versioned. Include enough data for the consumer to work without synchronous callbacks into the producer — otherwise you reintroduce temporal coupling through the back door. A loyalty consumer that must call checkout "to get the amount" on every event has not become event-driven; it has become chatty.
 
 ```java
-@KafkaListener(topics = "order.authorized")
-public void onAuthorized(OrderAuthorizedEvent payload) {
-    if (loyalty.alreadyAccrued(payload.orderId())) {
-        return; // idempotent
+@Component
+public class BillingBerthReservedHandler {
+    private final BillingProjection projection;
+
+    @Bean
+    Consumer<BerthReserved> billingOnBerthReserved() {
+        return event -> projection.openReservationInvoice(event);
     }
-    loyalty.accrue(payload.orderId(), payload.amount());
 }
 ```
 
-Failure modes are the curriculum. Poison messages need DLQs. Ordering is per key, not global, on most brokers — partition by `orderId` when sequence per order matters. Exactly-once is a property you design for with idempotent handlers and transactional outboxes, not a flag you flip casually. Tracing should propagate through message headers so OpenTelemetry still shows one logical story from HTTP into the consumer span.
+`AFTER_COMMIT` matters: listeners that run before commit can publish a reservation that rolls back. Outbox patterns upgrade this further — write the event to an outbox table in the same transaction, then relay to Kafka — when loss is unacceptable. Walk dual-write loss: process dies after commit, before `bridge.send`; scheduling shows B7 reserved; billing never invoices until replay. Walk dual-write phantom: send before commit, transaction rolls back on a later constraint; billing invoices a ghost. Outbox makes the event row commit atomically with the berth row; a relay polls or tails that table.
 
-Schema evolution deserves an explicit policy. Additive fields are usually safe; renaming or removing fields breaks old consumers. Prefer a version field or a compatible Avro/JSON schema registry workflow when many teams share a topic.
+Consumers must be idempotent; at-least-once delivery will replay `BerthReserved` for B7. Key invoices by `berthId` + window or by event id. Failure modes stay honest. Billing lag means invoices trail assignments — observe projection lag with a gauge (`harbor.billing.projection.lag.seconds`). Poison messages need a dead-letter path, not infinite retries that stall the partition. Events are facts about the past (`Reserved`), not commands (`ReserveBerth`) dressed as events — commands ask for work; events announce what already happened.
 
-Misconception: events make the system "eventually consistent" so invariants no longer matter. Aggregate invariants still hold inside the write model; eventual consistency applies between projections and peers. Misconception: replace every REST call with a topic. Synchronous APIs remain right for queries and for actions that must complete in the user request. Misconception: "we use Kafka, so we are event-driven." Topics that carry RPC-shaped request/reply pairs are queues with extra ceremony.
+Runtime symptoms: operators see the board update instantly (same JVM projection) while billing invoices appear minutes later (broker consumer) — that is eventual consistency working, not a bug, unless lag SLO burns. Another: duplicate invoices after a rebalance when the consumer was not idempotent. Another: a “event” named `CreateInvoice` that still expects a synchronous response — that is an RPC on a topic.
 
-Today we moved from in-process domain events to broker integration, stressed after-commit and outbox discipline, and kept consumers idempotent. One pattern shows up constantly once events feed read sides: the model you write is a bad shape for the screens you read.
+Trade-offs: decoupling availability and fan-out versus harder end-to-end reasoning and eventual consistency UX. Keep synchronous APIs for trucker check-in; use events for facts many contexts must learn. Payload size: ids plus enough fields for the consumer to act beats dragging full vessel graphs across Kafka. Ordering: partition by `berthId` when per-berth order matters.
 
-That deliberate split is CQRS.
+Schema evolution needs the same honesty as Feign contracts. Add optional fields; avoid renaming `imo` under a live consumer group. When a breaking change is unavoidable, a new topic version (`berth.reserved.v2`) beats silent poison on `v1`. Measure consumer lag per group; a single stuck billing consumer should not be invisible because yard-board lag is fine.
+
+A misconception is replacing every API with events until a trucker check-in requires five topics to return a response. Another is publishing from a transaction that has not committed. A third is huge payloads on the bus instead of ids plus follow-up queries inside the billing context.
+
+Once events feed read sides, a familiar split appears: the model you write for berth invariants is a bad shape for the schedule board screen. That intentional split is CQRS.
 
 ## Source attribution
 
 Reference: `Spring_Framework_Handbook.html` — Lesson 110 (*Event-Driven Architecture*).
-
-Narration technique: sync fan-out pain → in-process vs broker → AFTER_COMMIT listener → outbox sketch → failure modes → misconceptions → bridge to CQRS.
