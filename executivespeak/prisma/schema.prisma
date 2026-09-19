@@ -1,0 +1,355 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  name          String?
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile            UserProfile?
+  practiceSessions   PracticeSession[]
+  conversations      Conversation[]
+  achievements       UserAchievement[]
+  vocabularyItems    VocabularyItem[]
+  vocabularyReviews  VocabularyReview[]
+  userPhrases        UserPhrase[]
+  progressSnapshots  ProgressSnapshot[]
+  coachSettings      CoachSettings?
+  accounts           Account[]
+  sessions           Session[]
+
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profession              String?
+  yearsExperience         Int?
+  englishLevel            String?
+  nativeLanguage          String?
+  targetAccent            String?
+  dailyPracticeMinutes    Int      @default(20)
+  primaryGoal             String?
+  confidenceScore         Int?
+  onboardingCompleted     Boolean  @default(false)
+  baselineCompleted       Boolean  @default(false)
+  currentLevel            Int      @default(1)
+  currentLevelLabel       String   @default("Basic Speaker")
+  communicationScores     Json?
+  weaknessProfile         Json?
+  streakDays              Int      @default(0)
+  totalSpeakingMinutes    Int      @default(0)
+  lastPracticeDate        DateTime?
+  demoMode                Boolean  @default(false)
+}
+
+model PracticeSession {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            String
+  scenarioTitle   String?
+  scenarioPrompt  String?  @db.Text
+  durationSeconds Int      @default(0)
+  overallScore    Int?
+  scorecard       Json?
+  summary         Json?
+  startedAt       DateTime @default(now())
+  endedAt         DateTime?
+  metadata        Json?
+
+  speechAnalyses SpeechAnalysis[]
+
+  @@index([userId, startedAt])
+}
+
+model Conversation {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  personality  String   @default("executive_coach")
+  scenarioId   String?
+  scenario     Scenario? @relation(fields: [scenarioId], references: [id])
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  messages ConversationMessage[]
+
+  @@index([userId, createdAt])
+}
+
+model ConversationMessage {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String
+  content        String       @db.Text
+  transcript     String?      @db.Text
+  analysis       Json?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+model SpeechAnalysis {
+  id                String          @id @default(cuid())
+  practiceSessionId String
+  practiceSession   PracticeSession @relation(fields: [practiceSessionId], references: [id], onDelete: Cascade)
+  transcript        String          @db.Text
+  analysis          Json
+  fillerWordCount   Int             @default(0)
+  createdAt         DateTime        @default(now())
+
+  grammarMistakes       GrammarMistake[]
+  pronunciationMistakes PronunciationMistake[]
+}
+
+model GrammarMistake {
+  id               String         @id @default(cuid())
+  speechAnalysisId String
+  speechAnalysis   SpeechAnalysis @relation(fields: [speechAnalysisId], references: [id], onDelete: Cascade)
+  original         String
+  correction       String
+  category         String?
+  recurring        Boolean        @default(false)
+  count            Int            @default(1)
+  createdAt        DateTime       @default(now())
+
+  @@index([original])
+}
+
+model PronunciationMistake {
+  id               String         @id @default(cuid())
+  speechAnalysisId String
+  speechAnalysis   SpeechAnalysis @relation(fields: [speechAnalysisId], references: [id], onDelete: Cascade)
+  word             String
+  issue            String
+  ipa              String?
+  createdAt        DateTime       @default(now())
+
+  @@index([word])
+}
+
+model VocabularyItem {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word         String
+  context      String?  @db.Text
+  introducedAt DateTime @default(now())
+  lastUsedAt   DateTime?
+  useCount     Int      @default(0)
+  status       String   @default("learning")
+
+  reviews VocabularyReview[]
+
+  @@unique([userId, word])
+  @@index([userId, status])
+}
+
+model VocabularyReview {
+  id               String         @id @default(cuid())
+  userId           String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vocabularyItemId String
+  vocabularyItem   VocabularyItem @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
+  dueAt            DateTime
+  completedAt      DateTime?
+  success          Boolean?
+
+  @@index([userId, dueAt])
+}
+
+model Scenario {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String?  @db.Text
+  category    String
+  difficulty  Int      @default(1)
+  prompt      String   @db.Text
+  metadata    Json?
+  active      Boolean  @default(true)
+
+  conversations Conversation[]
+  dailyPlans    DailyPlanItem[]
+}
+
+model LearningGoal {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  category  String
+  target    String?
+  progress  Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model DailyChallenge {
+  id        String   @id @default(cuid())
+  date      DateTime @db.Date
+  title     String
+  prompt    String   @db.Text
+  category  String
+  active    Boolean  @default(true)
+
+  @@unique([date, title])
+}
+
+model DailyPlan {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @db.Date
+  focus     String?
+  minutes   Int      @default(20)
+  createdAt DateTime @default(now())
+
+  items DailyPlanItem[]
+
+  @@unique([userId, date])
+}
+
+model DailyPlanItem {
+  id          String    @id @default(cuid())
+  dailyPlanId String
+  dailyPlan   DailyPlan @relation(fields: [dailyPlanId], references: [id], onDelete: Cascade)
+  order       Int
+  type        String
+  title       String
+  prompt      String    @db.Text
+  scenarioId  String?
+  scenario    Scenario? @relation(fields: [scenarioId], references: [id])
+  completed   Boolean   @default(false)
+}
+
+model WeeklyAssessment {
+  id        String   @id @default(cuid())
+  userId    String
+  weekStart DateTime @db.Date
+  metrics   Json
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@unique([userId, weekStart])
+}
+
+model MonthlyAssessment {
+  id        String   @id @default(cuid())
+  userId    String
+  monthStart DateTime @db.Date
+  report    Json
+  createdAt DateTime @default(now())
+
+  @@unique([userId, monthStart])
+}
+
+model Achievement {
+  id          String @id @default(cuid())
+  slug        String @unique
+  title       String
+  description String
+  icon        String?
+
+  users UserAchievement[]
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  earnedAt      DateTime    @default(now())
+
+  @@unique([userId, achievementId])
+}
+
+model ProgressSnapshot {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scores    Json
+  source    String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model Phrase {
+  id       String @id @default(cuid())
+  category String
+  phrase   String
+  context  String?
+
+  userPhrases UserPhrase[]
+}
+
+model UserPhrase {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phraseId  String
+  phrase    Phrase   @relation(fields: [phraseId], references: [id], onDelete: Cascade)
+  saved     Boolean  @default(true)
+  usedCount Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, phraseId])
+}
+
+model CoachSettings {
+  id              String @id @default(cuid())
+  userId          String @unique
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  personality     String @default("executive_coach")
+  feedbackTiming  String @default("after_turn")
+  storeRecordings Boolean @default(false)
+  storeTranscripts Boolean @default(true)
+  theme           String @default("system")
+}

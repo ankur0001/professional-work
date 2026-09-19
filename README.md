@@ -4,6 +4,14 @@ Personal professional hub for **Ankur Kumar** — freelance profiles, career ass
 
 **Repository:** https://github.com/ankur0001/professional-work
 
+## ExecutiveSpeak (AI communication coach)
+
+Full-stack app for software engineers — speaking-first coaching with demo mode:
+
+- **App:** [`executivespeak/`](executivespeak/)
+- **Run locally:** `cd executivespeak && cp .env.example .env && npm install && npm run dev`
+- **Demo login:** `demo@executivespeak.app` / `demo1234`
+
 ## Structure
 
 ```
