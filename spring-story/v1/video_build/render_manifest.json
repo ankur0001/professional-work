@@ -1,9 +1,9 @@
 [
   {
-    "ep": 107,
-    "title": "Hexagonal Architecture",
-    "beats": 12,
-    "duration_sec": 131.625,
-    "mp4": "/workspace/spring-story/v1/episodes/ep107-hexagonal-architecture/Spring_Episode_107_Hexagonal_Architecture.mp4"
+    "ep": 109,
+    "title": "DDD Basics",
+    "beats": 20,
+    "duration_sec": 210.25,
+    "mp4": "/workspace/spring-story/v1/episodes/ep109-ddd-basics/Spring_Episode_109_DDD_Basics.mp4"
   }
 ]
