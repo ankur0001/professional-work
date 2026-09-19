@@ -1,9 +1,9 @@
 [
   {
-    "ep": 4,
-    "title": "Dependency Injection",
-    "beats": 23,
-    "duration_sec": 273.51,
-    "mp4": "/workspace/spring-story/v1/episodes/ep04-dependency-injection/Spring_Episode_04_Dependency_Injection.mp4"
+    "ep": 10,
+    "title": "Configuration Styles",
+    "beats": 29,
+    "duration_sec": 292.938,
+    "mp4": "/workspace/spring-story/v1/episodes/ep10-configuration-styles/Spring_Episode_10_Configuration_Styles.mp4"
   }
 ]
