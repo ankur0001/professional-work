@@ -1,9 +1,9 @@
 [
   {
-    "ep": 1,
-    "title": "Why Spring?",
-    "beats": 31,
-    "duration_sec": 392.5,
-    "mp4": "/workspace/spring-story/v1/episodes/ep01-why-spring/Spring_Episode_01_Why_Spring.mp4"
+    "ep": 4,
+    "title": "Dependency Injection",
+    "beats": 23,
+    "duration_sec": 273.51,
+    "mp4": "/workspace/spring-story/v1/episodes/ep04-dependency-injection/Spring_Episode_04_Dependency_Injection.mp4"
   }
 ]
