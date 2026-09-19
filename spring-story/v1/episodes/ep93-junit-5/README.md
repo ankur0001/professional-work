@@ -11,11 +11,14 @@
 | Title | [`title.txt`](title.txt) |
 | Description + timestamps | [`youtube_description.txt`](youtube_description.txt) |
 | Tags | [`tags.txt`](tags.txt) |
+| Video (clean) | [`Spring_Episode_93_JUnit_5.mp4`](Spring_Episode_93_JUnit_5.mp4) |
+| Video (captioned) | [`Spring_Episode_93_JUnit_5_CAPTIONED.mp4`](Spring_Episode_93_JUnit_5_CAPTIONED.mp4) |
+| Captions (SRT) | [`Spring_Episode_93.srt`](Spring_Episode_93.srt) |
 | Thumbnail | [`thumbnail.jpg`](thumbnail.jpg) |
 | Chapters | [`chapters.txt`](chapters.txt) |
 | Narration / transcript | [`narration.md`](narration.md) |
 
-> Video (`.mp4`) and captions (`.srt`) are produced in a later video-build pass. Upload metadata and thumbnail are ready now.
+> Video + SRT are ready in this folder (clean + captioned).
 
 ## Suggested upload
 
