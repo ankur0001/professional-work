@@ -1,0 +1,238 @@
+1
+00:00:00,000 --> 00:00:13,775
+New hire opens a PR titled "add web
+endpoint for station status." The pom.xml
+diff lists spring-web, spring-webmvc,
+hibernate-validator, jackson-databind,
+tomcat-embed-core, each with a hand-picked
+version.
+
+2
+00:00:13,895 --> 00:00:27,095
+Two of those versions disagree with the
+Boot BOM already imported. CI fails on
+NoSuchMethodError deep in Jackson or
+Spring MVC — not in the new controller.
+Reviewer comment: "Delete all of that.
+
+3
+00:00:27,215 --> 00:00:39,599
+Use spring-boot-starter-web." The bike-
+share API does not need a custom
+dependency graph for "hello HTTP."
+Starters are dependency descriptors, not
+runtime containers.
+
+4
+00:00:39,719 --> 00:00:51,503
+spring-boot-starter-web pulls a tested set
+of jars compatible with your Boot version
+— Spring MVC, embedded Tomcat, Jackson,
+validation API — so auto-configuration
+conditions become true *together*.
+
+5
+00:00:51,623 --> 00:01:05,951
+The Boot dependency-management BOM (via
+spring-boot-dependencies or the parent
+POM) aligns versions. You choose features;
+Boot chooses compatible coordinates. That
+separation is the whole product pitch of
+starters.
+
+6
+00:01:06,071 --> 00:01:12,215
+Look at this example. <!-- before:
+dependency hell --> Walk the before/after.
+
+7
+00:01:12,335 --> 00:01:22,151
+Hand versions look precise and are usually
+wrong relative to the Boot release train:
+Boot 3.x expects a specific Spring
+Framework line and a Jackson line tested
+against it.
+
+8
+00:01:22,271 --> 00:01:30,623
+Mixing "latest Jackson" with "Boot's
+Spring" produces method mismatches at
+runtime — compile may still pass if your
+code does not call the missing method.
+
+9
+00:01:30,743 --> 00:01:38,063
+The starter dependency omits <version>
+when the parent BOM manages it;
+Maven/Gradle resolves a coherent graph.
+
+10
+00:01:38,183 --> 00:01:48,383
+Transitive jars appear in mvn
+dependency:tree under the starter — that
+tree *is* the classpath signal auto-config
+reads. Runtime effect is indirect but
+real.
+
+11
+00:01:48,503 --> 00:02:00,047
+With spring-boot-starter-web on the
+classpath, Boot's servlet web auto-
+configuration sees Tomcat and
+DispatcherServlet classes, starts an
+embedded server, registers MVC
+infrastructure beans,
+
+12
+00:02:00,167 --> 00:02:05,351
+and configures HTTP message converters
+including Jackson if present.
+
+13
+00:02:05,471 --> 00:02:12,095
+Without Jackson on the classpath, JSON
+@RestController methods fail at runtime
+when writing responses.
+
+14
+00:02:12,215 --> 00:02:22,079
+Without version alignment, you might get a
+server that starts and explodes on the
+first JSON payload — symptom:
+NoSuchMethodError or
+ClassNotFoundException in converter setup,
+
+15
+00:02:22,199 --> 00:02:29,543
+HTTP 500 on /api/stations/{id} while
+/actuator/health still looks fine.
+
+16
+00:02:29,663 --> 00:02:39,671
+Starters keep classpath signaling
+intentional: add starter-data-jpa and you
+invite DataSource and JPA auto-config;
+remove starter-web and the embedded server
+should disappear.
+
+17
+00:02:39,791 --> 00:02:50,351
+Common starters sketch a vocabulary:
+spring-boot-starter-web, data-jpa,
+security, actuator, test. Each is a menu
+item for a feature slice.
+
+18
+00:02:50,471 --> 00:02:58,535
+spring-boot-starter-test brings JUnit,
+Mockito, AssertJ, and Spring Test — use it
+in test scope so production images stay
+lean.
+
+19
+00:02:58,655 --> 00:03:06,239
+When you need only JDBC without JPA,
+prefer starter-jdbc over dragging
+Hibernate via starter-data-jpa.
+
+20
+00:03:06,359 --> 00:03:13,871
+Failure mode: new hire "fixes" a missing
+class by adding a second, differently
+versioned copy of a jar already on the
+tree.
+
+21
+00:03:13,991 --> 00:03:27,048
+Symptom: duplicate classes on the
+classpath, non-deterministic which wins,
+subtle bugs in one environment. Maven's
+dependency mediation picked one version;
+an explicit wrong version forced another.
+
+22
+00:03:27,167 --> 00:03:39,263
+Another failure: adding starter-webflux
+beside starter-web "to try reactive" —
+dual stacks, confused web-application-type
+deduction, larger image, surprising thread
+models. Trade-offs.
+
+23
+00:03:39,383 --> 00:03:48,047
+Starters trade fine-grained control for
+curated coherence — perfect for services;
+occasionally heavy if you only wanted one
+transitive and got fifteen.
+
+24
+00:03:48,167 --> 00:04:00,119
+Excluding a transitive (<exclusions>) is
+valid when you replace embedded Tomcat
+with Jetty via spring-boot-starter-jetty,
+but each exclusion is a promise you
+understand the auto-config conditions you
+just changed.
+
+25
+00:04:00,239 --> 00:04:05,879
+Pinning versions manually fights the BOM
+and reintroduces the PR that started this
+lesson.
+
+26
+00:04:05,999 --> 00:04:16,391
+After the new hire switches to spring-
+boot-starter-web, run mvn dependency:tree
+| head in review and look for a single
+Jackson and a single Spring MVC line
+managed by the Boot BOM.
+
+27
+00:04:16,511 --> 00:04:20,159
+That tree is the artifact you are actually
+shipping.
+
+28
+00:04:20,279 --> 00:04:30,791
+If a transitive from a random SDK pulls an
+older jackson-databind, resolve it with
+Boot's dependency management or an
+explicit BOM-aligned override — not by
+deleting the starter.
+
+29
+00:04:30,911 --> 00:04:37,199
+Starters and the BOM are one system: the
+starter selects features; the BOM selects
+versions.
+
+30
+00:04:37,319 --> 00:04:48,095
+Misconception unique to starters: "A
+starter contains the auto-configuration
+Java code for that feature." Auto-
+configuration mostly lives in spring-boot-
+autoconfigure.
+
+31
+00:04:48,215 --> 00:05:00,959
+Starters primarily bring dependencies (and
+sometimes transitive config). Removing a
+starter removes jars; excluding an auto-
+config class is a different lever. The POM
+is clean.
+
+32
+00:05:01,079 --> 00:05:11,831
+Controllers still fail to map because the
+main application class sits in
+com.bikeshare while controllers live in
+com.bikeshare.api.web, and someone set a
+custom scan base that missed them.
+
+33
+00:05:11,951 --> 00:05:17,927
+@SpringBootApplication is three
+annotations fused — and the scan-base
+mistake hides in that fusion.
