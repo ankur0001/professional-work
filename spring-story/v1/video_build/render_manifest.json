@@ -1,9 +1,9 @@
 [
   {
-    "ep": 35,
-    "title": "Interceptors",
-    "beats": 14,
-    "duration_sec": 153.834,
-    "mp4": "/workspace/spring-story/v1/episodes/ep35-interceptors/Spring_Episode_35_Interceptors.mp4"
+    "ep": 60,
+    "title": "JDK Proxy",
+    "beats": 29,
+    "duration_sec": 303.81,
+    "mp4": "/workspace/spring-story/v1/episodes/ep60-jdk-proxy/Spring_Episode_60_JDK_Proxy.mp4"
   }
 ]
