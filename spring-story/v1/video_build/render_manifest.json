@@ -1,9 +1,9 @@
 [
   {
-    "ep": 60,
-    "title": "JDK Proxy",
-    "beats": 29,
-    "duration_sec": 303.81,
-    "mp4": "/workspace/spring-story/v1/episodes/ep60-jdk-proxy/Spring_Episode_60_JDK_Proxy.mp4"
+    "ep": 49,
+    "title": "Pessimistic Locking",
+    "beats": 14,
+    "duration_sec": 165.498,
+    "mp4": "/workspace/spring-story/v1/episodes/ep49-pessimistic-locking/Spring_Episode_49_Pessimistic_Locking.mp4"
   }
 ]
