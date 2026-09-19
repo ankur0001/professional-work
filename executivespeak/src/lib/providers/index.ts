@@ -34,7 +34,12 @@ export function getPronunciationProvider(): PronunciationProvider {
   return {
     name: getAppConfig().pronunciationProvider,
     async analyzeWord(word, transcriptContext) {
+      const { lookupPronunciation } = await import("./pronunciation/word-bank");
+      const entry = lookupPronunciation(word);
       if (!transcriptContext.toLowerCase().includes(word.toLowerCase())) return null;
+      if (entry) {
+        return { word: entry.word, issue: entry.issue, ipa: entry.ipa };
+      }
       return {
         word,
         issue: "Check word stress and vowel clarity.",

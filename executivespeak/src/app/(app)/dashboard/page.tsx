@@ -31,9 +31,17 @@ export default function DashboardPage() {
   const [demoMode, setDemoMode] = useState(true);
   const [challenge, setChallenge] = useState<DailyChallenge | null>(null);
   const [challengeDone, setChallengeDone] = useState(false);
+  const [curriculum, setCurriculum] = useState<{
+    focus: string;
+    minutes: number;
+    weaknessTargets: string[];
+    items: { title: string; prompt: string; slug: string }[];
+  } | null>(null);
   const plan = getDailyPlan(profile.dailyPracticeMinutes ?? 20);
+  const focusText = curriculum?.focus ?? plan.focus;
+  const practiceMinutes = curriculum?.minutes ?? plan.minutes;
   const spokenToday = 0;
-  const progressPct = Math.min(100, (spokenToday / plan.minutes) * 100);
+  const progressPct = Math.min(100, (spokenToday / practiceMinutes) * 100);
 
   useEffect(() => {
     fetch("/api/config").then((r) => r.json()).then((c) => setDemoMode(c.demoMode));
@@ -47,6 +55,10 @@ export default function DashboardPage() {
         setChallenge(d.challenge);
         setChallengeDone(d.completed);
       })
+      .catch(() => undefined);
+    fetch("/api/curriculum/today")
+      .then((r) => r.json())
+      .then(setCurriculum)
       .catch(() => undefined);
   }, []);
 
@@ -102,7 +114,14 @@ export default function DashboardPage() {
             <CardTitle className="text-base">Today&apos;s focus</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm">{plan.focus}</p>
+            <p className="text-sm">{focusText}</p>
+            {curriculum?.weaknessTargets?.length ? (
+              <ul className="mt-2 list-disc pl-5 text-xs text-muted-foreground">
+                {curriculum.weaknessTargets.map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+            ) : null}
             <p className="mt-3 text-sm font-medium">Challenge</p>
             <p className="text-sm text-muted-foreground">{plan.challenge}</p>
           </CardContent>

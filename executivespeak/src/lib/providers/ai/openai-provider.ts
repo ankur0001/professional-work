@@ -121,4 +121,40 @@ export class OpenAIProvider implements AIProvider {
       return this.fallback.evaluateMeetingResponse(input);
     }
   }
+
+  async analyzeStory(transcript: string) {
+    try {
+      const { storytellingCoachSystem } = await import("@/lib/prompts/storytelling-coach");
+      const raw = await this.chatJson(storytellingCoachSystem, JSON.stringify({ transcript }));
+      const { storyAnalysisSchema } = await import("@/lib/schemas/executive");
+      return storyAnalysisSchema.parse(raw);
+    } catch {
+      return this.fallback.analyzeStory(transcript);
+    }
+  }
+
+  async analyzeExecutivePresentation(input: import("../types").ExecutivePresentationInput) {
+    try {
+      const { executiveAssessmentSystem } = await import("@/lib/prompts/executive-assessment");
+      const raw = await this.chatJson(executiveAssessmentSystem, JSON.stringify(input));
+      const { executiveReportSchema } = await import("@/lib/schemas/executive");
+      return executiveReportSchema.parse(raw);
+    } catch {
+      return this.fallback.analyzeExecutivePresentation(input);
+    }
+  }
+
+  async generateMeetingTurn(input: import("../types").MeetingTurnInput) {
+    try {
+      const { meetingSimulatorSystem } = await import("@/lib/prompts/meeting-simulator");
+      const raw = await this.chatJson(
+        meetingSimulatorSystem,
+        JSON.stringify({ task: "next_turn", ...input }),
+      );
+      const { meetingTurnSchema } = await import("@/lib/schemas/executive");
+      return meetingTurnSchema.parse(raw);
+    } catch {
+      return this.fallback.generateMeetingTurn(input);
+    }
+  }
 }

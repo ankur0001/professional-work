@@ -17,7 +17,12 @@ export default function AssessmentPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-8">
-      <h1 className="text-3xl font-semibold">Weekly assessment</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-3xl font-semibold">Weekly assessment</h1>
+        <Button asChild variant="outline">
+          <Link href="/assessment/executive">Monthly executive day</Link>
+        </Button>
+      </div>
       <p className="text-sm text-muted-foreground">
         Trends are calculated from your actual sessions only — never fabricated.
       </p>

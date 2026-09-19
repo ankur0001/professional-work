@@ -8,6 +8,12 @@ import type {
 } from "../types";
 import { feedbackAnalysisSchema } from "@/lib/schemas/feedback";
 import { writingCoachSchema, meetingEvaluationSchema } from "@/lib/schemas/writing";
+import {
+  executiveReportSchema,
+  storyAnalysisSchema,
+  meetingTurnSchema,
+} from "@/lib/schemas/executive";
+import type { ExecutivePresentationInput, MeetingTurnInput } from "../types";
 import { detectFillerWords } from "@/lib/scoring";
 
 function scoreFromText(transcript: string, base: number): number {
@@ -205,6 +211,81 @@ export class MockAIProvider implements AIProvider {
         : "Solid meeting response — you balanced constraints with a clear recommendation.",
       improvedVersion:
         "I understand the Friday deadline. Adding people won't help this week due to onboarding cost. I recommend we ship auth + checkout Friday and move reporting to sprint 24 — I'll document scope for PM sign-off today.",
+    });
+  }
+
+  async analyzeStory(transcript: string) {
+    const t = transcript.toLowerCase();
+    const hasResult = /\b(result|outcome|shipped|delivered|fixed)\b/.test(t);
+    const hasLesson = /\b(learned|lesson|next time|takeaway)\b/.test(t);
+    const base = scoreFromText(transcript, 65);
+    return storyAnalysisSchema.parse({
+      situation: base,
+      challenge: base + 4,
+      action: base + 2,
+      result: hasResult ? base + 8 : base - 15,
+      lesson: hasLesson ? base + 6 : base - 20,
+      overall: hasResult && hasLesson ? base + 5 : base - 5,
+      structureNotes: hasLesson
+        ? "Good lesson close — tighten the result with one metric if possible."
+        : "Missing a clear lesson. End with what you would do differently.",
+      improvedOutline:
+        "Situation: team migration deadline → Challenge: legacy API failures → Action: phased rollout + feature flags → Result: zero downtime, 30% latency win → Lesson: validate rollback paths before cutover.",
+    });
+  }
+
+  async analyzeExecutivePresentation(input: ExecutivePresentationInput) {
+    const combined = input.transcripts.join(" ");
+    const base = scoreFromText(combined, 70);
+    const weak = /\b(maybe|kind of)\b/i.test(combined);
+    return executiveReportSchema.parse({
+      executivePresence: weak ? base - 10 : base + 5,
+      clarity: base,
+      conciseness: base - 5,
+      structure: base + 3,
+      businessAwareness: base - 2,
+      technicalDepth: base + 8,
+      confidence: weak ? base - 8 : base + 2,
+      persuasiveness: base,
+      audienceAdaptation: base + 1,
+      overall: base,
+      coachingReport:
+        "You explained the technical decision clearly. For executive audiences, open with business impact, then recommendation, then risks. Close with the decision you need from the CTO.",
+      topThreeActions: [
+        "Lead with revenue/risk impact in sentence one.",
+        "State your recommendation before architecture details.",
+        "End with a explicit decision ask and timeline.",
+      ],
+    });
+  }
+
+  async generateMeetingTurn(input: MeetingTurnInput) {
+    const turns = input.history.length;
+    if (!input.userResponse && turns === 0) {
+      return meetingTurnSchema.parse({
+        speaker: "Product Manager",
+        line: "We need this feature by Friday. Marketing already announced it.",
+        expectsUserResponse: false,
+      });
+    }
+    if (!input.userResponse) {
+      return meetingTurnSchema.parse({
+        speaker: "Engineer",
+        line: "That timeline isn't realistic — integration tests aren't green yet.",
+        expectsUserResponse: false,
+      });
+    }
+    if (turns <= 4) {
+      return meetingTurnSchema.parse({
+        speaker: "Engineering Manager",
+        line: "What's the smallest scope we can ship Friday without taking on outage risk?",
+        expectsUserResponse: true,
+      });
+    }
+    return meetingTurnSchema.parse({
+      speaker: "Product Manager",
+      line: "If we slip to next week, what do we tell customers?",
+      expectsUserResponse: true,
     });
   }
 }

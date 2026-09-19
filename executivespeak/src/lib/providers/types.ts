@@ -1,5 +1,6 @@
 import type { FeedbackAnalysis, SessionSummary, BaselineScores } from "@/lib/schemas/feedback";
 import type { WritingCoachResult, MeetingEvaluation } from "@/lib/schemas/writing";
+import type { ExecutiveReport, StoryAnalysis, MeetingTurn } from "@/lib/schemas/executive";
 
 export interface AIProvider {
   name: string;
@@ -9,6 +10,20 @@ export interface AIProvider {
   analyzeBaseline(transcripts: string[]): Promise<BaselineScores>;
   coachWriting(input: WritingCoachInput): Promise<WritingCoachResult>;
   evaluateMeetingResponse(input: MeetingEvalInput): Promise<MeetingEvaluation>;
+  analyzeStory(transcript: string): Promise<StoryAnalysis>;
+  analyzeExecutivePresentation(input: ExecutivePresentationInput): Promise<ExecutiveReport>;
+  generateMeetingTurn(input: MeetingTurnInput): Promise<MeetingTurn>;
+}
+
+export interface ExecutivePresentationInput {
+  transcripts: string[];
+  scenario: string;
+}
+
+export interface MeetingTurnInput {
+  meetingId: string;
+  history: { speaker: string; line: string }[];
+  userResponse?: string;
 }
 
 export interface WritingCoachInput {

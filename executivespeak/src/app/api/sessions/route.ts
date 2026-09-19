@@ -10,6 +10,8 @@ import {
 } from "@/lib/demo/demo-store";
 import { getDailyChallenge } from "@/lib/data/daily-challenges";
 import { suggestWordsFromTranscript } from "@/lib/vocabulary/suggest";
+import { detectWordsInTranscript } from "@/lib/providers/pronunciation/word-bank";
+import { addPronunciationFocus } from "@/lib/demo/demo-store";
 import { getAIProvider } from "@/lib/providers";
 import { getPrisma } from "@/lib/db";
 import { isDemoMode } from "@/lib/config";
@@ -74,6 +76,8 @@ export async function POST(req: Request) {
   if (isDemoMode() || session.user.demo) {
     const newWords = body.transcripts.flatMap((t) => suggestWordsFromTranscript(t));
     if (newWords.length) upsertVocabulary(session.user.email, newWords);
+    const pronounced = body.transcripts.flatMap((t) => detectWordsInTranscript(t));
+    if (pronounced.length) addPronunciationFocus(session.user.email, pronounced.map((p) => p.word));
     const profile = getDemoProfile(session.user.email);
     profile.weaknessProfile = mergeWeaknessProfile(profile.weaknessProfile, last);
     if (last) {

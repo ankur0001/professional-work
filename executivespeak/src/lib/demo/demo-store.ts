@@ -29,6 +29,8 @@ export interface DemoUserProfile {
   achievements: string[];
   completedChallengeIds: string[];
   lastChallengeDate: string | null;
+  pronunciationFocus: string[];
+  monthlyReports: { monthStart: string; report: Record<string, unknown> }[];
 }
 
 export interface VocabularyEntry {
@@ -115,6 +117,8 @@ function defaultProfile(name = "Demo Engineer"): DemoUserProfile {
     achievements: [],
     completedChallengeIds: [],
     lastChallengeDate: null,
+    pronunciationFocus: ["architecture", "recommend"],
+    monthlyReports: [],
   };
 }
 
@@ -189,6 +193,26 @@ export function upsertVocabulary(email: string, words: string[]): DemoUserProfil
       status: "learning",
     });
   }
+  return saveDemoProfile(profile);
+}
+
+export function addPronunciationFocus(email: string, words: string[]): DemoUserProfile {
+  const profile = getDemoProfile(email);
+  const set = new Set([...profile.pronunciationFocus, ...words.map((w) => w.toLowerCase())]);
+  profile.pronunciationFocus = [...set].slice(-12);
+  return saveDemoProfile(profile);
+}
+
+export function saveMonthlyReport(
+  email: string,
+  monthStart: string,
+  report: Record<string, unknown>,
+): DemoUserProfile {
+  const profile = getDemoProfile(email);
+  profile.monthlyReports = [
+    { monthStart, report },
+    ...profile.monthlyReports.filter((m) => m.monthStart !== monthStart),
+  ].slice(0, 6);
   return saveDemoProfile(profile);
 }
 

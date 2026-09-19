@@ -105,7 +105,14 @@ Implemented: authentication, onboarding, baseline assessment, dashboard, voice c
 - Daily leadership challenges + achievements
 - Weekly assessment trends (from real session data)
 
-Phase 3+: monthly executive assessment day, advanced pronunciation API, meeting multi-agent AI, full DB-backed SRS.
+### Phase 3 (implemented)
+
+- **Monthly Executive Communication Day** (`/assessment/executive`) — 10-min CTO presentation + coaching report
+- **Storytelling trainer** (`/storytelling`) — SCARL structure scoring
+- **Live multi-agent meeting** — dynamic PM/Engineer/Manager turns via `/api/meeting/turn`
+- **Pronunciation word bank** — session-detected focus list + slow/normal TTS
+- **Personalized curriculum** — `/api/curriculum/today` from weakness profile
+- **DB-backed vocabulary service** — Prisma when `DEMO_MODE=false`, demo store fallback
 
 ## License
 

@@ -1,26 +1,14 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
-import {
-  getDemoProfile,
-  reviewVocabularyWord,
-  upsertVocabulary,
-} from "@/lib/demo/demo-store";
-import { isDemoMode } from "@/lib/config";
-import { wordsDueForReview } from "@/lib/vocabulary/suggest";
+import { introduceWords, listVocabulary, reviewWord } from "@/lib/services/vocabulary-service";
 import { z } from "zod";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!isDemoMode() && !session.user.demo) {
-    return NextResponse.json({ items: [], due: [] });
-  }
-  const profile = getDemoProfile(session.user.email);
-  return NextResponse.json({
-    items: profile.vocabularyItems,
-    due: wordsDueForReview(profile.vocabularyItems),
-  });
+  const data = await listVocabulary(session.user.id, session.user.email);
+  return NextResponse.json(data);
 }
 
 const postSchema = z.discriminatedUnion("action", [
@@ -32,14 +20,10 @@ export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = postSchema.parse(await req.json());
-  if (isDemoMode() || session.user.demo) {
-    if (body.action === "introduce") {
-      upsertVocabulary(session.user.email, body.words);
-    } else {
-      reviewVocabularyWord(session.user.email, body.word, body.success);
-    }
-    const profile = getDemoProfile(session.user.email);
-    return NextResponse.json({ items: profile.vocabularyItems });
+  if (body.action === "introduce") {
+    const items = await introduceWords(session.user.id, session.user.email, body.words);
+    return NextResponse.json({ items });
   }
-  return NextResponse.json({ ok: true });
+  const items = await reviewWord(session.user.id, session.user.email, body.word, body.success);
+  return NextResponse.json({ items });
 }
