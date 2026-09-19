@@ -1,9 +1,9 @@
 [
   {
-    "ep": 91,
-    "title": "Resilience4j",
-    "beats": 21,
-    "duration_sec": 217.125,
-    "mp4": "/workspace/spring-story/v1/episodes/ep91-resilience4j/Spring_Episode_91_Resilience4j.mp4"
+    "ep": 45,
+    "title": "Criteria API",
+    "beats": 13,
+    "duration_sec": 155.154,
+    "mp4": "/workspace/spring-story/v1/episodes/ep45-criteria-api/Spring_Episode_45_Criteria_API.mp4"
   }
 ]
