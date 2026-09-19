@@ -1,9 +1,9 @@
 [
   {
-    "ep": 82,
-    "title": "Reactive Security",
-    "beats": 16,
-    "duration_sec": 165.81,
-    "mp4": "/workspace/spring-story/v1/episodes/ep82-reactive-security/Spring_Episode_82_Reactive_Security.mp4"
+    "ep": 107,
+    "title": "Hexagonal Architecture",
+    "beats": 12,
+    "duration_sec": 131.625,
+    "mp4": "/workspace/spring-story/v1/episodes/ep107-hexagonal-architecture/Spring_Episode_107_Hexagonal_Architecture.mp4"
   }
 ]
