@@ -1,0 +1,110 @@
+1
+00:00:00,000 --> 00:00:03,552
+Reactive programming introduced
+publishers.
+
+2
+00:00:03,672 --> 00:00:15,264
+Most harbor lookups are not streams of
+thousands of rows — they are “give me this
+vessel by MMSI,” “load this berth
+assignment,” “call this registry once.”
+Reactor’s type for that is Mono<T>:
+
+3
+00:00:15,384 --> 00:00:20,064
+a publisher that completes with zero or
+one item, or with an error.
+
+4
+00:00:20,184 --> 00:00:34,439
+Think of Mono as a lazy asynchronous
+Optional with operators — but do not
+implement it by wrapping blocking calls in
+Mono.just.
+Mono.just(repo.findByMmsi(mmsi)) still
+blocks the caller thread before the Mono
+even exists.
+
+5
+00:00:34,560 --> 00:00:48,672
+Prefer sources that are non-blocking, or
+defer blocking work explicitly. Look at
+this java for a moment. Operator
+vocabulary you should say out loud. map
+transforms the item synchronously.
+
+6
+00:00:48,792 --> 00:01:03,359
+flatMap chains another Mono or Flux when
+each item needs an async call — the
+reactive replacement for nested callbacks.
+switchIfEmpty handles the zero-item case.
+timeout, retry, onErrorResume shape time
+and failure.
+
+7
+00:01:03,480 --> 00:01:19,200
+zipWhen / zipWith combine parallel
+lookups. then ignores the payload and
+waits for completion — useful for deletes.
+Cardinality is the contract. If you
+accidentally emit two items into a Mono,
+Reactor signals an error.
+
+8
+00:01:19,320 --> 00:01:32,760
+If your repository can return many
+positions, you wanted Flux. Choosing Mono
+documents intent: WebFlux treats Mono as a
+single JSON object body, not an array.
+Empty is not null.
+
+9
+00:01:32,880 --> 00:01:47,400
+A completed empty Mono means “no value.”
+Mapping without guarding empty keeps
+emptiness. Turning empty into an error
+with switchIfEmpty(Mono.error(...)) is how
+you express 404-style vessel misses at the
+reactive layer.
+
+10
+00:01:47,520 --> 00:01:57,000
+Returning Mono.justOrEmpty(optional)
+bridges imperative code carefully;
+returning null from a reactive adapter is
+not the same and usually breaks callers.
+
+11
+00:01:57,120 --> 00:02:07,103
+A misconception is calling .block() on a
+Mono inside WebFlux request handling to
+“make it simple.” That reintroduces thread
+blocking on the event loop.
+
+12
+00:02:07,224 --> 00:02:13,319
+Blocking belongs at edges you control —
+tests sometimes, or a narrow adapter — not
+in the hot path.
+
+13
+00:02:13,439 --> 00:02:20,544
+Another misconception is nesting subscribe
+inside map instead of flatMap — that
+breaks backpressure and error propagation.
+
+14
+00:02:20,663 --> 00:02:27,287
+A third is treating Mono as a servlet-
+style injected dependency rather than a
+publisher you compose and return.
+
+15
+00:02:27,407 --> 00:02:42,048
+Today we treated Mono as the 0..1 reactive
+publisher: compose with flatMap, handle
+empty, signal errors, return it to the web
+layer instead of blocking. Live AIS maps
+need 0..n. That publisher is Flux.

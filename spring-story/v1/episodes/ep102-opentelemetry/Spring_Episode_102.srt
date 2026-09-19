@@ -1,0 +1,159 @@
+1
+00:00:00,000 --> 00:00:09,144
+Grafana shows gate p95 climbing. Which
+span is guilty — gateway auth, gate’s
+releaseGate, Feign to billing, or
+billing’s SQL?
+
+2
+00:00:09,323 --> 00:00:19,067
+OpenTelemetry (OTel) standardizes traces,
+metrics, and baggage so one check-in
+becomes a tree of spans you can open
+beside the Prometheus series that alerted
+you.
+
+3
+00:00:19,187 --> 00:00:34,379
+In Spring Boot 3, Micrometer Tracing
+bridges to OTel (or Brave). Auto-
+instrumentation covers inbound HTTP and
+outbound clients. You export via OTLP to a
+collector, which fans out to your trace
+backend.
+
+4
+00:00:34,500 --> 00:00:43,067
+Correlate by keeping stable metric names
+and span names around the same operation —
+harbor.gate.release as both timer and span
+name is deliberate.
+
+5
+00:00:43,188 --> 00:00:57,516
+When names diverge (releaseGate in
+metrics, GateReleaseService.accept in
+traces), humans waste minutes joining
+worlds by timestamp alone. Look at this
+example. # gate-service Look at this java
+for a moment.
+
+6
+00:00:57,636 --> 00:01:10,524
+Observation is Boot’s preferred API: one
+abstraction can emit a timer and a span
+together when configured.
+lowCardinalityKeyValue mirrors the
+Micrometer tag rule. Follow a check-in.
+
+7
+00:01:10,644 --> 00:01:22,260
+Gateway span (sampled) carries traceparent
+to gate. Gate’s Observation creates
+harbor.gate.release and nests the Feign
+client span. Billing continues the trace.
+
+8
+00:01:22,380 --> 00:01:34,524
+In the UI you jump from a Grafana spike at
+14:02 to traces in that window and sort by
+duration. When the breaker opens, child
+spans fail fast — the trace shows
+milliseconds, not a mystery hang.
+
+9
+00:01:34,644 --> 00:01:47,219
+Exemplars (when enabled) can link a
+Prometheus histogram bucket back to a
+trace id; even without them, matching
+timestamps and operation names gets you
+close. Sampling and cardinality rules
+return.
+
+10
+00:01:47,340 --> 00:01:56,028
+100% traces on the public gateway can
+drown the collector — symptom: rising
+export queue, dropped spans exactly when
+incidents happen.
+
+11
+00:01:56,147 --> 00:02:08,963
+High-cardinality span attributes — raw
+plate numbers — create the same cost
+problem as metric tags. Put plates in
+application logs keyed by trace id
+instead. Walk a missing-child failure.
+
+12
+00:02:09,084 --> 00:02:24,420
+Gate spans exist; billing never appears.
+Causes: Feign client not using the
+instrumented factory; billing sampling at
+zero while gate samples; W3C vs B3
+mismatch across a legacy hop; or a sidecar
+that strips traceparent.
+
+13
+00:02:24,539 --> 00:02:36,323
+Fix by curling headers on a test check-in
+and confirming the outbound request
+carries the parent. Another failure:
+custom spans never end() in a finally path
+— leaks and skewed durations.
+
+14
+00:02:36,443 --> 00:02:48,491
+Trade-offs: the Java agent auto-
+instruments wide; Micrometer Observation
+gives explicit business spans with less
+surprise. Use both carefully — double
+instrumentation duplicates spans.
+
+15
+00:02:48,611 --> 00:02:57,659
+Traces without RED metrics leave you blind
+between sampled requests; metrics without
+traces leave you blind on critical path.
+Keep both.
+
+16
+00:02:57,780 --> 00:03:07,307
+When correlating from Grafana, filter
+traces by service gate-service, operation
+harbor.gate.release, and the spike’s time
+window; sort by duration descending.
+
+17
+00:03:07,427 --> 00:03:15,060
+The top trace usually names the guilty
+child — billing SQL, DNS, or a retry storm
+— faster than reading three log files.
+
+18
+00:03:15,180 --> 00:03:21,396
+If no traces appear in the window, check
+sampling and collector health before
+blaming the application.
+
+19
+00:03:21,516 --> 00:03:34,620
+A misconception is installing an OTel Java
+agent and never verifying Feign/WebClient
+propagation on the gate↔billing hop.
+Another is treating traces as a
+replacement for RED metrics — you need
+both.
+
+20
+00:03:34,740 --> 00:03:42,228
+A third is custom spans around every
+getter until the waterfall is unreadable.
+You can see where time goes.
+
+21
+00:03:42,348 --> 00:03:50,460
+The next discipline is deciding what to
+change when evidence says a method is hot
+or a pool is saturated — tuning from
+signals, not folklore.

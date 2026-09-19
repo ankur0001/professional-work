@@ -1,9 +1,9 @@
 [
   {
-    "ep": 74,
-    "title": "CORS",
+    "ep": 76,
+    "title": "Reactive Programming",
     "beats": 18,
-    "duration_sec": 202.098,
-    "mp4": "/workspace/spring-story/v1/episodes/ep74-cors/Spring_Episode_74_CORS.mp4"
+    "duration_sec": 190.842,
+    "mp4": "/workspace/spring-story/v1/episodes/ep76-reactive-programming/Spring_Episode_76_Reactive_Programming.mp4"
   }
 ]
