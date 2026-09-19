@@ -1,0 +1,107 @@
+1
+00:00:00,000 --> 00:00:16,199
+Derived repository method names run out of
+breath. "Find manifests for vessel
+IMO-9312345 with arrival date on
+2026-09-18" is still readable as a method.
+Add three more predicates and the name
+becomes a novel.
+
+2
+00:00:16,320 --> 00:00:32,615
+JPQL lets you query the entity model —
+property names, associations — without
+writing table-column SQL by hand. JPQL
+looks like SQL but speaks entities. You
+write select m from Manifest m, not select
+* from manifests.
+
+3
+00:00:32,736 --> 00:00:50,136
+Fields are Java properties. Associations
+are navigated with dots or joins.
+Hibernate translates to SQL for your
+dialect. Look at this java for a moment.
+Parameter binding uses :name with @Param,
+or ordinal ?1 style.
+
+4
+00:00:50,256 --> 00:01:02,472
+Prefer named parameters for harbor queries
+you will revisit at 3am. join m.lines
+navigates the association you mapped — you
+did not type cargo_lines.manifest_id.
+
+5
+00:01:02,591 --> 00:01:14,280
+Projection queries return what a screen
+needs without hydrating full graphs: Look
+at this java for a moment. @Modifying on
+an update/delete JPQL query marks it as a
+write.
+
+6
+00:01:14,400 --> 00:01:22,896
+Bulk JPQL updates bypass the persistence
+context’s dirty checking for already-
+managed instances — clear the context if
+you mixed styles.
+
+7
+00:01:23,016 --> 00:01:35,736
+Native SQL with nativeQuery = true is an
+escape hatch when you need a database-
+specific hint. Prefer JPQL while the query
+stays in entity terms; drop to native when
+the dialect feature is the point.
+
+8
+00:01:35,856 --> 00:01:48,480
+Read the vessel-and-day query against a
+real ops question: "show me everything for
+IMO-9312345 arriving today, ordered by
+manifest number." The JPQL states that in
+entity language.
+
+9
+00:01:48,600 --> 00:02:01,104
+Hibernate emits the SQL with the real
+column names for your dialect. When you
+rename arrivalDate in Java, the query
+updates with the model — not with a buried
+arrival_date string in twelve native
+queries.
+
+10
+00:02:01,224 --> 00:02:15,120
+Writing table columns inside JPQL
+(manifest_number) is a common failure —
+JPQL wants manifestNumber. Selecting
+entities and then filtering in Java loops
+is how N+1 and memory problems start.
+
+11
+00:02:15,240 --> 00:02:25,296
+And treating JPQL as "string SQL with
+different keywords" misses the point:
+refactor a property name and your JPQL
+should follow the model, not the physical
+schema.
+
+12
+00:02:25,415 --> 00:02:29,807
+JPQL is great when the query shape is
+known at compile time.
+
+13
+00:02:29,927 --> 00:02:40,175
+When port-search filters appear and
+disappear at runtime — optional flag
+state, optional tonnage range, optional
+name fragment — string-concatenated JPQL
+gets unsafe and ugly.
+
+14
+00:02:40,295 --> 00:02:44,783
+The Criteria API builds those predicates
+programmatically.
