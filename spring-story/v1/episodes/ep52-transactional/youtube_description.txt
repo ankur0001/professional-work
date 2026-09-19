@@ -1,0 +1,32 @@
+The Spring Story — Episode 52: @Transactional
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• The warehouse page shows twelve units of SKU-4401.
+• A picker confirms a reservation for eight.
+• Somewhere between the click and the toast, the stock row decrements, the reservation insert dies on a…
+• Morning inventory is short by eight with no reservation to explain it.
+• That is the unit-of-work problem in warehouse language: stock, reservation, and ledger must share one fate.
+• Before Spring drew the boundary for you, teams scripted it by hand.
+• Commit — or roll back and close, on every failure path, including the ones nobody remembered.
+• Miss a branch and you leak connections or strand half-applied inventory.
+• …and more
+
+Timestamps
+0:00 The warehouse page shows twelve units of SKU-4401. A picker…
+0:53 Declarative transactions flip the ownership. You mark the…
+1:44 Strip @Transactional and each save can auto-commit on its own…
+2:20 Defaults matter when you debug. Runtime exceptions and errors roll…
+3:00 We drew the warehouse boundary so stock, reservation, and ledger…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 53 — Propagation
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

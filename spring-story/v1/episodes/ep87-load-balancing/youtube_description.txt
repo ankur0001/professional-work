@@ -1,0 +1,33 @@
+The Spring Story — Episode 87: Load Balancing
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Discovery returns three billing pods.
+• Gate still has to pick one for this quote.
+• Round-robin across healthy instances is the boring, correct default.
+• Sticky routing to a dying pod is the expensive mistake.
+• Spring Cloud LoadBalancer sits between the logical name billing-service and the concrete URI.
+• Wire a load-balanced WebClient (or RestTemplate) so the hostname in the URL is a service id, not a DNS A…
+• Next call may land on 10.0.8.12.
+• Health-aware configurations skip instances that fail actuator checks.
+• …and more
+
+Timestamps
+0:00 Discovery returns three billing pods. Gate still has to pick one…
+0:54 Walk a bad morning. Pod B1’s health flips DOWN because its Hikari…
+1:31 Inside Kubernetes, a ClusterIP already balances at the platform…
+2:05 Trade-offs: client-side balancing gives the caller control and…
+3:00 A misconception is assuming client-side balancing replaces…
+3:39 Declarative HTTP clients — OpenFeign — are that surface.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 88 — Feign Client
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

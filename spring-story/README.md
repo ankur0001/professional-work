@@ -12,12 +12,27 @@ spring-story/
 ├── EXPANSION_STYLE.md
 ├── INDEX.md
 ├── EPISODE_CATALOG.md
-└── episodes/
-    ├── ep01_why-spring.md
-    ├── ep02_spring-architecture.md
-    ├── …
-    └── ep112_production-case-studies.md
+├── episodes/          # source narrations
+│   ├── ep01_why-spring.md
+│   └── …
+└── v1/                # YouTube upload packs (per episode)
+    ├── README.md
+    ├── INDEX.md
+    └── episodes/
+        ├── ep01-why-spring/
+        │   ├── title.txt
+        │   ├── youtube_description.txt
+        │   ├── tags.txt
+        │   ├── chapters.txt
+        │   ├── thumbnail.jpg
+        │   ├── narration.md
+        │   └── README.md
+        └── …
 ```
+
+## YouTube upload packs (`v1/`)
+
+Each episode has a ready-to-upload kit under [`v1/`](v1/README.md) — title, description (with timestamps), tags, chapters, and a **branded 1920×1080 thumbnail** (designed still; not a video frame, no burned-in subtitles). Video/SRT land in a later production pass. See [`v1/INDEX.md`](v1/INDEX.md).
 
 ## Review first (gold standards)
 

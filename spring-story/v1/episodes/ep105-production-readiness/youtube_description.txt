@@ -1,0 +1,33 @@
+The Spring Story — Episode 105: Production Readiness
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Gate’s new Boot jar is “feature complete” in the demo environment.
+• Trucks are already queued for the weekend shift.
+• Kubernetes rolls the Deployment.
+• Within minutes pods restart in a loop, the Service has no ready endpoints, and the booth sees timeouts.
+• Nobody changed the release logic.
+• The jar was not ready for production as an operating problem — probes, startup cost, shutdown, and a…
+• Production readiness is that operating problem.
+• Spring Boot Actuator, Micrometer, and graceful shutdown are tools inside it.
+• …and more
+
+Timestamps
+0:00 Friday 18:10. Gate’s new Boot jar is “feature complete” in the…
+0:42 Start with the Friday failure. Liveness and readiness both pointed…
+1:24 Readiness can remove the pod from Service endpoints while the DB…
+2:11 Walk a drain. SIGTERM arrives; Boot stops accepting new work;…
+3:01 Trade-offs stay explicit. Deep readiness checks catch dependency…
+3:32 Once a service can survive production operations, a different…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 106 — Layered Architecture
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

@@ -1,0 +1,31 @@
+The Spring Story — Episode 55: Rollback Rules
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• A manifest import throws ManifestException — checked, on purpose, so callers must handle bad customs data.
+• The service method is @Transactional.
+• The transaction commits anyway.
+• Half a manifest sits in the database with a status that says “accepted.” Nightly reconciliation fails.
+• Someone asks why Spring “ignored” the error.
+• It did not ignore the error.
+• It followed the default rollback rules.
+• Unchecked exceptions — RuntimeException and subclasses — and Error mark the transaction for rollback.
+• …and more
+
+Timestamps
+0:00 A manifest import throws ManifestException — checked, on purpose,…
+0:40 For harbor manifests, the business meaning is usually clear: a…
+1:18 Rules match the exception that actually escapes, including…
+2:05 Local rules still assume one resource manager. The day intake must…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 56 — Distributed Transactions
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

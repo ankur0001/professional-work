@@ -1,0 +1,32 @@
+The Spring Story — Episode 101: Grafana
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• At 03:10 the quay lead does not want to invent PromQL.
+• They want a dashboard titled Gate Release that already shows p95 duration, error ratio, and request rate…
+• Grafana turns scraped series into that shared picture — panels, variables for gate_id, and alerts that…
+• Provision a datasource and a starter dashboard as code so every environment matches: Walk an on-call use.
+• Open Gate Release, set time range to “last 1 hour,” glance p95 and 5xx, then the breaker panel.
+• If breaker is open and p95 collapsed, fail-fast is working and billing is the dependency.
+• If breaker is closed and p95 climbed with Feign client timers high, billing is slow but still accepting —…
+• That story only works if panels share the same PromQL you alert on.
+• …and more
+
+Timestamps
+0:00 At 03:10 the quay lead does not want to invent PromQL. They want a…
+1:02 Alerting belongs on the same expressions. A rule on error ratio …
+1:46 Failure symptoms: twenty pretty panels, zero alerts;…
+2:27 During a booth backup, the quay lead should change only the time…
+3:05 Metrics answer how much and how often. They still struggle with…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 102 — OpenTelemetry
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

@@ -1,0 +1,32 @@
+The Spring Story — Episode 56: Distributed Transactions
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Harbor booking wants one sentence to be true: “berth reserved and carrier notified.” The reservation lands…
+• The notification leaves on a JMS queue for the carrier gateway.
+• If the database commits and the message never sends, trucks arrive to a berth nobody told them about.
+• If the message sends and the database rolls back, carriers prepare for a booking that does not exist.
+• A local @Transactional on the database alone cannot cover both.
+• Historically the industry answer was a distributed transaction: a coordinator, XA-capable resource…
+• Two-phase commit is that protocol.
+• Phase one: the coordinator asks every participant to prepare — flush, lock, vote yes or no.
+• …and more
+
+Timestamps
+0:00 Harbor booking wants one sentence to be true: “berth reserved and…
+0:30 Historically the industry answer was a distributed transaction: a…
+1:13 In a true XA arrangement, that single annotation enlists both the…
+1:54 Still own the vocabulary. Global versus local transaction.…
+2:28 So the fork is honest. Invest in XA where both resources truly…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 57 — Saga Pattern
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

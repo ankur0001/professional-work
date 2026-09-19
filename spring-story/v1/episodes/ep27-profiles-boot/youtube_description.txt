@@ -1,0 +1,32 @@
+The Spring Story — Episode 27: Profiles (Boot)
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Staging ferry checkout fails a payment smoke test — or rather, succeeds against the wrong place.
+• The charge appears on the production merchant dashboard.
+• Root cause: application-prod.yml held payment.merchant-id: ferry_live_9f3, and the staging Deployment set…
+• Only application.yml loaded, and someone had "temporarily" put the live merchant id in the default file…
+• Boot profiles were supposed to keep merchant IDs apart.
+• Boot builds on Framework profiles with file conventions: application.yml plus application-{profile}.yml,…
+• Active profiles select which documents join the Environment.
+• The same artifact carries every profile's config; activation chooses the slice.
+• …and more
+
+Timestamps
+0:00 Staging ferry checkout fails a payment smoke test — or rather,…
+0:48 Walk the documents. Default application.yml holds only safe local…
+1:45 Failure mode symptoms: staging smoke test charge appears on prod…
+2:17 Trade-offs. Boot profile documents keep one JAR for all…
+3:27 Misconception unique to Boot profiles: "application-prod.yml is…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 28 — Packaging
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

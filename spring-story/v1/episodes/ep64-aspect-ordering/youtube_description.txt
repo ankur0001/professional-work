@@ -1,0 +1,31 @@
+The Spring Story — Episode 64: Aspect Ordering
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Security must reject unauthorized operators before anything else runs.
+• Transactions must begin before business work and commit after.
+• Metrics want to time the call — ideally without opening a database transaction for callers who were going…
+• If the order is accidental, you open connections for rejected trucks, or you time only the inner fragment…
+• Aspect ordering makes that sequence intentional.
+• Spring uses Ordered / @Order on aspect beans (and on some infrastructure advisors).
+• Lower order values mean higher precedence.
+• For @Around advice, higher precedence is outer: enters first, exits last.
+• …and more
+
+Timestamps
+0:00 One releaseGate call. Three aspects. Security must reject…
+0:40 For harbor gate releases, prefer security → transaction → metrics…
+1:30 Spring’s own @Transactional and @Async advisors live in the same…
+2:23 Ordered aspects keep security, transactions, and metrics from…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 65 — AOP Performance
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

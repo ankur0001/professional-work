@@ -1,0 +1,31 @@
+The Spring Story — Episode 82: Reactive Security
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• WebFlux changed the HTTP engine under /positions/stream.
+• Spring Security still has to authenticate and authorize — but it cannot assume ThreadLocal and servlet…
+• Reactive security adapts the same ideas to WebFlux’s WebFilter chain and a context that rides with the…
+• In servlet apps, SecurityContextHolder defaulted to ThreadLocal storage.
+• In WebFlux, the security context is typically stored in Reactor’s Context and retrieved with reactive…
+• You configure a SecurityWebFilterChain instead of a servlet SecurityFilterChain.
+• Method security has reactive-aware expressions when return types are publishers.
+• Mirror the earlier JWT walk, now on the reactive chain: bearer token extracted, decoded without blocking…
+• …and more
+
+Timestamps
+0:00 WebFlux changed the HTTP engine under /positions/stream. Spring…
+0:44 // Request: GET /positions/stream?quayId=7
+1:17 Watch blocking habits. A custom ReactiveAuthenticationManager that…
+2:08 Phase 8 closes the reactive web and security loop: publishers,…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 83 — Microservices with Spring
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

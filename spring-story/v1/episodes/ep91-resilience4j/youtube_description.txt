@@ -1,0 +1,32 @@
+The Spring Story — Episode 91: Resilience4j
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Circuit breakers protect gate from a dead billing dependency.
+• The tide API is a different beast: intermittent 503s, bursty rate limits, and a vendor that hates…
+• Resilience4j gives you composable decorators — retry, rate limiter, bulkhead, time limiter, circuit…
+• Scheduling asks the tide service for predicted height before confirming a berth.
+• Wrap the client: Read the composition as a story.
+• Rate limiter refuses to stampede the vendor — when the bucket is empty, callers fail in ~200ms instead of…
+• Bulkhead caps concurrent tide calls so scheduling’s other threads keep working on berth conflicts that do…
+• Retry absorbs blips with bounded attempts and backoff; TideStationUnknownException is ignored so you do…
+• …and more
+
+Timestamps
+0:00 Circuit breakers protect gate from a dead billing dependency. The…
+1:16 Walk symptoms. Without rate limiting, a berth storm during fog…
+1:58 Trade-offs: retries help idempotent GETs of tide height; they are…
+2:46 A misconception is retrying non-idempotent POSTs until you…
+3:18 That push model is messaging with Spring Cloud Stream.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 92 — Spring Cloud Stream
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

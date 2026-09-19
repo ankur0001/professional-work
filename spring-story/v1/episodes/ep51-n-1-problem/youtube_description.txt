@@ -1,0 +1,31 @@
+The Spring Story — Episode 51: N+1 Problem
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Ops opens today’s manifest list for vessel IMO-9312345.
+• The SQL log shows one SELECT for manifests — fine — then twenty more as the JSON serializer walks each…
+• That pattern is the N+1 problem: **1** query for the parents plus **N** queries for children, one per parent.
+• It shows up wherever lazy associations meet loops.
+• Twenty manifests → twenty child selects → twenty-one statements total.
+• Scale to two hundred manifests on a busy day and the board melts.
+• Lazy keeps writes and incidental loads cheap.
+• The villain is navigating lazy associations across a collection without a fetch plan.
+• …and more
+
+Timestamps
+0:00 Ops opens today’s manifest list for vessel IMO-9312345. Twenty…
+0:39 Count it out loud. Twenty manifests → twenty child selects →…
+1:12 join fetch tells Hibernate to initialize lines while loading…
+1:58 Notice what these read fixes still assume: an open persistence…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 52 — @Transactional
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

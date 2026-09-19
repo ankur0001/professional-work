@@ -1,0 +1,31 @@
+The Spring Story — Episode 37: REST Best Practices
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• You can wire controllers, validation, advice, filters, and uploads and still ship an API that fights its…
+• REST best practices are the craft layer: idempotent parcel create, honest pagination of tracking events,…
+• Use nouns and plural collections: /parcels, /parcels/{id}, /parcels/{id}/events.
+• Avoid verby paths like /createParcel.
+• Let HTTP verbs carry the action.
+• Keep identifiers opaque in URLs.
+• Idempotent create matters the moment a trucker’s mobile app retries a POST after a timeout.
+• Without an idempotency key, you register the same parcel twice.
+• …and more
+
+Timestamps
+0:00 You can wire controllers, validation, advice, filters, and uploads…
+0:42 Store the key with the created parcel id. On replay, return the…
+1:15 DTO boundaries close the loop. Request and response types are not…
+1:58 RPC-in-disguise paths (/parcels/doCheckIn) fight every HTTP tool…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 38 — JPA Fundamentals
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

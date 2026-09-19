@@ -1,0 +1,32 @@
+The Spring Story — Episode 29: DispatcherServlet
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• A luggage scanner at the harbor gate pings your Boot process: GET /luggage/TAG-8841.
+• Something inside the JVM still has to decide which Java method owns that tag, call it, and write JSON back.
+• That center of gravity is not "Spring magic." It is DispatcherServlet.
+• Harbor teams used to register a servlet per concern — one for luggage tags, one for berth boards, one for…
+• Each copy-pasted encoding, error pages, and content-type negotiation.
+• Change the error shape in luggage and forget customs.
+• The front-controller pattern collapses that duplication: one servlet owns the HTTP pipeline; handlers…
+• In a Boot web app you rarely declare DispatcherServlet by hand.
+• …and more
+
+Timestamps
+0:00 A luggage scanner at the harbor gate pings your Boot process: GET…
+0:42 In a Boot web app you rarely declare DispatcherServlet by hand.…
+1:42 Say the pipeline once without ornament: HTTP request →…
+2:34 Operationally, Boot’s default is one dispatcher for the app.…
+3:39 We named the front door and watched one luggage GET move through…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 30 — Controllers
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

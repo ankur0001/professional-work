@@ -1,0 +1,32 @@
+The Spring Story — Episode 69: JWT
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Truckers do not live inside your VPN.
+• Their mobile app hits the harbor API from a highway shoulder, proves identity without a sticky HTTP…
+• Session cookies that assume one browser and one server get awkward fast.
+• A common answer is a bearer token — and the usual format is JWT.
+• A JSON Web Token is three Base64url segments: header, payload, signature.
+• The payload carries claims — subject, expiry, issuer, scopes, custom fields like trucker id.
+• The signature binds those claims to a key so a resource server can validate the token without calling the…
+• That is the appeal and the danger: validation is local and fast, but a leaked token is a stolen identity…
+• …and more
+
+Timestamps
+0:00 Truckers do not live inside your VPN. Their mobile app hits the…
+0:49 Spring Security’s OAuth2 Resource Server support treats JWTs as…
+1:31 Narrate failure modes as carefully as the happy path. Missing…
+2:12 A topic-specific misconception is “we use JWT, so we are doing…
+2:48 The bearer path is now concrete: Authorization header → parse →…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 70 — OAuth2
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

@@ -1,0 +1,33 @@
+The Spring Story — Episode 28: Packaging
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Before: tram timetable API image rebuild after a one-line Java change re-uploads ~170MB because the fat…
+• After: layered jar — dependencies in a lower Docker layer, application classes on top — and the same…
+• Cold starts in the cluster stop waiting on registry bandwidth every commit.
+• Packaging is not a footnote after Boot; it is how the bike-adjacent tram service's deploy loop feels.
+• Boot's packaging story centers on the executable "fat" jar: your classes plus dependencies plus a launcher…
+• spring-boot-maven-plugin / Gradle plugin builds it.
+• Layered jars split that archive into named layers (dependencies, spring-boot-loader,…
+• Same runtime model; different layout for Docker's cache.
+• …and more
+
+Timestamps
+0:00 Before: tram timetable API image rebuild after a one-line Java…
+0:54 FROM eclipse-temurin:21-jre
+1:41 Runtime launch. JarLauncher reads BOOT-INF layout, builds a…
+2:17 Failure mode symptoms before layering: CI shows image push sizes…
+2:58 Trade-offs. Fat jars optimize operator simplicity and local runs;…
+3:48 Misconception unique to packaging: "A Boot fat jar is a normal zip…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 29 — DispatcherServlet
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

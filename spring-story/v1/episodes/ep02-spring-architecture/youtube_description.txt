@@ -1,0 +1,31 @@
+The Spring Story — Episode 02: Spring Architecture
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• The baggage-tracking system at Gate West started as one WAR.
+• Tag scanners, carousel boards, lost-bag claims, overnight reconciliation — all in one deployable.
+• Three years later, a carousel outage still forced a full redeploy of claims and reconciliation.
+• The monolith was not just "big." It was one classpath, one restart boundary, and one blame surface.
+• When the team finally split modules, Spring became the awkward part of the conversation.
+• Someone had pulled a vague "spring" dependency into the reconciliation JAR and dragged servlet APIs, MVC,…
+• On-call could not tell which Spring pieces were load-bearing.
+• The failure was modular blindness, not a missing annotation.
+• …and more
+
+Timestamps
+0:00 The baggage-tracking system at Gate West started as one WAR. Tag…
+0:46 Spring Framework is layered so you can compose different shapes…
+1:40 At runtime that job never opens port 8080, and the container does…
+2:13 The architecture misconception that bit Gate West is simple: "If…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 03 — IoC (Inversion of Control)
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

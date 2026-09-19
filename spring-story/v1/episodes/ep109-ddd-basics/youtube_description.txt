@@ -1,0 +1,32 @@
+The Spring Story — Episode 109: DDD Basics
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• CRUD honesty fails on the quay.
+• A row named berths with columns status and vessel_id does not explain why two schedulers cannot both…
+• In the scheduling context, people say *assign*, *reserve*, *release*, *conflict*, *tidal window*.
+• In billing, the same physical quay might be *billable reservation* and *demurrage start*.
+• Bounded contexts allow different models that integrate deliberately — often through events or…
+• When a ticket says “fix berth status,” ask which language the speaker is using before you touch a column.
+• The aggregate root is Berth.
+• Outside code does not sprinkle reservations.add on a list from a controller — it calls reserve so overlaps…
+• …and more
+
+Timestamps
+0:00 CRUD honesty fails on the quay. A row named berths with columns…
+0:46 The aggregate root is Berth. Outside code does not sprinkle…
+1:38 DDD is not mandatory ceremony for every screen. A simple…
+2:23 Trade-offs: richer models cost design time and careful mapping to…
+2:58 Once BerthReserved is a fact inside the process, the next pressure…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 110 — Event-Driven Architecture
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

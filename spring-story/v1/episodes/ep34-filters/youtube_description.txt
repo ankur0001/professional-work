@@ -1,0 +1,31 @@
+The Spring Story — Episode 34: Filters
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• At 02:17 the customs API drops a request somewhere between the load balancer and a controller.
+• Ops asks for a correlation id.
+• If that id only appears after DispatcherServlet maps a handler, you have already lost the misses — static…
+• Correlation belongs earlier: on the servlet filter chain.
+• Filters sit on the container’s filter chain, outside Spring MVC’s handler story.
+• The Jakarta Servlet Filter API is the standard hook: doFilter(request, response, chain).
+• You wrap, reject, or decorate, then either call chain.doFilter to continue or write a response and stop.
+• For a customs API, the classic early job is ensuring every request carries X-Request-Id before security…
+• …and more
+
+Timestamps
+0:00 At 02:17 the customs API drops a request somewhere between the…
+0:48 response.setHeader(HEADER, requestId);
+1:39 Registering filters in Boot is usually @Component plus optional…
+2:24 You can stamp every customs call with a request id before MVC…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 35 — Interceptors
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

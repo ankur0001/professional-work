@@ -1,0 +1,32 @@
+The Spring Story — Episode 62: Advice
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Not always — just enough that berth planners see timeouts on calm mornings.
+• You do not want every caller to invent its own retry loop.
+• You want one place that says: around tide fetches, retry a couple of times, then surface the failure.
+• A proxy gives you a place to stand; advice is what you do while standing there.
+• Spring’s annotation model maps cleanly onto spoken intent: before, after returning, after throwing, after…
+• @Before runs before the target; it can throw and stop the call — here a red station board freezes forecasts.
+• @AfterReturning runs only on success and can bind the returned TideWindow.
+• @AfterThrowing runs only when the target throws, binding the exception type you care about.
+• …and more
+
+Timestamps
+0:00 The tide API flakes. Not always — just enough that berth planners…
+0:32 Walk each kind. @Before runs before the target; it can throw and…
+1:08 Transaction management is around-style in spirit: begin before…
+1:43 Misuse patterns are familiar. Calling proceed twice by accident…
+2:14 Aiming the advice is the job of pointcuts.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 63 — Pointcuts
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

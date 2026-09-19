@@ -1,0 +1,31 @@
+The Spring Story — Episode 88: Feign Client
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Every gate class that quotes a tariff should not re-encode the same GET path, query params, and JSON binding.
+• OpenFeign — through Spring Cloud OpenFeign — lets gate declare a BillingClient interface that mirrors…
+• A runtime proxy turns method calls into load-balanced requests.
+• The interface becomes the anti-corruption layer between gate’s domain and billing’s wire format.
+• Enable clients on the Boot application, then write the interface.
+• The name attribute is the service id discovery and load balancing already understand.
+• Read the dependency direction.
+• GateReleaseService depends on BillingClient the way it would depend on a local port.
+• …and more
+
+Timestamps
+0:00 Every gate class that quotes a tariff should not re-encode the…
+0:33 Read the dependency direction. GateReleaseService depends on…
+1:19 Fallbacks hint at the resilience story ahead. A fallback is…
+1:58 Declarative clients make the gate↔billing hop easy. Easy remote…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 89 — Circuit Breaker
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory
