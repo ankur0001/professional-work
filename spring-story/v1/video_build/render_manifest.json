@@ -1,9 +1,9 @@
 [
   {
-    "ep": 94,
-    "title": "Mockito",
-    "beats": 20,
-    "duration_sec": 225.75,
-    "mp4": "/workspace/spring-story/v1/episodes/ep94-mockito/Spring_Episode_94_Mockito.mp4"
+    "ep": 59,
+    "title": "Dynamic Proxies",
+    "beats": 16,
+    "duration_sec": 190.566,
+    "mp4": "/workspace/spring-story/v1/episodes/ep59-dynamic-proxies/Spring_Episode_59_Dynamic_Proxies.mp4"
   }
 ]
