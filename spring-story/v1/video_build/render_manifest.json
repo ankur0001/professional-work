@@ -1,9 +1,9 @@
 [
   {
-    "ep": 62,
-    "title": "Advice",
+    "ep": 88,
+    "title": "Feign Client",
     "beats": 14,
-    "duration_sec": 151.25,
-    "mp4": "/workspace/spring-story/v1/episodes/ep62-advice/Spring_Episode_62_Advice.mp4"
+    "duration_sec": 154.866,
+    "mp4": "/workspace/spring-story/v1/episodes/ep88-feign-client/Spring_Episode_88_Feign_Client.mp4"
   }
 ]
