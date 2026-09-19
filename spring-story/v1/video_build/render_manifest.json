@@ -1,9 +1,9 @@
 [
   {
-    "ep": 105,
-    "title": "Production Readiness",
-    "beats": 25,
-    "duration_sec": 243.114,
-    "mp4": "/workspace/spring-story/v1/episodes/ep105-production-readiness/Spring_Episode_105_Production_Readiness.mp4"
+    "ep": 82,
+    "title": "Reactive Security",
+    "beats": 16,
+    "duration_sec": 165.81,
+    "mp4": "/workspace/spring-story/v1/episodes/ep82-reactive-security/Spring_Episode_82_Reactive_Security.mp4"
   }
 ]
