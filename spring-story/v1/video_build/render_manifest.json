@@ -1,9 +1,9 @@
 [
   {
-    "ep": 101,
-    "title": "Grafana",
-    "beats": 20,
-    "duration_sec": 212.058,
-    "mp4": "/workspace/spring-story/v1/episodes/ep101-grafana/Spring_Episode_101_Grafana.mp4"
+    "ep": 102,
+    "title": "OpenTelemetry",
+    "beats": 21,
+    "duration_sec": 230.91,
+    "mp4": "/workspace/spring-story/v1/episodes/ep102-opentelemetry/Spring_Episode_102_OpenTelemetry.mp4"
   }
 ]
