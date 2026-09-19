@@ -73,3 +73,12 @@ Runtime target per episode: **4–15 minutes** (aim ~10–12).
 ## Source
 
 Narrations are derived from `Spring_Framework_Handbook.html` (InterviewPrep / public handbook), lesson-by-lesson. They are teaching scripts, not a verbatim dump of the HTML.
+
+
+## Videos (`v1/`)
+
+YouTube videos are rendered with the same motion-graphics pipeline as The Java Story v2:
+
+- Tooling: [`v1/video_build/`](v1/video_build/README.md)
+- Per episode: clean MP4, captioned MP4, and SRT alongside the upload pack
+- Batch: `bash spring-story/v1/video_build/batch_render.sh`
