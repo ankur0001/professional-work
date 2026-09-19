@@ -1,0 +1,115 @@
+1
+00:00:00,000 --> 00:00:09,119
+At 02:17 the customs API drops a request
+somewhere between the load balancer and a
+controller. Ops asks for a correlation id.
+
+2
+00:00:09,239 --> 00:00:23,183
+If that id only appears after
+DispatcherServlet maps a handler, you have
+already lost the misses — static asset
+404s, rejected auth, paths that never
+matched. Correlation belongs earlier: on
+the servlet filter chain.
+
+3
+00:00:23,303 --> 00:00:34,967
+Filters sit on the container’s filter
+chain, outside Spring MVC’s handler story.
+The Jakarta Servlet Filter API is the
+standard hook: doFilter(request, response,
+chain).
+
+4
+00:00:35,087 --> 00:00:41,999
+You wrap, reject, or decorate, then either
+call chain.doFilter to continue or write a
+response and stop.
+
+5
+00:00:42,119 --> 00:00:53,399
+For a customs API, the classic early job
+is ensuring every request carries
+X-Request-Id before security and MVC spend
+time on the call. Look at this java for a
+moment.
+
+6
+00:00:53,519 --> 00:01:07,151
+OncePerRequestFilter keeps the logic from
+running twice on forwards. @Order with
+highest precedence puts the filter early
+so later security filters and
+DispatcherServlet inherit the id on the
+response and in MDC logs.
+
+7
+00:01:07,271 --> 00:01:17,255
+If the client already sent X-Request-Id,
+honor it; otherwise mint one. Either way,
+the outbound header is set even when no
+controller ever runs.
+
+8
+00:01:17,375 --> 00:01:30,911
+Mental model the chain: incoming request →
+your filters (in order) →
+DispatcherServlet → … → response unwinds
+back through filters. Encoding filters,
+compression filters, and Spring Security’s
+filter chain all live here.
+
+9
+00:01:31,031 --> 00:01:43,007
+They do not receive a HandlerMethod. They
+do not know whether /customs/declarations
+mapped. That ignorance is a feature when
+you need work for every HTTP exchange.
+
+10
+00:01:43,127 --> 00:01:51,335
+Registering filters in Boot is usually
+@Component plus optional
+FilterRegistrationBean when you need URL
+patterns or an explicit name.
+
+11
+00:01:51,455 --> 00:02:02,087
+Ordering matters: a security filter that
+rejects before your request-id filter runs
+will leave ops without the header on 401s
+— put identity-of-request first when that
+is the ops contract.
+
+12
+00:02:02,207 --> 00:02:15,215
+Filters are not interceptors with a
+different annotation. If you need the
+chosen handler method, model attributes,
+or MVC-specific pre/post hooks tied to
+mapped controllers, you want a
+HandlerInterceptor.
+
+13
+00:02:15,335 --> 00:02:21,143
+Forgetting filterChain.doFilter and
+wondering why controllers never run is
+another classic.
+
+14
+00:02:21,263 --> 00:02:34,655
+Heavy customs business rules in a filter
+bypass validation, advice, and the
+programming model you just built — keep
+filters thin and mechanical. You can stamp
+every customs call with a request id
+before MVC wakes up.
+
+15
+00:02:34,775 --> 00:02:46,055
+What if you need cross-cutting behavior
+that *does* know the chosen handler —
+timing only mapped admin console methods,
+or rules based on handler annotations?
+That is interceptor territory.
