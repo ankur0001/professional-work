@@ -1,9 +1,9 @@
 [
   {
-    "ep": 47,
-    "title": "Caching",
-    "beats": 14,
-    "duration_sec": 147.162,
-    "mp4": "/workspace/spring-story/v1/episodes/ep47-caching/Spring_Episode_47_Caching.mp4"
+    "ep": 94,
+    "title": "Mockito",
+    "beats": 20,
+    "duration_sec": 225.75,
+    "mp4": "/workspace/spring-story/v1/episodes/ep94-mockito/Spring_Episode_94_Mockito.mp4"
   }
 ]
