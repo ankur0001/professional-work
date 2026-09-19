@@ -1,0 +1,116 @@
+1
+00:00:00,000 --> 00:00:15,311
+Ops opens today’s manifest list for vessel
+IMO-9312345. Twenty manifests. The SQL log
+shows one SELECT for manifests — fine —
+then twenty more as the JSON serializer
+walks each manifest’s cargo lines.
+
+2
+00:00:15,431 --> 00:00:31,415
+That pattern is the N+1 problem: 1 query
+for the parents plus N queries for
+children, one per parent. It shows up
+wherever lazy associations meet loops.
+Look at this java for a moment. Look at
+this java for a moment.
+
+3
+00:00:31,535 --> 00:00:44,687
+Count it out loud. Twenty manifests →
+twenty child selects → twenty-one
+statements total. Scale to two hundred
+manifests on a busy day and the board
+melts. Lazy is not the villain.
+
+4
+00:00:44,807 --> 00:00:53,495
+Lazy keeps writes and incidental loads
+cheap. The villain is navigating lazy
+associations across a collection without a
+fetch plan.
+
+5
+00:00:53,615 --> 00:01:04,895
+Open-session-in-view can make this "work"
+without LazyInitializationException while
+still issuing N+1 SQL — silent latency.
+Fix it by loading what you need in fewer
+queries.
+
+6
+00:01:05,015 --> 00:01:17,015
+Join fetch is the clearest teaching fix:
+Look at this java for a moment. Look at
+this java for a moment. join fetch tells
+Hibernate to initialize lines while
+loading Manifest.
+
+7
+00:01:17,135 --> 00:01:29,256
+distinct softens duplicate parent rows
+joins can produce in the result list. For
+pagination, join fetch of collections is
+awkward — the database page of joined rows
+is not a page of parent entities.
+
+8
+00:01:29,375 --> 00:01:43,703
+Prefer fetch joins for non-paged detail
+lists, or page parent ids first, then
+fetch aggregates by those ids. @BatchSize
+on the collection reduces N+1 into fewer
+batched IN queries when you cannot join-
+fetch every path.
+
+9
+00:01:43,823 --> 00:01:57,719
+Entity graphs offer another explicit plan:
+@EntityGraph(attributePaths = {"lines"})
+on a repository method. A DTO query that
+selects exactly the columns the screen
+needs avoids hydrating the graph entirely.
+
+10
+00:01:57,839 --> 00:02:13,271
+Diagnosis before dogma. Enable SQL
+logging. Reproduce the manifest list.
+Count statements. If you see the repeating
+cargo_lines select inside the loop, you
+found N+1.
+
+11
+00:02:13,391 --> 00:02:24,168
+Fix with fetch join, entity graph, batch
+size, or a projection — not by marking
+every association FetchType.EAGER, which
+often moves the pain to writes and to
+every accidental load.
+
+12
+00:02:24,287 --> 00:02:32,903
+Notice what these read fixes still assume:
+an open persistence context spanning the
+whole operation. Writes raise a sharper
+problem.
+
+13
+00:02:33,023 --> 00:02:40,991
+Decrement yard stock, write a berth
+reservation, and append a ledger row —
+three inserts/updates that must succeed or
+fail together.
+
+14
+00:02:41,111 --> 00:02:50,999
+If the reservation saves and the ledger
+write throws, you cannot leave the harbor
+half-updated. Something has to bound that
+multi-write unit of work atomically.
+
+15
+00:02:51,119 --> 00:02:59,495
+That boundary is @Transactional — and it
+is where persistence context lifetime,
+commit, and rollback become deliberate
+instead of accidental.

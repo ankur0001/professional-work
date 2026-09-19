@@ -1,0 +1,106 @@
+1
+00:00:00,000 --> 00:00:06,887
+Every gate class that quotes a tariff
+should not re-encode the same GET path,
+query params, and JSON binding.
+
+2
+00:00:07,008 --> 00:00:19,056
+OpenFeign — through Spring Cloud OpenFeign
+— lets gate declare a BillingClient
+interface that mirrors billing’s HTTP API.
+A runtime proxy turns method calls into
+load-balanced requests.
+
+3
+00:00:19,175 --> 00:00:29,256
+The interface becomes the anti-corruption
+layer between gate’s domain and billing’s
+wire format. Enable clients on the Boot
+application, then write the interface.
+
+4
+00:00:29,375 --> 00:00:42,768
+The name attribute is the service id
+discovery and load balancing already
+understand. Look at this java for a
+moment. Look at this java for a moment.
+Read the dependency direction.
+
+5
+00:00:42,887 --> 00:00:54,671
+GateReleaseService depends on
+BillingClient the way it would depend on a
+local port. No URL string lives in the
+service. At runtime, Feign builds a JDK
+proxy.
+
+6
+00:00:54,792 --> 00:01:05,615
+quote("MSCU123", "3") becomes a GET to a
+chosen billing-service instance at
+/tariffs/quote?.... Encoders and decoders
+handle JSON.
+
+7
+00:01:05,736 --> 00:01:16,800
+Setting url on @FeignClient bypasses
+discovery — fine for a third-party tide
+vendor, wrong for internal billing you
+want balanced across three pods.
+Production knobs matter.
+
+8
+00:01:16,920 --> 00:01:28,632
+Connect and read timeouts, logger levels
+for bodies, request interceptors for
+service-to-service tokens, and error
+decoders that map HTTP 409 into
+TariffConflictException keep failures
+typed.
+
+9
+00:01:28,751 --> 00:01:41,687
+Contract drift — billing renames
+hazardClass — still fails at runtime;
+Feign does not invent schema evolution.
+Look at this java for a moment. Fallbacks
+hint at the resilience story ahead.
+
+10
+00:01:41,807 --> 00:01:50,543
+A fallback is deliberate degraded mode —
+last-known tariff, queue-for-later invoice
+— not a silent success that hides an
+outage from the booth supervisor.
+
+11
+00:01:50,663 --> 00:01:59,159
+A misconception is generating a Feign
+method for every billing controller
+endpoint and then chatting in loops from
+gate; design coarser remote operations.
+
+12
+00:01:59,279 --> 00:02:06,527
+Another is sharing billing’s JPA entities
+as Feign DTOs across jars until the
+services cannot deploy independently.
+
+13
+00:02:06,647 --> 00:02:20,279
+A third is forgetting Feign is blocking by
+default in many setups — if gate is
+WebFlux end to end, evaluate WebClient
+instead of forcing Feign onto the event
+loop. Declarative clients make the
+gate↔billing hop easy.
+
+14
+00:02:20,399 --> 00:02:34,415
+Easy remote calls also make cascading
+failure easy. When billing starts timing
+out, do gate threads keep piling into a
+dead dependency until every booth freezes?
+That failure mode is why circuit breakers
+exist.

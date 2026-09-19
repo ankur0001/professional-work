@@ -1,0 +1,110 @@
+1
+00:00:00,000 --> 00:00:16,224
+A planner moves vessel IMO-9312345 from
+berth B2 to berth B7. Your service loads a
+BerthAssignment, calls reassign("B7"), and
+returns. You never called UPDATE. Yet the
+database row changes.
+
+2
+00:00:16,344 --> 00:00:29,039
+That quiet write is Hibernate dirty
+checking — and it is the internal you need
+before lifecycle jargon makes sense. When
+Hibernate loads an entity inside a
+persistence context, it keeps a snapshot
+of the loaded state.
+
+3
+00:00:29,160 --> 00:00:42,600
+On flush — at transaction commit by
+default, or earlier if you force it —
+Hibernate compares the current field
+values to that snapshot. Differences
+become SQL. Unchanged entities produce no
+update.
+
+4
+00:00:42,719 --> 00:00:57,408
+That is the unit-of-work idea: you mutate
+objects; the provider schedules SQL. Look
+at this java for a moment. Look at this
+java for a moment. On flush, Hibernate may
+emit: Look at this example.
+
+5
+00:00:57,527 --> 00:01:10,703
+UPDATE berth_assignments If berthCode
+never changed, that update does not run.
+Calling save on an already-managed entity
+is mostly noise — Spring Data’s save for a
+managed instance often just returns the
+same instance.
+
+6
+00:01:10,823 --> 00:01:23,903
+The persistence context already tracks it.
+Flush modes matter when you interleave
+queries. AUTO (default) flushes before
+certain queries so you do not read stale
+data you just changed in memory.
+
+7
+00:01:24,024 --> 00:01:31,536
+COMMIT delays until commit — faster in
+some batch paths, surprising if you query
+mid-transaction expecting to see your own
+writes.
+
+8
+00:01:31,656 --> 00:01:39,048
+Understanding flush timing prevents "I
+updated the berth but the next SELECT
+still shows B2" bugs inside one
+transaction.
+
+9
+00:01:39,168 --> 00:01:52,872
+The first-level cache is the same
+persistence context: load BerthAssignment
+id 17 twice in one transaction and you get
+the same Java instance, not a second
+SELECT by default. That identity guarantee
+is intentional.
+
+10
+00:01:52,992 --> 00:02:08,207
+The second-level cache is optional and
+cross-transaction — a later lesson. Dirty
+checking lives in the first level. People
+believe every save call immediately hits
+the database. It does not — SQL is
+deferred until flush.
+
+11
+00:02:08,328 --> 00:02:16,176
+Others mutate a detached assignment after
+the transaction ended and expect dirty
+checking to notice; there is no context
+left to notice.
+
+12
+00:02:16,295 --> 00:02:29,015
+A third trap is opening the SQL log,
+seeing no update, and assuming Hibernate
+is broken when the field simply did not
+change relative to the snapshot. Dirty
+checking explains *how* managed entities
+write themselves.
+
+13
+00:02:29,135 --> 00:02:39,264
+It does not yet name the states an entity
+can be in — transient, managed, detached,
+removed — or what merge does when a clerk
+edits a cargo item after the request that
+loaded it has ended.
+
+14
+00:02:39,383 --> 00:02:42,695
+That lifecycle vocabulary is next.
