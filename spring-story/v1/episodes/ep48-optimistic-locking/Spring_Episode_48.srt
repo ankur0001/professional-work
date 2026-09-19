@@ -1,0 +1,84 @@
+1
+00:00:00,000 --> 00:00:13,800
+Two clerks open berth B7 at the same
+moment. Both screens show capacity 4
+remaining. Anya assigns a feeder that
+needs 2 slots. Ben assigns a coastal
+freighter that needs 3.
+
+2
+00:00:13,919 --> 00:00:25,655
+Without protection, last write wins and
+you overbook the pier. Optimistic locking
+assumes conflict is uncommon, lets both
+read, and detects the collision at write
+time with a version column.
+
+3
+00:00:25,775 --> 00:00:36,384
+JPA’s tool is @Version on the berth
+capacity aggregate: Look at this java for
+a moment. Hibernate includes the version
+in UPDATE statements: Look at this
+example.
+
+4
+00:00:36,503 --> 00:00:47,448
+UPDATE berths If the row’s version changed
+since you loaded it, zero rows update, and
+JPA throws OptimisticLockException —
+Spring often wraps it as
+ObjectOptimisticLockingFailureException.
+
+5
+00:00:47,567 --> 00:01:01,247
+The loser must reload, reapply business
+logic, and retry — or tell the clerk the
+berth changed under them. Look at this
+java for a moment. Look at this java for a
+moment. Walk the collision.
+
+6
+00:01:01,367 --> 00:01:17,351
+Transaction A and B both load version = 3,
+reservedSlots = 0, capacity 4. A reserves
+2 → flush sets reservedSlots = 2, version
+= 4. B reserves 3 with stale version = 3 →
+WHERE matches nothing → exception.
+
+7
+00:01:17,471 --> 00:01:32,663
+B does not silently leave the pier
+overbooked. That is the whole feature.
+Version fields can be long, int, Short, or
+a timestamp type. Prefer numeric versions
+for berth-style entities; Hibernate
+increments them.
+
+8
+00:01:32,783 --> 00:01:36,359
+Do not mutate @Version yourself in
+business code.
+
+9
+00:01:36,479 --> 00:01:45,743
+Detached update flows must carry the
+version from the client or from the
+previously loaded entity — drop the
+version and you may overwrite blindly
+depending on merge behavior.
+
+10
+00:01:45,863 --> 00:01:58,031
+Optimistic locking fits collaborative
+berth edits when contention is moderate
+and retry is acceptable. It does not hold
+a database lock while a human stares at a
+form for five minutes — usually a virtue.
+
+11
+00:01:58,151 --> 00:02:07,151
+When a use case cannot tolerate retry and
+must serialize access to a hot row — last
+slot on a berth during a storm diversion —
+you need pessimistic locking instead.

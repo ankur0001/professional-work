@@ -1,0 +1,142 @@
+1
+00:00:00,000 --> 00:00:14,544
+Skip the coordinator fantasy for a moment
+and book a trip the way product actually
+sells it: flight seat, hotel night, rental
+car. Three services. Three local
+databases. A card charge at the end.
+
+2
+00:00:14,663 --> 00:00:21,527
+You cannot hold XA locks across a hotel
+API that takes eight seconds and a car
+broker that times out on Tuesdays.
+
+3
+00:00:21,647 --> 00:00:35,423
+You need a different promise — each step
+commits locally, and if a later step
+fails, earlier steps run compensating
+actions that undo their business effect.
+That is the saga pattern. Not one global
+transaction.
+
+4
+00:00:35,543 --> 00:00:51,191
+A narrative of local transactions with
+explicit recovery. Step one: reserve the
+flight seat — local commit in inventory.
+Step two: hold the hotel room — local
+commit in hotels. Step three: reserve the
+car.
+
+5
+00:00:51,311 --> 00:00:59,447
+Step four: charge the card. If the charge
+fails, you do not “roll back” the seat the
+way JDBC rolls back a row.
+
+6
+00:00:59,567 --> 00:01:10,584
+You call releaseSeat, cancelHotelHold, and
+releaseCar — compensations that are
+themselves ordinary local transactions.
+Guests may briefly see a held seat that
+later frees.
+
+7
+00:01:10,703 --> 00:01:25,031
+Saga trades immediate global consistency
+for availability and clearer failure
+handling across services. Look at this
+java for a moment. That sketch is
+orchestration: one component directs steps
+and compensations.
+
+8
+00:01:25,151 --> 00:01:39,431
+Choreography is the other style — each
+service listens for events and reacts.
+SeatReserved triggers hotel holding.
+HotelHeld triggers car reservation.
+PaymentFailed triggers releases and
+cancels.
+
+9
+00:01:39,551 --> 00:01:51,095
+Orchestration is easier to follow in one
+place. Choreography avoids a central boss
+but scatters the flow. Both are sagas if
+they share the compensation mindset.
+
+10
+00:01:51,215 --> 00:01:57,071
+Spring does not ship a single @Saga
+annotation that finishes distributed
+workflows for you.
+
+11
+00:01:57,191 --> 00:02:08,735
+Building blocks yes: local @Transactional
+per service, messaging, transactional
+outbox so an event publish reliably
+follows a local commit, and application
+code or state machines that track
+progress.
+
+12
+00:02:08,855 --> 00:02:22,967
+Libraries exist on top. The idea you must
+own is independent of any one of them:
+forward actions plus compensations,
+idempotent handlers, and timeouts.
+Idempotency matters because retries
+duplicate.
+
+13
+00:02:23,087 --> 00:02:36,527
+Releasing an already-released seat must be
+safe. Payments need clear capture versus
+void semantics. Persist saga state — which
+steps succeeded — so a crash mid-flow can
+resume or compensate without guessing.
+
+14
+00:02:36,647 --> 00:02:45,551
+Kill early misconceptions. Saga is not XA
+with friendlier branding; it deliberately
+allows temporary inconsistency.
+
+15
+00:02:45,671 --> 00:02:54,120
+Compensation is not always the mechanical
+inverse of insert — canceling a started
+trip may mean refund plus restock, not
+deleting history.
+
+16
+00:02:54,240 --> 00:03:00,840
+And saga does not remove local
+transactions; every step still wants a
+solid boundary inside its service.
+
+17
+00:03:00,960 --> 00:03:08,640
+We have closed the transaction arc from
+one-method boundaries through nesting,
+isolation, rollback rules, XA limits, and
+sagas.
+
+18
+00:03:08,760 --> 00:03:20,208
+Step back and notice what kept
+intercepting method calls: begin
+transaction, maybe later log, authorize,
+or time. That cross-cutting interception
+is not unique to transactions.
+
+19
+00:03:20,328 --> 00:03:28,368
+What modularizes those concerns so every
+harbor service method does not copy-paste
+them? Aspect-oriented programming.

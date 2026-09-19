@@ -1,0 +1,30 @@
+The Spring Story — Episode 46: Specifications
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Criteria gives you dynamic predicates.
+• Specifications give those predicates names you can reuse:…
+• Harbor search stops being a private method full of if statements and becomes a library of composable rules.
+• Spring Data JPA’s JpaSpecificationExecutor adds findAll(Specification) to your repository.
+• A Specification is a functional bridge to Criteria — implement toPredicate, or build with lambdas.
+• and / or / not combine specs without knowing how each one builds its predicate.
+• Unit tests can assert combinations against an in-memory database or a repository slice.
+• Product owners request "hazardous cargo in Singapore over 500 kg" and you assemble existing specs instead…
+• …and more
+
+Timestamps
+0:00 Criteria gives you dynamic predicates. Specifications give those…
+0:47 Read the call site again. Nothing there knows whether isHazardous…
+1:31 Specifications are not a reason to abandon derived methods for…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 47 — Caching
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

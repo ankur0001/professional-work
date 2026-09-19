@@ -1,0 +1,32 @@
+The Spring Story — Episode 18: Spring Boot Architecture
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Breakpoint on SpringApplication.run for the bike-share API.
+• One docking-station service, one fat jar, one main.
+• You step over the call and watch phases fire: bootstrap listeners, Environment prepared,…
+• Cold start is not a blur — it is a pipeline.
+• Boot's architecture is that pipeline plus the opinions that fill it in.
+• Spring Boot is not a separate DI container.
+• It is an opinionated layer on Spring Framework that builds an ApplicationContext for you, auto-configures…
+• SpringApplication is the conductor.
+• …and more
+
+Timestamps
+0:00 Breakpoint on SpringApplication.run for the bike-share API. One…
+0:52 Walk the experiment. new SpringApplication(BikeShareApi.class)…
+2:17 Failure mode with symptoms on cold start: classpath includes a…
+3:01 Trade-offs. The pipeline removes dozens of manual assembly steps…
+3:32 Misconception unique to Boot architecture: "Boot replaces Spring…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 19 — Auto Configuration
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

@@ -1,0 +1,33 @@
+The Spring Story — Episode 30: Controllers
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• DispatcherServlet can route only if something exists to route *to*.
+• Controllers are that something: thin Java types whose methods claim URLs and translate HTTP into…
+• Without a convention, every team invents its own router for luggage: a giant servlet with a switch on the…
+• Spring MVC’s answer is annotation-driven controllers.
+• You mark a class as a web endpoint.
+• You mark methods with HTTP verbs and path patterns.
+• At startup, RequestMappingHandlerMapping reads those annotations and builds the lookup table the…
+• Two stereotypes show up constantly.
+• …and more
+
+Timestamps
+0:00 DispatcherServlet can route only if something exists to route to.…
+0:40 Two stereotypes show up constantly. @Controller is the classic…
+1:23 Method mapping annotations are shortcuts over @RequestMapping.…
+2:13 Return types are part of the mapping story. A plain object becomes…
+2:54 Testing stays close to the type. A unit test can new up…
+3:40 That contract is REST design.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 31 — REST APIs
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

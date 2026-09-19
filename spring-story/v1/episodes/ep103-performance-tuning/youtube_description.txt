@@ -1,0 +1,33 @@
+The Spring Story — Episode 103: Performance Tuning
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Gate p95 is high; someone proposes “rewrite in WebFlux” before reading a single span.
+• Performance tuning in a Spring harbor stack starts from signals: RED metrics on releaseGate, saturation…
+• Is it error rate or latency?
+• If latency, is it time in gate code, time in Feign to billing, or time in billing SQL?
+• Micrometer HTTP timers and your harbor.gate.release.duration split edge versus business method.
+• Skipping steps is how teams spend a week on reactive rewrites while billing’s connection pool was the…
+• Here the flame is not a Java hot loop — it is waiting on billing.
+• The fix might be caching non-hazard quotes, batching, or raising billing capacity — not rewriting gate’s…
+• …and more
+
+Timestamps
+0:00 Resist the folklore fix. Gate p95 is high; someone proposes…
+0:46 Here the flame is not a Java hot loop — it is waiting on billing.…
+1:19 Walk the before/after with numbers. Six containers at 80ms each is…
+2:16 Failure modes of folklore tuning: more replicas that each still…
+2:51 Document each change with before/after p95 on the same panel and…
+3:31 When the bad signal is heap growth, GC thrash, or native memory,…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 104 — Memory Optimization
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

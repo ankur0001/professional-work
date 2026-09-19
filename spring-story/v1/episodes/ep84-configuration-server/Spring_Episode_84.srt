@@ -1,0 +1,113 @@
+1
+00:00:00,000 --> 00:00:11,663
+Thirty harbor services — gate pods,
+billing replicas, scheduling workers, tide
+adapters — each ship with an
+application.yml. The hazardous-goods
+surcharge changes on Monday.
+
+2
+00:00:11,783 --> 00:00:21,551
+By Wednesday, nineteen replicas still
+quote the old rate. That drift is not a
+YAML taste problem. It is a source-of-
+truth problem.
+
+3
+00:00:21,671 --> 00:00:31,631
+Spring Cloud Config Server is a Boot app
+that serves property sources from a
+backend — usually Git — keyed by
+application name, profile, and optional
+label (branch or tag).
+
+4
+00:00:31,751 --> 00:00:45,191
+Clients bootstrap, ask the server for
+their properties, and merge them over
+local defaults. One Git commit updates the
+fleet’s view of tariff rules when clients
+refresh or restart. Look at this example.
+
+5
+00:00:45,311 --> 00:00:53,207
+# config-repo/billing-service-prod.yml
+Look at this java for a moment. Look at
+this example.
+
+6
+00:00:53,327 --> 00:01:07,584
+# config-server application.yml On the
+client, import the config and name the
+application so the server can find
+billing-service-prod.yml: Look at this
+example. # billing-service Look at this
+java for a moment.
+
+7
+00:01:07,703 --> 00:01:19,127
+Walk the path. Billing starts, resolves
+spring.application.name and the active
+profile, GETs the Config Server, receives
+property sources, and binds
+TariffProperties.
+
+8
+00:01:19,247 --> 00:01:29,519
+Gate and scheduling do the same for their
+own files in the same repo. Operators
+change hazardous-surcharge in Git; a
+controlled refresh or rolling restart
+picks it up.
+
+9
+00:01:29,639 --> 00:01:42,143
+Secrets still belong in a secret store or
+sealed files — Config Server can
+integrate, but dumping passwords into a
+public Git history is not “centralized,”
+it is a leak. Refresh is optional and
+operational.
+
+10
+00:01:42,263 --> 00:01:53,783
+@RefreshScope beans rebuild when
+/actuator/refresh fires (or via a bus).
+Prefer restart-on-config for rare tariff
+cuts if your platform already rolls pods
+safely.
+
+11
+00:01:53,903 --> 00:01:59,135
+Live refresh without discipline produces
+“half the fleet on old rules” during the
+window.
+
+12
+00:01:59,255 --> 00:02:08,447
+A misconception is treating Config Server
+as a replacement for environment-specific
+secrets management — it is a property
+distribution mechanism, not a vault.
+
+13
+00:02:08,567 --> 00:02:15,383
+Another is stuffing every service’s entire
+YAML into one mega-file so nobody can
+review a billing-only change.
+
+14
+00:02:15,503 --> 00:02:28,007
+A third is marking config.import as
+required in laptops that cannot reach the
+server, then wondering why local boot
+fails — optional:configserver: exists for
+a reason. Tariff rules now have a home.
+
+15
+00:02:28,127 --> 00:02:38,687
+The next failure mode appears the moment
+gate must call billing and the host list
+is no longer a Compose alias you typed by
+hand. Services need a way to find each
+other by name.

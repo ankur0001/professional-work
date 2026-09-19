@@ -1,0 +1,31 @@
+The Spring Story — Episode 38: JPA Fundamentals
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Harbor ops can expose a REST board forever and still not have a product.
+• Sooner or later someone asks you to store a vessel, reload it tomorrow by IMO number, and update its berth…
+• That is when Java objects meet relational tables — and the mismatch becomes the real work.
+• Picture a vessel registry written with raw JDBC.
+• You open a connection, write INSERT INTO vessels (imo_number, name, flag_state) VALUES (?, ?, ?), then…
+• Tomorrow you add gross_tonnage.
+• You concatenate SQL for filters and hope nobody injects a quote.
+• You copy the same findById / save / delete boilerplate for berths, manifests, and cargo lines.
+• …and more
+
+Timestamps
+0:00 Harbor ops can expose a REST board forever and still not have a…
+0:58 That tax is not a Java syntax problem. It is an object-relational…
+1:38 Keep the names stacked. JPA is the API and mapping rules.…
+2:18 JPA is not "annotations instead of SQL forever." You still need to…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 39 — Hibernate Internals
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

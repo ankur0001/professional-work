@@ -1,0 +1,33 @@
+The Spring Story — Episode 09: Bean Lifecycle
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Those lines appear only after the morning booking wave — never during deploy.
+• The Redis rate-cache pool was empty until the first requests forced connections open.
+• Overnight shutdowns were worse: Redis logged abrupt disconnects because nobody closed the client.
+• The team does not need another caching library.
+• They need lifecycle hooks: warm before traffic, close on stop.
+• Spring's bean lifecycle is a sequence, not a single new.
+• Rough order for a managed singleton: instantiate (constructor), populate properties / inject…
+• You do not memorize every extension point on day one.
+• …and more
+
+Timestamps
+0:00 Those lines appear only after the morning booking wave — never…
+0:55 Runtime after the fix. During context refresh, Spring creates…
+2:00 Failure mode symptoms from the hotel rate desk. Init that opens…
+2:58 Trade-offs. Interface callbacks (InitializingBean /…
+3:32 Misconception unique to lifecycle: "@PostConstruct runs before…
+4:10 Pools warm cleanly now. The bank batch team watching from across…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 10 — Configuration Styles
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

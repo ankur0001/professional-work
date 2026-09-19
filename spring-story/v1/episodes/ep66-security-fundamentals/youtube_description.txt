@@ -1,0 +1,34 @@
+The Spring Story — Episode 66: Security Fundamentals
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Ship a harbor API on the public internet and the first reviewer question is not about JPA mappings.
+• It is: who can call /gates/release?
+• Controllers, repositories, and transactions can all be correct while the door stays open.
+• Security fundamentals are the shared vocabulary for closing that door without scattering if (user == null)…
+• Two questions appear on every request, and they are not the same.
+• That is authentication — establishing identity.
+• Second: given that identity, may they perform this action on this resource?
+• Teams that blur the words build filters that “check the token” and then forget ownership, or build role…
+• …and more
+
+Timestamps
+0:00 Ship a harbor API on the public internet and the first reviewer…
+0:59 Spring Security models the pipeline as a filter chain in front of…
+1:37 Read that as policy, not decoration. Health may stay public for…
+2:21 Runtime symptoms when the vocabulary is wrong: actuators open on…
+2:52 A misconception that shows up early: “Spring Security is just…
+3:27 Trade-offs sit in the open once vocabulary is shared. Session…
+4:12 That is where authentication mechanisms begin.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 67 — Authentication
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

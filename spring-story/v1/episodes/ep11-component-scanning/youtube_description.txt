@@ -1,0 +1,32 @@
+The Spring Story — Episode 11: Component Scanning
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• The cargo routing service passes every unit test on a laptop and fails contract tests in the pipeline with…
+• Production logs show the clock advancing in 15-minute jumps designed for demos.
+• Someone set @ComponentScan("com.cargo") on the Boot application in cargo-app, and the cargo-test-support…
+• Scanning did exactly what it was told.
+• The package boundary did not.
+• Component scanning walks packages looking for stereotype annotations — @Component, @Service, @Repository,…
+• It is convenience, not magic.
+• Convenience without package discipline becomes a production classpath mine: anything annotated and…
+• …and more
+
+Timestamps
+0:00 The cargo routing service passes every unit test on a laptop and…
+0:37 Component scanning walks packages looking for stereotype…
+1:41 Runtime of a scan during context refresh.…
+2:32 Failure mode symptoms in the cargo outage: contract tests assert…
+3:36 Misconception unique to scanning: "@SpringBootApplication only…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 12 — @Resource vs @Autowired vs @Inject
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

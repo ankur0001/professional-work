@@ -1,0 +1,116 @@
+1
+00:00:00,000 --> 00:00:13,391
+One releaseGate call. Three aspects.
+Security must reject unauthorized
+operators before anything else runs.
+Transactions must begin before business
+work and commit after.
+
+2
+00:00:13,511 --> 00:00:20,591
+Metrics want to time the call — ideally
+without opening a database transaction for
+callers who were going to be denied
+anyway.
+
+3
+00:00:20,711 --> 00:00:31,968
+If the order is accidental, you open
+connections for rejected trucks, or you
+time only the inner fragment and lie on
+the dashboard. Aspect ordering makes that
+sequence intentional.
+
+4
+00:00:32,088 --> 00:00:46,415
+Spring uses Ordered / @Order on aspect
+beans (and on some infrastructure
+advisors). Lower order values mean higher
+precedence. For @Around advice, higher
+precedence is outer: enters first, exits
+last.
+
+5
+00:00:46,536 --> 00:01:02,088
+Think nested wrappers. For harbor gate
+releases, prefer security → transaction →
+metrics from outside in. Look at this java
+for a moment. Look at this java for a
+moment. Look at this java for a moment.
+
+6
+00:01:02,207 --> 00:01:16,152
+Narrate the enter path. Client hits the
+proxy. Security (order 1) checks
+permission, calls proceed. Transactional-
+style advice (order 2) begins work, calls
+proceed.
+
+7
+00:01:16,271 --> 00:01:26,471
+Metrics (order 3) starts a timer, calls
+proceed, hits the target. On the way out:
+metrics stop, transaction commits,
+security exits.
+
+8
+00:01:26,591 --> 00:01:38,543
+Unauthorized callers fail in security and
+never open a transaction — usually what
+you want. Swap carelessly and you hold
+database connections for operators who
+were never allowed to release the gate.
+
+9
+00:01:38,663 --> 00:01:49,895
+Spring’s own @Transactional and @Async
+advisors live in the same precedence
+world. Custom aspects that must run
+outside or inside transactions should
+declare @Order explicitly.
+
+10
+00:01:50,015 --> 00:01:57,599
+When two aspects share the same order
+value, relative order is effectively
+undefined — do not depend on class-name
+sorting luck.
+
+11
+00:01:57,719 --> 00:02:10,655
+Within one aspect class, advice-type
+precedence has its own rules; cross-aspect
+problems are what @Order on the aspect
+bean solves. Prefer one clear
+responsibility per aspect so ordering
+stays reviewable.
+
+12
+00:02:10,775 --> 00:02:21,983
+Misconception: “@Order on any @Component
+controls method call order in the app.”
+Here it controls advisor precedence in the
+AOP chain, not general bean
+initialization.
+
+13
+00:02:22,103 --> 00:02:37,007
+Another: expecting @After from a lower-
+precedence aspect to run before @After
+from a higher-precedence aspect without
+drawing the enter/exit nest. Draw the
+nest. Speak the nest. Then the numbers
+make sense.
+
+14
+00:02:37,127 --> 00:02:50,495
+Ordered aspects keep security,
+transactions, and metrics from tripping
+over each other. They do not erase the
+cost of every proxy hop and advice
+invocation. When does that cost matter on
+a busy gate?
+
+15
+00:02:50,675 --> 00:02:53,411
+That is AOP performance.

@@ -1,0 +1,150 @@
+1
+00:00:00,000 --> 00:00:07,607
+A green @WebMvcTest can still hide a
+broken @Transactional boundary or a
+security matcher that rejects the booth
+scanner.
+
+2
+00:00:07,727 --> 00:00:19,103
+Integration tests load more of the real
+Boot application — often with
+@SpringBootTest and MockMvc or a random-
+port TestRestTemplate — and exercise the
+gate release flow as collaborators wire
+together.
+
+3
+00:00:19,223 --> 00:00:30,719
+Look at this java for a moment. Read what
+is real and what is faked. Spring
+Security, MVC, the ledger repository, and
+transactional proxies are real.
+
+4
+00:00:30,839 --> 00:00:42,575
+Billing stays a @MockBean so the test does
+not need a live billing pod — you are
+proving gate’s flow, not billing’s SQL.
+Assert side effects in the ledger, not
+only HTTP 202.
+
+5
+00:00:42,695 --> 00:00:53,783
+The billing-failure case proves the
+transactional boundary: no ledger row when
+quoting dies mid-flow. Anonymous access
+must fail if the booth scanner is supposed
+to authenticate.
+
+6
+00:00:53,903 --> 00:01:01,607
+Random-port style catches serialization
+and client configuration that MockMvc can
+miss: Look at this java for a moment.
+
+7
+00:01:01,727 --> 00:01:09,024
+Keep integration profiles pointed at
+isolated databases — embedded, ephemeral
+containers, or per-job schemas.
+
+8
+00:01:09,143 --> 00:01:16,415
+Shared staging schemas make parallel CI
+jobs collide and produce ghosts: one job
+deletes rows another just asserted.
+
+9
+00:01:16,535 --> 00:01:23,879
+@DirtiesContext is a blunt hammer when
+bean state leaks; prefer cleanup in
+@BeforeEach and immutable test data ids.
+
+10
+00:01:23,999 --> 00:01:36,983
+Transactional tests that roll back
+automatically are convenient until you
+assert on data visible only after commit —
+know whether your test transaction wraps
+the HTTP call. Runtime cost is the trade-
+off you feel.
+
+11
+00:01:37,103 --> 00:01:49,415
+Full context startup dominates wall time;
+context caching across classes helps when
+configurations match. Too many unique
+@MockBean sets break that cache and CI
+slows for invisible reasons.
+
+12
+00:01:49,535 --> 00:01:56,495
+Symptom: “integration suite used to be
+four minutes, now twenty” after every test
+class invented its own mock set.
+
+13
+00:01:56,615 --> 00:02:09,287
+Another runtime tell: a test passes with
+MockMvc but fails on RANDOM_PORT because a
+filter only runs on the real servlet path,
+or because JSON dates serialize
+differently through TestRestTemplate’s
+message converters.
+
+14
+00:02:09,407 --> 00:02:18,383
+Security and transactions are why this
+layer exists. @WithMockUser proves
+matchers; it does not prove JWT parsing.
+
+15
+00:02:18,503 --> 00:02:27,455
+If gate’s booth scanners send bearer
+tokens, add at least one test that builds
+a signed test token — or accept that token
+wiring lives in a narrower security test.
+
+16
+00:02:27,575 --> 00:02:37,943
+For @Transactional on releaseGate, assert
+both the happy ledger write and the empty
+ledger after a mid-flow billing failure;
+that is the integration bug @WebMvcTest
+will never see.
+
+17
+00:02:38,063 --> 00:02:51,551
+A misconception is replacing unit tests
+with integration tests because “they catch
+more.” They catch different things and
+cost more CPU. Another is asserting only
+status codes without ledger side effects.
+
+18
+00:02:51,671 --> 00:03:02,015
+A third is @MockBean on so many types that
+the test no longer integrates anything
+meaningful. Mocked billing and in-memory
+stores still skip the SQL dialect you
+ship.
+
+19
+00:03:02,135 --> 00:03:08,400
+When VesselRepository must prove derived
+queries against real Postgres, reach for
+Testcontainers.
+
+20
+00:03:08,519 --> 00:03:18,263
+Keep a short matrix in the team’s head:
+Mockito for tariff branches, @WebMvcTest
+for JSON and validation, @SpringBootTest
+for security-plus-ledger wiring,
+
+21
+00:03:18,383 --> 00:03:23,783
+containers for SQL truth — each layer
+answers a different lie the previous one
+can tell.

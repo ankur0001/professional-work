@@ -1,0 +1,131 @@
+1
+00:00:00,000 --> 00:00:12,599
+Authentication told you the caller is
+Alice. Authorization decides whether Alice
+may touch this berth admin route, with
+this method, right now. Picture two
+authenticated harbor users.
+
+2
+00:00:12,719 --> 00:00:27,911
+Alice has role ROLE_USER — a clerk on the
+yard floor. Bob has ROLE_ADMIN —
+operations lead. Both send valid
+credentials. GET /api/gates/status may
+succeed for Alice.
+
+3
+00:00:28,031 --> 00:00:35,015
+GET /api/admin/berths must succeed for Bob
+and return 403 for Alice — not 401.
+
+4
+00:00:35,135 --> 00:00:48,167
+A 401 means “we do not know who you are.”
+A 403 means “we know who you are, and you
+are not allowed.” That distinction is the
+heartbeat of authorization debugging on
+admin berth routes.
+
+5
+00:00:48,287 --> 00:01:01,896
+Before a central model, teams sprinkle if
+(!user.isAdmin()) throw ... through
+controllers. Rules drift. One endpoint
+checks a role string; another checks an
+LDAP group; a third forgets the check.
+
+6
+00:01:02,015 --> 00:01:16,367
+The failure mode is an authenticated clerk
+reaching a destructive berth reassignment
+because the guard lived only on the UI.
+Spring Security separates the concerns on
+purpose. Authentication fills the
+SecurityContext.
+
+7
+00:01:16,487 --> 00:01:28,007
+Authorization consumes it. At the HTTP
+layer, authorizeHttpRequests declares
+which paths need authentication, which
+roles, which authorities, or custom
+matchers.
+
+8
+00:01:28,128 --> 00:01:42,408
+The decision runs in the filter chain —
+typically via AuthorizationFilter — before
+your controller method executes. Look at
+this java for a moment. Read the denial
+path carefully. Alice is authenticated.
+
+9
+00:01:42,527 --> 00:01:58,631
+The security context is populated. The
+matcher for the admin berth route demands
+ROLE_ADMIN. Spring prefixes ROLE_ when you
+use hasRole("ADMIN"). Alice lacks it, so
+the filter short-circuits with forbidden.
+
+10
+00:01:58,751 --> 00:02:07,055
+Bob passes the same rule and reaches the
+berth admin controller. Same login
+machinery; different authorization
+outcome.
+
+11
+00:02:07,175 --> 00:02:19,343
+Authorities are the finer grain: strings
+like berths:write or gates:release
+attached to the Authentication. Roles are
+a convention — authorities with a ROLE_
+prefix — not a separate type system.
+
+12
+00:02:19,463 --> 00:02:33,336
+Prefer explicit authorities when product
+permissions do not map cleanly to a
+handful of roles. Prefer roles when the
+org already thinks in USER / ADMIN /
+SUPPORT. URL rules are not the whole
+story.
+
+13
+00:02:33,455 --> 00:02:46,703
+A path matcher cannot easily express
+“Alice may release only cargo she owns.”
+Object-level rules need method security or
+a custom AuthorizationManager. We will
+open method security soon.
+
+14
+00:02:46,823 --> 00:03:01,391
+Today, own the HTTP decision:
+authenticated is not authorized, and 401
+is not 403. A common misunderstanding is
+enabling anyRequest().authenticated() and
+believing admin berths are locked down.
+
+15
+00:03:01,511 --> 00:03:15,983
+That only requires a valid identity.
+Another is checking roles in the UI and
+assuming the API is safe — browsers are
+not your enforcement point. Enforce on the
+server, on every request that mutates or
+reveals berth data.
+
+16
+00:03:16,103 --> 00:03:30,623
+We established identity last. Today Alice
+is correctly denied and Bob is allowed on
+/admin/berths. APIs that span mobile
+clients often stop carrying server
+sessions and start carrying signed claims
+instead.
+
+17
+00:03:30,743 --> 00:03:34,175
+That pressure leads into JWT.

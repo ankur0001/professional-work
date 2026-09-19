@@ -1,0 +1,35 @@
+The Spring Story — Episode 79: Schedulers
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• An operator clicks "export gate pass PDF" on a reactive harbor console.
+• The chain that streamed AIS positions is non-blocking.
+• The PDF library is not — it hammers CPU and filesystem APIs that block.
+• Drop that callable on a Netty event-loop thread and unrelated position streams stutter: SSE ticks pause,…
+• Mono and Flux describe what happens.
+• Schedulers describe where it happens.
+• In Reactor, you shift execution with publishOn and subscribeOn, backed by Schedulers factories — not with…
+• Know the common pools by role.
+• …and more
+
+Timestamps
+0:00 An operator clicks "export gate pass PDF" on a reactive harbor…
+0:32 In Reactor, you shift execution with publishOn and subscribeOn,…
+1:18 // subscribeOn: influences where the subscription upstream begins…
+2:22 Say the difference until it sticks under pressure. subscribeOn…
+3:00 Failure mode symptoms. PDF export without a scheduler: p99 on…
+3:47 In WebFlux, you often never call subscribeOn because Netty already…
+4:32 Misconception unique to schedulers: "subscribeOn and publishOn are…
+5:11 That rule is backpressure.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 80 — Backpressure
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

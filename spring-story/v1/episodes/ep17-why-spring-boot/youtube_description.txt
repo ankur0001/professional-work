@@ -1,0 +1,34 @@
+The Spring Story — Episode 17: Why Spring Boot?
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Classic Spring can do almost everything.
+• The pain was not capability — it was the days of setup before the first useful endpoint.
+• Picture a team that already understands IoC, DI, and MVC.
+• They still lose a morning aligning dependency versions.
+• They still write configuration classes for a datasource, a Jackson ObjectMapper, an embedded or external…
+• None of that work is the product.
+• Boot exists to make the necessary boring again.
+• Spring Boot is an opinionated layer on top of Spring Framework.
+• …and more
+
+Timestamps
+0:00 Classic Spring can do almost everything. The pain was not…
+0:31 Spring Boot is an opinionated layer on top of Spring Framework. It…
+1:16 A short timeline helps. Boot work begins around 2012 at…
+2:03 This is not a toy because it is short. It is short because Boot…
+2:34 Of course opinionated defaults can feel like magic, and magic is a…
+3:24 A common misunderstanding is "Boot is a different framework from…
+4:08 The next natural question is what actually happens inside…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 18 — Spring Boot Architecture
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

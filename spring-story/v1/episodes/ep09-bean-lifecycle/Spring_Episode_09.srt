@@ -1,0 +1,225 @@
+1
+00:00:00,000 --> 00:00:12,407
+Look at this code for a moment. Those
+lines appear only after the morning
+booking wave — never during deploy. The
+Redis rate-cache pool was empty until the
+first requests forced connections open.
+
+2
+00:00:12,527 --> 00:00:26,280
+Overnight shutdowns were worse: Redis
+logged abrupt disconnects because nobody
+closed the client. The team does not need
+another caching library. They need
+lifecycle hooks: warm before traffic,
+close on stop.
+
+3
+00:00:26,399 --> 00:00:30,695
+Spring's bean lifecycle is a sequence, not
+a single new.
+
+4
+00:00:30,815 --> 00:00:42,960
+Rough order for a managed singleton:
+instantiate (constructor), populate
+properties / inject collaborators, aware
+interfaces (BeanNameAware,
+BeanFactoryAware, ApplicationContextAware,
+…),
+
+5
+00:00:43,079 --> 00:00:57,839
+BeanPostProcessor.postProcessBeforeInitial
+ization, init callbacks (@PostConstruct,
+InitializingBean.afterPropertiesSet,
+custom init-method), BeanPostProcessor.pos
+tProcessAfterInitialization (AOP proxies
+often wrap here),
+
+6
+00:00:57,959 --> 00:01:05,111
+bean in service, then on context close
+@PreDestroy / DisposableBean.destroy /
+custom destroy-method.
+
+7
+00:01:05,231 --> 00:01:18,888
+You do not memorize every extension point
+on day one. You learn where your pool open
+and close belong — after injection, before
+traffic; on shutdown, before the JVM
+exits. Look at this java for a moment.
+
+8
+00:01:19,007 --> 00:01:29,807
+Runtime after the fix. During context
+refresh, Spring creates RateCachePool via
+the constructor — only the URI string is
+set; factory and template are still null.
+
+9
+00:01:29,927 --> 00:01:38,735
+Dependency injection for this bean is
+already done (the @Value resolved through
+Environment). Aware callbacks run if
+implemented.
+
+10
+00:01:38,855 --> 00:01:48,048
+Then init: afterPropertiesSet builds the
+Lettuce factory, starts it, builds the
+template, and pings to force a real
+connection before the web tier accepts
+traffic.
+
+11
+00:01:48,167 --> 00:01:59,975
+In a typical Boot app, context refresh
+completes before Tomcat starts serving —
+so the morning wave hits a warm pool
+instead of reconnect warnings. Controllers
+call get; the template is ready.
+
+12
+00:02:00,095 --> 00:02:10,487
+On SIGTERM, Boot closes the context in
+reverse dependency order where possible,
+calls destroy on disposables, and Redis
+sees an orderly shutdown instead of TCP
+resets.
+
+13
+00:02:10,607 --> 00:02:20,063
+Swap @PostConstruct for afterPropertiesSet
+if you prefer annotations; the timing
+relative to injection is what matters —
+init runs after dependencies are set.
+
+14
+00:02:20,183 --> 00:02:31,295
+Prefer one init style per bean to avoid
+double-open surprises when both
+@PostConstruct and afterPropertiesSet do
+real work. Failure mode symptoms from the
+hotel rate desk.
+
+15
+00:02:31,415 --> 00:02:43,031
+Init that opens Redis against a down host:
+BeanCreationException during refresh,
+process fails to start — better than
+serving 500s with an empty pool, unless
+you deliberately lazy-init and degrade.
+
+16
+00:02:43,151 --> 00:02:51,479
+Init that assumes another bean is already
+warmed without depends-on or constructor
+injection: intermittent NPEs when creation
+order shifts.
+
+17
+00:02:51,599 --> 00:03:00,119
+Destroy skipped because the bean was never
+registered as disposable (raw new
+RateCachePool outside the container) —
+Redis still sees hard disconnects.
+
+18
+00:03:00,239 --> 00:03:06,575
+Calling get from a constructor or from a
+BeanPostProcessor that runs before init:
+template still null.
+
+19
+00:03:06,695 --> 00:03:15,839
+Prototype-scoped beans get init per
+instance but destroy only if you asked the
+container to manage the instance —
+forgotten destroy on prototypes is a
+classic leak.
+
+20
+00:03:15,959 --> 00:03:28,127
+Another tell: @PreDestroy methods that
+never run because the JVM was killed with
+kill -9, or because a non-daemon thread
+kept the process alive past an incomplete
+context close. Trade-offs.
+
+21
+00:03:28,247 --> 00:03:40,295
+Interface callbacks (InitializingBean /
+DisposableBean) couple your class to
+Spring APIs; @PostConstruct / @PreDestroy
+need a common annotation processor but
+keep the class freer of Spring types;
+
+22
+00:03:40,415 --> 00:03:46,439
+custom init/destroy method names in
+definitions suit third-party classes you
+cannot annotate.
+
+23
+00:03:46,559 --> 00:03:56,495
+Lifecycle hooks are the right place for
+scarce resources — pools, file watchers,
+subscription threads. They are the wrong
+place for request-scoped business logic.
+
+24
+00:03:56,615 --> 00:04:04,487
+Lazy-init delays the cost until first use;
+for Redis rate cache that recreates the
+morning reconnect storm unless something
+else warms it.
+
+25
+00:04:04,607 --> 00:04:16,343
+Misconception unique to lifecycle:
+"@PostConstruct runs before dependency
+injection finishes." It does not.
+Injection completes first; then init
+callbacks.
+
+26
+00:04:16,463 --> 00:04:27,144
+If your init method sees null
+collaborators, the bug is elsewhere —
+wrong injection, wrong bean, field access
+before the container finished, or you
+constructed the object yourself outside
+Spring.
+
+27
+00:04:27,264 --> 00:04:40,487
+Another misconception: "Constructor body
+is the init hook." Constructors run during
+instantiate, before collaborators are
+injectable via setters or some field
+paths; constructor injection is safe for
+final deps,
+
+28
+00:04:40,608 --> 00:04:48,935
+but opening external resources in a
+constructor makes testing and proxy
+subclassing harder — prefer init callbacks
+for side-effecting startup.
+
+29
+00:04:49,055 --> 00:05:02,183
+Pools warm cleanly now. The bank batch
+team watching from across the hall still
+configures the same lifecycle idea in
+2012-era XML, and they want a migration
+path toward Java config without a big-bang
+rewrite.
+
+30
+00:05:02,303 --> 00:05:07,199
+How you express definitions — not only
+when they init — becomes the next fight.

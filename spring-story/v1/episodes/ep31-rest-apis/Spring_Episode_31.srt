@@ -1,0 +1,138 @@
+1
+00:00:00,000 --> 00:00:04,655
+A @RestController that returns objects is
+not yet a REST API.
+
+2
+00:00:04,775 --> 00:00:14,592
+REST is a contract style: resources,
+verbs, representations, and status codes
+that clients can trust — especially when
+the resource is a parcel moving through a
+harbor.
+
+3
+00:00:14,711 --> 00:00:26,688
+Teams often start with "JSON endpoints"
+and discover the pain later. One method
+returns 200 with an error string in the
+body. Another returns 200 for create.
+
+4
+00:00:26,807 --> 00:00:34,896
+Paths look like /getParcel and
+/createParcel — RPC painted with HTTP.
+Content types drift.
+
+5
+00:00:35,015 --> 00:00:45,863
+Trucking clients cannot cache, cannot tell
+success from failure without parsing
+bodies, and cannot evolve without breaking
+every scanner. Spring does not force good
+REST on you.
+
+6
+00:00:45,983 --> 00:01:04,079
+It gives you the tools to express a
+deliberate contract. Think in resources,
+not procedure names. A parcel is a
+resource at /parcels/{id}. A collection
+lives at /parcels. Creating a parcel is
+POST /parcels with a body.
+
+7
+00:01:04,199 --> 00:01:17,423
+Updating is PUT or PATCH depending on your
+semantics. Deleting is DELETE. Reading is
+GET. Tracking events hang under the
+parcel: /parcels/{id}/events.
+
+8
+00:01:17,543 --> 00:01:29,687
+The Java method names can be create or
+get; the public contract is the URL plus
+the verb. Look at this java for a moment.
+ResponseEntity is deliberate response
+control.
+
+9
+00:01:29,807 --> 00:01:43,679
+201 Created with a Location header tells
+clients where the new parcel lives. 404
+for an unknown id is a status, not a soft
+null body with 200. GET stays safe and
+idempotent; POST creates.
+
+10
+00:01:43,799 --> 00:01:56,543
+Media types matter too: declare produces
+and consumes when you support more than
+one representation, and fail loudly on
+mismatch instead of guessing. Versioning
+and representation design deserve a short
+honest take.
+
+11
+00:01:56,663 --> 00:02:10,415
+Prefer stable resource names and evolve
+fields carefully. If you must version,
+pick a strategy and stick to it — URI
+prefix like /v1/parcels or a version media
+type — but do not invent three strategies
+in one codebase.
+
+12
+00:02:10,536 --> 00:02:23,687
+Separate request DTOs from response DTOs
+when the shapes diverge; exposing a JPA
+entity as the API body couples persistence
+to every trucking client. Hypermedia is
+optional; honesty is not.
+
+13
+00:02:23,807 --> 00:02:37,512
+You do not need a full HATEOAS graph on
+day one. You do need documented fields,
+predictable nullability, and stable enum
+strings for parcel states. Prefer ISO-8601
+timestamps.
+
+14
+00:02:37,632 --> 00:02:46,367
+When a collection of events is empty,
+return 200 with an empty list, not 404 —
+404 means the parcel resource itself is
+missing.
+
+15
+00:02:46,487 --> 00:02:53,855
+A frequent wrong turn is treating every
+successful Java return as HTTP 200,
+including creates and deletes.
+
+16
+00:02:53,975 --> 00:03:04,319
+Another is encoding actions in the path
+(/parcels/{id}/markDelivered) when a state
+transition could be a PATCH on the parcel
+or a POST to a subordinate resource.
+
+17
+00:03:04,439 --> 00:03:14,831
+A third is leaking internal database ids
+in URLs you are not willing to support
+forever — prefer opaque public tracking
+ids. Controllers can now claim paths.
+
+18
+00:03:14,951 --> 00:03:25,175
+Claiming a path still leaves a hole: what
+happens when the JSON is well-formed yet
+the customs fields are missing, blank, or
+nonsense — and who should reject that
+before the tracking service runs?
+
+19
+00:03:25,355 --> 00:03:28,043
+That boundary is validation.

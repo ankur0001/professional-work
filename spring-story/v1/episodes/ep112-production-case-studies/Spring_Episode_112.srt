@@ -1,0 +1,209 @@
+1
+00:00:00,000 --> 00:00:09,695
+Theory becomes judgment when trucks,
+legacy berth schemas, and on-call
+rotations enter the room. This closing
+episode is not a new framework feature.
+
+2
+00:00:09,815 --> 00:00:19,439
+It is three condensed postmortems that
+force you to pick from everything this
+series taught — IoC and Boot, MVC and
+data, security and cloud, tests,
+observability,
+
+3
+00:00:19,559 --> 00:00:24,239
+and architecture — and leave you with a
+synthesis you can reuse on Monday.
+
+4
+00:00:24,359 --> 00:00:32,280
+### Case 1 — Gate latency without a
+villain A harbor gate API met its error
+SLO and missed its latency SLO.
+
+5
+00:00:32,399 --> 00:00:46,799
+The first proposal was “move gate to
+WebFlux.” Grafana showed HTTP p99 high;
+the harbor.gate.release.duration timer was
+elevated; OpenTelemetry showed ten
+sequential billing quote spans per multi-
+container truck.
+
+6
+00:00:46,920 --> 00:01:00,167
+The fix was a bulk quote endpoint and a
+single span — evidence from the
+performance episode, not a programming-
+model fashion. Heap and GC were innocent.
+Architecture diagrams did not need
+redrawing.
+
+7
+00:01:00,287 --> 00:01:07,512
+Takeaway: instrument business hops, read
+the trace before changing stacks, optimize
+the algorithm the spans reveal.
+
+8
+00:01:07,631 --> 00:01:21,863
+### Case 2 — The god service that could
+not test release A monolith package named
+service imported web DTOs, JPA entities,
+and the billing Feign client into one
+class. Unit tests booted half of Spring.
+
+9
+00:01:21,983 --> 00:01:34,439
+The team carved a hexagonal slice around
+gate release: ReleaseGateUseCase in the
+core, MVC and Feign adapters outside,
+ArchUnit guarding imports. They did not
+rewrite every admin CRUD screen.
+
+10
+00:01:34,559 --> 00:01:41,135
+Release rules became testable with a fake
+BillingPort and DutyProvider; production
+wiring stayed Boot’s job.
+
+11
+00:01:41,255 --> 00:01:49,583
+Takeaway: ports and adapters where change
+and risk concentrate; layered pragmatism
+elsewhere; dependency direction over
+folder cosmetics.
+
+12
+00:01:49,703 --> 00:02:01,607
+### Case 3 — Schedule board choking the
+write model Operator boards joined berth
+reservations, vessel names, and billing
+state live against normalized write tables
+under row locks from reserve.
+
+13
+00:02:01,727 --> 00:02:15,119
+The team introduced mild CQRS:
+schedule_board_view updated after commit
+from BerthReserved, query controller
+separate from command controller. They
+added a Prometheus gauge on projection
+lag.
+
+14
+00:02:15,239 --> 00:02:21,239
+When lag spiked, on-call checked the
+projector before blaming Postgres primary
+CPU alone.
+
+15
+00:02:21,359 --> 00:02:29,735
+Takeaway: separate read models when
+screens and invariants diverge; emit
+domain events you can project; observe the
+projection itself.
+
+16
+00:02:29,855 --> 00:02:42,647
+### Synthesis — a working order of attack
+When a Spring harbor system hurts, walk a
+deliberate path instead of grabbing a
+buzzword: 1. See — Actuator, Micrometer,
+Prometheus, Grafana, traces.
+
+17
+00:02:42,768 --> 00:02:55,560
+If you cannot see it, you cannot rank it.
+2. Stabilize — readiness probes, timeouts,
+pools, memory bounds, graceful shutdown.
+Survive the week. 3.
+
+18
+00:02:55,680 --> 00:03:03,575
+Simplify the hot path — fix N+1, batch
+chatty Feign calls, cache only with hit
+metrics. 4.
+
+19
+00:03:03,695 --> 00:03:14,280
+Draw boundaries — layers first; hex/clean
+rings where frameworks invade the core;
+DDD where language and invariants are rich
+(Berth, gate release). 5.
+
+20
+00:03:14,400 --> 00:03:27,792
+Decouple in time — BerthReserved and
+outbox when sync fan-out couples
+availability. 6. Split read/write — CQRS
+when one model cannot serve both honesty
+and the schedule board. 7.
+
+21
+00:03:27,912 --> 00:03:39,264
+Prove — JUnit and Mockito at the tariff
+core, slices for gate controllers,
+Testcontainers for VesselRepository,
+contracts for gate↔billing, dashboards and
+alerts as part of the change.
+
+22
+00:03:39,384 --> 00:03:50,304
+Spring’s through-line across the catalog
+is unchanged from the opening lesson: keep
+business logic in POJOs you can reason
+about; let the container and ecosystem
+handle assembly, infrastructure,
+
+23
+00:03:50,424 --> 00:03:52,944
+and cross-cutting concerns.
+
+24
+00:03:53,063 --> 00:04:05,783
+Boot accelerates the outer rings. Cloud
+patterns and messaging address multi-
+service quay reality. Observability closes
+the feedback loop so architecture debates
+meet production numbers.
+
+25
+00:04:05,903 --> 00:04:20,783
+### What you should be able to do now
+Explain why a bean is created and where a
+request enters DispatcherServlet. Choose
+JPA fetch strategies with SQL evidence.
+Secure a resource with the filter chain
+you can narrate.
+
+26
+00:04:20,903 --> 00:04:33,024
+Test slices without booting the world.
+Scrape gate meters, find a slow span on
+check-in, and decide whether the next move
+is a pool change, a port/adapter carve-
+out, or a schedule-board read model.
+
+27
+00:04:33,144 --> 00:04:42,288
+That combination — mechanism plus judgment
+— is the series’ real deliverable. There
+is no next handbook episode waiting behind
+a curtain.
+
+28
+00:04:42,408 --> 00:04:53,016
+The next lesson is the system you own:
+pick one bottleneck on your quay, name the
+Spring mechanism that addresses it,
+measure before and after, and keep the
+dependency arrows pointing toward the
+domain.
+
+29
+00:04:53,136 --> 00:04:56,472
+The handbook ends here; the work does not.

@@ -1,0 +1,132 @@
+1
+00:00:00,000 --> 00:00:12,624
+CSRF was about a browser silently using
+cookies against your harbor site. CORS is
+about a browser refusing to let JavaScript
+on one origin read responses from another
+— unless your API opts in.
+
+2
+00:00:12,743 --> 00:00:30,024
+Different attack, different headers,
+different failure mode. Do not blur them.
+Origins are scheme + host + port.
+https://ops.example and
+https://api.example are different origins.
+
+3
+00:00:30,144 --> 00:00:39,167
+A SPA on the ops origin that calls fetch('
+https://api.example/api/gates/status') is
+cross-origin.
+
+4
+00:00:39,287 --> 00:00:48,335
+Simple GETs may be sent, but the browser
+hides the response from JS unless the API
+returns the right Access-Control-Allow-
+Origin (and related) headers.
+
+5
+00:00:48,455 --> 00:00:58,175
+For requests the browser classifies as
+“not simple” — custom headers like
+Authorization, JSON content types, or
+certain methods — the browser first sends
+a preflight:
+
+6
+00:00:58,295 --> 00:01:03,359
+OPTIONS with Access-Control-Request-Method
+and Access-Control-Request-Headers.
+
+7
+00:01:03,479 --> 00:01:08,495
+Your API must answer the preflight
+successfully before the real request runs.
+
+8
+00:01:08,615 --> 00:01:20,039
+Without CORS configuration, local
+development feels haunted: Postman works,
+curl works, the SPA console on
+https://ops.example shows a CORS error.
+
+9
+00:01:20,159 --> 00:01:34,127
+Nothing is wrong with your controller
+mapping — the browser enforced the same-
+origin policy. Spring MVC lets you declare
+CORS with @CrossOrigin,
+WebMvcConfigurer#addCorsMappings, or a
+CorsConfigurationSource bean.
+
+10
+00:01:34,247 --> 00:01:45,455
+When Spring Security is on the classpath,
+you must also integrate CORS into the
+security filter chain — otherwise Security
+may reject or ignore the preflight before
+MVC’s CORS handling helps you.
+
+11
+00:01:45,575 --> 00:01:58,895
+Look at this java for a moment. Narrate
+credentials carefully. If you set Allow-
+Credentials: true, you cannot use Allow-
+Origin: *. You must echo an explicit
+origin.
+
+12
+00:01:59,015 --> 00:02:11,831
+Cookie-based SPAs and credentialed XHR
+need that pairing. Bearer-token SPAs often
+send Authorization explicitly and may not
+need cookies — still list Authorization in
+allowed headers so preflight passes.
+
+13
+00:02:11,951 --> 00:02:25,967
+CORS is not an authentication mechanism.
+Allowing https://ops.example does not
+authenticate the user. It only tells the
+browser which frontends may read
+responses.
+
+14
+00:02:26,087 --> 00:02:39,071
+A non-browser client can still call your
+API; protect with authentication and
+authorization as before. CORS also does
+not stop CSRF — a forged cookie POST is a
+different problem with a different
+defense.
+
+15
+00:02:39,191 --> 00:02:49,223
+A misconception is fixing CORS by
+reflecting arbitrary Origin headers in
+production. Reflecting every origin with
+credentials is an open door.
+
+16
+00:02:49,343 --> 00:02:59,327
+Another is confusing CORS errors with
+401/403 from Spring Security — check the
+Network tab: failed preflight vs failed
+bearer validation look different.
+
+17
+00:02:59,447 --> 00:03:12,599
+A third is “we enabled CORS, so CSRF is
+handled” — that blurs two distinct browser
+policies. We have secured identity,
+access, tokens, methods, CSRF, and cross-
+origin browser access.
+
+18
+00:03:12,719 --> 00:03:21,647
+Those behaviors are not scattered magic —
+they are ordered filters. The next episode
+names that chain and shows how a harbor
+request walks it.

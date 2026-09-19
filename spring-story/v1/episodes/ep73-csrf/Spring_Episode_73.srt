@@ -1,0 +1,149 @@
+1
+00:00:00,000 --> 00:00:12,887
+Method security answered domain rules for
+an already-authenticated principal. CSRF
+answers a browser-shaped attack that never
+needs to steal the password — it only
+needs the browser to attach cookies
+automatically.
+
+2
+00:00:13,007 --> 00:00:29,759
+Here is the forged-POST story for cargo
+release. Alice is logged into
+https://harbor.example with a session
+cookie from the ops console. While her
+session is alive, she visits
+https://evil.example.
+
+3
+00:00:29,879 --> 00:00:39,335
+That page contains a hidden form that
+POSTs to
+https://harbor.example/api/gates/release
+with a cargo id in the body.
+
+4
+00:00:39,455 --> 00:00:50,903
+Alice’s browser sends the harbor session
+cookie on that cross-site POST because
+that is how cookies work for the target
+domain. The harbor server sees an
+authenticated session and opens the boom.
+
+5
+00:00:51,023 --> 00:01:06,527
+Alice never clicked “Release” on the real
+console. That is cross-site request
+forgery. This is not a CORS story and not
+a JWT story. CORS is about whether
+JavaScript on another origin may read a
+response.
+
+6
+00:01:06,647 --> 00:01:13,871
+CSRF is about the browser ambiently
+attaching cookie credentials to a state-
+changing request the user did not intend.
+
+7
+00:01:13,991 --> 00:01:24,503
+APIs that use Authorization: Bearer
+headers from JavaScript are usually not
+vulnerable in the same way — browsers do
+not auto-attach arbitrary bearer tokens
+the way they attach cookies.
+
+8
+00:01:24,623 --> 00:01:39,431
+Cookie-session browser apps are the
+classic CSRF victims. Spring Security
+enables CSRF protection by default for
+browser-oriented configurations precisely
+because of that model. The defense is a
+synchronizer token.
+
+9
+00:01:39,551 --> 00:01:49,487
+The server issues a CSRF token bound to
+the session. Legitimate forms and AJAX
+calls from your origin include that token
+in a header or form field.
+
+10
+00:01:49,607 --> 00:02:02,759
+The forged page on evil.example cannot
+read your token (same-origin policy).
+Spring’s CsrfFilter rejects state-changing
+requests that lack a valid token. Look at
+this java for a moment.
+
+11
+00:02:02,879 --> 00:02:10,343
+Walk the denial: session cookie may be
+present; authentication may succeed; CSRF
+check still fails without the token.
+
+12
+00:02:10,463 --> 00:02:17,520
+That ordering matters when you debug — you
+can be logged in and still get 403 on
+POST, PUT, PATCH, DELETE.
+
+13
+00:02:17,639 --> 00:02:27,191
+For pure stateless bearer-token APIs with
+no cookie session, teams often disable
+CSRF in the security DSL because the
+browser cookie attack does not apply.
+
+14
+00:02:27,311 --> 00:02:38,183
+Disabling it on a Thymeleaf form-login ops
+console because “it was noisy in Postman”
+is how you reopen the forged cargo-release
+hole. Match the protection to the
+credential style.
+
+15
+00:02:38,303 --> 00:02:46,079
+SameSite cookie attributes reduce some
+CSRF variants but are not a complete
+replacement for token checks on sensitive
+actions.
+
+16
+00:02:46,199 --> 00:02:53,351
+Defense in depth: SameSite where
+appropriate, CSRF tokens for cookie
+sessions, and never rely on the UI alone.
+
+17
+00:02:53,471 --> 00:03:09,911
+A misconception is “CSRF is an XSS
+problem.” They interact — XSS can steal
+tokens — but CSRF is specifically about
+abuse of ambient authority (cookies).
+Fixing XSS does not remove the need for
+CSRF tokens in cookie apps.
+
+18
+00:03:10,031 --> 00:03:17,975
+Another misconception is protecting only
+/login — protect every state-changing
+endpoint that trusts the session,
+including gate release.
+
+19
+00:03:18,095 --> 00:03:25,199
+Today we watched a cross-site forged POST
+ride a session cookie to release cargo and
+saw Spring’s CSRF token stop it.
+
+20
+00:03:25,319 --> 00:03:36,911
+Browsers bring another cross-origin
+concern that is not forgery of cookie
+POSTs but controlled access to your API
+from JavaScript on another origin. That
+policy surface is CORS.

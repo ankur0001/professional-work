@@ -1,0 +1,162 @@
+1
+00:00:00,000 --> 00:00:08,592
+Resist the folklore fix. Gate p95 is high;
+someone proposes “rewrite in WebFlux”
+before reading a single span.
+
+2
+00:00:08,711 --> 00:00:21,071
+Performance tuning in a Spring harbor
+stack starts from signals: RED metrics on
+releaseGate, saturation gauges on pools,
+traces for critical path, and — when CPU
+is the villain — a flame graph that names
+the hot method.
+
+3
+00:00:21,192 --> 00:00:31,631
+Triage in order. Is it error rate or
+latency? If latency, is it time in gate
+code, time in Feign to billing, or time in
+billing SQL?
+
+4
+00:00:31,811 --> 00:00:42,780
+Micrometer HTTP timers and your
+harbor.gate.release.duration split edge
+versus business method. Traces confirm.
+Only then profile.
+
+5
+00:00:42,899 --> 00:00:56,099
+Skipping steps is how teams spend a week
+on reactive rewrites while billing’s
+connection pool was the whole story. Look
+at this text for a moment. Here the flame
+is not a Java hot loop — it is waiting on
+billing.
+
+6
+00:00:56,219 --> 00:01:03,228
+The fix might be caching non-hazard
+quotes, batching, or raising billing
+capacity — not rewriting gate’s
+controllers.
+
+7
+00:01:03,347 --> 00:01:12,852
+A different flame that shows
+TariffCalculator.quote burning CPU on
+every request might mean an accidental
+O(n²) surcharge table scan.
+
+8
+00:01:12,971 --> 00:01:25,787
+Socket wait versus CPU burn demand
+opposite remedies; the profile
+distinguishes them when metrics only say
+“slow.” Look at this java for a moment.
+Walk the before/after with numbers.
+
+9
+00:01:25,907 --> 00:01:36,395
+Six containers at 80ms each is ~480ms of
+Feign alone on the critical path; one bulk
+quote at 120ms changes the booth math
+without touching WebFlux.
+
+10
+00:01:36,515 --> 00:01:49,331
+If the contract cannot bulk yet, parallel
+calls with a bounded executor help — and
+need a bulkhead so you do not stampede
+billing. Measure again on the same Grafana
+panels; anecdotes are not acceptance
+criteria.
+
+11
+00:01:49,451 --> 00:02:02,531
+Pool tuning follows gauges, not vibes:
+Look at this example. spring: If
+hikaricp_connections_pending climbs while
+CPU is idle, enlarge carefully or shorten
+queries — do not guess.
+
+12
+00:02:02,652 --> 00:02:10,187
+Feign timeouts that exceed user patience
+keep threads stuck; timeouts that are far
+below billing p99 manufacture errors.
+
+13
+00:02:10,307 --> 00:02:19,692
+Load-test after each change with a
+realistic check-in mix — multi-container
+trucks, hazard classes, cold caches — and
+watch the same Grafana panels that page
+you.
+
+14
+00:02:19,811 --> 00:02:24,419
+A laptop profile with an empty billing
+stub will not show socket wait.
+
+15
+00:02:24,539 --> 00:02:33,659
+Failure modes of folklore tuning: more
+replicas that each still fan out N Feign
+calls; JVM flag churn before fixing N+1 or
+unbounded retries;
+
+16
+00:02:33,780 --> 00:02:42,372
+caching without eviction that trades
+latency for the memory incident in the
+next episode; “optimize Jackson” when 58%
+of the flame is socket wait.
+
+17
+00:02:42,491 --> 00:02:56,051
+Trade-offs: caching tariff quotes helps
+non-hazard traffic and risks stale rates
+for IMDG changes — key by hazard and
+version the tariff table. Vertical scaling
+buys time; chatty APIs return when traffic
+multiplies.
+
+18
+00:02:56,171 --> 00:03:06,972
+Prefer eliminating round trips over micro-
+optimizing serializers. Document each
+change with before/after p95 on the same
+panel and the same load-test script.
+
+19
+00:03:07,091 --> 00:03:19,859
+If you cannot show the number, you did not
+finish the tuning — you only shipped a
+hypothesis. Rollback is part of tuning: a
+bulk endpoint that regresses billing CPU
+should revert while you redesign the
+query.
+
+20
+00:03:19,979 --> 00:03:32,483
+A misconception is equating “more
+replicas” with a fix when each replica
+still makes the same chatty Feign fan-out.
+Another is tuning JVM flags before fixing
+an N+1 or unbounded retry storm.
+
+21
+00:03:32,603 --> 00:03:38,195
+A third is trusting a local laptop profile
+when production waits on a different
+billing region.
+
+22
+00:03:38,315 --> 00:03:46,715
+When the bad signal is heap growth, GC
+thrash, or native memory, the lens narrows
+further — memory optimization with dumps
+and cache bounds.

@@ -1,0 +1,8 @@
+# v2 source
+
+Episode 37: REST Best Practices
+
+Narration: `spring-story/v1/episodes/ep37-rest-best-practices/narration.md`
+Renderer: `spring-story/v1/video_build/render_spring_episode.py`
+Visuals: animated scenes via `spring-story/v1/video_build/visual_engine.py`
+TTS: Edge-TTS (full audio; video padded through end)

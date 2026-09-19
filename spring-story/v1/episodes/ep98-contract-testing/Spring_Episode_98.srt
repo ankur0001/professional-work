@@ -1,0 +1,156 @@
+1
+00:00:00,000 --> 00:00:14,976
+Gate’s BillingClient expects GET
+/tariffs/quote to return { "amount":
+"108.00", "currency": "USD" }. Billing
+renames amount to total on a Friday.
+Gate’s Feign decoder fails on Monday’s
+shift change.
+
+2
+00:00:15,096 --> 00:00:27,551
+Neither side’s unit tests lied — they
+never shared a wire contract. Contract
+testing makes that share explicit: a pact
+or Spring Cloud Contract stub that billing
+must satisfy and gate can consume in CI.
+
+3
+00:00:27,671 --> 00:00:40,536
+With Spring Cloud Contract, billing
+authors a contract DSL; the build
+generates verification tests for the
+producer and stub jars for consumers.
+Gate’s tests run Feign against the stub,
+not against a hope.
+
+4
+00:00:40,655 --> 00:00:49,991
+Look at this example. // billing-service
+contract: shouldReturnTariffQuote.groovy
+Look at this java for a moment.
+
+5
+00:00:50,111 --> 00:00:59,303
+Producer side: billing’s CI runs the
+generated smoke tests against its
+controllers — if the stub says 200 with
+amount, the controller must still do that.
+
+6
+00:00:59,423 --> 00:01:10,775
+Rename the JSON field without updating the
+contract and producer verification fails
+before merge. Consumer side: gate’s CI
+downloads stubs and exercises
+BillingClient.
+
+7
+00:01:10,895 --> 00:01:23,303
+Breaking the contract breaks the build
+before the quay feels it. Walk the Friday
+rename with contracts in place: billing’s
+build turns red on verification; gate
+never ships a decoder that expects a
+missing field.
+
+8
+00:01:23,423 --> 00:01:35,303
+Contracts are not end-to-end substitutes.
+They lock shapes and status codes at the
+boundary. Business sequencing — check-in
+then invoice — still needs integration or
+journey tests.
+
+9
+00:01:35,423 --> 00:01:42,455
+Prefer dedicated client DTOs on both sides
+so contract fields do not drag JPA
+entities across jars.
+
+10
+00:01:42,575 --> 00:01:50,351
+Version stub artifacts so gate can pin a
+known-good billing stub while billing
+develops the next incompatible change on a
+new contract file.
+
+11
+00:01:50,471 --> 00:01:59,375
+Failure symptoms without contracts: Feign
+DecodeException at 06:00 after a billing
+deploy; each team’s green pipeline; blame
+traveling across Slack.
+
+12
+00:01:59,495 --> 00:02:08,063
+With contracts too loose (byRegex(".*") on
+every field), the same outage returns
+because nothing forced amount to stay a
+money string.
+
+13
+00:02:08,183 --> 00:02:15,239
+With stubs published once and never re-
+verified, drift accumulates silently until
+a consumer bumps the stub version.
+
+14
+00:02:15,359 --> 00:02:27,839
+Trade-offs: consumer-driven contracts
+(Pact-style) put gate in charge of
+expectations; producer-first Contract DSL
+puts billing in charge of publishing
+stubs. Either works if both pipelines run.
+
+15
+00:02:27,959 --> 00:02:36,743
+Contracts add build complexity; they pay
+off when multiple consumers (gate,
+scheduling, ops tooling) depend on
+billing’s HTTP shape.
+
+16
+00:02:36,863 --> 00:02:49,655
+Do not contract every admin CRUD endpoint
+on day one — start with the tariff quote
+path that stops trucks when it breaks.
+Walk a coordinated change. Billing must
+add degraded to the quote JSON.
+
+17
+00:02:49,775 --> 00:02:59,879
+Update the contract body and matchers
+first; regenerate stubs; fix gate’s DTO
+and Feign decoder; merge producer
+verification green; then consumers bump
+the stub version.
+
+18
+00:02:59,999 --> 00:03:10,175
+Reversing that order — ship billing first
+— recreates Monday’s decoder failure with
+extra ceremony. Contracts are a change
+protocol, not only a test type.
+
+19
+00:03:10,295 --> 00:03:22,247
+A misconception is writing contracts so
+loose (byRegex(".*") everywhere) that they
+never fail. Another is generating stubs
+once and never re-running producer
+verification.
+
+20
+00:03:22,367 --> 00:03:28,151
+A third is treating contracts as
+documentation only without wiring them
+into both pipelines.
+
+21
+00:03:28,271 --> 00:03:39,671
+Green contracts and green tariff tests
+still leave a production question
+unanswered: how slow is releaseGate, for
+whom, since when? Phase 11 starts with
+meters, not dashboards.

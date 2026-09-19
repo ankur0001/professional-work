@@ -1,0 +1,32 @@
+The Spring Story — Episode 58: AOP Concepts
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Open GateReleaseService before anyone introduces aspects and you can predict the clutter.
+• Log entry with truck plate and cargo id.
+• Check that the operator may release this gate.
+• Then — finally — the three lines that actually open the boom and stamp the release.
+• On the way out: log duration, log errors, maybe write an audit row.
+• Change the audit format and you edit every gate method.
+• Forget the permission check on one overload and you ship a hole.
+• The domain was never the hard part.
+• …and more
+
+Timestamps
+0:00 Open GateReleaseService before anyone introduces aspects and you…
+0:35 Those rims are cross-cutting concerns. Timing, audit, security,…
+1:08 Speak the example. @Aspect marks the module. @Around wraps…
+1:52 History sets expectations. AspectJ aimed at a rich join-point…
+2:39 We modularized timing and audit around harbor gate services. The…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 59 — Dynamic Proxies
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

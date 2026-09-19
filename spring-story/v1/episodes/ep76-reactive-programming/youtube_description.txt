@@ -1,0 +1,32 @@
+The Spring Story — Episode 76: Reactive Programming
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• AIS feeds do not wait politely for your thread pool.
+• Hundreds of vessels report positions; operators open live maps; each connection holds a servlet thread…
+• Under fan-in, the thread-per-request model collapses — not because the CPU is busy computing, but because…
+• Reactive programming flips the default.
+• Instead of returning a finished value, you return a **publisher** that will emit values later.
+• The thread that accepts the connection does not sit blocked on JDBC or a remote call; it schedules work…
+• Subscribers request data; operators transform streams; schedulers decide which threads run which stages.
+• The goal is higher concurrency with fewer threads for I/O-bound workloads — not magic speed for CPU-bound…
+• …and more
+
+Timestamps
+0:00 AIS feeds do not wait politely for your thread pool. Hundreds of…
+0:53 Project Reactor is the library Spring WebFlux builds on. The…
+1:30 Read that as assembly, not as imperative steps that already…
+2:14 When do you reach for this model? Many concurrent slow I/O…
+2:56 Today we named the shift: publishers instead of eager values,…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 77 — Mono
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

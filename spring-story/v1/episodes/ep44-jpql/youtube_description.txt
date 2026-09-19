@@ -1,0 +1,31 @@
+The Spring Story — Episode 44: JPQL
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Derived repository method names run out of breath.
+• "Find manifests for vessel IMO-9312345 with arrival date on 2026-09-18" is still readable as a method.
+• Add three more predicates and the name becomes a novel.
+• JPQL lets you query the entity model — property names, associations — without writing table-column SQL by…
+• JPQL looks like SQL but speaks entities.
+• You write select m from Manifest m, not select * from manifests.
+• Associations are navigated with dots or joins.
+• Hibernate translates to SQL for your dialect.
+• …and more
+
+Timestamps
+0:00 Derived repository method names run out of breath. "Find manifests…
+0:34 Parameter binding uses :name with @Param, or ordinal ?1 style.…
+1:06 Read the vessel-and-day query against a real ops question: "show…
+1:52 JPQL is great when the query shape is known at compile time. When…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 45 — Criteria API
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

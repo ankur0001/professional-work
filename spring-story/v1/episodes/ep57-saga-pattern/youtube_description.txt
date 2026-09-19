@@ -1,0 +1,32 @@
+The Spring Story — Episode 57: Saga Pattern
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Skip the coordinator fantasy for a moment and book a trip the way product actually sells it: flight seat,…
+• You cannot hold XA locks across a hotel API that takes eight seconds and a car broker that times out on…
+• You need a different promise — each step commits locally, and if a later step fails, earlier steps run…
+• A narrative of local transactions with explicit recovery.
+• Step one: reserve the flight seat — local commit in inventory.
+• Step two: hold the hotel room — local commit in hotels.
+• Step three: reserve the car.
+• If the charge fails, you do not “roll back” the seat the way JDBC rolls back a row.
+• …and more
+
+Timestamps
+0:00 Skip the coordinator fantasy for a moment and book a trip the way…
+0:31 That is the saga pattern. Not one global transaction. A narrative…
+1:10 That sketch is orchestration: one component directs steps and…
+1:59 Idempotency matters because retries duplicate. Releasing an…
+2:34 We have closed the transaction arc from one-method boundaries…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 58 — AOP Concepts
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

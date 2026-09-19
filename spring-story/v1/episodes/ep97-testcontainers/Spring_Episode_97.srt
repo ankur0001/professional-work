@@ -1,0 +1,161 @@
+1
+00:00:00,000 --> 00:00:11,855
+H2 forgives SQL that Postgres rejects. A
+VesselRepository.findByImoNumber that
+“works” on H2 can fail in the quay’s
+Postgres on a type, JSON function, or
+lock.
+
+2
+00:00:11,975 --> 00:00:26,687
+Testcontainers starts a real
+PostgreSQLContainer for the test JVM,
+gives Spring JDBC URLs dynamically, and
+tears the container down after the class
+or suite. Look at this java for a moment.
+Walk the lifecycle.
+
+3
+00:00:26,807 --> 00:00:38,328
+JUnit starts the class. Testcontainers
+pulls (or reuses) postgres:16-alpine,
+waits for readiness, exposes a JDBC URL on
+a random host port.
+
+4
+00:00:38,448 --> 00:00:49,103
+@DynamicPropertySource feeds Boot before
+the context refreshes — without it, Boot
+may still point at H2 from application-
+test.yml and you think you tested Postgres
+when you did not.
+
+5
+00:00:49,224 --> 00:01:03,168
+Spring Data runs against real Postgres.
+Unique constraints, timestamptz, and JSONB
+operators behave as production. The
+container stops when the class ends — or
+lives longer with reuse enabled for local
+speed.
+
+6
+00:01:03,288 --> 00:01:14,640
+Look at this example. # optional: reuse
+across runs in local
+~/.testcontainers.properties Use the same
+major version you run in production when
+practical.
+
+7
+00:01:14,760 --> 00:01:29,304
+Flyway/Liquibase migrations should run in
+this test profile so schema matches what
+gate and scheduling deploy — a repository
+green against an entity-only schema that
+never applied migration
+V42__berth_window.sql is false
+
+8
+00:01:29,424 --> 00:01:31,296
+ comfort.
+
+9
+00:01:31,416 --> 00:01:41,760
+Pair @DataJpaTest with Testcontainers when
+you want a repository slice without the
+full web stack — still real Postgres,
+narrower context, faster feedback on
+derived queries.
+
+10
+00:01:41,880 --> 00:01:51,984
+If @DataJpaTest replaces your DataSource
+by default, keep Replace.NONE and the
+dynamic properties; otherwise you silently
+fall back to H2 and the whole point
+evaporates.
+
+11
+00:01:52,104 --> 00:02:02,712
+Failure symptoms: CI agents without Docker
+cannot start containers — the suite fails
+loudly at environment setup, which is
+better than silent H2 substitution if you
+forbade replace.
+
+12
+00:02:02,832 --> 00:02:15,623
+Parallel classes sharing one reused
+container without truncating tables
+produce cross-talk. Pinning
+postgres:latest means an upstream major
+bump breaks CI overnight; pin 16-alpine or
+your prod minor.
+
+13
+00:02:15,743 --> 00:02:21,647
+Slow first pull on cold agents dominates
+runtime — warm the image in the pipeline
+image cache.
+
+14
+00:02:21,768 --> 00:02:35,376
+Another tell: tests pass locally on an
+Apple-silicon image tag and fail on CI’s
+amd64 agent because someone floated a
+platform-specific tag without a multi-arch
+digest. Trade-offs: fidelity versus speed.
+
+15
+00:02:35,496 --> 00:02:45,576
+Not every tariff-math unit test deserves a
+container. Reserve Testcontainers for
+persistence, Flyway, locking, and SQL that
+has bitten you on H2.
+
+16
+00:02:45,695 --> 00:02:52,919
+Kafka and Redis modules exist too when
+Cloud Stream or caches are the risk — same
+pattern, different GenericContainer.
+
+17
+00:02:53,039 --> 00:03:03,431
+For VesselRepository, the unique-IMO test
+above is the kind of constraint H2 may
+soft-pedal depending on mode; Postgres is
+blunt, which is what you want before a
+quay deploy.
+
+18
+00:03:03,551 --> 00:03:13,055
+A misconception is treating Testcontainers
+as a replacement for unit tests of pure
+tariff math — containers are for
+infrastructure fidelity, not for every
+assertion.
+
+19
+00:03:13,175 --> 00:03:27,551
+Another is sharing one container with
+mutable data across parallel classes
+without isolation. A third is pinning
+postgres:latest and wondering why CI broke
+on an upstream major bump. Repositories
+now meet real SQL.
+
+20
+00:03:27,671 --> 00:03:36,719
+Service boundaries still break when gate’s
+Feign shape drifts from billing’s
+controller. Contract tests lock that wire
+format between teams.
+
+21
+00:03:36,840 --> 00:03:47,448
+When both container SQL tests and
+contracts are green, you have proven
+persistence and the HTTP edge — still not
+the full booth journey, but far fewer
+Monday surprises than H2-plus-hope.

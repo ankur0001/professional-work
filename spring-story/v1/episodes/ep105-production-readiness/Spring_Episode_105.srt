@@ -1,0 +1,181 @@
+1
+00:00:00,000 --> 00:00:12,695
+Friday 18:10. Gate’s new Boot jar is
+“feature complete” in the demo
+environment. Trucks are already queued for
+the weekend shift. Kubernetes rolls the
+Deployment.
+
+2
+00:00:12,815 --> 00:00:21,863
+Within minutes pods restart in a loop, the
+Service has no ready endpoints, and the
+booth sees timeouts. Nobody changed the
+release logic.
+
+3
+00:00:21,983 --> 00:00:34,295
+The jar was not ready for production as an
+operating problem — probes, startup cost,
+shutdown, and a missing runbook — even
+though the feature demo looked fine.
+Production readiness is that operating
+problem.
+
+4
+00:00:34,415 --> 00:00:47,783
+Spring Boot Actuator, Micrometer, and
+graceful shutdown are tools inside it.
+They are not a checklist that replaces
+judgment about how this service fails in
+front of real traffic. Start with the
+Friday failure.
+
+5
+00:00:47,903 --> 00:00:53,951
+Liveness and readiness both pointed at a
+deep health indicator that pinged billing
+and the ledger database.
+
+6
+00:00:54,071 --> 00:01:07,319
+A brief billing blip marked the pod not-
+live; Kubernetes killed it; startup ran
+Flyway again; the next blip killed it
+again. Symptom: restart loop during a
+dependency hiccup while the JVM process
+itself was fine.
+
+7
+00:01:07,439 --> 00:01:15,408
+Fix the meaning of the probes. Liveness
+should answer “should the platform kill
+me?” — cheap process health.
+
+8
+00:01:15,527 --> 00:01:28,823
+Readiness should answer “should I receive
+traffic?” — including critical
+dependencies you are unwilling to serve
+without. Startup probes give Flyway and
+warm caches time before liveness is
+allowed to kill a slow boot.
+
+9
+00:01:28,943 --> 00:01:42,647
+Look at this example. management: Look at
+this example. livenessProbe: Readiness can
+remove the pod from Service endpoints
+while the DB is down without restarting
+it. Liveness stays cheap.
+
+10
+00:01:42,767 --> 00:01:51,047
+If both probes mean “deep dependency
+check,” you recreate Friday’s loop. The
+same go-live has to survive deploy
+mechanics.
+
+11
+00:01:51,167 --> 00:01:59,255
+Migrations belong in the pipeline with
+clear ownership — a failed migration fails
+the rollout instead of leaving half the
+fleet on schema V41.
+
+12
+00:01:59,375 --> 00:02:09,383
+Observability is not optional decoration:
+if releaseGate has no timer, Prometheus
+has no scrape, and traces do not cover
+check-in, the first incident has no
+baseline.
+
+13
+00:02:09,503 --> 00:02:21,575
+Resilience settings you already learned —
+timeouts, breakers, bounded caches — are
+readiness items when the booth depends on
+them. And shutdown matters: when a pod
+drains, in-flight releases should finish.
+
+14
+00:02:21,695 --> 00:02:33,815
+Look at this example. server: Walk a
+drain. SIGTERM arrives; Boot stops
+accepting new work; in-flight releaseGate
+may finish within the timeout; then the
+process exits.
+
+15
+00:02:33,935 --> 00:02:46,463
+Too short and you cut ledger writes mid-
+transaction. Too long and deploys stall.
+Align with kube
+terminationGracePeriodSeconds. Runbooks
+are part of the artifact.
+
+16
+00:02:46,583 --> 00:02:57,359
+When billingQuote is open, who is paged,
+what fallback the booth uses, how recovery
+is verified — including the Grafana link
+and the breaker metric name — must not
+live only in Slack history.
+
+17
+00:02:57,479 --> 00:03:03,359
+Rollback for a bad tariff ConfigMap or a
+bad image belongs next to the forward
+deploy steps.
+
+18
+00:03:03,479 --> 00:03:13,367
+A practical readiness test: someone
+unfamiliar with the service follows the
+runbook for “billing breaker open” and
+“rollback tariff ConfigMap” using only
+links in the artifact.
+
+19
+00:03:13,487 --> 00:03:19,343
+If they need tribal knowledge, you are not
+ready. Trade-offs stay explicit.
+
+20
+00:03:19,463 --> 00:03:29,615
+Deep readiness checks catch dependency
+loss early and couple your traffic shape
+to that dependency’s blips — sometimes
+degraded mode (accept check-in, queue
+invoice) beats going NotReady.
+
+21
+00:03:29,735 --> 00:03:34,055
+Document which choice the quay wants
+before night shift invents one.
+
+22
+00:03:34,175 --> 00:03:42,551
+Another trap: equating “Deployed to prod”
+with readiness while probes stay UP and
+the ledger is read-only broken because
+health never checked what the booth needs.
+
+23
+00:03:42,671 --> 00:03:46,991
+A third: disabling noisy probes instead of
+fixing the check.
+
+24
+00:03:47,111 --> 00:03:58,415
+Once a service can survive production
+operations, a different pressure appears:
+the codebase itself gets harder to change
+— controllers talk to SQL, domain rules
+scatter, every feature touches everything.
+
+25
+00:03:58,535 --> 00:04:02,663
+Architecture boundaries become the next
+operating concern.

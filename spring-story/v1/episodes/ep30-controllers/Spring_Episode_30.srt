@@ -1,0 +1,194 @@
+1
+00:00:00,000 --> 00:00:11,663
+DispatcherServlet can route only if
+something exists to route *to*.
+Controllers are that something: thin Java
+types whose methods claim URLs and
+translate HTTP into harbor-domain calls.
+
+2
+00:00:11,783 --> 00:00:23,088
+Without a convention, every team invents
+its own router for luggage: a giant
+servlet with a switch on the path, a hand-
+rolled map of strings to method handles,
+or XML that points method names at URLs.
+
+3
+00:00:23,207 --> 00:00:34,320
+Spring MVC’s answer is annotation-driven
+controllers. You mark a class as a web
+endpoint. You mark methods with HTTP verbs
+and path patterns.
+
+4
+00:00:34,439 --> 00:00:44,759
+At startup, RequestMappingHandlerMapping
+reads those annotations and builds the
+lookup table the dispatcher already uses.
+Two stereotypes show up constantly.
+
+5
+00:00:44,879 --> 00:00:50,303
+@Controller is the classic stereotype for
+MVC that often returns a view name.
+
+6
+00:00:50,423 --> 00:01:04,751
+@RestController is @Controller plus
+@ResponseBody on the type: return values
+are written to the response body,
+typically as JSON, not resolved as view
+names. For a luggage API, @RestController
+is the everyday choice.
+
+7
+00:01:04,871 --> 00:01:20,135
+Look at this java for a moment. Read that
+against a live request. Client sends GET
+/luggage/TAG-8841. Mapping matches class
+path /luggage plus method path /{tag} with
+verb GET.
+
+8
+00:01:20,255 --> 00:01:39,335
+The adapter binds path variable tag to
+TAG-8841. Your method runs. The return
+value is serialized. Status defaults to
+200 unless you change it. No XML. No
+manual registration of the method with the
+servlet.
+
+9
+00:01:39,455 --> 00:01:53,039
+Method mapping annotations are shortcuts
+over @RequestMapping. @GetMapping,
+@PostMapping, @PutMapping, @PatchMapping,
+and @DeleteMapping fix the HTTP method so
+the declaration reads like the contract.
+
+10
+00:01:53,159 --> 00:02:05,759
+Path variables use {name} in the pattern
+and @PathVariable on the parameter. Query
+parameters use @RequestParam. Headers and
+cookies have their own annotations when
+you need them.
+
+11
+00:02:05,879 --> 00:02:15,623
+Prefer constructor injection for the
+lookup collaborator so the controller
+stays easy to test with a fake
+LuggageLookup. Keep controllers thin on
+purpose.
+
+12
+00:02:15,743 --> 00:02:27,935
+The method should bind input, call one use
+case, and shape the HTTP result. Tag
+status rules belong in the domain service.
+Persistence belongs in repositories.
+
+13
+00:02:28,055 --> 00:02:40,631
+When a luggage controller grows if trees
+for customs holds and berth assignments,
+you are no longer writing a translation
+layer — you are hiding a service inside a
+web adapter. Return types are part of the
+mapping story.
+
+14
+00:02:40,751 --> 00:02:52,751
+A plain object becomes the response body
+under @RestController. ResponseEntity<T>
+lets you set status and headers — useful
+when a missing tag should be 404 rather
+than an empty 200.
+
+15
+00:02:52,871 --> 00:03:05,255
+void with a status annotation can work for
+no-content responses. For HTML MVC, a
+String view name plus a Model parameter is
+still valid — same dispatcher, different
+adapter outcome.
+
+16
+00:03:05,375 --> 00:03:13,007
+Component scanning must see the
+controller: put it under the Boot
+application’s package tree or declare an
+explicit @ComponentScan.
+
+17
+00:03:13,127 --> 00:03:23,111
+If the class is invisible to the context,
+the mapping never exists, and the
+dispatcher correctly answers 404. Testing
+stays close to the type.
+
+18
+00:03:23,231 --> 00:03:29,207
+A unit test can new up LuggageController
+with a fake lookup and call
+get("TAG-8841").
+
+19
+00:03:29,327 --> 00:03:39,263
+A slice test with @WebMvcTest loads MVC
+infrastructure without the full Boot
+context and asserts that GET
+/luggage/TAG-8841 returns JSON.
+
+20
+00:03:39,383 --> 00:03:45,407
+Both styles reinforce the same idea: the
+controller is an adapter, not the harbor
+domain.
+
+21
+00:03:45,527 --> 00:03:58,223
+@RestController and @Controller are not
+interchangeable "as long as Jackson is on
+the classpath." A plain @Controller method
+returning an object without @ResponseBody
+is treated as a view name or model dance,
+
+22
+00:03:58,343 --> 00:04:00,719
+not a JSON body.
+
+23
+00:04:00,840 --> 00:04:09,719
+Stuffing every harbor path onto one god
+controller also hurts: split by resource —
+luggage, berths, manifests — so mappings
+stay discoverable.
+
+24
+00:04:09,840 --> 00:04:18,120
+And treating path variables as trusted
+domain ids without checking existence is
+how you leak 500s instead of deliberate
+404s.
+
+25
+00:04:18,240 --> 00:04:27,336
+You now know what sits at the end of the
+dispatcher pipeline: annotated methods
+that claim verbs and paths, with
+/luggage/{tag} as the mental model.
+
+26
+00:04:27,456 --> 00:04:38,855
+Mapping a method still leaves a bigger
+contract open — how those methods should
+speak HTTP as an API: status codes,
+resource shapes, and content types, rather
+than merely returning a Java object.
+
+27
+00:04:38,975 --> 00:04:41,687
+That contract is REST design.

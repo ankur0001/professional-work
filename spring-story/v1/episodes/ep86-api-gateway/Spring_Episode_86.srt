@@ -1,0 +1,167 @@
+1
+00:00:00,000 --> 00:00:14,663
+External truckers should hit one hostname
+— https://ops.harbor.example — not a
+spreadsheet of gate, billing, and
+scheduling URLs. TLS terminates once.
+Authn checks once.
+
+2
+00:00:14,783 --> 00:00:22,128
+Paths fan out to internals that never
+appear on the public DNS. That front door
+is an API gateway.
+
+3
+00:00:22,247 --> 00:00:32,975
+Spring Cloud Gateway is a reactive Boot
+application built on WebFlux and a route
+model: predicates decide whether a request
+matches; filters reshape headers, paths,
+or responses;
+
+4
+00:00:33,095 --> 00:00:39,479
+the URI — often lb://gate-service — sends
+traffic to a discovered instance.
+
+5
+00:00:39,599 --> 00:00:47,255
+It is not a servlet RestController that
+proxies with RestTemplate. Think route
+tables, not controller methods.
+
+6
+00:00:47,375 --> 00:00:51,119
+Under load the gateway’s event loop stays
+non-blocking;
+
+7
+00:00:51,239 --> 00:01:00,719
+a blocking call inside a filter starves
+other truckers’ requests on the same
+threads — that is why Gateway sits on
+WebFlux even when gate and billing remain
+servlet Boot apps.
+
+8
+00:01:00,839 --> 00:01:14,183
+Look at this example. spring: Look at this
+java for a moment. A trucker POSTs
+/api/gates/G12/check-ins. The Path
+predicate matches gate-checkins.
+
+9
+00:01:14,303 --> 00:01:27,767
+StripPrefix=1 drops /api (or your
+configured count) so gate sees the path it
+actually mapped. lb://gate-service
+resolves through discovery and load
+balancing to a concrete pod.
+
+10
+00:01:27,887 --> 00:01:39,503
+If StripPrefix is wrong by one segment,
+gate returns 404 while the gateway log
+still shows a successful route match —
+classic symptom: edge 200 path rewritten
+into an unknown controller mapping.
+
+11
+00:01:39,623 --> 00:01:48,768
+Billing and scheduling stay unreachable
+except through their declared paths; a
+curious client probing
+/api/internal/ledger should not find a
+route.
+
+12
+00:01:48,887 --> 00:01:57,671
+Global filters can attach correlation
+headers, enforce JWT at the edge, or rate-
+limit abusive clients before a gate pod
+burns CPU.
+
+13
+00:01:57,791 --> 00:02:05,495
+Walk a RateLimiter trip: Redis says the
+trucker token bucket is empty; Gateway
+returns 429 without calling gate.
+
+14
+00:02:05,615 --> 00:02:15,719
+Walk a downstream outage: circuit breaker
+filter opens, fallback URI returns a
+controlled JSON body, booth scanners show
+“retry shortly” instead of a raw
+connection reset.
+
+15
+00:02:15,839 --> 00:02:29,087
+Those behaviors belong at the edge when
+every public client shares one hostname.
+Keep domain logic out of the gateway.
+Quoting tariffs, releasing cargo,
+assigning berths — those belong in
+services.
+
+16
+00:02:29,207 --> 00:02:37,823
+The gateway owns technical cross-cuts:
+routing, TLS, coarse auth, request size,
+maybe canary headers (X-Harbor-Canary →
+weighted routes).
+
+17
+00:02:37,943 --> 00:02:49,511
+When the gateway accumulates business
+rules — “hazard class IMDG_3 must go to
+billing first” — you have rebuilt the
+monolith at the wrong layer, and every
+change to tariff policy requires an edge
+deploy.
+
+18
+00:02:49,631 --> 00:03:03,935
+Trade-offs: one gateway simplifies trucker
+TLS and WAF placement, but it is also a
+blast radius — a bad route YAML takes down
+all three backends’ public face. Some
+teams split edge by audience (trucker vs
+ops console).
+
+19
+00:03:04,055 --> 00:03:17,207
+Latency adds a hop; measure it. Predicate
+order matters when two routes could match;
+put the more specific path first or you
+will debug “why does GET /api/berths/B7
+hit the wrong service?” for an hour.
+
+20
+00:03:17,327 --> 00:03:24,839
+A misconception is exposing every internal
+Actuator through the gateway “for
+convenience” — that convenience is an
+attack surface.
+
+21
+00:03:24,959 --> 00:03:32,063
+Another is confusing Gateway with Spring
+MVC reverse-proxy hacks: predicates and
+filters are the programming model.
+
+22
+00:03:32,183 --> 00:03:42,887
+A third is putting sticky session affinity
+on by default for a stateless check-in
+API; prefer token-based identity and any
+healthy instance. Truckers now have one
+edge.
+
+23
+00:03:43,007 --> 00:03:54,575
+Behind it, three billing pods answer the
+same service id. Who chooses which pod
+gets the next quote request? Client-side
+load balancing makes that choice explicit.

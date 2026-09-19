@@ -1,0 +1,31 @@
+The Spring Story — Episode 08: Bean Scopes
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Two guests booking the Harborview Hotel on different laptops somehow share a cart.
+• Guest A selects a king ocean-view; Guest B refreshes and sees A's room with A's loyalty rate.
+• Support screenshots prove it.
+• Engineering finds BookingCart registered as the default singleton — one instance for the whole JVM —…
+• Scope is the answer to "how many instances, and over what boundary?" Spring's built-in scopes include…
+• That default is correct for stateless services and wrong for a mutable cart.
+• Runtime for session scope with a scoped proxy.
+• On context refresh Spring does not put one shared BookingCart into the controller.
+• …and more
+
+Timestamps
+0:00 Incident channel, 19:40. Two guests booking the Harborview Hotel…
+0:46 Runtime for session scope with a scoped proxy. On context refresh…
+1:24 Prototype scope would create a new cart on every getBean or…
+2:04 Carts are isolated again. The next outage is different: Redis…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 09 — Bean Lifecycle
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

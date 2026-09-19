@@ -1,0 +1,138 @@
+1
+00:00:00,000 --> 00:00:07,607
+The warehouse page shows twelve units of
+SKU-4401. A picker confirms a reservation
+for eight.
+
+2
+00:00:07,727 --> 00:00:20,567
+Somewhere between the click and the toast,
+the stock row decrements, the reservation
+insert dies on a unique constraint, and
+the ledger never writes. Morning inventory
+is short by eight with no reservation to
+explain it.
+
+3
+00:00:20,687 --> 00:00:32,328
+Three tables participated. Only one kept
+the change. That is the unit-of-work
+problem in warehouse language: stock,
+reservation, and ledger must share one
+fate.
+
+4
+00:00:32,448 --> 00:00:47,496
+Before Spring drew the boundary for you,
+teams scripted it by hand. Borrow a
+connection. Disable auto-commit. Decrement
+stock. Insert the reservation. Append the
+ledger.
+
+5
+00:00:47,615 --> 00:01:00,984
+Commit — or roll back and close, on every
+failure path, including the ones nobody
+remembered. Miss a branch and you leak
+connections or strand half-applied
+inventory. The ceremony outgrew the
+business rule.
+
+6
+00:01:01,103 --> 00:01:17,712
+Declarative transactions flip the
+ownership. You mark the boundary.
+Infrastructure begins, commits, and rolls
+back. Look at this java for a moment. Walk
+the method as a spoken clock. Enter
+reserve.
+
+7
+00:01:17,831 --> 00:01:35,015
+The proxy starts a transaction and binds
+the JDBC connection or JPA EntityManager
+to the thread. Stock decrements.
+Reservation persists. Ledger appends.
+Return normally and Spring commits — all
+three tables agree.
+
+8
+00:01:35,135 --> 00:01:47,687
+Throw InsufficientStockException, or fail
+on the ledger insert after stock already
+changed in memory, and Spring rolls back.
+The decrement, the reservation row, and
+any ledger attempt vanish together.
+
+9
+00:01:47,807 --> 00:02:05,687
+Atomicity is the point; the annotation is
+how you name the boundary. Strip
+@Transactional and each save can auto-
+commit on its own connection. Stock
+sticks. Reservation fails. Ledger is
+silent. The warehouse lies.
+
+10
+00:02:05,807 --> 00:02:18,239
+With the annotation, mid-method failure is
+not “best effort cleanup.” It is rollback.
+Under the hood this is proxy plus
+interceptor, not a rewrite of your class
+file on the common path.
+
+11
+00:02:18,359 --> 00:02:32,135
+A call through the bean proxy hits
+TransactionInterceptor. Attributes from
+@Transactional feed a
+PlatformTransactionManager. The manager
+begins or joins work; your method runs;
+commit or rollback follows.
+
+12
+00:02:32,255 --> 00:02:45,719
+TransactionSynchronizationManager keeps
+the resource tied to the thread for that
+boundary. Defaults matter when you debug.
+Runtime exceptions and errors roll back;
+checked exceptions do not unless you say
+so.
+
+13
+00:02:45,839 --> 00:02:56,783
+Self-invocation skips the proxy —
+this.reserve(...) from inside the same
+class never sees the interceptor. readOnly
+= true is a hint for reads, not a magic
+shield.
+
+14
+00:02:56,903 --> 00:03:03,167
+The same annotation spans JDBC, JPA, and
+MyBatis when the right manager is
+configured.
+
+15
+00:03:03,287 --> 00:03:17,903
+One misconception: treating @Transactional
+as “this method may touch the database.”
+It scopes a unit of work; repositories
+still do the talking. Another: sprinkling
+it on private helpers and expecting advice
+to fire.
+
+16
+00:03:18,023 --> 00:03:29,327
+External calls through the proxy count.
+Internal ones do not. We drew the
+warehouse boundary so stock, reservation,
+and ledger commit or disappear together.
+
+17
+00:03:29,447 --> 00:03:41,375
+Nested collaborators change the story:
+does an inner call join that boundary, or
+open a second one that can survive when
+the outer work fails? Propagation is how
+Spring answers that nesting question.

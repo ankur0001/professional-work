@@ -1,0 +1,197 @@
+1
+00:00:00,000 --> 00:00:08,640
+Before: tram timetable API image rebuild
+after a one-line Java change re-uploads
+~170MB because the fat jar is one opaque
+layer.
+
+2
+00:00:08,759 --> 00:00:21,768
+After: layered jar — dependencies in a
+lower Docker layer, application classes on
+top — and the same one-line change pushes
+a few megabytes. Cold starts in the
+cluster stop waiting on registry bandwidth
+every commit.
+
+3
+00:00:21,887 --> 00:00:28,271
+Packaging is not a footnote after Boot; it
+is how the bike-adjacent tram service's
+deploy loop feels.
+
+4
+00:00:28,391 --> 00:00:40,991
+Boot's packaging story centers on the
+executable "fat" jar: your classes plus
+dependencies plus a launcher (JarLauncher)
+that understands nested jars under BOOT-
+INF. spring-boot-maven-plugin / Gradle
+plugin builds it.
+
+5
+00:00:41,111 --> 00:00:50,663
+Layered jars split that archive into named
+layers (dependencies, spring-boot-loader,
+snapshot-dependencies, application) so
+container tools can cache stable layers.
+
+6
+00:00:50,783 --> 00:01:04,535
+Same runtime model; different layout for
+Docker's cache. Look at this example.
+<plugin> Look at this example. FROM
+eclipse-temurin:21-jre as builder Walk the
+Dockerfile.
+
+7
+00:01:04,655 --> 00:01:11,063
+Builder stage copies the fat jar and runs
+Boot's layertools extract — producing
+directories per layer.
+
+8
+00:01:11,183 --> 00:01:19,247
+Final image copies dependencies first
+(changes rarely), then loader, then
+snapshot deps, then application (changes
+every commit).
+
+9
+00:01:19,367 --> 00:01:33,143
+Docker caches unchanged lower layers; only
+the application layer invalidates on a
+one-line Java edit. ENTRYPOINT still uses
+JarLauncher, which expects Boot's layout —
+you are not switching to java -cp
+manually.
+
+10
+00:01:33,263 --> 00:01:47,591
+Order of COPY lines matters: put the most
+stable layers first. Runtime launch.
+JarLauncher reads BOOT-INF layout, builds
+a classloader over nested dependency jars
+in BOOT-INF/lib, and invokes your main.
+
+11
+00:01:47,711 --> 00:01:59,327
+Layer extract does not change that model —
+it only rearranges files for Docker cache.
+A classic thin jar plus external libs
+works too, but you own the classpath and
+entrypoint.
+
+12
+00:01:59,447 --> 00:02:12,216
+Fat jar wins on "java -jar works." Layered
+fat jar wins on "java -jar works and
+containers cache." WAR deployment to an
+external Tomcat remains possible for shops
+that mandate it;
+
+13
+00:02:12,335 --> 00:02:17,351
+you trade embedded-server simplicity for
+ops-standard application servers.
+
+14
+00:02:17,471 --> 00:02:26,903
+Failure mode symptoms before layering: CI
+shows image push sizes ~equal to full jar
+every build; nodes pull slowly; deploys
+lag commits by minutes of bandwidth.
+
+15
+00:02:27,023 --> 00:02:36,191
+After enabling layers but copying the fat
+jar as a single COPY app.jar in the final
+image, you gain nothing — layers must be
+extracted and copied separately.
+
+16
+00:02:36,311 --> 00:02:47,663
+Another failure: tools that assume a plain
+jar with classes at the root (jar tf
+habits, some security scanners, naive
+classpaths) break on nested BOOT-INF/lib
+until they speak Boot's launcher.
+
+17
+00:02:47,783 --> 00:02:58,560
+Symptom: ClassNotFoundException when
+someone runs java -cp tram-timetable.jar
+com.tram.TimetableApp instead of java -jar
+/ JarLauncher. Trade-offs.
+
+18
+00:02:58,679 --> 00:03:11,807
+Fat jars optimize operator simplicity and
+local runs; large images and poor Docker
+cache are the cost. Layered jars add
+build/Dockerfile complexity and pay back
+on frequent deploys with stable
+dependencies.
+
+19
+00:03:11,927 --> 00:03:20,735
+Native images and custom classpaths are
+further optimizations with steeper
+constraints — not required to fix the
+170MB push problem.
+
+20
+00:03:20,855 --> 00:03:26,735
+Keep the plugin's layer enablement aligned
+with a Dockerfile that actually uses
+extract output.
+
+21
+00:03:26,855 --> 00:03:38,903
+Verify locally before trusting CI numbers:
+build the layered jar, run the extract
+command from the Dockerfile, and du -sh
+each extracted directory. Dependencies
+should dwarf application.
+
+22
+00:03:39,023 --> 00:03:50,951
+If application is huge, you may be
+bundling frontend assets or fat test data
+into the main jar — fix that separately.
+Layering helps cache; it does not shrink
+what you put in the application layer.
+
+23
+00:03:51,071 --> 00:03:58,415
+Misconception unique to packaging: "A Boot
+fat jar is a normal zip of .class files at
+the root like a plain Maven jar,
+
+24
+00:03:58,535 --> 00:04:08,615
+so jar tf habits transfer unchanged."
+Nested BOOT-INF/lib jars are not flat on
+the launcher classpath the way a shaded
+uber-jar merges classes.
+
+25
+00:04:08,735 --> 00:04:16,559
+Tools that expect a plain classpath layout
+break until they speak Boot's launcher.
+Timetable images shrink on the wire.
+
+26
+00:04:16,679 --> 00:04:28,031
+The API still has to answer GET requests
+for stop times — and that means
+understanding what happens after Tomcat
+accepts a socket: the DispatcherServlet
+pipeline that turns a URL into a
+controller method.
+
+27
+00:04:28,151 --> 00:04:33,959
+Packaging got the process started; request
+mapping decides whether the timetable
+responds.

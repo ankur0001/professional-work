@@ -1,0 +1,112 @@
+1
+00:00:00,000 --> 00:00:09,720
+OAuth2 delegates access to the harbor API.
+It does not, by itself, define how a
+client learns the user’s identity in a
+standard way.
+
+2
+00:00:09,839 --> 00:00:22,247
+OpenID Connect sits on top of OAuth2 and
+adds that identity layer — the difference
+between “this calendar client may read
+berth windows” and “this browser session
+is Alice from the company IdP.” The short
+version:
+
+3
+00:00:22,367 --> 00:00:32,640
+OIDC keeps the authorization code flow you
+already know, and adds an ID token — a JWT
+that asserts who authenticated — plus a
+UserInfo endpoint for profile claims.
+
+4
+00:00:32,759 --> 00:00:45,311
+Scopes like openid, profile, and email are
+the handshake that you want login, not
+only API access. Request openid and a
+conformant provider returns an ID token
+alongside the access token.
+
+5
+00:00:45,431 --> 00:01:00,527
+Why harbor teams care: “Sign in with
+company Okta / Azure AD / Keycloak”
+without inventing a proprietary profile
+JSON for every IdP. OIDC standardizes sub,
+iss, aud, exp, nonce, and optional profile
+claims.
+
+6
+00:01:00,647 --> 00:01:15,263
+Your app verifies the ID token,
+establishes a local session or security
+context, and optionally still uses the
+access token to call harbor APIs. Look at
+this java for a moment. Hold the token
+types apart.
+
+7
+00:01:15,384 --> 00:01:30,120
+The ID token is for the client application
+to know who logged in. The access token is
+for calling a resource server. Your SPA
+should not send the ID token as an API
+bearer credential just because it is also
+a JWT.
+
+8
+00:01:30,239 --> 00:01:45,191
+Resource servers validate access tokens
+(and audience/scope). Login apps validate
+ID tokens. Nonce and state are not
+decorative. State ties the callback to the
+browser session that started the redirect.
+
+9
+00:01:45,311 --> 00:01:51,719
+Nonce binds the ID token to that
+authentication attempt so replayed ID
+tokens are harder to abuse.
+
+10
+00:01:51,840 --> 00:02:01,224
+Spring’s OAuth2 login support handles the
+common case when you use the client
+starter correctly — still know why those
+parameters exist when something fails in
+production.
+
+11
+00:02:01,344 --> 00:02:17,424
+A topic-specific misconception is saying
+“OIDC replaces OAuth2.” It extends it.
+Another is assuming every JWT from the
+company IdP is interchangeable: access
+tokens and ID tokens have different
+audiences and purposes.
+
+12
+00:02:17,544 --> 00:02:27,384
+A third is mapping email to local admin
+without an explicit claim-to-authority
+policy — that is how contractors inherit
+berth-admin god mode from a misconfigured
+IdP group.
+
+13
+00:02:27,504 --> 00:02:39,024
+In practice we added identity assertions
+on top of delegation: openid scope, ID
+token validation, OidcUser in the security
+context, and a clear split between login
+tokens and API tokens.
+
+14
+00:02:39,144 --> 00:02:52,560
+HTTP and login rules still live at the
+edge. Many domain rules — “only the owner
+may release this cargo” — want to sit next
+to the service method itself. That is
+where method security earns its place.

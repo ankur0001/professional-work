@@ -1,0 +1,231 @@
+1
+00:00:00,000 --> 00:00:08,375
+The pharmacy kiosk on Floor 2 is showing
+English labels to a Spanish-speaking
+patient again. Ops restarts the process.
+
+2
+00:00:08,495 --> 00:00:15,479
+The drug catalog still points at the
+staging URL because someone exported the
+wrong shell variables on the thin client.
+
+3
+00:00:15,599 --> 00:00:29,183
+Meanwhile the waiting-room board never
+lights up when a prescription is ready —
+the notifier writes a log line and hopes a
+polling job notices. Those three failures
+are not BeanFactory failures. The services
+are wired.
+
+4
+00:00:29,303 --> 00:00:42,839
+What is missing is the application layer
+Spring stacks on top of the factory:
+messages, environment, events, and
+resource loading. ApplicationContext
+extends BeanFactory. You still getBean.
+
+5
+00:00:42,959 --> 00:00:56,111
+You also get MessageSource for i18n,
+Environment / PropertyResolver for
+profiles and properties, an event bus via
+ApplicationEventPublisher, and
+ResourceLoader / ResourcePatternResolver
+for classpath and file resources.
+
+6
+00:00:56,231 --> 00:01:10,079
+Most real applications program to an
+ApplicationContext —
+AnnotationConfigApplicationContext,
+ClassPathXmlApplicationContext, or Boot's
+context — not to the raw factory API. Look
+at this java for a moment.
+
+7
+00:01:10,199 --> 00:01:15,095
+Walk the "ready" press on the kiosk after
+a successful context refresh.
+
+8
+00:01:15,215 --> 00:01:24,407
+Refresh has already built singletons: the
+ResourceBundleMessageSource is registered
+under the well-known MessageSource role,
+PrescriptionReadyListener is a bean (and,
+
+9
+00:01:24,527 --> 00:01:35,351
+if annotated with @EventListener or
+implementing ApplicationListener,
+subscribed through the multicaster), and
+FulfillmentService holds three
+collaborators that are themselves context
+services.
+
+10
+00:01:35,471 --> 00:01:41,135
+markReady calls
+env.getRequiredProperty("pharmacy.catalog-
+url").
+
+11
+00:01:41,256 --> 00:01:53,183
+Environment resolution walks registered
+PropertySource instances — system
+properties, OS environment variables,
+application.yml, profile-specific files —
+in documented precedence order.
+
+12
+00:01:53,304 --> 00:02:07,944
+Staging URL on the thin client means a
+wrong source won, not a missing bean.
+Next, messages.getMessage("rx.ready", …,
+locale) loads i18n/kiosk_es.properties (or
+falls back through the basename chain).
+
+13
+00:02:08,063 --> 00:02:18,168
+Missing key → NoSuchMessageException
+unless you configured a default message.
+Then events.publishEvent(...) hands the
+event to ApplicationEventMulticaster.
+
+14
+00:02:18,287 --> 00:02:25,631
+By default that delivery is synchronous on
+the caller's thread: the listener updates
+WaitingRoomBoard before markReady returns.
+
+15
+00:02:25,751 --> 00:02:36,743
+Same bean graph a BeanFactory would build
+— plus these services participating as
+first-class collaborators. Failure mode
+symptoms map cleanly onto the three Floor
+2 incidents.
+
+16
+00:02:36,863 --> 00:02:48,095
+English-only UI with a Spanish Locale:
+missing i18n/kiosk_es.properties on the
+classpath, wrong basename (i18n/kiosk vs
+messages/kiosk),
+
+17
+00:02:48,215 --> 00:02:57,047
+or Locale never set on the request —
+MessageSource falls back to the default
+bundle and operators blame "i18n is
+broken" when the file was never packaged.
+
+18
+00:02:57,167 --> 00:03:09,983
+Staging catalog URL after restart:
+pharmacy.catalog-url resolved from an
+exported shell variable that outranked the
+intended ConfigMap/file source;
+env.getProperty returns the wrong string
+without throwing,
+
+19
+00:03:10,103 --> 00:03:14,351
+while getRequiredProperty only helps when
+the key is absent.
+
+20
+00:03:14,471 --> 00:03:24,287
+Waiting-room board silent: listener not
+registered (component scan missed the
+package), event type mismatch
+(PrescriptionReadyEvent vs a similarly
+named DTO),
+
+21
+00:03:24,407 --> 00:03:29,519
+or someone assumed publishEvent was async
+and looked for a queue that does not
+exist.
+
+22
+00:03:29,639 --> 00:03:36,071
+Process kill mid-handler loses the in-
+memory event — it is not Kafka. Trade-
+offs.
+
+23
+00:03:36,191 --> 00:03:47,567
+ApplicationContext buys a standard refresh
+lifecycle, i18n, Environment post-
+processors, resource patterns, and an
+event multicaster at the cost of heavier
+startup than a bare factory.
+
+24
+00:03:47,687 --> 00:03:58,295
+For the pharmacy kiosk that cost is the
+product: you need those services. For the
+warehouse CLI next door, a
+DefaultListableBeanFactory may still be
+enough.
+
+25
+00:03:58,415 --> 00:04:08,927
+Boot's SpringApplication always builds an
+ApplicationContext; you rarely construct
+one by hand in production apps, but
+understanding what it adds explains why
+MessageSource, Environment,
+
+26
+00:04:09,048 --> 00:04:13,872
+and ApplicationEventPublisher inject
+without you writing factory lookups.
+
+27
+00:04:13,991 --> 00:04:23,255
+Misconception unique to
+ApplicationContext: "Publishing an event
+means asynchronous, reliable messaging."
+Inside a single context,
+
+28
+00:04:23,375 --> 00:04:31,343
+publishEvent is typically synchronous on
+the caller's thread unless you configure
+an ApplicationEventMulticaster with an
+async executor.
+
+29
+00:04:31,463 --> 00:04:46,079
+Exceptions in a listener propagate to the
+publisher by default. Losing the process
+mid-handler loses the event. Another
+misconception: "ApplicationContext
+replaces BeanFactory." It extends it.
+
+30
+00:04:46,199 --> 00:04:52,295
+getBean still bottoms out in the factory;
+the context wraps richer services around
+the same core.
+
+31
+00:04:52,415 --> 00:05:00,024
+The kiosk finally speaks the right
+language when Locale and bundles line up,
+and the board lights when the listener is
+actually subscribed.
+
+32
+00:05:00,144 --> 00:05:11,879
+That success raises a sharper question
+about the metadata itself: when the plugin
+team wants to load payment adapters from
+YAML at startup, what exactly is Spring
+storing for each bean before any instance
+exists?

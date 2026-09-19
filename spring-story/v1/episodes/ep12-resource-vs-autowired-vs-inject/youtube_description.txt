@@ -1,0 +1,33 @@
+The Spring Story — Episode 12: @Resource vs @Autowired vs @Inject
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• PR review, cargo finance module.
+• Author injects with @Autowired DataSource dataSource and marks the OLTP pool @Primary.
+• Reviewer insists on @Resource(name = "reportingDataSource") for the nightly export job.
+• A third engineer pastes @Inject from a Jakarta tutorial and claims it is "more standard." The app has two…
+• Which annotation wins is not taste — it is injection algorithm.
+• Pick the wrong algorithm and the export job hammers the OLTP pool during a full-table manifest dump.
+• @Autowired (Spring) and @Inject (Jakarta/JSR-330) are type-driven first.
+• If multiple candidates exist, Spring narrows with @Qualifier, @Primary, or — in some configurations —…
+• …and more
+
+Timestamps
+0:00 PR review, cargo finance module. Author injects with @Autowired…
+0:31 Short rules of engagement. @Autowired (Spring) and @Inject…
+1:04 Walk the config. oltpDataSource method name becomes the default…
+1:39 Modern Spring style for the same intent uses constructor injection…
+3:00 Failure mode to drill in demos: ship Case A to staging. Startup is…
+3:56 Misconception unique to these annotations: "@Inject and @Autowired…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 13 — @Configuration
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

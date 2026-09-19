@@ -1,0 +1,217 @@
+1
+00:00:00,000 --> 00:00:08,544
+Breakpoint on SpringApplication.run for
+the bike-share API. One docking-station
+service, one fat jar, one main.
+
+2
+00:00:08,663 --> 00:00:20,375
+You step over the call and watch phases
+fire: bootstrap listeners, Environment
+prepared, ApplicationContext created,
+beans refreshed, embedded Tomcat started,
+ApplicationRunner beans executed.
+
+3
+00:00:20,495 --> 00:00:31,823
+Cold start is not a blur — it is a
+pipeline. Boot's architecture is that
+pipeline plus the opinions that fill it
+in. Spring Boot is not a separate DI
+container.
+
+4
+00:00:31,943 --> 00:00:43,583
+It is an opinionated layer on Spring
+Framework that builds an
+ApplicationContext for you, auto-
+configures common infrastructure when the
+classpath looks right, embeds a web server
+when you need HTTP,
+
+5
+00:00:43,703 --> 00:00:46,559
+and packages runnable artifacts.
+
+6
+00:00:46,679 --> 00:01:00,239
+SpringApplication is the conductor. Auto-
+configuration classes are the sheet music
+that plays only when conditions match.
+Starters are curated dependency sets that
+make those conditions true on purpose.
+
+7
+00:01:00,359 --> 00:01:13,511
+Look at this java for a moment. Walk the
+experiment. new
+SpringApplication(BikeShareApi.class)
+records the primary source — your
+@SpringBootApplication class — without
+starting anything yet.
+
+8
+00:01:13,631 --> 00:01:23,039
+addListeners hooks the pipeline so you can
+observe phases;
+ApplicationEnvironmentPreparedEvent fires
+once profiles and property sources exist
+but before most beans.
+
+9
+00:01:23,159 --> 00:01:36,768
+app.run(args) executes the full cold-start
+sequence and blocks until the embedded
+server is up (for a web app) or until non-
+web runners finish. Runtime cold-start
+timeline for a docking lookup, slower on
+purpose.
+
+10
+00:01:36,887 --> 00:01:46,175
+First, SpringApplication deduces web
+application type from the classpath:
+servlet stack present → SERVLET; WebFlux
+without servlet → REACTIVE; neither →
+NONE.
+
+11
+00:01:46,295 --> 00:01:52,391
+It starts a bootstrap context for early
+logging configuration and
+SpringApplicationRunListeners.
+
+12
+00:01:52,511 --> 00:02:04,847
+It prepares the Environment: loads
+application.yml, applies profile
+documents, attaches command-line args from
+args, publishes environment-prepared
+events — this is when your listener can
+print active profiles.
+
+13
+00:02:04,967 --> 00:02:15,000
+It prints the banner. It creates the
+matching ApplicationContext implementation
+(AnnotationConfigServletWebServerApplicati
+onContext for servlet).
+
+14
+00:02:15,119 --> 00:02:23,543
+It loads sources: BikeShareApi plus auto-
+configuration imports triggered by
+@EnableAutoConfiguration inside
+@SpringBootApplication.
+
+15
+00:02:23,663 --> 00:02:34,560
+It refreshes the context: bean definition
+loading, BeanFactoryPostProcessors,
+singleton pre-instantiation — DataSource,
+MVC infrastructure, your StationDirectory
+if scanned.
+
+16
+00:02:34,679 --> 00:02:44,135
+It creates and starts the embedded web
+server, publishing started/ready events.
+ApplicationRunner / CommandLineRunner
+beans run.
+
+17
+00:02:44,255 --> 00:02:53,231
+Only then does GET /stations/{id} hit a
+DispatcherServlet backed by beans Boot
+mostly assembled without an XML file from
+2012.
+
+18
+00:02:53,351 --> 00:03:01,655
+Failure mode with symptoms on cold start:
+classpath includes a JDBC driver and
+Hikari, but no spring.datasource.url.
+
+19
+00:03:01,775 --> 00:03:09,839
+Auto-config registers a DataSource bean;
+refresh fails with Failed to configure a
+DataSource: 'url' attribute is not
+specified.
+
+20
+00:03:09,959 --> 00:03:22,127
+The stack points at auto-configuration,
+not your application package — which is
+the architecture lesson: Boot inserted a
+definition you did not write because the
+classpath signaled "database." Another
+failure:
+
+21
+00:03:22,247 --> 00:03:30,719
+wrong web type deduction after
+accidentally adding both servlet and
+reactive starters — confusing context type
+and "which stack am I on?" debugging.
+
+22
+00:03:30,839 --> 00:03:41,735
+Listeners that throw during environment
+prepare abort startup before any
+controller exists; symptom is a short log
+ending at bootstrap, no Tomcat port bind.
+Trade-offs.
+
+23
+00:03:41,855 --> 00:03:53,807
+The pipeline removes dozens of manual
+assembly steps and standardizes startup
+across services; it also concentrates
+"magic" into phases you must learn to
+observe (--debug, condition reports,
+startup events).
+
+24
+00:03:53,927 --> 00:04:01,511
+Hand-building an
+AnnotationConfigApplicationContext is
+clearer for teaching BeanFactory, but
+slower for shipping APIs.
+
+25
+00:04:01,631 --> 00:04:11,447
+Boot's opinions (embedded server, auto-
+config, fat jar) are defaults you can
+override — excluding auto-config,
+providing your own SpringApplication
+customizers,
+
+26
+00:04:11,567 --> 00:04:16,991
+switching to WAR deployment — each
+override costs knowledge of which phase
+you are interrupting.
+
+27
+00:04:17,111 --> 00:04:26,519
+Misconception unique to Boot architecture:
+"Boot replaces Spring Framework — learning
+Framework concepts is optional." Boot
+orchestrates Framework.
+
+28
+00:04:26,639 --> 00:04:39,455
+When auto-config surprises you, you debug
+bean definitions, conditions, and the
+context — Framework vocabulary — not a
+magical Boot-only machine. The bike-share
+API is up in seconds on a laptop.
+
+29
+00:04:39,575 --> 00:04:52,151
+A developer adds postgresql driver "just
+for later" and suddenly a DataSource bean
+appears and fails startup because no URL
+is set. Who created that bean without a
+@Bean method in the application package?

@@ -1,0 +1,150 @@
+1
+00:00:00,000 --> 00:00:09,167
+When scheduling assigns berth B7 to vessel
+IMO 9321483, billing needs a reservation
+signal and the yard board needs a redraw.
+
+2
+00:00:09,287 --> 00:00:23,663
+Synchronous fan-out from scheduling
+couples availability: if billing is down,
+does the berth assignment roll back?
+Messaging flips the shape. Scheduling
+publishes BerthChanged events; consumers
+react on their own clocks.
+
+3
+00:00:23,783 --> 00:00:32,135
+Spring Cloud Stream binds your functions
+(or suppliers/consumers) to a broker
+through a binder — Kafka and RabbitMQ are
+the common ones.
+
+4
+00:00:32,256 --> 00:00:43,176
+You write a Function, Consumer, or
+Supplier bean; configuration maps it to
+destinations. The business code stays
+about events, not about Kafka producer
+APIs.
+
+5
+00:00:43,295 --> 00:00:59,712
+That separation is the point: swap binders
+in a test or migrate brokers without
+rewriting applyReservation. Look at this
+java for a moment. Look at this java for a
+moment. Look at this example. spring: Walk
+the flow.
+
+6
+00:00:59,832 --> 00:01:12,528
+Scheduling commits the assignment and
+sends to berth.changed. Billing’s consumer
+group processes the event into an invoice
+projection. Yard board’s separate group
+redraws independently.
+
+7
+00:01:12,647 --> 00:01:25,079
+Two groups mean two independent offsets —
+billing lag does not freeze the yard
+board. If billing is down, messages wait
+in the topic; scheduling does not block
+the crane operator’s UI on billing’s
+health.
+
+8
+00:01:25,199 --> 00:01:35,879
+Idempotent consumers matter — at-least-
+once delivery will redeliver;
+applyReservation must tolerate duplicates
+by natural key (berthId + window) or an
+event id store.
+
+9
+00:01:35,999 --> 00:01:45,023
+Publishing inside a transaction without an
+outbox can still lose messages if the
+process dies after commit and before send
+— or send before commit and leak phantoms.
+
+10
+00:01:45,143 --> 00:01:57,479
+Symptom of the first: berth shows ASSIGNED
+in scheduling DB, billing never invoices
+until a replay tool runs. Symptom of the
+second: billing opens an invoice for a
+reservation that rolled back.
+
+11
+00:01:57,599 --> 00:02:07,583
+Treat “after commit + outbox” as the
+production upgrade path when loss is
+unacceptable — write the event row with
+the assignment, relay asynchronously,
+delete or mark published.
+
+12
+00:02:07,703 --> 00:02:15,239
+Failure modes to operate: poison messages
+that throw forever need a DLQ binding, or
+one bad payload stalls a partition.
+
+13
+00:02:15,359 --> 00:02:23,135
+Schema changes on BerthChanged need
+compatibility discipline — adding optional
+fields is safer than renaming imoNumber on
+Friday.
+
+14
+00:02:23,255 --> 00:02:30,095
+Consumer concurrency helps throughput; it
+also reorders relative to single-thread
+assumptions inside a projection.
+
+15
+00:02:30,215 --> 00:02:40,799
+Trade-offs: messaging decouples
+availability and scales fan-out, at the
+cost of eventual consistency and harder
+request/response UX. Check-in still wants
+a synchronous answer.
+
+16
+00:02:40,919 --> 00:02:52,703
+Events shine for facts many systems must
+learn. Payload size: publish ids and let
+billing fetch details inside its context
+when payloads would drag vessel master
+data across the bus.
+
+17
+00:02:52,823 --> 00:03:02,447
+A misconception is treating Cloud Stream
+as “Kafka with annotations” and ignoring
+consumer groups; without groups, competing
+consumers do not share work the way you
+expect.
+
+18
+00:03:02,567 --> 00:03:08,591
+Another is dumping huge payloads on the
+bus instead of ids and letting consumers
+fetch details.
+
+19
+00:03:08,711 --> 00:03:20,711
+A third is assuming messaging deletes the
+need for APIs — check-in still wants
+request/response; events shine for fan-out
+facts. Cloud patterns alone do not prove
+gate release or tariff math.
+
+20
+00:03:20,831 --> 00:03:31,151
+Phase 10 starts under Spring’s test
+annotations, at the engine that discovers
+methods, runs them, and reports pass or
+fail. That engine is JUnit 5.

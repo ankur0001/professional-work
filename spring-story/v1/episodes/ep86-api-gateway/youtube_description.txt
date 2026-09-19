@@ -1,0 +1,32 @@
+The Spring Story — Episode 86: API Gateway
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• External truckers should hit one hostname — https://ops.harbor.example — not a spreadsheet of gate,…
+• Paths fan out to internals that never appear on the public DNS.
+• That front door is an API gateway.
+• Spring Cloud Gateway is a reactive Boot application built on WebFlux and a route model: predicates decide…
+• It is not a servlet RestController that proxies with RestTemplate.
+• Think route tables, not controller methods.
+• Under load the gateway’s event loop stays non-blocking; a blocking call inside a filter starves other…
+• A trucker POSTs /api/gates/G12/check-ins.
+• …and more
+
+Timestamps
+0:00 External truckers should hit one hostname —…
+0:53 A trucker POSTs /api/gates/G12/check-ins. The Path predicate…
+1:30 Global filters can attach correlation headers, enforce JWT at the…
+2:28 Trade-offs: one gateway simplifies trucker TLS and WAF placement,…
+3:20 Truckers now have one edge. Behind it, three billing pods answer…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 87 — Load Balancing
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

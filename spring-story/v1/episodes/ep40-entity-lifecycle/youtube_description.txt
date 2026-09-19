@@ -1,0 +1,31 @@
+The Spring Story — Episode 40: Entity Lifecycle
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• A warehouse handheld loads CargoItem CARGO-441 during a request, shows it on screen, and the HTTP call ends.
+• Two minutes later the clerk taps "mark damaged." If you keep the old Java object and call save carelessly,…
+• JPA entities move through named states.
+• **Transient**: a new CargoItem(...) that the persistence context has never seen — no row yet.
+• **Managed**: loaded or persisted inside an open persistence context; dirty checking applies.
+• **Detached**: the context closed (typically when the transaction/request ended) but the object still sits…
+• **Removed**: marked for deletion on flush.
+• Controller calls a transactional service.
+• …and more
+
+Timestamps
+0:00 A warehouse handheld loads CargoItem CARGO-441 during a request,…
+0:42 Walk a request. Controller calls a transactional service. Service…
+1:18 Transient → managed via persist / save on a new entity. Managed →…
+1:56 Lifecycle names the states. The room those managed instances live…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 41 — Persistence Context
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

@@ -1,0 +1,32 @@
+The Spring Story — Episode 95: Spring Test
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Unit tests construct TariffService with mocks.
+• Gate’s GateController still needs Spring MVC: mapping, JSON conversion, validation, exception advice.
+• Booting the whole harbor for every controller tweak is slow.
+• @WebMvcTest loads a slice — just the web layer for named controllers — and MockMvc drives…
+• MockMvc exercises the dispatcher pipeline: handler mapping, argument resolution, message conversion,…
+• @MockBean puts a Mockito mock into the slice’s ApplicationContext, replacing the real GateReleaseService —…
+• If you forget @MockBean for a required collaborator, the slice context fails to start with an unsatisfied…
+• Security can be disabled for the slice or shaped with @WithMockUser when the controller relies on the…
+• …and more
+
+Timestamps
+0:00 Unit tests construct TariffService with mocks. Gate’s…
+0:38 verify(releases).accept(eq("G12"), any(TruckCheckIn.class));
+1:27 Other slices exist. @DataJpaTest focuses repositories and an…
+2:28 Trade-offs: slices are fast and focused; they will not catch a…
+3:01 A misconception is using @SpringBootTest for every controller…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 96 — Integration Testing
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

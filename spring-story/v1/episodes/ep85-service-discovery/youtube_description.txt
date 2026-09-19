@@ -1,0 +1,33 @@
+The Spring Story — Episode 85: Service Discovery
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• At 06:00 there are three billing pods.
+• At 06:12 one dies during a deploy.
+• At 06:15 a fourth starts on a different node.
+• If gate still dials http://10.0.4.22:8080, check-ins fail while healthy instances sit idle.
+• Discovery answers a simple question: given the logical name billing-service, which live instances exist…
+• A registry holds the catalog.
+• Each instance registers on startup with host, port, health URL, and metadata.
+• Clients — or a platform DNS layer — query the catalog and choose a target.
+• …and more
+
+Timestamps
+0:00 Gate needs billing. At 06:00 there are three billing pods. At…
+0:51 GateBillingProbe(DiscoveryClient discovery) {
+1:25 Walk a deploy failure. Billing pod B2 stops heartbeats at 06:12.…
+2:04 Health integration is not optional decoration. If billing’s…
+3:03 A misconception is hard-coding hostnames “temporarily” beside…
+3:40 That edge is the API gateway.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 86 — API Gateway
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

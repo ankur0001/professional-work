@@ -1,0 +1,33 @@
+The Spring Story — Episode 60: JDK Proxy
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Program the harbor gate to an interface and the JDK already knows how to wrap it.
+• java.lang.reflect.Proxy implements that interface at runtime and funnels every call through one…
+• Spring AOP leans on that when an interface-based proxy is enough.
+• No subclass of your concrete class.
+• A brand-new type that only promises the interface methods.
+• Interface-oriented design and JDK proxies fit cleanly.
+• You inject GateService, not HarborGateService, and Spring can substitute a proxy that still is-a GateService.
+• Callers never need the concrete class — which is exactly what the yard crane console and the trucker API…
+• …and more
+
+Timestamps
+0:00 Program the harbor gate to an interface and the JDK already knows…
+0:42 Walk a release call at runtime. Collaborators hold a field of type…
+1:32 Failure mode that shows up in code review and production. Someone…
+2:32 JDK proxies can implement multiple interfaces. If…
+3:28 Trade-offs. JDK proxies need no bytecode subclassing of your…
+4:13 The limitation is the next engineering wall. What if there is no…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 61 — CGLIB
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

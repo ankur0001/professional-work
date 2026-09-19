@@ -1,0 +1,31 @@
+The Spring Story — Episode 71: OpenID Connect
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• OAuth2 delegates access to the harbor API.
+• It does not, by itself, define how a client learns the user’s identity in a standard way.
+• OpenID Connect sits on top of OAuth2 and adds that identity layer — the difference between “this calendar…
+• Scopes like openid, profile, and email are the handshake that you want login, not only API access.
+• Request openid and a conformant provider returns an ID token alongside the access token.
+• Why harbor teams care: “Sign in with company Okta / Azure AD / Keycloak” without inventing a proprietary…
+• OIDC standardizes sub, iss, aud, exp, nonce, and optional profile claims.
+• Your app verifies the ID token, establishes a local session or security context, and optionally still uses…
+• …and more
+
+Timestamps
+0:00 OAuth2 delegates access to the harbor API. It does not, by itself,…
+0:45 Why harbor teams care: “Sign in with company Okta / Azure AD /…
+1:30 Nonce and state are not decorative. State ties the callback to the…
+2:18 In practice we added identity assertions on top of delegation:…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 72 — Method Security
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

@@ -1,0 +1,30 @@
+The Spring Story — Episode 107: Hexagonal Architecture
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Layered Spring apps often still let the framework sit in the middle of the onion.
+• A “domain” class annotated with JPA and Jackson, a service that returns ResponseEntity, a repository…
+• Hexagonal architecture — ports and adapters — flips the gravity for gate release: the domain sits in the…
+• Alistair Cockburn’s idea is concrete here.
+• The application core defines ports — interfaces for what drives gate release and what release needs.
+• Adapters implement those ports.
+• The core never imports Spring Web.
+• Boot remains the composition root that wires adapters to ports.
+• …and more
+
+Timestamps
+0:00 Layered Spring apps often still let the framework sit in the…
+0:46 Draw one hexagon for gate release:
+1:21 A misconception is drawing hexagons in Confluence while…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 108 — Clean Architecture
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

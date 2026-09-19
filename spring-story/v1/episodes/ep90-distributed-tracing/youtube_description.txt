@@ -1,0 +1,32 @@
+The Spring Story — Episode 90: Distributed Tracing
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• A trucker reports check-in took forty seconds.
+• Gate logs show a slow billing call.
+• Billing logs show a slow DB.
+• Without shared identifiers, those three files are three novels.
+• Distributed tracing stitches them: one trace id for the whole check-in, one span per hop, parent-child…
+• In modern Spring, Micrometer Tracing with an OpenTelemetry or Brave bridge propagates context over HTTP.
+• Boot instruments servlet/WebFlux requests and outbound clients — RestTemplate, WebClient, Feign — so W3C…
+• You rarely hand-roll headers; you verify they appear and that your sampler is intentional.
+• …and more
+
+Timestamps
+0:00 A trucker reports check-in took forty seconds. Gateway logs look…
+0:52 Follow one check-in. Gateway creates root span http POST…
+1:36 Sampling is policy. probability: 1.0 is fine for a staging quay;…
+2:27 Trade-offs: full tracing everywhere is expensive; metrics alone…
+3:14 Traces explain one request. Resilience still needs more than…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 91 — Resilience4j
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

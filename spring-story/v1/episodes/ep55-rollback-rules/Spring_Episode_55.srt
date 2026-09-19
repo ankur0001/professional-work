@@ -1,0 +1,110 @@
+1
+00:00:00,000 --> 00:00:14,952
+A manifest import throws ManifestException
+— checked, on purpose, so callers must
+handle bad customs data. The service
+method is @Transactional. The exception
+escapes. The transaction commits anyway.
+
+2
+00:00:15,071 --> 00:00:31,128
+Half a manifest sits in the database with
+a status that says “accepted.” Nightly
+reconciliation fails. Someone asks why
+Spring “ignored” the error. It did not
+ignore the error. It followed the default
+rollback rules.
+
+3
+00:00:31,248 --> 00:00:40,776
+Unchecked exceptions — RuntimeException
+and subclasses — and Error mark the
+transaction for rollback. Checked
+exceptions do not, unless you list them.
+
+4
+00:00:40,896 --> 00:00:48,887
+The interceptor inspects what escapes the
+advised method, matches rollback and no-
+rollback rules, and tells the manager to
+commit or roll back.
+
+5
+00:00:49,008 --> 00:01:04,176
+For harbor manifests, the business meaning
+is usually clear: a checked
+ManifestException is fatal to the unit of
+work. Say so on the annotation. Look at
+this java for a moment. Look at this java
+for a moment.
+
+6
+00:01:04,296 --> 00:01:13,128
+Read the attributes aloud. rollbackFor =
+ManifestException.class means: even though
+this is checked, undo the transaction.
+
+7
+00:01:13,248 --> 00:01:20,040
+Without it, the default would commit the
+saved manifest after a customs reject —
+the bug that started this episode.
+
+8
+00:01:20,160 --> 00:01:30,792
+noRollbackFor =
+CustomsLinkDownException.class means: even
+though this is a runtime exception, keep
+the intake; mark notify-pending and let a
+retry path finish the side effect.
+
+9
+00:01:30,912 --> 00:01:40,416
+Defaults would have wiped a valid manifest
+because a downstream link blinked. Rules
+match the exception that actually escapes,
+including subclasses.
+
+10
+00:01:40,536 --> 00:01:52,007
+Catch inside the method and swallow
+without rethrowing, and the interceptor
+sees success — partial state may commit.
+Catching is not a rollback rule; it is a
+decision that the boundary completed.
+
+11
+00:01:52,128 --> 00:02:07,152
+You can list multiple types, or use the
+stringly rollbackForClassName forms in
+older configs. Prefer explicit class
+literals. In tests, @Rollback / @Commit
+steer the test transaction — related idea,
+different switch.
+
+12
+00:02:07,271 --> 00:02:19,967
+A frequent bug is wrapping a runtime
+failure in a checked type, adding throws,
+and forgetting rollbackFor. Another is
+noRollbackFor = Exception.class, then
+wondering why serious failures still
+commit.
+
+13
+00:02:20,087 --> 00:02:33,072
+Prefer domain exceptions with clear fatal
+versus recoverable meaning, and align the
+annotation with that meaning — especially
+for checked ManifestException on intake
+paths. Local rules still assume one
+resource manager.
+
+14
+00:02:33,192 --> 00:02:45,552
+The day intake must write Postgres and
+publish a JMS booking message in one
+breath, a single local boundary is no
+longer enough. Distributed transactions
+are where that stretch gets honest — and
+expensive.

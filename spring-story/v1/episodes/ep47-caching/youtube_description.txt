@@ -1,0 +1,30 @@
+The Spring Story — Episode 47: Caching
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• The vessel directory is mostly read.
+• Planners open the same IMO profile dozens of times an hour.
+• Without a cache, every open is a SELECT.
+• With a cache that never evicts, a renamed vessel stays wrong until someone restarts the pod.
+• Spring’s cache abstraction sits between those failure modes: cache directory reads; evict on update.
+• Enable caching with @EnableCaching and a CacheManager — Boot will autoconfigure simple or Redis-backed…
+• Then declare stereotypes on the service that owns vessel directory access: @Cacheable runs the method on a…
+• On a hit, the method body — and the SELECT — do not run.
+• …and more
+
+Timestamps
+0:00 The vessel directory is mostly read. Planners open the same IMO…
+0:33 What you cache matters as much as whether you cache. Prefer…
+1:15 Caching is not a substitute for an index on imonumber. It is not a…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 48 — Optimistic Locking
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory
