@@ -99,4 +99,26 @@ export class OpenAIProvider implements AIProvider {
       return this.fallback.generateSessionSummary(input);
     }
   }
+
+  async coachWriting(input: import("../types").WritingCoachInput) {
+    try {
+      const { writingCoachSystem } = await import("@/lib/prompts/writing-coach");
+      const raw = await this.chatJson(writingCoachSystem, JSON.stringify(input));
+      const { writingCoachSchema } = await import("@/lib/schemas/writing");
+      return writingCoachSchema.parse(raw);
+    } catch {
+      return this.fallback.coachWriting(input);
+    }
+  }
+
+  async evaluateMeetingResponse(input: import("../types").MeetingEvalInput) {
+    try {
+      const { meetingSimulatorSystem } = await import("@/lib/prompts/meeting-simulator");
+      const raw = await this.chatJson(meetingSimulatorSystem, JSON.stringify(input));
+      const { meetingEvaluationSchema } = await import("@/lib/schemas/writing");
+      return meetingEvaluationSchema.parse(raw);
+    } catch {
+      return this.fallback.evaluateMeetingResponse(input);
+    }
+  }
 }

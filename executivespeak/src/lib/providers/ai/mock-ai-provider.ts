@@ -1,5 +1,13 @@
-import type { AIProvider, AnalyzeSpeechInput, ConversationInput, SummaryInput } from "../types";
+import type {
+  AIProvider,
+  AnalyzeSpeechInput,
+  ConversationInput,
+  SummaryInput,
+  WritingCoachInput,
+  MeetingEvalInput,
+} from "../types";
 import { feedbackAnalysisSchema } from "@/lib/schemas/feedback";
+import { writingCoachSchema, meetingEvaluationSchema } from "@/lib/schemas/writing";
 import { detectFillerWords } from "@/lib/scoring";
 
 function scoreFromText(transcript: string, base: number): number {
@@ -153,5 +161,50 @@ export class MockAIProvider implements AIProvider {
       betterPhrase: "I recommend we revisit the architecture because the current design is creating several problems.",
       tomorrowChallenge: "Give a 60-second project update to a non-technical manager — no fillers in the first sentence.",
     };
+  }
+
+  async coachWriting(input: WritingCoachInput) {
+    const t = input.text.trim();
+    const hedging = /\b(maybe|just|sorry|I think)\b/i.test(t);
+    return writingCoachSchema.parse({
+      original: t,
+      corrected: t.replace(/\bmaybe\b/gi, "").replace(/\s+/g, " ").trim(),
+      natural: hedging
+        ? "Thanks for the update. I have concerns about the Friday date — here's what we can ship safely."
+        : t,
+      professional:
+        "Thanks for raising this. A Friday release is risky given open integration work. I recommend we ship a scoped MVP Friday and schedule the remainder for the next sprint.",
+      leadership:
+        "A Friday launch would expose us to integration risk. My recommendation: deliver the core workflow Friday with feature flags, and commit the remaining scope by next Wednesday.",
+      toneNotes: hedging
+        ? "You sound apologetic. Lead with your recommendation, not uncertainty."
+        : "Tone is neutral; strengthen with a clear recommendation.",
+      clarityNotes: "State the risk, the proposal, and the next step in three sentences.",
+      shorter:
+        "Friday is too aggressive for full scope. Recommend MVP Friday + remainder next sprint.",
+      moreConfident: "We should not commit to the full feature by Friday. We will deliver the MVP and defer non-critical scope.",
+      moreDiplomatic:
+        "I hear the urgency. To protect quality, I'd suggest we align on a reduced scope for Friday and plan the rest immediately after.",
+      executiveFriendly:
+        "Risk: full feature by Friday. Proposal: MVP Friday, complete rollout next week. Decision needed: approve reduced scope?",
+    });
+  }
+
+  async evaluateMeetingResponse(input: MeetingEvalInput) {
+    const t = input.userResponse.trim();
+    const base = scoreFromText(t, 68);
+    const weak = /\b(maybe|sorry|I guess)\b/i.test(t);
+    return meetingEvaluationSchema.parse({
+      clear: base,
+      professional: weak ? base - 8 : base + 4,
+      assertive: weak ? base - 12 : base,
+      collaborative: base + 2,
+      leadership: weak ? base - 10 : base + 6,
+      summary: weak
+        ? "You addressed the question, but hedging weakened your authority. Name the trade-off and propose a concrete plan."
+        : "Solid meeting response — you balanced constraints with a clear recommendation.",
+      improvedVersion:
+        "I understand the Friday deadline. Adding people won't help this week due to onboarding cost. I recommend we ship auth + checkout Friday and move reporting to sprint 24 — I'll document scope for PM sign-off today.",
+    });
   }
 }

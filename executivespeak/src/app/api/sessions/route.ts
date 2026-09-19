@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
-import { addDemoSession, getDemoProfile, saveDemoProfile } from "@/lib/demo/demo-store";
+import {
+  addDemoSession,
+  completeDailyChallenge,
+  getDemoProfile,
+  saveDemoProfile,
+  upsertVocabulary,
+} from "@/lib/demo/demo-store";
+import { getDailyChallenge } from "@/lib/data/daily-challenges";
+import { suggestWordsFromTranscript } from "@/lib/vocabulary/suggest";
 import { getAIProvider } from "@/lib/providers";
 import { getPrisma } from "@/lib/db";
 import { isDemoMode } from "@/lib/config";
@@ -64,6 +72,8 @@ export async function POST(req: Request) {
     : { overall: overallScore };
 
   if (isDemoMode() || session.user.demo) {
+    const newWords = body.transcripts.flatMap((t) => suggestWordsFromTranscript(t));
+    if (newWords.length) upsertVocabulary(session.user.email, newWords);
     const profile = getDemoProfile(session.user.email);
     profile.weaknessProfile = mergeWeaknessProfile(profile.weaknessProfile, last);
     if (last) {
@@ -74,6 +84,9 @@ export async function POST(req: Request) {
       };
     }
     saveDemoProfile(profile);
+    if (/leadership|challenge|disagreement/i.test(body.scenarioTitle + body.type)) {
+      completeDailyChallenge(session.user.email, getDailyChallenge().id);
+    }
     const saved = addDemoSession(session.user.email, {
       type: body.type,
       scenarioTitle: body.scenarioTitle,

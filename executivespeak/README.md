@@ -95,7 +95,17 @@ npm test
 
 Implemented: authentication, onboarding, baseline assessment, dashboard, voice conversation UI, STT (browser), mock/live AI feedback, daily practice plan, session history, progress views, phrase library, module scaffolds.
 
-Phase 2+: pronunciation engine, grammar memory UI, vocabulary SRS, meeting simulator, weekly/monthly assessments.
+### Phase 2 (implemented)
+
+- Meeting simulator with multi-participant scripts and response evaluation
+- Impromptu speaking (15s think → 30/60/90s speak)
+- Email & chat coach (Slack/email/Teams/Jira/PR)
+- Vocabulary engine with spaced repetition (demo store)
+- Grammar memory drills from recurring mistakes
+- Daily leadership challenges + achievements
+- Weekly assessment trends (from real session data)
+
+Phase 3+: monthly executive assessment day, advanced pronunciation API, meeting multi-agent AI, full DB-backed SRS.
 
 ## License
 

@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { getDailyPlan } from "@/lib/data/scenarios";
 import { greetingForHour } from "@/lib/utils";
+import { ACHIEVEMENT_CATALOG } from "@/lib/data/achievements";
 
 interface Profile {
   name?: string;
@@ -16,11 +17,20 @@ interface Profile {
   communicationScores?: Record<string, number>;
   totalSpeakingMinutes?: number;
   streakDays?: number;
+  achievements?: string[];
+}
+
+interface DailyChallenge {
+  id: string;
+  title: string;
+  prompt: string;
 }
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile>({});
   const [demoMode, setDemoMode] = useState(true);
+  const [challenge, setChallenge] = useState<DailyChallenge | null>(null);
+  const [challengeDone, setChallengeDone] = useState(false);
   const plan = getDailyPlan(profile.dailyPracticeMinutes ?? 20);
   const spokenToday = 0;
   const progressPct = Math.min(100, (spokenToday / plan.minutes) * 100);
@@ -30,6 +40,13 @@ export default function DashboardPage() {
     fetch("/api/profile")
       .then((r) => r.json())
       .then(setProfile)
+      .catch(() => undefined);
+    fetch("/api/challenges/daily")
+      .then((r) => r.json())
+      .then((d) => {
+        setChallenge(d.challenge);
+        setChallengeDone(d.completed);
+      })
       .catch(() => undefined);
   }, []);
 
@@ -120,6 +137,38 @@ export default function DashboardPage() {
           ))}
         </CardContent>
       </Card>
+
+      {challenge && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Daily leadership challenge</CardTitle>
+            <CardDescription>{challengeDone ? "Completed today" : challenge.title}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <p>{challenge.prompt}</p>
+            <Button asChild variant={challengeDone ? "secondary" : "default"}>
+              <Link href={`/practice?scenario=leadership-design-disagreement`}>
+                {challengeDone ? "Practice again" : "Start challenge"}
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {(profile.achievements?.length ?? 0) > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Achievements</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {profile.achievements!.map((slug) => (
+              <Badge key={slug} variant="outline">
+                {ACHIEVEMENT_CATALOG[slug]?.title ?? slug}
+              </Badge>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
         <CardHeader>

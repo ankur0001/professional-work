@@ -1,4 +1,5 @@
 import type { FeedbackAnalysis, SessionSummary, BaselineScores } from "@/lib/schemas/feedback";
+import type { WritingCoachResult, MeetingEvaluation } from "@/lib/schemas/writing";
 
 export interface AIProvider {
   name: string;
@@ -6,6 +7,19 @@ export interface AIProvider {
   generateConversationReply(input: ConversationInput): Promise<string>;
   generateSessionSummary(input: SummaryInput): Promise<SessionSummary>;
   analyzeBaseline(transcripts: string[]): Promise<BaselineScores>;
+  coachWriting(input: WritingCoachInput): Promise<WritingCoachResult>;
+  evaluateMeetingResponse(input: MeetingEvalInput): Promise<MeetingEvaluation>;
+}
+
+export interface WritingCoachInput {
+  text: string;
+  channel: "slack" | "email" | "teams" | "jira" | "pr";
+}
+
+export interface MeetingEvalInput {
+  meetingTitle: string;
+  promptLine: string;
+  userResponse: string;
 }
 
 export interface AnalyzeSpeechInput {
