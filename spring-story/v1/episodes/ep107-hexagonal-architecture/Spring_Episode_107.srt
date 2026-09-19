@@ -1,0 +1,91 @@
+1
+00:00:00,000 --> 00:00:04,895
+Layered Spring apps often still let the
+framework sit in the middle of the onion.
+
+2
+00:00:05,016 --> 00:00:15,984
+A “domain” class annotated with JPA and
+Jackson, a service that returns
+ResponseEntity, a repository interface
+that extends Spring Data in the same
+package as release rules — the layers have
+names,
+
+3
+00:00:16,103 --> 00:00:18,936
+but the center is not isolated.
+
+4
+00:00:19,055 --> 00:00:32,447
+Hexagonal architecture — ports and
+adapters — flips the gravity for gate
+release: the domain sits in the center;
+HTTP, billing Feign, and JPA plug in
+around it. Alistair Cockburn’s idea is
+concrete here.
+
+5
+00:00:32,567 --> 00:00:43,991
+The application core defines ports —
+interfaces for what drives gate release
+and what release needs. Adapters implement
+those ports. The core never imports Spring
+Web.
+
+6
+00:00:44,111 --> 00:00:55,703
+Boot remains the composition root that
+wires adapters to ports. Draw one hexagon
+for gate release: - Driving (primary)
+port: ReleaseGateUseCase — what the booth
+can ask the app to do.
+
+7
+00:00:55,823 --> 00:01:10,128
+- Driven (secondary) ports: GateLedger,
+BillingPort — what release needs from the
+outside. - Adapters: GateController (MVC)
+drives the use case; JpaGateLedgerAdapter
+and BillingFeignAdapter implement driven
+ports.
+
+8
+00:01:10,247 --> 00:01:25,463
+Look at this java for a moment. Look at
+this java for a moment. Look at this java
+for a moment. Unit tests construct
+ReleaseGateService with fake BillingPort
+and GateLedger — no MockMvc required for
+tariff branching.
+
+9
+00:01:25,583 --> 00:01:39,791
+Slice tests cover the MVC adapter.
+Production wiring is a @Configuration that
+binds interfaces to adapters. The hexagon
+is not a folder religion; it is dependency
+direction you can point at in review.
+
+10
+00:01:39,911 --> 00:01:51,383
+A misconception is drawing hexagons in
+Confluence while controllers still call
+Feign clients directly. Another is ports
+for every trivial getter until the core is
+an interface museum.
+
+11
+00:01:51,503 --> 00:01:58,223
+A third is putting Spring Data interfaces
+in the domain package and declaring
+victory because the folder says domain.
+
+12
+00:01:58,343 --> 00:02:11,183
+Hexagonal’s cousin names the same gravity
+with rings and an explicit dependency
+rule: source code dependencies point only
+inward. That formulation is Clean
+Architecture — and it sharpens what the
+gate domain may import.
