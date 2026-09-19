@@ -1,9 +1,9 @@
 [
   {
-    "ep": 71,
-    "title": "OpenID Connect",
-    "beats": 14,
-    "duration_sec": 173.01,
-    "mp4": "/workspace/spring-story/v1/episodes/ep71-openid-connect/Spring_Episode_71_OpenID_Connect.mp4"
+    "ep": 73,
+    "title": "CSRF",
+    "beats": 20,
+    "duration_sec": 217.362,
+    "mp4": "/workspace/spring-story/v1/episodes/ep73-csrf/Spring_Episode_73_CSRF.mp4"
   }
 ]
