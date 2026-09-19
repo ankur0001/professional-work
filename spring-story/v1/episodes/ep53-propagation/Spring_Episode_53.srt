@@ -1,0 +1,136 @@
+1
+00:00:00,000 --> 00:00:12,695
+Support opens a ticket: “checkout failed,
+but we have no audit row saying it even
+started.” Engineering replies: “of course
+— the whole transaction rolled back.”
+Operations replies:
+
+2
+00:00:12,815 --> 00:00:17,519
+“then how do we prove the attempt?” Same
+database.
+
+3
+00:00:17,640 --> 00:00:30,504
+Two different truths people need from
+nested writes. Propagation is the dial
+between those truths: when a transactional
+method calls another, does the inner work
+join the outer unit, or run in a
+transaction of its own?
+
+4
+00:00:30,684 --> 00:00:48,852
+Spring’s default is Propagation.REQUIRED.
+No transaction on the thread? Start one.
+Already inside one? Join it. Nested
+REQUIRED collaborators share one fate. One
+rollback undoes everyone who joined.
+
+5
+00:00:48,972 --> 00:01:00,539
+Propagation.REQUIRES_NEW does the opposite
+split. Suspend the outer transaction if
+present, open a fresh one, commit or roll
+it back on its own, then resume the outer.
+
+6
+00:01:00,659 --> 00:01:16,451
+The inner commit can survive outer failure
+— which is exactly what checkout audit
+usually wants. Look at this java for a
+moment. Look at this java for a moment.
+Narrate the nested calls. Client enters
+checkout.
+
+7
+00:01:16,572 --> 00:01:36,444
+Spring opens T1.
+auditService.record("CHECKOUT_STARTED", …)
+goes through the audit bean’s proxy.
+REQUIRES_NEW suspends T1, opens T2,
+inserts the audit, commits T2, resumes T1.
+Purchase saves on T1. Payment throws.
+
+8
+00:01:36,564 --> 00:01:49,908
+T1 rolls back — the purchase is gone. The
+started audit remains, because T2 already
+committed. Operations gets the breadcrumb.
+Finance does not get a phantom purchase.
+
+9
+00:01:50,028 --> 00:02:09,756
+Flip only the propagation on record to
+plain @Transactional — still REQUIRED. The
+audit insert joins T1. Payment fails.
+Rollback erases “CHECKOUT_STARTED” too.
+Support sees silence. Same methods.
+Different nesting rule.
+
+10
+00:02:09,876 --> 00:02:20,099
+Different database truth. Other modes
+exist for sharper contracts. SUPPORTS
+joins if present, otherwise runs non-
+transactional.
+
+11
+00:02:20,219 --> 00:02:33,707
+NOT_SUPPORTED suspends and runs without a
+transaction — long reads that should not
+hold locks. MANDATORY demands an existing
+transaction and fails otherwise. NEVER
+refuses to run inside one.
+
+12
+00:02:33,828 --> 00:02:46,403
+NESTED uses a savepoint inside the same
+physical transaction when the manager
+supports it, so a partial rollback can
+return to that mark without undoing the
+entire outer unit. Keep the interview
+sentence short.
+
+13
+00:02:46,524 --> 00:03:01,163
+Propagation is not “how many databases.”
+It is “what happens when transactional
+methods nest on one thread.” The proxy and
+TransactionInterceptor read the attribute
+before the PlatformTransactionManager
+begins, joins,
+
+14
+00:03:01,283 --> 00:03:04,019
+suspends, or resumes.
+
+15
+00:03:04,139 --> 00:03:14,795
+Misread it and rollbacks surprise you.
+Catch an exception from a joined
+participant, ignore that the outer
+transaction is rollback-only, and wonder
+why commit fails later.
+
+16
+00:03:14,915 --> 00:03:22,211
+Call a REQUIRES_NEW method on this inside
+the same class — no proxy, no suspension,
+no independent commit.
+
+17
+00:03:22,331 --> 00:03:31,739
+Design reviews usually debate only two
+modes in practice: REQUIRED for shared
+atomicity, REQUIRES_NEW when a side effect
+must outlive outer failure.
+
+18
+00:03:31,859 --> 00:03:42,299
+Joining or splitting still says nothing
+about what concurrent transactions may
+observe of each other’s rows while work is
+in flight. That visibility question is
+isolation.
