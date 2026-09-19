@@ -18,21 +18,26 @@ In Reactive Streams, the subscriber tells the publisher how many items it reques
 ```java
 Flux<AisFix> incoming = aisFeed.live(); // potentially high-rate source
 
-Flux<AisFix> protectedFlow = incoming
-    .onBackpressureLatest()                 // UI gauges: newest fix wins
-    .flatMap(this::persistAsync, 4)         // limit in-flight persists
-    .doOnRequest(n -> log.debug("UI requested {}", n));
+Flux<AisFix> toMapUi = incoming
+        .onBackpressureLatest()              // map gauge: newest fix wins
+        .doOnRequest(n -> log.debug("UI requested {}", n));
 
-// Alternative strategies (pick deliberately):
-// onBackpressureBuffer(256)  — bounded buffer for short bursts
-// onBackpressureDrop()       — drop when consumer is slow (telemetry sometimes OK)
-// onBackpressureBuffer(n, overflowHandler) — bounded + explicit overflow
-// limitRate(32)              — prefetch / request in chunks toward upstream
+Flux<AisFix> toArchive = incoming
+        .onBackpressureBuffer(256)           // short bursts OK; bound the queue
+        .flatMap(this::persistAsync, 4);     // also cap in-flight persists
 ```
 
-Prefetch matters. Many operators request a batch ahead of time for throughput. `limitRate` helps shape how demand is propagated upstream. `flatMap` concurrency caps how many inner publishers run at once — that is also a backpressure-related control, even though it is not named `onBackpressure*`.
+Those two chains are different policies for the same producer/consumer mismatch — not interchangeable knobs.
 
-Strategies are product decisions. Buffering smooths bursts until memory hurts — always bound the buffer. Dropping suits metrics where staleness beats crash. Latest suits operator map gauges — a stale position is worse than a skipped one when the UI is slow. Erroring on overflow makes failure visible when silent loss is unacceptable. There is no universal default that saves you from thinking.
+Buffering with `onBackpressureBuffer(n)` keeps up to *n* fixes when the consumer hiccups, then applies an overflow policy (error, drop oldest, and so on). Use it for short bursts you cannot afford to lose — a brief UI freeze while archiving still wants those positions. Always bound the buffer; unbounded buffer is a deferred OOM.
+
+Dropping with `onBackpressureDrop()` discards new signals when demand is zero. Use it when a missed AIS tick is acceptable and crashing is not — some telemetry fits here. It is wrong for ledger-like persistence.
+
+Latest-value with `onBackpressureLatest()` keeps only the newest unread fix; older pending values lose. That fits operator map gauges, where a stale ship position is worse than a skipped intermediate one. It is wrong when every event must be processed.
+
+Rate shaping — `limitRate`, or `flatMap` concurrency — controls how demand is requested upstream or how many inner publishers run at once. That is still backpressure: you are limiting outstanding work, even when the method name does not start with `onBackpressure`.
+
+Prefetch is part of the same story. Many operators request a batch ahead for throughput. That helps until the batch is larger than the consumer can absorb — then you are back to choosing buffer, drop, latest, or fail. There is no universal default that saves you from naming the product policy.
 
 In WebFlux, the HTTP response and Netty watermarks participate in demand. If you return a `Flux` as SSE for `/positions/stream`, a slow client should slow generation when the pipeline is wired correctly. If you assemble an in-memory list with `collectList()` first, you already opted out of streaming backpressure for that payload — fine for small pages, dangerous for unbounded AIS history.
 

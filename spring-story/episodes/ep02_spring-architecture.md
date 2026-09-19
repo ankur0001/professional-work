@@ -13,11 +13,11 @@
 
 The baggage-tracking system at Gate West started as one WAR. Tag scanners, carousel boards, lost-bag claims, overnight reconciliation — all in one deployable. Three years later, a carousel outage still forced a full redeploy of claims and reconciliation. The monolith was not just "big." It was one classpath, one restart boundary, and one blame surface.
 
-When the team finally split modules, Spring became the awkward part of the conversation. Someone had pulled a vague "spring" dependency into the reconciliation JAR and dragged servlet APIs, MVC, and messaging into a nightly batch that never served HTTP. Build times grew. On-call could not tell which Spring modules were load-bearing. The failure was modular blindness, not a missing annotation.
+When the team finally split modules, Spring became the awkward part of the conversation. Someone had pulled a vague "spring" dependency into the reconciliation JAR and dragged servlet APIs, MVC, and messaging into a nightly batch that never served HTTP. Build times grew. On-call could not tell which Spring pieces were load-bearing. The failure was modular blindness, not a missing annotation.
 
-Spring Framework is layered on purpose. At the center sit `spring-core`, `spring-beans`, and `spring-context` — the core container that understands bean definitions, factories, and the application context. Optional rings attach when you need them: `spring-aop` for proxies, `spring-web` / `spring-webmvc` for HTTP, `spring-jdbc` / `spring-orm` / `spring-tx` for data access, `spring-test` for tests. You compose a stack the way you compose a meal: take the base, add only what you will eat.
+Spring Framework is layered so you can compose different shapes for different jobs. At the center sit `spring-core`, `spring-beans`, and `spring-context` — the container that understands bean definitions, factories, and the application context. Everything else is optional: you add a ring only when that deployable needs it.
 
-For Gate West that meant three deployables with different Spring shapes. The scanner ingest service needed the container plus messaging. The carousel board needed webmvc. The overnight reconciliation job needed the container plus JDBC — and nothing from the web stack.
+Watch how that maps onto Gate West after the split. Scanner ingest is a headless process that receives bag-tag events. Its classpath needs the container plus messaging — not MVC. The carousel board is an HTTP service; it adds `spring-webmvc` (and whatever view or JSON stack you choose) on top of the same container core. Overnight reconciliation is a batch job with JDBC access to the bags database: container plus `spring-jdbc` / transaction support — and deliberately nothing from the web stack. Same Spring family. Three different module graphs. Three restart boundaries.
 
 ```java
 // Reconciliation module: container + JDBC only — no webmvc on the classpath
@@ -44,11 +44,11 @@ public class BaggageReconcileConfig {
 }
 ```
 
-At runtime the container does not care that this job never opens port 8080. It reads bean-definition metadata, registers types in a `BeanFactory`, and materializes the graph. `ApplicationContext` sits on top of that factory with events, messages, and resource loading — which the carousel UI will need later, and which the batch job may barely touch. Higher modules may depend on the container; your baggage domain should not sprawl into every Spring package just because a transitive dependency made it available.
+At runtime that job never opens port 8080, and the container does not care. It reads bean-definition metadata, registers types in a `BeanFactory`, and materializes the graph. `ApplicationContext` sits on top of that factory with events, messages, and resource loading — which the carousel UI will lean on later, and which the batch job may barely touch. Higher-level Spring modules may depend on the container; your baggage domain should not sprawl into every Spring package just because a transitive dependency made it available.
 
-Misconception unique to architecture: "If the app uses Spring, it uses Spring Web." False. Spring is a modular toolbox. A classpath that includes MVC in a headless reconciler is an architecture smell, not proof you needed a controller.
+The architecture misconception that bit Gate West is simple: "If the app uses Spring, it uses Spring Web." False. Spring is a modular toolbox. A classpath that includes MVC in a headless reconciler is an architecture smell, not proof you needed a controller. Another smell: one shared "utils" module that imports every Spring starter so every deployable inherits everyone else's stack.
 
-After the split, Gate West could restart carousel boards without bouncing claims. But a quieter problem remained inside each module: services still constructed doctors of collaborators with `new`, and tests still fought construction order. Who actually owns object creation once the modules are drawn?
+After the split, Gate West could restart carousel boards without bouncing claims. But a quieter problem remained inside each module: services still constructed collaborators with `new`, and tests still fought construction order. Who actually owns object creation once the module boundaries are drawn?
 
 ## Source attribution
 

@@ -11,11 +11,11 @@
 
 ## Full narration
 
-Harbor Cloud patterns without tests are folklore. Phase 10 starts underneath Spring’s `@WebMvcTest` and `@SpringBootTest`, at the engine that discovers methods, runs them, and reports pass or fail: JUnit 5 — Jupiter for the programming model, Vintage only if you still carry JUnit 4. Maven Surefire or Gradle’s test task launches the JUnit Platform; the Platform finds engines; Jupiter finds your `@Test` methods.
+You are about to refactor `TariffCalculator` — the hazardous-surcharge rules that finance swears are correct. There is no automated test. The last change was verified by a spreadsheet on someone’s laptop. You either ship blind or you invent a way to re-run the known cases after every edit. That pressure is why Phase 10 starts here, underneath Spring’s `@WebMvcTest` and `@SpringBootTest`: you need an engine that discovers test methods, runs them, and reports pass or fail before Spring even enters the picture.
 
-Hold three verbs for the whole episode: discovery, execution, reporting. Discovery scans the test classpath for Jupiter APIs — `@Test`, `@ParameterizedTest`, `@TestFactory`, `@Nested`. Execution creates an instance (per-method by default), runs lifecycle callbacks, invokes the method, records outcomes. Reporting publishes events — started, skipped, successful, failed, aborted — that Surefire prints and CI parses.
+That engine is JUnit 5. Jupiter is the programming model you write against. The JUnit Platform is what Maven Surefire or Gradle’s test task launches. Vintage exists only if you still carry JUnit 4. Hold three verbs for the whole episode: discovery, execution, reporting.
 
-Here is a real unit test for tariff math — pure Java, no Spring context — so you can hear those verbs in one file.
+Here is the safety net you wish you had before touching surcharge math — pure Java, no Spring context — so those verbs stay audible in one file.
 
 ```java
 import org.junit.jupiter.api.*;
@@ -55,31 +55,33 @@ class TariffCalculatorTest {
         assertThrows(IllegalArgumentException.class,
                 () -> calculator.quote(null, HazardClass.NONE));
     }
-
-    @AfterEach
-    void tearDown() {
-        calculator = null;
-    }
 }
 ```
 
-Discovery: Surefire asks Jupiter for tests in `TariffCalculatorTest`. Jupiter finds `appliesHazardousSurcharge`, three parameterized invocations from `hazardMatrix`, and `rejectsNullBase`. Execution: `@BeforeEach` builds a fresh calculator; assertions check money; `assertThrows` verifies the guard. Reporting: a failure in `appliesHazardousSurcharge` prints the display name, expected versus actual, and a stack trace at the assertion line — CI goes red from that report, not from a vague “build failed.”
+Discovery: Surefire asks the Platform for tests; the Platform asks Jupiter; Jupiter finds `appliesHazardousSurcharge`, three parameterized invocations from `hazardMatrix`, and `rejectsNullBase`. You did not register them in an XML suite — the annotations *are* the registration.
 
-Lifecycle annotations shape execution. `@BeforeAll` / `@AfterAll` run once per class (static unless you change the lifecycle). `@BeforeEach` / `@AfterEach` wrap every test. `@Disabled` skips and reports skipped, not passed. `Assumptions.assumeTrue` aborts as skipped when an environment prerequisite is missing — different from failure.
+Execution: for each test, Jupiter creates an instance (per-method by default), runs `@BeforeEach`, invokes the method, and records the outcome. `assertEquals` compares money; `assertThrows` documents the guard. If surcharge math regresses, execution fails at the assertion line with expected versus actual — not with a vague “build failed.”
+
+Reporting: Jupiter publishes events — started, skipped, successful, failed, aborted — that Surefire prints and CI parses. A red build is a failed report from this channel. Green means these methods passed, not that the harbor is safe.
+
+Lifecycle annotations shape execution. `@BeforeAll` / `@AfterAll` run once per class. `@Disabled` skips and reports skipped, not passed. `Assumptions.assumeTrue` aborts as skipped when an environment prerequisite is missing — different from failure.
 
 ```java
 @Test
 void onlyWhenTariffFixturePresent() {
-    Assumptions.assumeTrue(Files.exists(Path.of("src/test/resources/tariff-fixture.json")));
+    Assumptions.assumeTrue(
+            Files.exists(Path.of("src/test/resources/tariff-fixture.json")));
     // load fixture-backed scenario
 }
 ```
 
-Extensions are Jupiter’s plugin model. `@ExtendWith` registers parameter resolvers and callbacks. Mockito’s Jupiter extension and Spring’s `SpringExtension` plug in here — which is why later harbor tests feel like “annotations that work with JUnit,” not a separate runner universe like old `SpringJUnit4ClassRunner`.
+Extensions are Jupiter’s plugin model. `@ExtendWith` registers parameter resolvers and callbacks. Mockito’s Jupiter extension and Spring’s `SpringExtension` plug in here — which is why later harbor tests feel like annotations that cooperate with JUnit, not a separate runner universe like old `SpringJUnit4ClassRunner`.
 
 A misconception is treating green bars as proof the booth is safe when tests only cover happy-path TEU math. Another is sharing mutable static tariff tables across tests and chasing order-dependent failures — Jupiter may run in parallel if you enable it. A third is asserting on log lines or `Thread.sleep` instead of return values; flaky reports train teams to ignore CI.
 
-JUnit runs the method. It does not invent stand-ins for `DutyProvider` when tariff logic depends on a port. That is Mockito’s job.
+JUnit runs the method. It does not invent stand-ins for `DutyProvider` when tariff logic depends on a port. When the calculator cannot be constructed without a live collaborator, you need a different tool.
+
+That tool is Mockito.
 
 ## Source attribution
 
