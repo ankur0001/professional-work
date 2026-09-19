@@ -1,9 +1,9 @@
 [
   {
-    "ep": 108,
-    "title": "Clean Architecture",
-    "beats": 21,
-    "duration_sec": 235.566,
-    "mp4": "/workspace/spring-story/v1/episodes/ep108-clean-architecture/Spring_Episode_108_Clean_Architecture.mp4"
+    "ep": 111,
+    "title": "CQRS",
+    "beats": 20,
+    "duration_sec": 210.426,
+    "mp4": "/workspace/spring-story/v1/episodes/ep111-cqrs/Spring_Episode_111_CQRS.mp4"
   }
 ]
