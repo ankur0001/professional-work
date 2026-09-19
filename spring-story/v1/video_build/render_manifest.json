@@ -1,9 +1,9 @@
 [
   {
-    "ep": 111,
-    "title": "CQRS",
-    "beats": 20,
-    "duration_sec": 210.426,
-    "mp4": "/workspace/spring-story/v1/episodes/ep111-cqrs/Spring_Episode_111_CQRS.mp4"
+    "ep": 110,
+    "title": "Event-Driven Architecture",
+    "beats": 22,
+    "duration_sec": 229.182,
+    "mp4": "/workspace/spring-story/v1/episodes/ep110-event-driven-architecture/Spring_Episode_110_Event_Driven_Architecture.mp4"
   }
 ]
