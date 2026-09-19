@@ -1,9 +1,9 @@
 [
   {
-    "ep": 88,
-    "title": "Feign Client",
-    "beats": 14,
-    "duration_sec": 154.866,
-    "mp4": "/workspace/spring-story/v1/episodes/ep88-feign-client/Spring_Episode_88_Feign_Client.mp4"
+    "ep": 51,
+    "title": "N+1 Problem",
+    "beats": 15,
+    "duration_sec": 179.946,
+    "mp4": "/workspace/spring-story/v1/episodes/ep51-n-1-problem/Spring_Episode_51_N_1_Problem.mp4"
   }
 ]
