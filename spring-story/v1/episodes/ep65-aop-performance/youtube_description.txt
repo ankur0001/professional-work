@@ -1,0 +1,33 @@
+The Spring Story — Episode 65: AOP Performance
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Multiply three milliseconds by a few million gate-status polls per day and you are no longer discussing…
+• You are discussing a latency tax.
+• Someone aimed a wide pointcut at every public method under com.harbor..*, each @Around allocating strings…
+• On a cold path that already waits forty milliseconds on the database, a few microseconds of AOP vanish.
+• On a hot status loop, the abstraction becomes measurable pain.
+• AOP performance is about knowing where that tax is worth paying.
+• Auto-proxy creators scan advisors, build candidate sets, and generate JDK or CGLIB proxy classes for…
+• Hundreds of beans times class-based proxy generation shows up in boot time and metaspace.
+• …and more
+
+Timestamps
+0:00 Multiply three milliseconds by a few million gate-status polls per…
+0:32 Startup cost comes first. Auto-proxy creators scan advisors, build…
+1:16 Runtime cost sits in the call path. Prefer cheap advice bodies. An…
+1:48 Pointcut shape matters. Complex runtime matching is cheaper when…
+2:22 A misconception is “remove all AOP for speed.” You would…
+3:05 That opens security fundamentals.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 66 — Security Fundamentals
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

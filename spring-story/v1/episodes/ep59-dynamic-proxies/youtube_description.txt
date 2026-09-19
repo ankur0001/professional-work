@@ -1,0 +1,32 @@
+The Spring Story — Episode 59: Dynamic Proxies
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Debug a transactional gate release and print the runtime class of the injected collaborator.
+• You expected GateReleaseServiceImpl.
+• You see something like $Proxy147 or GateReleaseServiceImpl$$SpringCGLIB$$0.
+• The method still opens the boom.
+• So what object did Spring actually inject?
+• A proxy — a runtime stand-in that looks like your bean to callers, holds the real target, and decides what…
+• Dynamic proxies are synthesized at runtime, not handwritten as GateReleaseServiceProxy for every type.
+• Without that stand-in, AOP has nowhere to stand.
+• …and more
+
+Timestamps
+0:00 Debug a transactional gate release and print the runtime class of…
+0:49 GateService proxy = (GateService) Proxy.newProxyInstance(
+1:26 Two families matter. If the bean exposes at least one interface,…
+2:02 Operational consequences follow. Collaborators receive the proxy,…
+2:41 So the injected object for a transactional gate service is a…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 60 — JDK Proxy
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

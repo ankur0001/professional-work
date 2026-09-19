@@ -1,0 +1,32 @@
+The Spring Story — Episode 83: Microservices with Spring
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• The harbor ops monolith shipped as one fat jar for years: berth scheduling, gate release, and vessel…
+• Then scheduling needed a Tuesday hotfix while billing was mid-tariff cutover, and the release train stalled.
+• Splitting is no longer a conference talk — it is a release-calendar problem.
+• After the cut, three Boot jars stand where one did: scheduling-service, billing-service, and gate-service.
+• A truck check-in that used to be three method calls becomes three network hops.
+• A junior engineer hard-codes http://billing:8082 into RestTemplate.
+• Staging uses different ports.
+• Tariff YAML is copied into thirty application.yml files; someone updates the hazardous-goods surcharge in…
+• …and more
+
+Timestamps
+0:00 The harbor ops monolith shipped as one fat jar for years: berth…
+1:09 Spring Cloud packages those chores on top of Spring Boot. Keep the…
+1:44 Read that controller as a promise, not finished architecture. The…
+2:41 A misconception specific to this split is treating “microservices…
+3:19 We named the moment one harbor jar becomes a fleet, listed the…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 84 — Configuration Server
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

@@ -1,0 +1,34 @@
+The Spring Story — Episode 16: Environment
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Ops starts the tolling roadside service with: The process still opens express-lane pricing.
+• An environment variable says true.
+• Nobody can explain precedence without opening Spring's property source order charts.
+• Feature flags and DB URLs for tolling are supposed to resolve from env, files, and CLI through one…
+• When that abstraction is ignored — or when code reads System.getenv in one place and @Value in another —…
+• Environment models two ideas together: active profiles, and a hierarchy of PropertySource instances.
+• When you call env.getProperty("tolling.express-lane.enabled"), Spring walks property sources in precedence…
+• Boot adds several sources for you — command-line args typically beat environment variables, which beat…
+• …and more
+
+Timestamps
+0:00 Ops starts the tolling roadside service with:
+0:32 Environment models two ideas together: active profiles, and a…
+1:06 Walk the service. The constructor captures resolved values once at…
+1:43 Runtime for that CLI launch. Boot (or a manually prepared context)…
+2:26 Failure mode symptoms: CLI says false, plaza receipts still show…
+3:07 Trade-offs. Reading Environment in constructors is simple and…
+3:41 Misconception unique to Environment: "System.getenv and…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 17 — Why Spring Boot?
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

@@ -1,0 +1,32 @@
+The Spring Story — Episode 97: Testcontainers
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• H2 forgives SQL that Postgres rejects.
+• A VesselRepository.findByImoNumber that “works” on H2 can fail in the quay’s Postgres on a type, JSON…
+• Testcontainers starts a real PostgreSQLContainer for the test JVM, gives Spring JDBC URLs dynamically, and…
+• Testcontainers pulls (or reuses) postgres:16-alpine, waits for readiness, exposes a JDBC URL on a random…
+• @DynamicPropertySource feeds Boot before the context refreshes — without it, Boot may still point at H2…
+• Spring Data runs against real Postgres.
+• Unique constraints, timestamptz, and JSONB operators behave as production.
+• The container stops when the class ends — or lives longer with reuse enabled for local speed.
+• …and more
+
+Timestamps
+0:00 H2 forgives SQL that Postgres rejects. A…
+0:58 Use the same major version you run in production when practical.…
+1:36 Failure symptoms: CI agents without Docker cannot start containers…
+2:15 Trade-offs: fidelity versus speed. Not every tariff-math unit test…
+3:06 Repositories now meet real SQL. Service boundaries still break…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 98 — Contract Testing
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

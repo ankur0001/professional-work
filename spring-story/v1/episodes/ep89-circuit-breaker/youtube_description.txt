@@ -1,0 +1,33 @@
+The Spring Story — Episode 89: Circuit Breaker
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Billing’s p99 jumps from 80ms to 8 seconds.
+• Without protection, every gate check-in thread blocks on Feign until the pool saturates.
+• Trucks wait at the booth while healthy gate CPU sits in socket reads.
+• A circuit breaker flips that failure mode: after enough errors or slow calls, the breaker opens,…
+• Spring Cloud CircuitBreaker provides an abstraction; Resilience4j is the usual implementation on Boot 3.
+• Annotate the gate method that calls billing, or wrap the call programmatically.
+• The important part is the state machine — closed, open, half-open — around the gate↔billing boundary.
+• Closed means traffic flows and outcomes fill a sliding window.
+• …and more
+
+Timestamps
+0:00 Billing’s p99 jumps from 80ms to 8 seconds. Without protection,…
+0:55 Walk a burst. Twenty quote calls, half time out past…
+1:27 Symptoms you can hear from ops: before the breaker, gate thread…
+2:04 Compose with Feign carefully. Fallbacks must be honest: returning…
+2:54 A misconception is setting thresholds so tight that normal blips…
+3:32 Distributed tracing is next.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 90 — Distributed Tracing
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

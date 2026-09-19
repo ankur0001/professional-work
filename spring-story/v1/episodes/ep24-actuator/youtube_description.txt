@@ -1,0 +1,32 @@
+The Spring Story — Episode 24: Actuator
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Pager, 02:10, seaport gate API.
+• Containers are "Running." Clients time out.
+• On-call curls from the jump host: JSON returns "status":"DOWN" with db detail Connection refused.
+• Not a mystery novel — Actuator turned a black box into a health document.
+• The outage was a drained connection pool after a Postgres failover the app never learned about.
+• Without that endpoint, the next step would have been speculative pod deletes and a debugger on a live gate.
+• Spring Boot Actuator exposes operational endpoints: health, info, metrics, env (careful), loggers,…
+• Add spring-boot-starter-actuator.
+• …and more
+
+Timestamps
+0:00 Pager, 02:10, seaport gate API. Containers are "Running." Clients…
+0:48 Walk the config and indicator. management.server.port: 8081 binds…
+1:58 Failure mode from 02:10: health DOWN on db, pods still "Running"…
+2:32 Trade-offs. Actuator shortens incidents by making process state…
+3:35 Misconception unique to Actuator: "Exposing /actuator/env and…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 25 — DevTools
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

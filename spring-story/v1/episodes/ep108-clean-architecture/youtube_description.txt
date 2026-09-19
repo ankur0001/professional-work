@@ -1,0 +1,32 @@
+The Spring Story — Episode 108: Clean Architecture
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Hexagonal said ports and adapters for gate release.
+• Clean Architecture — Robert C.
+• Martin’s rings — states the dependency rule bluntly: source code dependencies point only inward.
+• The domain must not import Spring Web.
+• Controllers, Feign, and JPA may depend on the domain; the domain depends on nothing from those frameworks.
+• Map the rings onto the harbor gate service: 1.
+• **Entities** — GateRelease, HazardClass, money invariants.
+• **Use cases** — ReleaseGateInteractor, input/output models.
+• …and more
+
+Timestamps
+0:00 Hexagonal said ports and adapters for gate release. Clean…
+0:39 Where does @Transactional live? Often on the adapter or a thin…
+1:29 Clean and hexagonal overlap heavily in Spring shops. Use whichever…
+2:15 Trade-offs: more types and mappers versus a domain you can…
+2:48 A misconception is “Clean Architecture means no Spring.” Spring is…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 109 — DDD Basics
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

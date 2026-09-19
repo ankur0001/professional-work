@@ -1,0 +1,32 @@
+The Spring Story — Episode 102: OpenTelemetry
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Grafana shows gate p95 climbing.
+• Which span is guilty — gateway auth, gate’s releaseGate, Feign to billing, or billing’s SQL?
+• OpenTelemetry (OTel) standardizes traces, metrics, and baggage so one check-in becomes a tree of spans you…
+• In Spring Boot 3, Micrometer Tracing bridges to OTel (or Brave).
+• Auto-instrumentation covers inbound HTTP and outbound clients.
+• You export via OTLP to a collector, which fans out to your trace backend.
+• Correlate by keeping stable metric names and span names around the same operation — harbor.gate.release as…
+• When names diverge (releaseGate in metrics, GateReleaseService.accept in traces), humans waste minutes…
+• …and more
+
+Timestamps
+0:00 Grafana shows gate p95 climbing. Which span is guilty — gateway…
+0:47 Observation is Boot’s preferred API: one abstraction can emit a…
+1:31 Sampling and cardinality rules return. 100% traces on the public…
+2:18 Trade-offs: the Java agent auto-instruments wide; Micrometer…
+2:59 A misconception is installing an OTel Java agent and never…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 103 — Performance Tuning
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

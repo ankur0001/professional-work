@@ -1,0 +1,33 @@
+The Spring Story — Episode 70: OAuth2
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• JWT told you how a harbor resource server trusts a bearer token.
+• OAuth2 answers a different question: how did the client get permission to hold that token in the first place?
+• Think about a calendar app that wants to read a planner’s harbor appointments — vessel windows, berth…
+• You do not want that calendar app to collect the harbor password.
+• You want the user to log in at the harbor identity provider, approve a scope like harbor.calendar.read,…
+• OAuth2 is that delegation protocol.
+• Roles have names: resource owner (the user), client (the calendar app), authorization server (issues…
+• The authorization code flow is the one you should narrate for browser and confidential clients.
+• …and more
+
+Timestamps
+0:00 JWT told you how a harbor resource server trusts a bearer token.…
+0:48 The authorization code flow is the one you should narrate for…
+1:27 Spring Security supports both sides you usually build. As a…
+2:05 When the user hits a protected calendar page, oauth2Login sends…
+2:45 A frequent misunderstanding is treating “we added oauth2Login” as…
+3:32 That is OpenID Connect.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 71 — OpenID Connect
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

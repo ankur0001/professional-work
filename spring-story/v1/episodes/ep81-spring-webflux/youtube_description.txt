@@ -1,0 +1,32 @@
+The Spring Story — Episode 81: Spring WebFlux
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Reactor gave us Mono, Flux, schedulers, and backpressure.
+• Spring WebFlux is how those types become HTTP servers and clients on a non-blocking stack — typically…
+• For the harbor ops board, that means a reactive /positions/stream endpoint that writes AIS fixes as they…
+• Contrast the center of gravity.
+• Spring MVC: DispatcherServlet, thread-per-request style, blocking signatures returning objects or…
+• WebFlux: reactive HTTP, handlers that return Mono / Flux, and a choice of programming model — annotated…
+• Same application for JSON APIs; different concurrency contract.
+• This is not servlet DI with a new annotation coat — it is publishers on the wire.
+• …and more
+
+Timestamps
+0:00 Reactor gave us Mono, Flux, schedulers, and backpressure. Spring…
+0:50 PositionController(AisStreamService ais) {
+1:29 Boot chooses the stack from the classpath. spring-boot-starter-web…
+2:16 A misconception is “WebFlux is always faster than MVC.” For modest…
+2:49 We can serve reactive HTTP. Security still matters — identity and…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 82 — Reactive Security
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

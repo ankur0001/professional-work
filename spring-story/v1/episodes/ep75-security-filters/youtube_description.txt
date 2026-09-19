@@ -1,0 +1,32 @@
+The Spring Story — Episode 75: Security Filters
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Every security feature in this phase eventually lands in the same place: a filter chain that runs before…
+• If you can narrate that chain, configuration stops feeling like folklore.
+• Servlet containers have a filter chain.
+• Spring Security installs DelegatingFilterProxy (named springSecurityFilterChain) into that chain.
+• The proxy forwards to FilterChainProxy, which selects a SecurityFilterChain bean for the request — useful…
+• Inside the chosen chain, a list of security filters runs in a deliberate order: channel security, CORS,…
+• CORS must handle preflight early.
+• CSRF must see the request before controllers mutate state.
+• …and more
+
+Timestamps
+0:00 Every security feature in this phase eventually lands in the same…
+0:38 Order is not academic. CORS must handle preflight early. CSRF must…
+1:15 You can list the filters at runtime by enabling debug security or…
+1:58 A misconception is treating SecurityFilterChain as “the servlet…
+2:38 That door is reactive programming.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 76 — Reactive Programming
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

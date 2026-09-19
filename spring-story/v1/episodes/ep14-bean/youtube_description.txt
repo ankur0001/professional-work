@@ -1,0 +1,33 @@
+The Spring Story — Episode 14: @Bean
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Debugger stuck in SmsClient.<init>.
+• The cinema (and every other product in the building) uses a third-party SMS SDK.
+• You cannot put @Component on com.vendor.sms.SmsClient — you do not own the source, and the vendor…
+• Stereotype scanning is the wrong door.
+• @Bean is the door that fits: a factory method you write, returning an object Spring then manages.
+• A @Bean method is a factory method whose return value Spring registers as a container-managed object.
+• Method name defaults to the bean name.
+• Parameters are injected from the container.
+• …and more
+
+Timestamps
+0:00 Debugger stuck in SmsClient.<init. The cinema (and every other…
+0:54 Walk the factory. smsClient(Environment env) receives the…
+1:37 Runtime during refresh. Spring defines beans smsClient and…
+2:12 Failure mode with clear symptoms: omit destroyMethod (and the…
+2:49 Trade-offs. @Bean localizes foreign construction and lifecycle in…
+3:43 SMS works in one environment. Staging and production need…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 15 — Profiles
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

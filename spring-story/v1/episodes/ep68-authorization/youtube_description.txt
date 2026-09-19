@@ -1,0 +1,33 @@
+The Spring Story — Episode 68: Authorization
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Authentication told you the caller is Alice.
+• Authorization decides whether Alice may touch this berth admin route, with this method, right now.
+• Picture two authenticated harbor users.
+• Alice has role ROLE_USER — a clerk on the yard floor.
+• Bob has ROLE_ADMIN — operations lead.
+• Both send valid credentials.
+• GET /api/gates/status may succeed for Alice.
+• GET /api/admin/berths must succeed for Bob and return 403 for Alice — not 401.
+• …and more
+
+Timestamps
+0:00 Authentication told you the caller is Alice. Authorization decides…
+0:40 Before a central model, teams sprinkle if (!user.isAdmin()) throw…
+1:17 // Authenticated Alice (ROLEUSER) → GET /api/admin/berths
+1:49 Authorities are the finer grain: strings like berths:write or…
+2:30 A common misunderstanding is enabling anyRequest().authenticated()…
+3:03 That pressure leads into JWT.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 69 — JWT
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

@@ -1,0 +1,31 @@
+The Spring Story — Episode 49: Pessimistic Locking
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• One free slot left on berth B7.
+• Two reservation requests hit the API within milliseconds.
+• Optimistic locking would let both read "one slot left," then fail one at commit — acceptable for clerks…
+• Pessimistic locking serializes access: the first transaction locks the row; the second waits or fails fast.
+• JPA expresses this with lock modes on find / query APIs.
+• LockModeType.PESSIMISTIC_WRITE typically becomes SELECT ...
+• FOR UPDATE on databases that support it.
+• Transaction A calls findForUpdate("B7") and holds the row lock.
+• …and more
+
+Timestamps
+0:00 Storm diversion. One free slot left on berth B7. Two reservation…
+0:34 Walk the timeline. Transaction A calls findForUpdate("B7") and…
+1:26 Pessimistic locking is not free. It reduces concurrency on hot…
+2:08 You can now choose optimistic vs pessimistic for berth fights.…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 50 — JPA Performance Tuning
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

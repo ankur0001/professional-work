@@ -1,0 +1,33 @@
+The Spring Story — Episode 100: Prometheus
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• GateReleaseService records timers into a MeterRegistry.
+• Restart a pod and in-process counters reset.
+• Scale to twelve gate replicas and you have twelve private notebooks.
+• Prometheus scrapes each instance, stores samples over time, and lets you ask what p95…
+• Boot exposes a scrape endpoint when micrometer-registry-prometheus is on the classpath and Actuator…
+• If you curl the endpoint and do not see harbor_gate_release_*, the meter never registered or the scrape…
+• Walk that check during deploy: port-forward one gate pod, curl localhost:8081/actuator/prometheus | grep…
+• Wire Prometheus to the gate pods: PromQL for gate latency and error ratio: Read the queries carefully.
+• …and more
+
+Timestamps
+0:00 GateReleaseService records timers into a MeterRegistry. Restart a…
+0:51 Wire Prometheus to the gate pods:
+1:29 Timers in Micrometer become histograms or summaries depending on…
+2:14 Trade-offs: shorter scrape intervals catch spikes faster and cost…
+2:49 A misconception is scraping only one gate pod and calling it fleet…
+3:22 That shared picture is Grafana.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 101 — Grafana
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

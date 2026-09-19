@@ -1,0 +1,32 @@
+The Spring Story — Episode 99: Micrometer
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Then the pager fires: gate release feels slow on quay B.
+• Someone asks “how slow, for which gate, since when?” and the best answer is a screenshot of a log line.
+• That gap — between “booths are backed up” and “we can prove it” — is why Phase 11 starts with metrics.
+• Micrometer is Spring’s vendor-neutral metrics facade.
+• You write against MeterRegistry.
+• Exporters — Prometheus, Datadog, CloudWatch — plug in from classpath and config.
+• Gate code stays about counters and timers, not about a vendor SDK.
+• Swap the registry binder and the same harbor.gate.release.duration name still means the same thing in the…
+• …and more
+
+Timestamps
+0:00 Contracts are green. Then the pager fires: gate release feels slow…
+0:43 Four meter types you will actually use: Counter (only up —…
+1:46 Boot already exposes JVM meters, HTTP server timers, and often…
+2:38 Trade-offs: too few meters and you fly blind; too many tagged…
+3:13 Numbers in a process are still trapped in that process. The open…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 100 — Prometheus
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

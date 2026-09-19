@@ -1,0 +1,34 @@
+The Spring Story — Episode 15: Profiles
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Friday deploy of the tolling-adjacent reporting service.
+• Same JAR that developers ran against H2 on laptops.
+• Someone forgot the active profile.
+• The app started, Auto-DDL touched the wrong assumptions, and the first health check looked "up" while…
+• Three environments — local H2, staging Postgres, prod Postgres with read replicas — one artifact.
+• Profiles exist so bean definitions and properties can differ without forking the codebase into…
+• A profile is a named gate on definitions and property sources.
+• Activate with spring.profiles.active, the SPRING_PROFILES_ACTIVE environment variable, or programmatic API…
+• …and more
+
+Timestamps
+0:00 Friday deploy of the tolling-adjacent reporting service. Same JAR…
+0:30 A profile is a named gate on definitions and property sources.…
+1:36 Runtime with spring.profiles.active=prod. Spring prepares the…
+2:12 Step through a staging boot with spring.profiles.active=staging…
+2:57 Failure mode from that Friday: SPRINGPROFILESACTIVE unset in the…
+3:29 Trade-offs. Profiles keep one artifact and branch bean graphs…
+4:17 Profiles select which beans exist. The tolling ops team still…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 16 — Environment
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

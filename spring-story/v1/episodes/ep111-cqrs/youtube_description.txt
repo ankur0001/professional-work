@@ -1,0 +1,31 @@
+The Spring Story — Episode 111: CQRS
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Write berth assignments under row locks and overlap rules.
+• The schedule board wants a denormalized view: berth, vessel name, ETA, tide window, billing status —…
+• One normalized write model serving both jobs creates lock contention and ugly queries.
+• CQRS — Command Query Responsibility Segregation — separates the write path from the read model.
+• Commands go through the Berth aggregate.
+• Queries hit a projection built for the board.
+• Operators query schedule_board_view without touching the write aggregate’s reservation collection.
+• Billing state can update from BerthReserved consumers without blocking reserve.
+• …and more
+
+Timestamps
+0:00 Write berth assignments under row locks and overlap rules. The…
+1:03 CQRS is a spectrum. Mild CQRS is a SQL view or upsert table…
+1:51 Trade-offs: faster, simpler reads and concentrated write…
+2:33 A misconception is equating CQRS with event sourcing — you can…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 112 — Production Case Studies
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

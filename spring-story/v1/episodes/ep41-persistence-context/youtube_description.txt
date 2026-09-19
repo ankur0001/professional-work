@@ -1,0 +1,31 @@
+The Spring Story — Episode 41: Persistence Context
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Inside one harbor booking request, you load Booking id 500 twice — once to authorize the trucker, once to…
+• Do you get two Java objects or one?
+• In JPA, inside one persistence context, you get **one**.
+• That identity guarantee is the persistence context’s quiet contract.
+• The persistence context is the first-level cache and the unit-of-work boundary.
+• It tracks managed entities, their snapshots for dirty checking, and pending inserts, updates, and deletes…
+• In a typical Spring Boot app it is transaction-scoped: open when the transactional method starts, close…
+• Open-session-in-view can stretch it across the whole web request — convenient for lazy reads, dangerous…
+• …and more
+
+Timestamps
+0:00 Inside one harbor booking request, you load Booking id 500 twice —…
+0:48 // same persistence context → same instance
+1:30 EntityManager.clear() detaches all managed entities — useful in…
+2:08 You understand the room managed entities live in. You still do not…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 42 — Repositories
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory
