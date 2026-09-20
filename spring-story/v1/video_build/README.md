@@ -17,7 +17,8 @@ Existing upload pack files (`title.txt`, `youtube_description.txt`, `tags.txt`, 
 ## Dependencies
 
 ```bash
-pip3 install --user edge-tts soundfile pillow numpy
+pip3 install --user torch --index-url https://download.pytorch.org/whl/cpu
+pip3 install --user chatterbox-tts soundfile pillow numpy
 # ffmpeg / ffprobe already required on PATH
 ```
 
@@ -42,6 +43,6 @@ Completed episode numbers are appended to `logs/completed.txt`.
 
 - **Palette:** dark forest green + Spring leaf accents (not Java amber).
 - **Chrome:** “The Spring Story” series label on every beat.
-- **TTS:** Edge-TTS (`en-US-GuyNeural` by default; override with `SPRING_TTS_VOICE`).
+- **TTS:** Chatterbox Turbo (same local engine as Java Story v2). Optional: `CHATTERBOX_DEVICE`, `CHATTERBOX_VOICE_WAV`.
 - **Visuals:** same animated scene planner as Java v2 (`visual_engine.py`) — flows, stacks, pipelines, comparisons — not text-wall slides.
 - Work audio/clips live under `video_build/work/` (gitignored).

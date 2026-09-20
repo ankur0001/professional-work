@@ -2,7 +2,7 @@
 """Render The Spring Story videos from coherent narrative markdown.
 
 Animated visual cut: flows, stacks, pipelines, lanes, diagrams — not
-text-wall slides. Narration audio stays Edge-TTS (unchanged text).
+text-wall slides. Narration audio stays Chatterbox TTS (same as Java Story).
 
 Output layout (common across episode PRs):
   spring-story/v1/Spring_Episode_XX_<Slug>.mp4
@@ -44,7 +44,7 @@ FONT_BOLD = "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf"
 FONT_REG = "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf"
 
 sys.path.insert(0, str(SYS_PATH_TTS))
-from edge_tts_engine import SAMPLE_RATE, synth_beat  # noqa: E402
+from chatterbox_tts import SAMPLE_RATE, synth_beat  # noqa: E402
 from visual_engine import render_beat_frames  # noqa: E402
 
 
@@ -574,7 +574,7 @@ def render_one(path: Path, reuse_audio: bool = False, max_beats: int | None = No
         f"Narration: `{path.relative_to(ROOT)}`\n"
         f"Renderer: `spring-story/v1/video_build/render_spring_episode.py`\n"
         f"Visuals: animated scenes via `spring-story/v1/video_build/visual_engine.py`\n"
-        f"TTS: Edge-TTS (full audio; video padded through end)\n"
+        f"TTS: local Chatterbox Turbo (same as Java Story; full audio; video padded through end)\n"
     )
     dur = probe(mp4)
     print(f"    wrote {mp4.name} ({dur/60:.1f} min) audio_ok")
