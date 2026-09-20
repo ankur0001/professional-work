@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:12,288
+00:00:00,000 --> 00:00:12,960
 Mono was zero or one vessel. Harbor ops
 still need live maps: AIS position ticks
 for every ship on a quay, berth event
@@ -7,12 +7,12 @@ feeds, Server-Sent Events to operator
 consoles, chunked file reads.
 
 2
-00:00:12,407 --> 00:00:17,544
+00:00:13,080 --> 00:00:18,519
 That cardinality is Flux<T> — a reactive
 sequence of zero to many items.
 
 3
-00:00:17,664 --> 00:00:31,032
+00:00:18,640 --> 00:00:32,359
 The mental model stays a publisher:
 assemble operators into a pipeline,
 subscribe (or return the publisher to
@@ -21,14 +21,14 @@ downstream. Nothing in the chain runs
 until something subscribes.
 
 4
-00:00:31,152 --> 00:00:41,543
+00:00:32,480 --> 00:00:41,880
 Look at this java for a moment. Walk an
 operator opening the quay map. WebFlux
 subscribes to the returned Flux when the
 SSE response starts.
 
 5
-00:00:41,664 --> 00:00:55,560
+00:00:42,000 --> 00:00:57,920
 aisFeed.positionsForQuay(quayId) begins
 emitting AisFix items — each fix is one
 signal, not a buffered list handed over at
@@ -37,28 +37,28 @@ two minutes so the console does not paint
 ghosts.
 
 6
-00:00:55,679 --> 00:01:04,079
+00:00:58,039 --> 00:01:05,599
 flatMap takes each remaining fix and
 starts an async vesselDirectory.nameOf
 lookup, merging results into PositionView
 as they complete.
 
 7
-00:01:04,200 --> 00:01:13,055
+00:01:05,719 --> 00:01:14,400
 The concurrency argument 8 caps how many
 directory calls may be in flight; omit it
 and an AIS burst can open hundreds of
 lookups and melt the directory.
 
 8
-00:01:13,176 --> 00:01:23,879
+00:01:14,519 --> 00:01:24,319
 limitRate(32) requests upstream in batches
 so a fast feed does not overwhelm the SSE
 write path. Each PositionView becomes an
 SSE event on the wire.
 
 9
-00:01:24,000 --> 00:01:35,016
+00:01:24,439 --> 00:01:35,799
 When the operator closes the tab, the
 browser drops the connection, WebFlux
 cancels the subscription, doOnCancel logs,
@@ -66,17 +66,17 @@ and upstream work should stop — if the AIS
 fan-in ignores cancellation,
 
 10
-00:01:35,135 --> 00:01:38,256
+00:01:35,920 --> 00:01:38,079
 you leak subscriptions against the feed.
 
 11
-00:01:38,375 --> 00:01:46,079
+00:01:38,200 --> 00:01:44,439
 Operator vocabulary that differs from Mono
 mostly by cardinality. map stays
 synchronous per item.
 
 12
-00:01:46,199 --> 00:01:57,767
+00:01:44,560 --> 00:01:55,079
 flatMap fans out async work per element
 and interleaves results; concatMap
 preserves order and waits for each inner
@@ -85,12 +85,12 @@ ordered side effects like writing berth
 audit rows.
 
 13
-00:01:57,887 --> 00:02:02,927
+00:01:55,200 --> 00:01:59,560
 flatMapSequential keeps interleaving
 concurrency but emits in source order.
 
 14
-00:02:03,047 --> 00:02:14,111
+00:01:59,680 --> 00:02:15,040
 buffer, window, and collectList move
 between stream and aggregate shapes;
 collectList() turns a Flux into
@@ -99,26 +99,26 @@ whole collection in memory — know that
 cost for AIS history,
 
 15
-00:02:14,231 --> 00:02:17,280
+00:02:15,159 --> 00:02:17,639
 where a long quay window can blow the
 heap.
 
 16
-00:02:17,400 --> 00:02:27,623
+00:02:17,759 --> 00:02:26,959
 take, skip, and timeout bound time and
 count for consoles that should not stream
 forever without a client heartbeat story.
 Hot versus cold shows up harder with Flux.
 
 17
-00:02:27,743 --> 00:02:37,032
+00:02:27,079 --> 00:02:36,519
 A cold publisher — a reactive repository
 query — runs its work per subscriber; two
 operators opening the same historical
 window hit the database twice.
 
 18
-00:02:37,151 --> 00:02:46,991
+00:02:36,639 --> 00:02:48,239
 A hot publisher — a shared AIS multicast
 feed — emits regardless of when you
 subscribe; late operators miss earlier
@@ -126,14 +126,14 @@ fixes and only see live ticks from join
 time forward.
 
 19
-00:02:47,111 --> 00:02:55,199
+00:02:48,359 --> 00:02:56,439
 share() and publish().refCount() bridge
 those worlds carefully: first subscriber
 connects upstream, last cancel
 disconnects.
 
 20
-00:02:55,319 --> 00:03:07,751
+00:02:56,559 --> 00:03:09,559
 For HTTP responses, cold pipelines tied to
 the request subscription are the usual
 story; live maps often sit on a hot feed
@@ -142,7 +142,7 @@ map empty for thirty seconds?" is
 explainable.
 
 21
-00:03:07,871 --> 00:03:20,807
+00:03:09,679 --> 00:03:22,079
 Failure mode symptoms on the ops floor.
 Unbounded flatMap without concurrency
 limits: directory latency climbs, event-
@@ -150,14 +150,14 @@ loop threads busy, SSE clients time out
 while CPU looks "fine" on the wrong pool.
 
 22
-00:03:20,927 --> 00:03:30,072
+00:03:22,199 --> 00:03:32,119
 Calling blockLast() or toStream() inside a
 WebFlux handler to "get a List": you left
 the reactive model and can stall Netty
 threads that other quay streams share.
 
 23
-00:03:30,192 --> 00:03:41,280
+00:03:32,239 --> 00:03:45,279
 Using Flux for a single optional vessel
 because "reactive means Flux": wrong
 cardinality — WebFlux may serialize an
@@ -165,21 +165,21 @@ array body where clients expected one
 object; use Mono for 0..1.
 
 24
-00:03:41,400 --> 00:03:50,807
+00:03:45,399 --> 00:03:55,559
 Assuming filter plus map replaces pushdown
 at the AIS feed: reactive operators do not
 make wasted fixes free — filter at the
 source when the feed API allows.
 
 25
-00:03:50,927 --> 00:03:59,735
+00:03:55,679 --> 00:04:04,319
 Ignoring cancellation: after tab close,
 logs still show directory lookups for that
 quayId for minutes — leaked work. Trade-
 offs.
 
 26
-00:03:59,855 --> 00:04:12,864
+00:04:04,439 --> 00:04:16,119
 Flux expresses push sequences and composes
 cancellation and backpressure hooks; it
 costs cognitive load and makes blocking
@@ -188,7 +188,7 @@ Prefer Mono when the contract is one
 result.
 
 27
-00:04:12,983 --> 00:04:22,584
+00:04:16,239 --> 00:04:26,079
 Prefer Flux when the product is a stream —
 live positions, event feeds, chunked
 download — and design hot/cold
@@ -196,20 +196,20 @@ deliberately instead of discovering it in
 an incident.
 
 28
-00:04:22,703 --> 00:04:31,463
+00:04:26,199 --> 00:04:33,919
 Misconception unique to Flux: "Returning
 Flux means the work already started."
 Assembly is lazy; subscription starts it.
 
 29
-00:04:31,583 --> 00:04:41,231
+00:04:34,039 --> 00:04:42,999
 Another: "collectList() is always fine for
 APIs." It is fine for small bounded sets;
 it is a memory incident for unbounded AIS
 history.
 
 30
-00:04:41,351 --> 00:04:54,359
+00:04:43,119 --> 00:04:55,519
 A third: "hot and cold are academic." They
 decide whether a second subscriber replays
 or joins live — operator console bugs are
@@ -217,7 +217,7 @@ often that distinction misread. We can now
 express sequences.
 
 31
-00:04:54,479 --> 00:05:08,039
+00:04:55,639 --> 00:05:08,159
 CPU work, blocking legacy PDF calls, and
 event-loop I/O still should not all share
 one thread by accident. Where those
