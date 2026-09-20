@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:16,224
+00:00:00,000 --> 00:00:15,679
 Someone ships a logging @Around with
 execution(* com.harbor..*(..)). Overnight
 the metrics bus melts. Repository findById
@@ -7,7 +7,7 @@ calls, mapper methods, and gate services
 all sprout advice. Latency climbs.
 
 2
-00:00:16,344 --> 00:00:31,320
+00:00:15,799 --> 00:00:29,879
 The advice body was harmless. The aim was
 not. Pointcuts are the aiming language:
 predicates that select join points so
@@ -16,7 +16,7 @@ Spring AOP the dominant join point is
 method execution.
 
 3
-00:00:31,440 --> 00:00:45,504
+00:00:30,000 --> 00:00:43,240
 The dominant expression language is
 AspectJ pointcut syntax, interpreted for
 proxy-based weaving. Narrow the harbor
@@ -25,7 +25,7 @@ repositories. Look at this java for a
 moment.
 
 4
-00:00:45,624 --> 00:01:01,968
+00:00:43,359 --> 00:00:55,640
 Look at this java for a moment. Design
 expressions like APIs. execution selects
 by method signature. Double-dot .. in a
@@ -33,7 +33,7 @@ package pattern means any subpackage.
 within restricts by type.
 
 5
-00:01:02,088 --> 00:01:16,248
+00:00:55,759 --> 00:01:08,599
 @annotation selects opt-in methods —
 excellent when you want auditing without
 wrapping every repository. @within matches
@@ -42,7 +42,7 @@ bean(gateReleaseService) selects by bean
 name when that style fits.
 
 6
-00:01:16,368 --> 00:01:29,328
+00:01:08,719 --> 00:01:22,000
 Combine with &&, ||, and !. Named
 @Pointcut methods keep compositions
 readable — here gateServices and
@@ -51,21 +51,21 @@ excluded so advice does not hit
 persistence methods by accident.
 
 7
-00:01:29,448 --> 00:01:41,088
+00:01:22,120 --> 00:01:34,000
 Args binding ties matched parameters into
 advice when types line up: execution(*
 release(..)) && args(cargoId) lets advice
 declare CargoId cargoId.
 
 8
-00:01:41,208 --> 00:01:50,904
+00:01:34,120 --> 00:01:44,320
 Binding mistakes fail loudly — better than
 silent no-ops if you notice early. What
 Spring AOP will not do: advise join points
 proxies cannot see.
 
 9
-00:01:51,024 --> 00:02:01,920
+00:01:44,439 --> 00:01:53,679
 Field access, constructors, and private
 method calls are AspectJ-complete features
 outside the proxy subset. Keep
@@ -73,7 +73,7 @@ expectations matched to the weaving model
 you enabled.
 
 10
-00:02:02,040 --> 00:02:16,272
+00:01:53,799 --> 00:02:08,560
 Pointcut bugs show up as “advice never
 runs” or “advice runs too often.” Too
 narrow: wrong package, forgot public,
@@ -81,7 +81,7 @@ mismatched arguments. Too wide:
 execution(* *(..)) across the classpath.
 
 11
-00:02:16,392 --> 00:02:29,016
+00:02:08,680 --> 00:02:21,680
 Another failure mode is matching self-
 invocations that never enter the proxy —
 the expression is fine; the call path is
@@ -90,13 +90,13 @@ Spring bean, not by constructing the
 target with new.
 
 12
-00:02:29,136 --> 00:02:34,464
+00:02:21,800 --> 00:02:26,840
 So advice aims through pointcuts, and
 named compositions keep that aim
 maintainable.
 
 13
-00:02:34,584 --> 00:02:47,232
+00:02:26,960 --> 00:02:39,840
 When security, transactions, and metrics
 all match the same gate method, a new
 problem appears: which advice runs first,
