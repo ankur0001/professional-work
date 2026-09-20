@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:14,087
+00:00:00,000 --> 00:00:10,919
 Friday deploy of the tolling-adjacent
 reporting service. Same JAR that
 developers ran against H2 on laptops.
@@ -7,20 +7,20 @@ Staging expected Postgres. Someone forgot
 the active profile.
 
 2
-00:00:14,207 --> 00:00:21,791
+00:00:11,039 --> 00:00:18,399
 The app started, Auto-DDL touched the
 wrong assumptions, and the first health
 check looked "up" while queries failed
 with dialect errors.
 
 3
-00:00:21,911 --> 00:00:28,775
+00:00:18,519 --> 00:00:27,280
 Three environments — local H2, staging
 Postgres, prod Postgres with read replicas
 — one artifact.
 
 4
-00:00:28,896 --> 00:00:41,328
+00:00:27,399 --> 00:00:40,879
 Profiles exist so bean definitions and
 properties can differ without forking the
 codebase into reporting-local and
@@ -29,7 +29,7 @@ a named gate on definitions and property
 sources.
 
 5
-00:00:41,448 --> 00:00:57,432
+00:00:41,000 --> 00:00:57,960
 Activate with spring.profiles.active, the
 SPRING_PROFILES_ACTIVE environment
 variable, or programmatic API on the
@@ -38,7 +38,7 @@ XML profile= attributes register only when
 that profile is on.
 
 6
-00:00:57,551 --> 00:01:13,560
+00:00:58,079 --> 00:01:13,239
 @Profile("!prod") excludes production.
 Multiple profiles can be active at once;
 the set is a bag, not a single enum,
@@ -47,14 +47,14 @@ Deployment. Look at this java for a
 moment. Walk the gates.
 
 7
-00:01:13,680 --> 00:01:22,296
+00:01:13,359 --> 00:01:24,079
 @Profile("local") on localDataSource means
 that bean definition is registered only
 when local is active — H2 plus schema-
 local.sql.
 
 8
-00:01:22,416 --> 00:01:34,968
+00:01:24,200 --> 00:01:40,000
 @Profile({"staging", "prod"}) on
 postgresDataSource registers the same
 factory method for either staging or prod;
@@ -63,7 +63,7 @@ the two envs differ by property, not by a
 third method.
 
 9
-00:01:35,088 --> 00:01:46,608
+00:01:40,120 --> 00:01:52,080
 @Profile("prod") on routingDataSource adds
 a read/write splitter only in production:
 it injects the postgres bean by qualifier
@@ -71,14 +71,14 @@ and builds a replica pool from
 app.datasource.replica-url.
 
 10
-00:01:46,728 --> 00:01:55,968
+00:01:52,200 --> 00:02:02,320
 In staging you get a single Postgres
 DataSource; in prod you get routing on
 top. Runtime with
 spring.profiles.active=prod.
 
 11
-00:01:56,088 --> 00:02:07,752
+00:02:02,439 --> 00:02:14,079
 Spring prepares the Environment, marks
 prod active, and while parsing
 configuration classes only accepts @Bean
@@ -86,7 +86,7 @@ methods whose profiles match.
 localDataSource never enters the registry.
 
 12
-00:02:07,872 --> 00:02:20,376
+00:02:14,199 --> 00:02:27,759
 postgresDataSource and routingDataSource
 do. If something @Autowired DataSource
 without a qualifier in prod, you still
@@ -94,26 +94,26 @@ need clarity — often mark the routing bean
 @Primary so repositories get the splitter.
 
 13
-00:02:20,496 --> 00:02:26,951
+00:02:27,879 --> 00:02:34,479
 Wrong or missing profile changes which
 definitions exist: unsatisfied
 dependencies can fail fast,
 
 14
-00:02:27,072 --> 00:02:35,903
+00:02:34,599 --> 00:02:44,560
 or — worse — a leftover local in
 spring.profiles.active=local,prod can
 register H2 *and* Postgres and then lose
 on primary selection.
 
 15
-00:02:36,024 --> 00:02:44,903
+00:02:44,680 --> 00:02:52,520
 Step through a staging boot with
 spring.profiles.active=staging once more,
 slower. Environment marks only staging.
 
 16
-00:02:45,024 --> 00:02:54,719
+00:02:52,640 --> 00:03:02,920
 PersistenceProfiles is parsed;
 localDataSource's @Profile("local") does
 not match, so that definition is skipped
@@ -121,7 +121,7 @@ entirely — not created-and-disabled,
 skipped.
 
 17
-00:02:54,840 --> 00:03:09,503
+00:03:03,040 --> 00:03:17,280
 postgresDataSource matches the
 staging/prod set and registers.
 routingDataSource requires prod, so
@@ -130,12 +130,12 @@ Repositories that @Autowired DataSource
 receive the single Postgres bean.
 
 18
-00:03:09,623 --> 00:03:14,519
+00:03:17,400 --> 00:03:21,320
 First query uses the staging JDBC URL from
 Environment.
 
 19
-00:03:14,639 --> 00:03:26,207
+00:03:21,440 --> 00:03:34,600
 If ops meant prod and typed production
 instead of prod, none of the postgres
 profile annotations match either — and if
@@ -144,25 +144,25 @@ fails with NoSuchBeanDefinitionException
 for DataSource,
 
 20
-00:03:26,327 --> 00:03:30,359
+00:03:34,720 --> 00:03:37,760
 which is painful but clearer than talking
 to the wrong cluster.
 
 21
-00:03:30,479 --> 00:03:37,007
+00:03:37,880 --> 00:03:43,680
 Failure mode from that Friday:
 SPRING_PROFILES_ACTIVE unset in the
 staging Deployment.
 
 22
-00:03:37,127 --> 00:03:45,335
+00:03:43,800 --> 00:03:51,800
 Only default property sources load; if a
 default DataSource auto-config or an
 unprofiled bean still builds something,
 startup may succeed.
 
 23
-00:03:45,455 --> 00:03:57,215
+00:03:51,920 --> 00:04:04,000
 Symptom: SQLGrammarException or wrong
 dialect messages on first query; H2 file
 in /tmp on a staging pod;
@@ -170,7 +170,7 @@ Environment.getActiveProfiles() empty in
 an actuator env dump.
 
 24
-00:03:57,335 --> 00:04:10,919
+00:04:04,120 --> 00:04:15,360
 Another failure: application-prod.yml
 present in the JAR but profile never
 activated — people assume the filename
@@ -178,40 +178,40 @@ alone selects prod. It does not;
 activation is mandatory. Trade-offs.
 
 25
-00:04:11,039 --> 00:04:19,631
+00:04:15,480 --> 00:04:24,439
 Profiles keep one artifact and branch bean
 graphs cleanly; they also hide behavior
 behind an env var that must be set
 correctly in every cluster.
 
 26
-00:04:19,751 --> 00:04:27,479
+00:04:24,560 --> 00:04:32,759
 Too many fine-grained profiles (local,
 local-h2, local-postgres, qa1…) explode
 combinatorial testing.
 
 27
-00:04:27,599 --> 00:04:36,527
+00:04:32,879 --> 00:04:41,519
 Prefer coarse profiles for infrastructure
 (local/staging/prod) and property overlays
 for small differences (URLs, pool sizes).
 
 28
-00:04:36,647 --> 00:04:45,935
+00:04:41,639 --> 00:04:52,519
 Profile-specific *beans* for incompatible
 implementations (H2 vs Postgres); profile-
 specific *properties* for the same bean
 shape with different values.
 
 29
-00:04:46,055 --> 00:04:57,407
+00:04:52,639 --> 00:05:03,079
 Misconception unique to profiles: "Setting
 spring.profiles.active=prod replaces
 application.properties entirely with
 application-prod.properties." No.
 
 30
-00:04:57,527 --> 00:05:13,103
+00:05:03,199 --> 00:05:19,439
 Profile-specific documents add and
 override; the default
 application.properties (or .yml) still
@@ -221,7 +221,7 @@ overrides. Profiles select which beans
 exist.
 
 31
-00:05:13,223 --> 00:05:26,591
+00:05:19,560 --> 00:05:36,040
 The tolling ops team still needs a single
 API to ask "what is the feature flag value
 and which DB URL won after env vars,
