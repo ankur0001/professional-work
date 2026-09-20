@@ -1,9 +1,9 @@
 [
   {
-    "ep": 65,
-    "title": "AOP Performance",
-    "beats": 18,
-    "duration_sec": 185.25,
-    "mp4": "/workspace/spring-story/v1/episodes/ep65-aop-performance/Spring_Episode_65_AOP_Performance.mp4"
+    "ep": 66,
+    "title": "Security Fundamentals",
+    "beats": 26,
+    "duration_sec": 271.625,
+    "mp4": "/workspace/spring-story/v1/episodes/ep66-security-fundamentals/Spring_Episode_66_Security_Fundamentals.mp4"
   }
 ]
