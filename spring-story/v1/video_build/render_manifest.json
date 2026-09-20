@@ -1,9 +1,9 @@
 [
   {
-    "ep": 52,
-    "title": "@Transactional",
-    "beats": 17,
-    "duration_sec": 200.21,
-    "mp4": "/workspace/spring-story/v1/episodes/ep52-transactional/Spring_Episode_52_Transactional.mp4"
+    "ep": 54,
+    "title": "Isolation Levels",
+    "beats": 19,
+    "duration_sec": 197.77,
+    "mp4": "/workspace/spring-story/v1/episodes/ep54-isolation-levels/Spring_Episode_54_Isolation_Levels.mp4"
   }
 ]
