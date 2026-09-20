@@ -1,9 +1,9 @@
 [
   {
-    "ep": 67,
-    "title": "Authentication",
-    "beats": 22,
-    "duration_sec": 236.41,
-    "mp4": "/workspace/spring-story/v1/episodes/ep67-authentication/Spring_Episode_67_Authentication.mp4"
+    "ep": 68,
+    "title": "Authorization",
+    "beats": 17,
+    "duration_sec": 198.65,
+    "mp4": "/workspace/spring-story/v1/episodes/ep68-authorization/Spring_Episode_68_Authorization.mp4"
   }
 ]
