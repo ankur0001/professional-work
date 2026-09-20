@@ -1,9 +1,9 @@
 [
   {
-    "ep": 55,
-    "title": "Rollback Rules",
-    "beats": 14,
-    "duration_sec": 161.37,
-    "mp4": "/workspace/spring-story/v1/episodes/ep55-rollback-rules/Spring_Episode_55_Rollback_Rules.mp4"
+    "ep": 56,
+    "title": "Distributed Transactions",
+    "beats": 17,
+    "duration_sec": 186.85,
+    "mp4": "/workspace/spring-story/v1/episodes/ep56-distributed-transactions/Spring_Episode_56_Distributed_Transactions.mp4"
   }
 ]
