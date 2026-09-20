@@ -1,9 +1,9 @@
 [
   {
-    "ep": 13,
-    "title": "@Configuration",
-    "beats": 30,
-    "duration_sec": 278.29,
-    "mp4": "/workspace/spring-story/v1/episodes/ep13-configuration/Spring_Episode_13_Configuration.mp4"
+    "ep": 14,
+    "title": "@Bean",
+    "beats": 28,
+    "duration_sec": 295.17,
+    "mp4": "/workspace/spring-story/v1/episodes/ep14-bean/Spring_Episode_14_Bean.mp4"
   }
 ]
