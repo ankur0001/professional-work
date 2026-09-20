@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:18,143
+00:00:00,000 --> 00:00:17,359
 War story from the bike-share team,
 Tuesday. Diff adds one line to the Gradle
 build: the PostgreSQL JDBC driver. No Java
@@ -8,7 +8,7 @@ configure a DataSource: 'url' attribute is
 not specified.
 
 2
-00:00:18,263 --> 00:00:31,391
+00:00:17,480 --> 00:00:31,240
 Nobody wrote a DataSource @Bean. Something
 else did — Boot auto-configuration —
 because a DataSource class became visible
@@ -16,7 +16,7 @@ and no user bean of that type existed yet.
 The classpath spoke; Boot answered.
 
 3
-00:00:31,512 --> 00:00:46,847
+00:00:31,359 --> 00:00:49,920
 Auto-configuration is conditional bean
 registration shipped with Boot. Candidate
 classes are listed under META-INF/spring/o
@@ -25,7 +25,7 @@ Configuration.imports (older Boot:
 spring.factories).
 
 4
-00:00:46,968 --> 00:01:00,240
+00:00:50,039 --> 00:01:04,599
 Annotations like @ConditionalOnClass,
 @ConditionalOnMissingBean,
 @ConditionalOnProperty decide whether
@@ -34,20 +34,20 @@ code stays small; the classpath and
 Environment become signals.
 
 5
-00:01:00,359 --> 00:01:11,111
+00:01:04,719 --> 00:01:13,480
 That is powerful and surprising in equal
 measure until you can read a condition
 evaluation report. Look at this java for a
 moment. Look at this example.
 
 6
-00:01:11,231 --> 00:01:16,823
+00:01:13,599 --> 00:01:18,799
 # auto-configured DataSource still needs
 properties Walk the simplified auto-
 config.
 
 7
-00:01:16,944 --> 00:01:29,688
+00:01:18,919 --> 00:01:31,879
 @ConditionalOnClass means: only consider
 this configuration if DataSource and
 Hikari are loadable — adding the Postgres
@@ -56,19 +56,19 @@ classpath (together with Boot's JDBC
 starter or transitive deps).
 
 8
-00:01:29,808 --> 00:01:38,376
+00:01:31,999 --> 00:01:39,639
 @EnableConfigurationProperties(DataSourceP
 roperties.class) binds spring.datasource.*
 into a typed properties object.
 
 9
-00:01:38,496 --> 00:01:45,552
+00:01:39,759 --> 00:01:47,639
 @Bean + @ConditionalOnMissingBean means:
 create a DataSource *only if* the user did
 not already define one.
 
 10
-00:01:45,672 --> 00:01:58,224
+00:01:47,759 --> 00:02:00,039
 initializeDataSourceBuilder().build()
 reads URL, username, password from those
 properties — empty URL is what triggered
@@ -76,7 +76,7 @@ Tuesday's failure. Runtime after the
 driver lands, step by step.
 
 11
-00:01:58,344 --> 00:02:10,656
+00:02:00,159 --> 00:02:10,879
 During context refresh Boot loads auto-
 configuration import lists. Each candidate
 is evaluated against conditions.
@@ -84,7 +84,7 @@ DataSourceAutoConfiguration matches on
 class presence.
 
 12
-00:02:10,776 --> 00:02:22,487
+00:02:11,000 --> 00:02:22,520
 Inside, @ConditionalOnMissingBean searches
 the bean factory for an existing
 DataSource definition — none in the bike-
@@ -92,21 +92,21 @@ share app — so the method is eligible. It
 builds from DataSourceProperties.
 
 13
-00:02:22,608 --> 00:02:33,048
+00:02:22,639 --> 00:02:34,679
 Properties are empty for url → Boot fails
 fast with the familiar message. That fail-
 fast is kinder than a silent miswire to an
 in-memory default you did not want.
 
 14
-00:02:33,168 --> 00:02:41,664
+00:02:34,799 --> 00:02:44,879
 Fixes: add spring.datasource.url (and
 credentials); or define your own @Bean
 DataSource so @ConditionalOnMissingBean
 skips;
 
 15
-00:02:41,783 --> 00:02:53,639
+00:02:44,999 --> 00:02:57,799
 or exclude the auto-config class via
 spring.autoconfigure.exclude /
 @SpringBootApplication(exclude=...) if you
@@ -115,13 +115,13 @@ driver for a batch tool on the same
 classpath.
 
 16
-00:02:53,759 --> 00:02:59,759
+00:02:57,919 --> 00:03:03,719
 Debug with --debug or
 ConditionEvaluationReport logging to see
 matched and negative conditions.
 
 17
-00:02:59,879 --> 00:03:12,000
+00:03:03,839 --> 00:03:16,279
 Failure mode symptoms beyond missing URL:
 you define a custom DataSource bean, but
 still see Boot trying to configure JPA
@@ -130,28 +130,28 @@ because another auto-config keyed off
 different types,
 
 18
-00:03:12,120 --> 00:03:20,544
+00:03:16,399 --> 00:03:24,239
 or your bean was not visible yet when
 conditions ran (rare with proper user
 config ordering, more common with unusual
 BeanDefinition tricks).
 
 19
-00:03:20,664 --> 00:03:28,656
+00:03:24,359 --> 00:03:33,039
 Symptom of successful override: condition
 report shows DataSourceAutoConfiguration
 beans skipped due to
 @ConditionalOnMissingBean.
 
 20
-00:03:28,776 --> 00:03:39,840
+00:03:33,159 --> 00:03:44,239
 Symptom of accidental activation: adding
 starter-data-jpa "for later" pulls driver
 + Hibernate and suddenly entity scanning
 and DDL expectations appear. Trade-offs.
 
 21
-00:03:39,960 --> 00:03:51,695
+00:03:44,359 --> 00:03:56,239
 Auto-configuration collapses days of
 XML/Java infra into classpath conventions
 and keeps services consistent; it couples
@@ -159,7 +159,7 @@ startup behavior to dependencies, so "just
 add a jar" is never free.
 
 22
-00:03:51,816 --> 00:04:03,024
+00:03:56,359 --> 00:04:07,799
 Exclusions and custom beans restore
 control but require knowing which auto-
 config class owns the surprise. Prefer
@@ -167,21 +167,21 @@ reading conditions over memorizing every
 @Bean Boot might create.
 
 23
-00:04:03,144 --> 00:04:10,968
+00:04:07,919 --> 00:04:16,199
 One more runtime detail the bike-share
 team used after Tuesday: start with
 --debug and search the log for
 DataSourceAutoConfiguration.
 
 24
-00:04:11,087 --> 00:04:19,199
+00:04:16,319 --> 00:04:25,079
 Positive matches show which nested
 configurations fired; negative matches
 show why an exclude or
 @ConditionalOnMissingBean skipped a bean.
 
 25
-00:04:19,319 --> 00:04:29,471
+00:04:25,199 --> 00:04:35,719
 That report is how you prove "our @Bean
 DataSource suppressed Boot" without
 guessing. Auto-configuration is not a
@@ -189,7 +189,7 @@ black box once you treat conditions as the
 API.
 
 26
-00:04:29,591 --> 00:04:42,168
+00:04:35,839 --> 00:04:49,079
 Misconception unique to auto-
 configuration: "Auto-configuration runs
 before my @Configuration and always wins."
@@ -197,12 +197,12 @@ Conditions like @ConditionalOnMissingBean
 are evaluated with user beans in mind;
 
 27
-00:04:42,288 --> 00:04:46,247
+00:04:49,199 --> 00:04:52,519
 defining your own DataSource typically
 suppresses Boot's.
 
 28
-00:04:46,367 --> 00:04:56,759
+00:04:52,639 --> 00:05:04,119
 The surprise is not that Boot overrides
 you — it is that Boot acts when you said
 nothing and the classpath said "database."
@@ -210,7 +210,7 @@ The team now understands why the driver
 created a bean.
 
 29
-00:04:56,879 --> 00:05:08,399
+00:05:04,239 --> 00:05:17,199
 The new hire still stares at a pom.xml
 with twenty-seven versioned Spring jars
 fighting each other. Curated dependency
