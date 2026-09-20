@@ -1,9 +1,9 @@
 [
   {
-    "ep": 32,
-    "title": "Validation",
-    "beats": 15,
-    "duration_sec": 161.73,
-    "mp4": "/workspace/spring-story/v1/episodes/ep32-validation/Spring_Episode_32_Validation.mp4"
+    "ep": 33,
+    "title": "Exception Handling",
+    "beats": 14,
+    "duration_sec": 137.27,
+    "mp4": "/workspace/spring-story/v1/episodes/ep33-exception-handling/Spring_Episode_33_Exception_Handling.mp4"
   }
 ]

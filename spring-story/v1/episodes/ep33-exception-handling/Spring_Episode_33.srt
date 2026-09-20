@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:13,055
+00:00:00,000 --> 00:00:12,599
 A trucker app asks for parcel PRC-90210.
 The id does not exist. What should the
 JSON look like — and will every other
@@ -7,7 +7,7 @@ missing-id path in the harbor API look the
 same?
 
 2
-00:00:13,235 --> 00:00:26,820
+00:00:12,779 --> 00:00:24,179
 Without a shared approach, each controller
 invents an answer. One returns a string.
 Another returns a Map. A third lets Tomcat
@@ -15,25 +15,25 @@ render an HTML error page to a JSON
 client.
 
 3
-00:00:26,939 --> 00:00:30,947
+00:00:24,299 --> 00:00:27,219
 Operators cannot alert on status codes
 consistently.
 
 4
-00:00:31,067 --> 00:00:38,963
+00:00:27,339 --> 00:00:35,059
 Spring MVC gives you structured hooks:
 @ExceptionHandler on a controller,
 @RestControllerAdvice for application-wide
 handlers,
 
 5
-00:00:39,083 --> 00:00:45,995
+00:00:35,179 --> 00:00:41,899
 and ResponseEntityExceptionHandler as a
 base when you want to customize framework
 exceptions such as bind failures.
 
 6
-00:00:46,115 --> 00:01:00,323
+00:00:42,019 --> 00:00:58,299
 Start from a domain signal and a stable
 error shape — Problem+JSON style fields
 work well even if you keep a simple
@@ -42,14 +42,14 @@ Look at this java for a moment. Look at
 this java for a moment.
 
 7
-00:01:00,444 --> 00:01:09,780
+00:00:58,420 --> 00:01:07,379
 Controllers stay thin: throw
 ParcelNotFoundException when a lookup
 misses; do not build error maps inline.
 Advice owns status and envelope.
 
 8
-00:01:09,900 --> 00:01:23,268
+00:01:07,500 --> 00:01:21,099
 Validation failures from the previous
 lesson become first-class citizens of the
 same bridge — clients parse one shape for
@@ -58,17 +58,17 @@ id." @ResponseStatus on an exception type
 can set the code,
 
 9
-00:01:23,388 --> 00:01:27,852
+00:01:21,219 --> 00:01:25,219
 but a status without a body is a weak
 contract for mobile clients.
 
 10
-00:01:27,972 --> 00:01:31,980
+00:01:25,340 --> 00:01:28,579
 Prefer advice that always returns the
 shared problem type.
 
 11
-00:01:32,100 --> 00:01:43,788
+00:01:28,700 --> 00:01:41,140
 Local @ExceptionHandler methods on a
 single controller are fine for controller-
 specific cases; application-wide policy
@@ -77,7 +77,7 @@ luggage, parcels, and customs do not
 diverge.
 
 12
-00:01:43,908 --> 00:01:56,964
+00:01:41,260 --> 00:01:54,060
 Wrapping every controller method in
 try/catch "for safety" scatters policy and
 guarantees inconsistency. Returning
@@ -86,14 +86,14 @@ with no shared fields forces every client
 to write N parsers.
 
 13
-00:01:57,084 --> 00:02:07,884
+00:01:54,180 --> 00:02:04,580
 Swallowing exceptions and returning 200
 with "success": false teaches clients to
 ignore HTTP — reverse that habit early.
 Failures now have a deliberate model.
 
 14
-00:02:08,004 --> 00:02:20,412
+00:02:04,700 --> 00:02:16,819
 Some concerns still must wrap the request
 *before* Spring MVC even picks a handler —
 encoding, security filters, correlation
