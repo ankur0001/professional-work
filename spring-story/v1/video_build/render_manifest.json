@@ -1,9 +1,9 @@
 [
   {
-    "ep": 56,
-    "title": "Distributed Transactions",
-    "beats": 17,
-    "duration_sec": 186.85,
-    "mp4": "/workspace/spring-story/v1/episodes/ep56-distributed-transactions/Spring_Episode_56_Distributed_Transactions.mp4"
+    "ep": 57,
+    "title": "Saga Pattern",
+    "beats": 19,
+    "duration_sec": 200.45,
+    "mp4": "/workspace/spring-story/v1/episodes/ep57-saga-pattern/Spring_Episode_57_Saga_Pattern.mp4"
   }
 ]
