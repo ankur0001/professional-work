@@ -1,9 +1,9 @@
 [
   {
-    "ep": 40,
-    "title": "Entity Lifecycle",
-    "beats": 13,
-    "duration_sec": 155.5,
-    "mp4": "/workspace/spring-story/v1/episodes/ep40-entity-lifecycle/Spring_Episode_40_Entity_Lifecycle.mp4"
+    "ep": 41,
+    "title": "Persistence Context",
+    "beats": 15,
+    "duration_sec": 147.41,
+    "mp4": "/workspace/spring-story/v1/episodes/ep41-persistence-context/Spring_Episode_41_Persistence_Context.mp4"
   }
 ]
