@@ -1,9 +1,9 @@
 [
   {
-    "ep": 57,
-    "title": "Saga Pattern",
-    "beats": 19,
-    "duration_sec": 200.45,
-    "mp4": "/workspace/spring-story/v1/episodes/ep57-saga-pattern/Spring_Episode_57_Saga_Pattern.mp4"
+    "ep": 58,
+    "title": "AOP Concepts",
+    "beats": 15,
+    "duration_sec": 187.57,
+    "mp4": "/workspace/spring-story/v1/episodes/ep58-aop-concepts/Spring_Episode_58_AOP_Concepts.mp4"
   }
 ]

@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:14,135
+00:00:00,000 --> 00:00:10,800
 Open GateReleaseService before anyone
 introduces aspects and you can predict the
 clutter. Log entry with truck plate and
@@ -7,7 +7,7 @@ cargo id. Start a timer. Check that the
 operator may release this gate.
 
 2
-00:00:14,255 --> 00:00:27,695
+00:00:10,919 --> 00:00:24,079
 Then — finally — the three lines that
 actually open the boom and stamp the
 release. On the way out: log duration, log
@@ -16,7 +16,7 @@ the audit format and you edit every gate
 method.
 
 3
-00:00:27,815 --> 00:00:39,983
+00:00:24,199 --> 00:00:35,039
 Forget the permission check on one
 overload and you ship a hole. The domain
 was never the hard part. The repeated rim
@@ -24,7 +24,7 @@ was. Those rims are cross-cutting
 concerns.
 
 4
-00:00:40,103 --> 00:00:52,631
+00:00:35,159 --> 00:00:48,719
 Timing, audit, security, transactions —
 they cut across modules instead of
 belonging to one feature package. Aspect-
@@ -33,7 +33,7 @@ own modules and applies them
 systematically.
 
 5
-00:00:52,751 --> 00:01:06,816
+00:00:48,839 --> 00:01:01,119
 Spring AOP does that with proxies and a
 small AspectJ-inspired model. You write an
 aspect: pointcuts for where to intervene,
@@ -41,7 +41,7 @@ advice for what to run. At runtime, calls
 into a Spring bean hit a proxy first.
 
 6
-00:01:06,935 --> 00:01:23,135
+00:01:01,239 --> 00:01:13,759
 If the join point matches, advice runs
 before, after, or around the real method.
 Look at this java for a moment. Speak the
@@ -50,7 +50,7 @@ wraps matching gate service release
 methods.
 
 7
-00:01:23,256 --> 00:01:36,864
+00:01:13,879 --> 00:01:25,959
 Before proceed, we record entry. After, we
 record timing. On failure, we audit and
 rethrow. GateReleaseService methods stay
@@ -58,7 +58,7 @@ about cargo and booms — no copy-pasted
 timers.
 
 8
-00:01:36,983 --> 00:01:48,575
+00:01:26,079 --> 00:01:36,719
 @Transactional fits the same story: you
 may never write @Aspect yourself, yet
 transactions still ride AOP
@@ -66,7 +66,7 @@ infrastructure. Hold the vocabulary so
 later episodes stay crisp.
 
 9
-00:01:48,695 --> 00:02:03,647
+00:01:36,840 --> 00:01:52,359
 Join point: a moment you could intervene —
 in Spring AOP, primarily method execution.
 Pointcut: the predicate that selects join
@@ -74,7 +74,7 @@ points. Advice: the code that runs.
 Aspect: pointcut plus advice.
 
 10
-00:02:03,768 --> 00:02:18,384
+00:01:52,480 --> 00:02:06,480
 Weaving: applying aspects to targets —
 Spring usually weaves at runtime via
 proxies, not compile-time bytecode
@@ -83,13 +83,13 @@ expectations. AspectJ aimed at a rich
 join-point model.
 
 11
-00:02:18,503 --> 00:02:25,727
+00:02:06,600 --> 00:02:14,439
 Spring AOP chose a pragmatic subset:
 proxy-based, method-centric, friendly to
 Java config and annotations.
 
 12
-00:02:25,847 --> 00:02:40,463
+00:02:14,560 --> 00:02:29,920
 Enable it with @EnableAspectJAutoProxy or,
 in Boot, by having spring-aop and
 aspectjweaver on the classpath with
@@ -99,7 +99,7 @@ notices @Aspect beans and wraps matching
 targets.
 
 13
-00:02:40,583 --> 00:02:53,783
+00:02:30,039 --> 00:02:43,759
 What AOP is not: a dump for core gate
 business rules, or a license to advise
 everything. If the rule is really “this
@@ -107,7 +107,7 @@ cargo’s seal must match,” keep it in the
 domain. Use aspects for true cross-cuts.
 
 14
-00:02:53,903 --> 00:03:03,047
+00:02:43,879 --> 00:02:54,039
 Spring AOP will not advise private
 methods, self-invocations, or calls that
 never pass through the proxy — limits that
@@ -115,7 +115,7 @@ become vivid once you see how proxies
 work.
 
 15
-00:03:03,167 --> 00:03:17,591
+00:02:54,159 --> 00:03:07,120
 We modularized timing and audit around
 harbor gate services. The mechanical
 mystery remains: what object actually sits
