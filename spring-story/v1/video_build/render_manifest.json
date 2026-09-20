@@ -1,9 +1,9 @@
 [
   {
-    "ep": 11,
-    "title": "Component Scanning",
-    "beats": 29,
-    "duration_sec": 287.21,
-    "mp4": "/workspace/spring-story/v1/episodes/ep11-component-scanning/Spring_Episode_11_Component_Scanning.mp4"
+    "ep": 12,
+    "title": "@Resource vs @Autowired vs @Inject",
+    "beats": 30,
+    "duration_sec": 330.77,
+    "mp4": "/workspace/spring-story/v1/episodes/ep12-resource-vs-autowired-vs-inject/Spring_Episode_12_Resource_vs_Autowired_vs_Inject.mp4"
   }
 ]
