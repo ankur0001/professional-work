@@ -1,9 +1,9 @@
 [
   {
-    "ep": 58,
-    "title": "AOP Concepts",
-    "beats": 15,
-    "duration_sec": 187.57,
-    "mp4": "/workspace/spring-story/v1/episodes/ep58-aop-concepts/Spring_Episode_58_AOP_Concepts.mp4"
+    "ep": 59,
+    "title": "Dynamic Proxies",
+    "beats": 16,
+    "duration_sec": 183.71,
+    "mp4": "/workspace/spring-story/v1/episodes/ep59-dynamic-proxies/Spring_Episode_59_Dynamic_Proxies.mp4"
   }
 ]

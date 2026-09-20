@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:16,175
+00:00:00,000 --> 00:00:15,880
 Debug a transactional gate release and
 print the runtime class of the injected
 collaborator. You expected
@@ -8,20 +8,20 @@ like $Proxy147 or
 GateReleaseServiceImpl$$SpringCGLIB$$0.
 
 2
-00:00:16,295 --> 00:00:24,792
+00:00:16,000 --> 00:00:22,559
 The method still opens the boom.
 Transactions still commit. So what object
 did Spring actually inject?
 
 3
-00:00:24,972 --> 00:00:32,603
+00:00:22,739 --> 00:00:32,019
 A proxy — a runtime stand-in that looks
 like your bean to callers, holds the real
 target, and decides what happens on each
 invocation.
 
 4
-00:00:32,724 --> 00:00:47,172
+00:00:32,140 --> 00:00:45,100
 Dynamic proxies are synthesized at
 runtime, not handwritten as
 GateReleaseServiceProxy for every type.
@@ -30,7 +30,7 @@ stand. A client calls
 gateService.release(cargoId).
 
 5
-00:00:47,292 --> 00:01:00,036
+00:00:45,219 --> 00:00:59,500
 If gateService is the raw target,
 @Transactional and your @Around never run.
 If it is a proxy, the call enters the
@@ -39,7 +39,7 @@ runs, and only then does proceed reach the
 target.
 
 6
-00:01:00,155 --> 00:01:15,683
+00:00:59,619 --> 00:01:13,700
 Look at this java for a moment. Look at
 this java for a moment.
 Proxy.newProxyInstance needs a class
@@ -48,26 +48,26 @@ an InvocationHandler. Every interface
 method becomes invoke on the handler.
 
 7
-00:01:15,804 --> 00:01:20,867
+00:01:13,819 --> 00:01:18,099
 Spring’s AOP runtime is that idea with an
 advisor chain, pointcut matching,
 
 8
-00:01:20,987 --> 00:01:29,388
+00:01:18,219 --> 00:01:26,259
 and ReflectiveMethodInvocation calling
 proceed through interceptors — including
 transaction and security interceptors you
 did not author by hand.
 
 9
-00:01:29,507 --> 00:01:40,283
+00:01:26,379 --> 00:01:37,019
 Two families matter. If the bean exposes
 at least one interface, Spring may create
 a JDK dynamic proxy that implements those
 interfaces and delegates to the target.
 
 10
-00:01:40,403 --> 00:01:52,787
+00:01:37,140 --> 00:01:50,140
 If the bean is a concrete class with no
 interface — or you force class-based
 proxies — Spring uses CGLIB to subclass
@@ -75,7 +75,7 @@ the concrete type and override methods.
 Same idea for callers: talk to a wrapper.
 
 11
-00:01:52,908 --> 00:02:09,731
+00:01:50,260 --> 00:02:05,580
 Different mechanics under the floor. Why
 “dynamic”? The proxy class is generated as
 the context refreshes. You do not maintain
@@ -83,7 +83,7 @@ GateServiceProxy.java. Auto-proxy creators
 wrap eligible beans when advisors match.
 
 12
-00:02:09,852 --> 00:02:23,243
+00:02:05,700 --> 00:02:17,060
 Operational consequences follow.
 Collaborators receive the proxy, which is
 what you want for advice to fire. Casting
@@ -91,7 +91,7 @@ to the concrete impl can fail when the
 runtime chose a JDK interface proxy.
 
 13
-00:02:23,364 --> 00:02:36,156
+00:02:17,180 --> 00:02:30,379
 Self-calls inside the target
 (this.release(...)) never enter the proxy,
 so annotated advice on that path is
@@ -100,14 +100,14 @@ custom @Aspect advice all share that
 requirement.
 
 14
-00:02:36,276 --> 00:02:47,915
+00:02:30,500 --> 00:02:41,620
 People sometimes imagine AOP as a compiler
 plugin rewriting every .class. Full
 AspectJ can weave that way. Spring AOP’s
 everyday path is proxy-based.
 
 15
-00:02:48,036 --> 00:03:00,515
+00:02:41,740 --> 00:02:54,460
 Confusing the two leads to surprise when
 private methods or field access are not
 advised. So the injected object for a
@@ -115,7 +115,7 @@ transactional gate service is a proxy:
 interceptor logic first, then the target.
 
 16
-00:03:00,635 --> 00:03:10,115
+00:02:54,580 --> 00:03:03,260
 The next split is which technology Spring
 picks — and what breaks when you assume
 the wrong one. Start with the interface-
