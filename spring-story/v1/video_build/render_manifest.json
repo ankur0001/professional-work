@@ -1,9 +1,9 @@
 [
   {
-    "ep": 41,
-    "title": "Persistence Context",
-    "beats": 15,
-    "duration_sec": 147.41,
-    "mp4": "/workspace/spring-story/v1/episodes/ep41-persistence-context/Spring_Episode_41_Persistence_Context.mp4"
+    "ep": 42,
+    "title": "Repositories",
+    "beats": 16,
+    "duration_sec": 167.91,
+    "mp4": "/workspace/spring-story/v1/episodes/ep42-repositories/Spring_Episode_42_Repositories.mp4"
   }
 ]
