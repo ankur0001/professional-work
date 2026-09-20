@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:11,256
+00:00:00,000 --> 00:00:11,919
 The PR title is "register Stripe and Adyen
 from plugins.yml." The reviewer leaves one
 comment in red: "We are not scanning
@@ -7,13 +7,13 @@ comment in red: "We are not scanning
 control.
 
 2
-00:00:11,375 --> 00:00:19,487
+00:00:12,039 --> 00:00:19,039
 Metadata only." The author wanted to drop
 annotated classes on the classpath and
 hope component scan invents beans.
 
 3
-00:00:19,607 --> 00:00:30,335
+00:00:19,160 --> 00:00:28,800
 The marketplace platform loads payment
 plugins from YAML that marketing and
 partnerships can edit without a rebuild of
@@ -21,7 +21,7 @@ every adapter class. That fight is about
 bean definitions.
 
 4
-00:00:30,455 --> 00:00:44,543
+00:00:28,920 --> 00:00:44,400
 A bean definition is the recipe Spring
 holds before any instance exists: bean
 name, class (or factory method), scope,
@@ -30,11 +30,11 @@ lazy flag, depends-on, primary,
 init/destroy method names,
 
 5
-00:00:44,663 --> 00:00:46,535
+00:00:44,520 --> 00:00:45,560
 and more.
 
 6
-00:00:46,655 --> 00:01:01,415
+00:00:45,680 --> 00:01:00,800
 Instances are cakes. Definitions are
 recipes. You can have a recipe with zero
 cakes baked yet — and you can register a
@@ -43,34 +43,34 @@ must not component-scan. Look at this
 example.
 
 7
-00:01:01,535 --> 00:01:09,623
+00:01:00,920 --> 00:01:07,599
 # plugins.yml — marketplace payment
 adapters Look at this java for a moment.
 Runtime order matters.
 
 8
-00:01:09,743 --> 00:01:18,551
+00:01:07,719 --> 00:01:16,319
 During context bootstrap, Spring collects
 bean definitions into a
 BeanDefinitionRegistry — the same
 DefaultListableBeanFactory wears that hat.
 
 9
-00:01:18,671 --> 00:01:26,999
+00:01:16,439 --> 00:01:24,519
 Sources of definitions include XML
 readers, @Configuration class parsing,
 component scanning, and programmatic
 registration.
 
 10
-00:01:27,119 --> 00:01:35,255
+00:01:24,640 --> 00:01:32,560
 BeanDefinitionRegistryPostProcessor beans
 run early, after the registry exists but
 before most ordinary beans are
 instantiated.
 
 11
-00:01:35,375 --> 00:01:46,511
+00:01:32,680 --> 00:01:46,200
 In this registrar, each YAML row becomes a
 GenericBeanDefinition: setBeanClassName
 stores a string so the class need not be
@@ -78,19 +78,19 @@ loadable at registration time the way a
 hard-coded Class<?> literal would;
 
 12
-00:01:46,631 --> 00:01:52,943
+00:01:46,320 --> 00:01:51,880
 setScope marks singleton; constructor args
 capture the resolved API key string from
 Environment.
 
 13
-00:01:53,063 --> 00:02:00,047
+00:01:52,000 --> 00:01:58,719
 registerBeanDefinition(spec.id(), def)
 puts the recipe under stripeCheckout or
 adyenCheckout.
 
 14
-00:02:00,167 --> 00:02:11,615
+00:01:58,840 --> 00:02:13,480
 Only later, when something needs those
 beans — an autowired List<PaymentPlugin>,
 a lookup by name, or singleton pre-
@@ -99,12 +99,12 @@ factory read each definition, load the
 class,
 
 15
-00:02:11,735 --> 00:02:16,655
+00:02:13,599 --> 00:02:17,960
 invoke the constructor with the indexed
 argument, and cache the singleton.
 
 16
-00:02:16,775 --> 00:02:29,951
+00:02:18,079 --> 00:02:32,839
 Change YAML, restart, new recipe set. No
 @Component on Stripe's SDK required; no
 vendor package added to @ComponentScan.
@@ -112,7 +112,7 @@ Walk a failure that QA hits when YAML
 drifts.
 
 17
-00:02:30,071 --> 00:02:40,823
+00:02:32,959 --> 00:02:45,239
 Typo in className →
 CannotLoadBeanClassException or
 ClassNotFoundException wrapped when the
@@ -121,7 +121,7 @@ the YAML was parsed — registration
 succeeded with a bad string.
 
 18
-00:02:40,943 --> 00:02:51,023
+00:02:45,359 --> 00:02:56,959
 Missing stripe.api-key →
 getRequiredProperty fails inside the post-
 processor and context refresh aborts
@@ -129,14 +129,14 @@ before Tomcat accepts traffic; that is the
 loud failure you want.
 
 19
-00:02:51,143 --> 00:02:59,207
+00:02:57,079 --> 00:03:05,719
 Duplicate id with an existing bean →
 BeanDefinitionStoreException / override
 behavior depending on
 allowBeanDefinitionOverriding.
 
 20
-00:02:59,327 --> 00:03:09,911
+00:03:05,839 --> 00:03:16,319
 Registering after ordinary singleton
 instantiation has already begun is too
 late for this post-processor contract —
@@ -144,7 +144,7 @@ wrong extension point, and the new names
 never appear in early autowiring.
 
 21
-00:03:10,031 --> 00:03:20,687
+00:03:16,439 --> 00:03:27,479
 Another symptom: partnerships edits YAML
 to point at a class that exists but whose
 constructor signature no longer matches
@@ -152,23 +152,23 @@ the indexed args — BeanCreationException
 naming the plugin id,
 
 22
-00:03:20,807 --> 00:03:23,807
+00:03:27,599 --> 00:03:29,959
 with a nested constructor mismatch.
 
 23
-00:03:23,927 --> 00:03:32,735
+00:03:30,079 --> 00:03:37,959
 Trade-offs. Programmatic definitions give
 marketplace teams a metadata-driven plugin
 surface without scanning untrusted jars.
 
 24
-00:03:32,855 --> 00:03:39,791
+00:03:38,079 --> 00:03:44,959
 You own validation: bad YAML becomes a
 startup incident unless you schema-check
 before registerBeanDefinition.
 
 25
-00:03:39,911 --> 00:03:49,031
+00:03:45,079 --> 00:03:54,079
 Component scanning is simpler for first-
 party code you control; it is the wrong
 tool when the class lives in a vendor
@@ -176,26 +176,26 @@ artifact annotated for someone else's
 product.
 
 26
-00:03:49,151 --> 00:03:57,407
+00:03:54,199 --> 00:04:02,719
 XML <bean> elements are the same metadata
 idea in a different syntax — the registry
 does not care how the BeanDefinition
 object was born.
 
 27
-00:03:57,527 --> 00:04:07,727
+00:04:02,839 --> 00:04:12,199
 Misconception unique to bean definitions:
 "The @Component class is the bean
 definition." The annotation is a signal
 that a scanner should create a definition.
 
 28
-00:04:07,847 --> 00:04:12,551
+00:04:12,319 --> 00:04:16,199
 The definition is a separate metadata
 object living in the registry.
 
 29
-00:04:12,671 --> 00:04:23,207
+00:04:16,319 --> 00:04:29,839
 Two definitions can point at the same
 class with different names, scopes, or
 constructor args — stripeCheckout and
@@ -203,12 +203,12 @@ stripeCheckoutSandbox might share a class
 and differ only in property values.
 
 30
-00:04:23,327 --> 00:04:28,391
+00:04:29,959 --> 00:04:33,599
 Removing the annotation does not remove a
 definition you registered by hand.
 
 31
-00:04:28,512 --> 00:04:42,983
+00:04:33,719 --> 00:04:46,399
 Another misconception: "Registering a
 definition creates the instance."
 Registration stores the recipe; creation
@@ -217,7 +217,7 @@ instantiation. Partnerships ships a third
 plugin next week.
 
 32
-00:04:43,103 --> 00:04:57,072
+00:04:46,519 --> 00:04:59,759
 QA files a nastier bug first: two hotel-
 booking browsers share one shopping cart
 bean, and guest A's room selection appears

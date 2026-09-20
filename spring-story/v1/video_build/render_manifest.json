@@ -1,9 +1,9 @@
 [
   {
-    "ep": 6,
-    "title": "ApplicationContext",
+    "ep": 7,
+    "title": "Bean Definition",
     "beats": 32,
-    "duration_sec": 313.85,
-    "mp4": "/workspace/spring-story/v1/episodes/ep06-applicationcontext/Spring_Episode_06_ApplicationContext.mp4"
+    "duration_sec": 300.21,
+    "mp4": "/workspace/spring-story/v1/episodes/ep07-bean-definition/Spring_Episode_07_Bean_Definition.mp4"
   }
 ]
