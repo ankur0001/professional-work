@@ -1,9 +1,9 @@
 [
   {
-    "ep": 50,
-    "title": "JPA Performance Tuning",
+    "ep": 51,
+    "title": "N+1 Problem",
     "beats": 15,
-    "duration_sec": 135.53,
-    "mp4": "/workspace/spring-story/v1/episodes/ep50-jpa-performance-tuning/Spring_Episode_50_JPA_Performance_Tuning.mp4"
+    "duration_sec": 175.61,
+    "mp4": "/workspace/spring-story/v1/episodes/ep51-n-1-problem/Spring_Episode_51_N_1_Problem.mp4"
   }
 ]
