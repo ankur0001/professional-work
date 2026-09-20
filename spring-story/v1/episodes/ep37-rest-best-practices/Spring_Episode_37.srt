@@ -1,11 +1,11 @@
 1
-00:00:00,000 --> 00:00:07,200
+00:00:00,000 --> 00:00:08,119
 You can wire controllers, validation,
 advice, filters, and uploads and still
 ship an API that fights its clients.
 
 2
-00:00:07,320 --> 00:00:19,056
+00:00:08,239 --> 00:00:20,879
 REST best practices are the craft layer:
 idempotent parcel create, honest
 pagination of tracking events, and
@@ -14,7 +14,7 @@ the wire format. Start with resource
 naming.
 
 3
-00:00:19,176 --> 00:00:36,695
+00:00:21,000 --> 00:00:38,879
 Use nouns and plural collections:
 /parcels, /parcels/{id},
 /parcels/{id}/events. Avoid verby paths
@@ -23,14 +23,14 @@ the action. Keep identifiers opaque in
 URLs.
 
 4
-00:00:36,816 --> 00:00:47,352
+00:00:39,000 --> 00:00:49,159
 Idempotent create matters the moment a
 trucker’s mobile app retries a POST after
 a timeout. Without an idempotency key, you
 register the same parcel twice.
 
 5
-00:00:47,472 --> 00:01:03,240
+00:00:49,280 --> 00:01:03,640
 With one, the second call returns the
 original resource: Look at this java for a
 moment. Store the key with the created
@@ -39,28 +39,28 @@ and the same Location. Do not invent a
 second parcel.
 
 6
-00:01:03,359 --> 00:01:13,295
+00:01:03,759 --> 00:01:13,319
 Clients must send the key; document that
 requirement as part of the contract.
 Pagination keeps tracking-event lists
 honest: Look at this java for a moment.
 
 7
-00:01:13,415 --> 00:01:23,783
+00:01:13,439 --> 00:01:23,319
 Return Page when the UI needs total
 counts; return Slice when "has next" is
 enough and count queries hurt. Cap size so
 a client cannot ask for a million events.
 
 8
-00:01:23,903 --> 00:01:36,000
+00:01:23,439 --> 00:01:35,319
 Stable sort keys matter — without them,
 page two drifts under concurrent inserts.
 DTO boundaries close the loop. Request and
 response types are not your JPA entities.
 
 9
-00:01:36,119 --> 00:01:48,791
+00:01:35,439 --> 00:01:47,719
 Entities grow lazy associations and
 persistence annotations; JSON serializers
 will happily walk them into N+1 territory
@@ -68,7 +68,7 @@ and leak columns you never meant to
 publish. Map explicitly at the edge.
 
 10
-00:01:48,911 --> 00:02:04,967
+00:01:47,840 --> 00:02:03,439
 Status discipline stays non-negotiable:
 201 for creates, 204 for empty successful
 deletes, 404 for missing parcels, 409 for
@@ -77,7 +77,7 @@ envelope from your advice keeps mobile
 parsers sane.
 
 11
-00:02:05,087 --> 00:02:17,711
+00:02:03,560 --> 00:02:16,280
 Caching headers on pure GETs of immutable
 snapshots can help; do not cache
 personalized or rapidly changing gate
@@ -85,7 +85,7 @@ state without thought. Prefer ISO-8601
 timestamps and explicit money types.
 
 12
-00:02:17,831 --> 00:02:32,280
+00:02:16,400 --> 00:02:31,360
 Empty collections are 200 with [], not
 404. RPC-in-disguise paths
 (/parcels/doCheckIn) fight every HTTP tool
@@ -93,7 +93,7 @@ you adopt later. Returning entities "just
 for now" becomes forever.
 
 13
-00:02:32,400 --> 00:02:44,231
+00:02:31,480 --> 00:02:43,560
 Skipping idempotency because "retries are
 rare" guarantees duplicate parcels on the
 first flaky pier Wi-Fi day. Phase Three
@@ -101,7 +101,7 @@ gave you the HTTP front door and the
 habits to speak it carefully.
 
 14
-00:02:44,352 --> 00:02:58,056
+00:02:43,680 --> 00:02:57,360
 The next pressure is storage: vessels,
 manifests, and cargo lines that must
 survive process restarts. Mapping those as

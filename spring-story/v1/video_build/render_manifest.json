@@ -1,9 +1,9 @@
 [
   {
-    "ep": 36,
-    "title": "File Upload",
-    "beats": 16,
-    "duration_sec": 155.41,
-    "mp4": "/workspace/spring-story/v1/episodes/ep36-file-upload/Spring_Episode_36_File_Upload.mp4"
+    "ep": 37,
+    "title": "REST Best Practices",
+    "beats": 14,
+    "duration_sec": 177.81,
+    "mp4": "/workspace/spring-story/v1/episodes/ep37-rest-best-practices/Spring_Episode_37_REST_Best_Practices.mp4"
   }
 ]
