@@ -1,9 +1,9 @@
 [
   {
-    "ep": 21,
-    "title": "@SpringBootApplication",
-    "beats": 30,
-    "duration_sec": 318.73,
-    "mp4": "/workspace/spring-story/v1/episodes/ep21-springbootapplication/Spring_Episode_21_SpringBootApplication.mp4"
+    "ep": 22,
+    "title": "Configuration Properties",
+    "beats": 28,
+    "duration_sec": 307.89,
+    "mp4": "/workspace/spring-story/v1/episodes/ep22-configuration-properties/Spring_Episode_22_Configuration_Properties.mp4"
   }
 ]
