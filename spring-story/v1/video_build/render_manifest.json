@@ -1,9 +1,9 @@
 [
   {
-    "ep": 81,
-    "title": "Spring WebFlux",
-    "beats": 18,
-    "duration_sec": 177.73,
-    "mp4": "/workspace/spring-story/v1/episodes/ep81-spring-webflux/Spring_Episode_81_Spring_WebFlux.mp4"
+    "ep": 83,
+    "title": "Microservices with Spring",
+    "beats": 22,
+    "duration_sec": 241.67,
+    "mp4": "/workspace/spring-story/v1/episodes/ep83-microservices-with-spring/Spring_Episode_83_Microservices_with_Spring.mp4"
   }
 ]
