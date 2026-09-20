@@ -1,9 +1,9 @@
 [
   {
-    "ep": 83,
-    "title": "Microservices with Spring",
-    "beats": 22,
-    "duration_sec": 241.67,
-    "mp4": "/workspace/spring-story/v1/episodes/ep83-microservices-with-spring/Spring_Episode_83_Microservices_with_Spring.mp4"
+    "ep": 84,
+    "title": "Configuration Server",
+    "beats": 15,
+    "duration_sec": 157.5,
+    "mp4": "/workspace/spring-story/v1/episodes/ep84-configuration-server/Spring_Episode_84_Configuration_Server.mp4"
   }
 ]
