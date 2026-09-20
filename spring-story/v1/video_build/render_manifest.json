@@ -1,9 +1,9 @@
 [
   {
-    "ep": 8,
-    "title": "Bean Scopes",
-    "beats": 17,
-    "duration_sec": 153.53,
-    "mp4": "/workspace/spring-story/v1/episodes/ep08-bean-scopes/Spring_Episode_08_Bean_Scopes.mp4"
+    "ep": 9,
+    "title": "Bean Lifecycle",
+    "beats": 30,
+    "duration_sec": 310.25,
+    "mp4": "/workspace/spring-story/v1/episodes/ep09-bean-lifecycle/Spring_Episode_09_Bean_Lifecycle.mp4"
   }
 ]
