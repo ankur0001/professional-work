@@ -1,9 +1,9 @@
 [
   {
-    "ep": 59,
-    "title": "Dynamic Proxies",
-    "beats": 16,
-    "duration_sec": 183.71,
-    "mp4": "/workspace/spring-story/v1/episodes/ep59-dynamic-proxies/Spring_Episode_59_Dynamic_Proxies.mp4"
+    "ep": 60,
+    "title": "JDK Proxy",
+    "beats": 29,
+    "duration_sec": 299.53,
+    "mp4": "/workspace/spring-story/v1/episodes/ep60-jdk-proxy/Spring_Episode_60_JDK_Proxy.mp4"
   }
 ]

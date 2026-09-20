@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:12,336
+00:00:00,000 --> 00:00:12,839
 Program the harbor gate to an interface
 and the JDK already knows how to wrap it.
 java.lang.reflect.Proxy implements that
@@ -7,7 +7,7 @@ interface at runtime and funnels every
 call through one InvocationHandler.
 
 2
-00:00:12,455 --> 00:00:28,295
+00:00:12,959 --> 00:00:27,759
 Spring AOP leans on that when an
 interface-based proxy is enough. No
 subclass of your concrete class. A brand-
@@ -16,14 +16,14 @@ methods. Interface-oriented design and JDK
 proxies fit cleanly.
 
 3
-00:00:28,415 --> 00:00:35,063
+00:00:27,879 --> 00:00:34,519
 You inject GateService, not
 HarborGateService, and Spring can
 substitute a proxy that still is-a
 GateService.
 
 4
-00:00:35,183 --> 00:00:46,727
+00:00:34,640 --> 00:00:45,000
 Callers never need the concrete class —
 which is exactly what the yard crane
 console and the trucker API both depend on
@@ -31,13 +31,13 @@ when metrics and transactions wrap
 release. Look at this java for a moment.
 
 5
-00:00:46,847 --> 00:00:55,679
+00:00:45,119 --> 00:00:52,559
 Look at this java for a moment. Walk a
 release call at runtime. Collaborators
 hold a field of type GateService.
 
 6
-00:00:55,799 --> 00:01:05,951
+00:00:52,679 --> 00:01:03,200
 After context refresh with matching
 advisors, the injected object is often a
 JDK proxy implementing GateService (and
@@ -45,33 +45,33 @@ possibly other interfaces the target
 exposes),
 
 7
-00:01:06,072 --> 00:01:11,256
+00:01:03,320 --> 00:01:07,840
 holding HarborGateService as the target
 inside Spring's AOP infrastructure.
 
 8
-00:01:11,376 --> 00:01:21,072
+00:01:07,959 --> 00:01:17,399
 The trucker API calls
 gateService.release(cargoId). The call
 enters the proxy's InvocationHandler, not
 HarborGateService directly.
 
 9
-00:01:21,192 --> 00:01:29,304
+00:01:17,519 --> 00:01:25,759
 The interceptor chain runs — here the
 metrics @Around records nanos, and any
 transactional advisor would begin/commit
 around proceed.
 
 10
-00:01:29,424 --> 00:01:40,248
+00:01:25,879 --> 00:01:35,359
 pjp.proceed() eventually reflects into
 HarborGateService.release, which loads
 cargo and opens the boom. Return value
 flows back through the same chain.
 
 11
-00:01:40,368 --> 00:01:50,880
+00:01:35,479 --> 00:01:45,599
 The concrete class is not the type of the
 injected field — and that is fine for
 every caller that programmed to the
@@ -79,7 +79,7 @@ interface. Failure mode that shows up in
 code review and production.
 
 12
-00:01:51,000 --> 00:02:06,288
+00:01:45,719 --> 00:01:59,199
 Someone injects or casts to
 HarborGateService while Spring published a
 JDK proxy. The proxy is not an instance of
@@ -88,7 +88,7 @@ interface only. instanceof
 HarborGateService is false.
 
 13
-00:02:06,408 --> 00:02:18,648
+00:01:59,319 --> 00:02:13,599
 (HarborGateService) gateService throws
 ClassCastException at the edge that
 assumed the impl type — often a @Autowired
@@ -97,11 +97,11 @@ injection with an unsatisfied dependency
 or a wrong-type match d
 
 14
-00:02:18,768 --> 00:02:21,960
+00:02:13,719 --> 00:02:16,119
 epending on how candidates were filtered.
 
 15
-00:02:22,080 --> 00:02:33,192
+00:02:16,239 --> 00:02:29,599
 Self-invocation inside HarborGateService —
 this.status(gateId) from release — never
 enters the proxy, so advice on status does
@@ -109,14 +109,14 @@ not run for that path; metrics and
 transactions skip.
 
 16
-00:02:33,312 --> 00:02:40,296
+00:02:29,719 --> 00:02:36,239
 Pointcuts written against the concrete
 class name may not match the way you
 expect when the public entry is the
 interface proxy.
 
 17
-00:02:40,416 --> 00:02:51,312
+00:02:36,359 --> 00:02:47,719
 Final methods on the concrete class are
 irrelevant to the JDK proxy type because
 callers should not see the concrete class
@@ -125,7 +125,7 @@ interface methods are dispatched through
 the handler.
 
 18
-00:02:51,432 --> 00:03:04,440
+00:02:47,839 --> 00:03:00,639
 JDK proxies can implement multiple
 interfaces. If HarborGateService also
 implements HealthIndicator, the proxy can
@@ -134,21 +134,21 @@ interface may receive the same proxy
 instance.
 
 19
-00:03:04,560 --> 00:03:14,112
+00:03:00,759 --> 00:03:09,879
 Only interface methods are advised through
 this mechanism. Package-private or
 protected methods on the impl are not part
 of the proxy's public contract.
 
 20
-00:03:14,232 --> 00:03:23,184
+00:03:09,999 --> 00:03:19,599
 Selection rule of thumb: when the target
 implements at least one interface (other
 than marker-only cases Spring may ignore),
 JDK proxy is eligible.
 
 21
-00:03:23,304 --> 00:03:35,496
+00:03:19,719 --> 00:03:32,959
 Force class-based proxies with
 spring.aop.proxy-target-class=true or
 @EnableAspectJAutoProxy(proxyTargetClass =
@@ -156,13 +156,13 @@ true) and you push toward CGLIB even when
 interfaces exist.
 
 22
-00:03:35,616 --> 00:03:42,528
+00:03:33,079 --> 00:03:40,399
 Boot defaults have shifted over versions —
 verify what you actually get instead of
 assuming a textbook JDK proxy.
 
 23
-00:03:42,648 --> 00:03:56,568
+00:03:40,519 --> 00:03:55,439
 Debug with
 AopUtils.isJdkDynamicProxy(bean) or glance
 at the class name — $Proxy12 is a clue you
@@ -171,7 +171,7 @@ $$SpringCGLIB$$ means class proxy. Trade-
 offs.
 
 24
-00:03:56,688 --> 00:04:06,144
+00:03:55,559 --> 00:04:05,999
 JDK proxies need no bytecode subclassing
 of your concrete type, play well with
 final classes that still implement
@@ -179,20 +179,20 @@ interfaces, and keep the API surface
 honest.
 
 25
-00:04:06,264 --> 00:04:11,880
+00:04:06,119 --> 00:04:10,959
 They punish concrete-type injection and
 are unavailable when there is no interface
 to implement.
 
 26
-00:04:12,000 --> 00:04:20,088
+00:04:11,079 --> 00:04:18,959
 Prefer interface injection everywhere gate
 collaborators are wired; reserve concrete
 types for the @Service implementation
 class itself.
 
 27
-00:04:20,208 --> 00:04:33,960
+00:04:19,079 --> 00:04:31,199
 Misconception unique to JDK proxies: "The
 proxy is a subclass of HarborGateService."
 It is not. It is a sibling stand-in that
@@ -200,7 +200,7 @@ shares the interface, generated by
 Proxy.newProxyInstance.
 
 28
-00:04:34,080 --> 00:04:46,608
+00:04:31,319 --> 00:04:44,559
 Another misconception: "If I have an
 interface, Boot always uses JDK proxies."
 Configuration and Boot version may choose
@@ -208,7 +208,7 @@ CGLIB anyway — check before writing casts
 or instanceof against the impl.
 
 29
-00:04:46,728 --> 00:05:03,360
+00:04:44,679 --> 00:04:59,079
 The limitation is the next engineering
 wall. What if there is no interface? What
 if the bean is a concrete @Service
