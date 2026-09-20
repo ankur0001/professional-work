@@ -1,10 +1,10 @@
 1
-00:00:00,000 --> 00:00:06,480
+00:00:00,000 --> 00:00:04,799
 A ship’s manifest is a document with
 lines. In the database that is two tables.
 
 2
-00:00:06,600 --> 00:00:18,600
+00:00:04,919 --> 00:00:17,000
 In Java you want a Manifest that owns a
 list of CargoLine — and when a clerk
 deletes a line from the list, you want the
@@ -13,7 +13,7 @@ That is relationship mapping with orphan
 removal.
 
 3
-00:00:18,719 --> 00:00:34,128
+00:00:17,119 --> 00:00:32,920
 JPA association annotations describe
 cardinality and ownership. @OneToMany /
 @ManyToOne cover the manifest↔line case.
@@ -21,7 +21,7 @@ cardinality and ownership. @OneToMany /
 misuse them and join tables multiply.
 
 4
-00:00:34,247 --> 00:00:48,359
+00:00:33,039 --> 00:00:48,200
 For harbor cargo, start with the classic
 parent-child: Look at this java for a
 moment. Look at this java for a moment.
@@ -29,12 +29,12 @@ mappedBy = "manifest" says the child owns
 the foreign key column manifest_id.
 
 5
-00:00:48,479 --> 00:00:52,991
+00:00:48,320 --> 00:00:52,600
 Cascade ALL means persisting a new
 manifest persists new lines.
 
 6
-00:00:53,111 --> 00:01:06,024
+00:00:52,719 --> 00:01:06,159
 orphanRemoval = true means removing a line
 from the collection schedules a DELETE for
 that cargo row on flush — the relational
@@ -43,25 +43,25 @@ the document." Always maintain both sides
 in addLin
 
 7
-00:01:06,143 --> 00:01:08,447
+00:01:06,280 --> 00:01:07,920
 e / removeLine.
 
 8
-00:01:08,567 --> 00:01:17,328
+00:01:08,040 --> 00:01:16,360
 If you only lines.add(line) and forget
 line.setManifest(this), the foreign key
 may stay null depending on flush order and
 owning side rules.
 
 9
-00:01:17,447 --> 00:01:27,959
+00:01:16,480 --> 00:01:27,280
 Prefer FetchType.LAZY on collections so
 loading one manifest for a header screen
 does not pull every line until you ask.
 Bidirectional relationships are not free.
 
 10
-00:01:28,079 --> 00:01:41,447
+00:01:27,400 --> 00:01:41,840
 Equals/hashCode on entities with generated
 ids is a footgun inside sets. Cascading
 REMOVE from manifest to lines is powerful
@@ -70,34 +70,34 @@ do that only when the business rule
 matches.
 
 11
-00:01:41,567 --> 00:01:51,480
+00:01:41,960 --> 00:01:51,960
 @ManyToMany between vessels and ports
 often wants an explicit association entity
 (PortCall) instead of a bare join table,
 because the call has its own arrival time.
 
 12
-00:01:51,599 --> 00:02:00,191
+00:01:52,080 --> 00:02:00,800
 People mark every association EAGER "so I
 never see LazyInitializationException" and
 then wonder why a simple manifest list
 issues a forest of joins.
 
 13
-00:02:00,311 --> 00:02:07,727
+00:02:00,920 --> 00:02:08,680
 Others forget orphan removal and leave
 cargo rows pointing at deleted manifests —
 or delete lines manually in three places.
 
 14
-00:02:07,847 --> 00:02:17,544
+00:02:08,800 --> 00:02:17,320
 A third mistake is putting @JoinColumn on
 both sides of a bidirectional pair and
 confusing Hibernate about ownership.
 Associations give you a graph.
 
 15
-00:02:17,663 --> 00:02:24,575
+00:02:17,439 --> 00:02:24,439
 Querying that graph without dropping to
 table columns — "manifests for this vessel
 on this date" — is JPQL’s job.
