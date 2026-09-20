@@ -1,9 +1,9 @@
 [
   {
-    "ep": 24,
-    "title": "Actuator",
-    "beats": 27,
-    "duration_sec": 291.81,
-    "mp4": "/workspace/spring-story/v1/episodes/ep24-actuator/Spring_Episode_24_Actuator.mp4"
+    "ep": 25,
+    "title": "DevTools",
+    "beats": 29,
+    "duration_sec": 290.57,
+    "mp4": "/workspace/spring-story/v1/episodes/ep25-devtools/Spring_Episode_25_DevTools.mp4"
   }
 ]

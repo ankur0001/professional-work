@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:16,920
+00:00:00,000 --> 00:00:15,519
 LiveReload flickers on the museum ticket
 purchase page for the third time in a
 minute. A designer changed CSS. DevTools
@@ -8,21 +8,21 @@ reload hits before Thymeleaf finishes
 compiling. Another save.
 
 2
-00:00:17,040 --> 00:00:25,848
+00:00:15,639 --> 00:00:23,479
 Another restart. The developer disables
 LiveReload in frustration, then wonders
 why classpath changes no longer restart
 anything.
 
 3
-00:00:25,968 --> 00:00:34,632
+00:00:23,599 --> 00:00:31,839
 DevTools is a power tool for local
 feedback — not a production dependency,
 and not magic that understands design-tool
 save storms on a ticket UI.
 
 4
-00:00:34,752 --> 00:00:46,416
+00:00:31,959 --> 00:00:43,599
 Spring Boot DevTools watches the classpath
 for changes, triggers a fast application
 restart using two classloaders (base jars
@@ -30,7 +30,7 @@ stay loaded; project classes reload), and
 can push browser LiveReload events.
 
 5
-00:00:46,536 --> 00:00:59,591
+00:00:43,719 --> 00:00:56,320
 It disables some caching for templates in
 development. Exclude the dependency from
 production builds — optional Maven
@@ -39,7 +39,7 @@ so the fat jar you ship does not carry the
 restart agent.
 
 6
-00:00:59,712 --> 00:01:14,975
+00:00:56,439 --> 00:01:09,319
 Look at this example. <dependency> Look at
 this example. # application-local.yml Walk
 the local config. thymeleaf.cache: false
@@ -47,13 +47,13 @@ ensures template edits are visible without
 relying only on restart.
 
 7
-00:01:15,096 --> 00:01:22,680
+00:01:09,439 --> 00:01:16,439
 livereload.enabled: true opens the
 LiveReload server that browsers (with an
 extension or injected script) listen to.
 
 8
-00:01:22,799 --> 00:01:34,799
+00:01:16,560 --> 00:01:29,400
 restart.additional-exclude:
 static/,public/ is the museum fix: CSS and
 static asset saves should *not* trigger a
@@ -61,7 +61,7 @@ full application restart — only a browser
 refresh if LiveReload remains on.
 
 9
-00:01:34,920 --> 00:01:48,384
+00:01:29,519 --> 00:01:42,560
 Java and template class changes still
 restart the context.
 <optional>true</optional> helps keep
@@ -70,7 +70,7 @@ into downstream modules. Runtime while
 building the museum UI.
 
 10
-00:01:48,504 --> 00:02:01,560
+00:01:42,679 --> 00:01:57,879
 Save a Java controller → DevTools detects
 classpath change → restart classloader
 discards project classes and rebuilds the
@@ -79,31 +79,31 @@ start, but still re-runs bean creation,
 @PostConstruct,
 
 11
-00:02:01,680 --> 00:02:03,912
+00:01:57,999 --> 00:01:59,479
 and connection setup.
 
 12
-00:02:04,032 --> 00:02:10,800
+00:01:59,599 --> 00:02:07,199
 Save a static CSS file under an excluded
 path → no restart; LiveReload can refresh
 the browser alone.
 
 13
-00:02:10,920 --> 00:02:19,152
+00:02:07,319 --> 00:02:15,439
 Leave static files inside the restart
 trigger set and every CSS save pays a full
 context reboot — the flicker loop that
 burned the designer.
 
 14
-00:02:19,272 --> 00:02:27,888
+00:02:15,559 --> 00:02:23,559
 Remote DevTools exists for updating a
 remote app; treat it as a security surface
 requiring secrets, not a default for
 shared environments.
 
 15
-00:02:28,008 --> 00:02:38,832
+00:02:23,679 --> 00:02:36,599
 Failure mode symptoms: context restart
 thrash — logs show repeated "Restarting
 application" on every autosave from an IDE
@@ -111,13 +111,13 @@ or design tool writing static files;
 browser flashes white;
 
 16
-00:02:38,951 --> 00:02:46,752
+00:02:36,719 --> 00:02:44,199
 in-progress form state on the ticket page
 resets; local H2 database re-creates empty
 because the embedded bean was rebuilt.
 
 17
-00:02:46,871 --> 00:02:57,503
+00:02:44,319 --> 00:02:54,999
 Another failure: DevTools accidentally on
 the production classpath — unexpected
 restart behavior or LiveReload port open;
@@ -125,7 +125,7 @@ always verify the production image's
 dependency tree.
 
 18
-00:02:57,623 --> 00:03:09,144
+00:02:55,119 --> 00:03:06,599
 Disabling LiveReload in the browser
 extension while leaving restart triggers
 wide still restarts on CSS if excludes are
@@ -134,7 +134,7 @@ restart cost when the restart watcher is
 the real bill.
 
 19
-00:03:09,263 --> 00:03:22,007
+00:03:06,719 --> 00:03:20,999
 Trade-offs. DevTools shortens the edit-
 refresh loop for server-side UI work and
 small API tweaks; it is not a substitute
@@ -143,14 +143,14 @@ method replacement without resetting
 singletons.
 
 20
-00:03:22,127 --> 00:03:31,727
+00:03:21,119 --> 00:03:31,239
 Stateful beans, in-memory databases, and
 warm caches reset on every restart —
 externalize local Postgres if you need
 durable local data across restarts.
 
 21
-00:03:31,847 --> 00:03:45,167
+00:03:31,359 --> 00:03:44,839
 Turn DevTools off when diagnosing timing
 bugs that only appear under steady state.
 Classloader split, briefly: the "base"
@@ -159,7 +159,7 @@ change; the "restart" loader holds your
 target/classes.
 
 22
-00:03:45,287 --> 00:03:57,023
+00:03:44,959 --> 00:03:56,719
 On restart, only the restart loader is
 discarded and rebuilt, which is why
 DevTools feels faster than killing the JVM
@@ -167,25 +167,25 @@ DevTools feels faster than killing the JVM
 @Service singletons do.
 
 23
-00:03:57,143 --> 00:04:05,183
+00:03:56,839 --> 00:04:04,959
 Museum ticket sessions stored only in an
 in-memory bean vanish; designer CSS
 excludes avoid paying that tax for static
 edits.
 
 24
-00:04:05,303 --> 00:04:12,695
+00:04:05,079 --> 00:04:12,479
 Knowing which loader owns a class explains
 why a dependency bump still needs a full
 stop/start while a controller tweak does
 not.
 
 25
-00:04:12,815 --> 00:04:15,887
+00:04:12,599 --> 00:04:14,919
 Misconception unique to DevTools:
 
 26
-00:04:16,007 --> 00:04:28,895
+00:04:15,039 --> 00:04:27,480
 "DevTools restart is the same as hot-swap
 / HotSwap agent / JRebel class
 redefinition." It is a restart of the
@@ -194,19 +194,19 @@ classloader split — faster than killing
 the JVM,
 
 27
-00:04:29,015 --> 00:04:32,711
+00:04:27,599 --> 00:04:30,759
 slower and broader than swapping one
 method body.
 
 28
-00:04:32,831 --> 00:04:43,199
+00:04:30,879 --> 00:04:39,239
 Stateful beans reset. In-memory H2 re-
 creates unless you externalize it. The
 ticket UI iteration speed is acceptable
 again.
 
 29
-00:04:43,319 --> 00:04:54,143
+00:04:39,359 --> 00:04:50,119
 At 02:00 the ferry-booking on-call channel
 pastes four log lines from four pods with
 no shared request id — DevTools will not
