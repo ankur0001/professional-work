@@ -1,0 +1,33 @@
+The Spring Story — Episode 04: Dependency Injection
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Knowing that the container owns creation is useful — until you ask the practical question: how do my…
+• Inversion of Control tells you who is in charge.
+• Dependency Injection is the everyday mechanism.
+• It is how a service gets a repository, how a controller gets a service, how a gateway gets a config object…
+• A class constructs collaborators with new, or asks a service locator for them, or reaches into static holders.
+• The class now knows too much: which implementation exists, how it is configured, and when it is born.
+• Tests inherit that knowledge.
+• Swapping a real payment client for a fake means editing production construction paths or inventing brittle…
+• …and more
+
+Timestamps
+0:00 Knowing that the container owns creation is useful — until you ask…
+0:51 Dependency Injection flips that. The class declares dependencies.…
+1:27 Walk that code with the DI lens. @Service is just a stereotype…
+2:08 How does Spring choose which bean to inject when several…
+2:58 DI also changes how you think about interfaces. If PricingService…
+3:39 So today we moved from "the container creates beans" to "the…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 05 — BeanFactory
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

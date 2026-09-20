@@ -1,0 +1,108 @@
+1
+00:00:00,000 --> 00:00:15,599
+Inside one harbor booking request, you
+load Booking id 500 twice — once to
+authorize the trucker, once to attach a
+gate pass. Do you get two Java objects or
+one? In JPA, inside one persistence
+context, you get one.
+
+2
+00:00:15,719 --> 00:00:25,607
+That identity guarantee is the persistence
+context’s quiet contract. The persistence
+context is the first-level cache and the
+unit-of-work boundary.
+
+3
+00:00:25,727 --> 00:00:32,903
+It tracks managed entities, their
+snapshots for dirty checking, and pending
+inserts, updates, and deletes until flush.
+
+4
+00:00:33,024 --> 00:00:39,960
+In a typical Spring Boot app it is
+transaction-scoped: open when the
+transactional method starts, close when it
+ends.
+
+5
+00:00:40,079 --> 00:00:53,640
+Open-session-in-view can stretch it across
+the whole web request — convenient for
+lazy reads, dangerous when it hides N+1
+until production. Look at this java for a
+moment. Look at this java for a moment.
+
+6
+00:00:53,759 --> 00:01:06,816
+first == second is reference equality, not
+merely equal ids. Hibernate did not need a
+second SELECT for the findById after the
+entity was already managed — the context
+returned the tracked instance.
+
+7
+00:01:06,935 --> 00:01:15,743
+Change fields through either variable;
+there is only one snapshot to dirty-check.
+Across transactions the guarantee
+disappears.
+
+8
+00:01:15,863 --> 00:01:22,271
+A booking loaded in request A and a
+booking loaded in request B are different
+instances even for the same row.
+
+9
+00:01:22,391 --> 00:01:30,072
+That is why detached-edit bugs from the
+previous lesson appear: people pass
+instances across contexts as if identity
+were global.
+
+10
+00:01:30,191 --> 00:01:43,391
+EntityManager.clear() detaches all managed
+entities — useful in batch jobs,
+catastrophic mid-request if you still hold
+references you plan to dirty-check.
+flush() pushes SQL early without closing
+the context.
+
+11
+00:01:43,511 --> 00:01:47,471
+detach(entity) removes one instance from
+tracking.
+
+12
+00:01:47,591 --> 00:01:54,407
+The persistence context is not the second-
+level cache, not the database session in
+the JDBC sense alone,
+
+13
+00:01:54,527 --> 00:02:03,071
+and not "wherever Hibernate feels like
+remembering things." It is a well-defined
+map of managed entities tied to a unit of
+work.
+
+14
+00:02:03,191 --> 00:02:15,719
+Believing two finds always mean two
+SELECTs misses the cache. Believing two
+finds across transactions share an
+instance misses the boundary. You
+understand the room managed entities live
+in.
+
+15
+00:02:15,840 --> 00:02:28,391
+You still do not want every use case to
+inject EntityManager and write find/save
+by hand. Spring Data JPA repositories are
+the typed façade — and for vessels, that
+starts with findByImoNumber.

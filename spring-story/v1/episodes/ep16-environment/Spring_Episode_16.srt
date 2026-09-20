@@ -1,0 +1,222 @@
+1
+00:00:00,000 --> 00:00:16,320
+Ops starts the tolling roadside service
+with: Look at this bash for a moment. The
+process still opens express-lane pricing.
+A ConfigMap file says true. An environment
+variable says true. The CLI says false.
+
+2
+00:00:16,440 --> 00:00:29,807
+Nobody can explain precedence without
+opening Spring's property source order
+charts. Feature flags and DB URLs for
+tolling are supposed to resolve from env,
+files, and CLI through one abstraction:
+Environment.
+
+3
+00:00:29,928 --> 00:00:37,920
+When that abstraction is ignored — or when
+code reads System.getenv in one place and
+@Value in another — operators lose the
+kill switch.
+
+4
+00:00:38,039 --> 00:00:44,688
+Environment models two ideas together:
+active profiles, and a hierarchy of
+PropertySource instances.
+
+5
+00:00:44,807 --> 00:00:53,783
+When you call
+env.getProperty("tolling.express-
+lane.enabled"), Spring walks property
+sources in precedence order and returns
+the first hit.
+
+6
+00:00:53,903 --> 00:01:04,847
+Boot adds several sources for you —
+command-line args typically beat
+environment variables, which beat
+application YAML inside the jar, and so on
+— but the interface you code against stays
+Environment,
+
+7
+00:01:04,967 --> 00:01:09,455
+or @Value / @ConfigurationProperties that
+read through it.
+
+8
+00:01:09,575 --> 00:01:20,711
+Profiles decide which documents join the
+stack; Environment is what answers after
+the stack is built. Look at this java for
+a moment. Look at this example.
+
+9
+00:01:20,831 --> 00:01:34,919
+# application.yml (lowest among these
+examples) Walk the service. The
+constructor captures resolved values once
+at bean creation — a snapshot suitable for
+flags that should not flip mid-request
+without a refresh story.
+
+10
+00:01:35,039 --> 00:01:43,727
+getProperty(key, Boolean.class, false)
+converts the string through Spring's
+conversion service and defaults to false
+if the key is absent everywhere.
+
+11
+00:01:43,847 --> 00:01:51,863
+getRequiredProperty throws
+IllegalStateException if the datasource
+URL is missing — fail startup rather than
+connect to a phantom default.
+
+12
+00:01:51,983 --> 00:02:03,959
+price uses the captured boolean; it never
+re-queries Environment per vehicle, so a
+later change to a mounted file would not
+be visible until the bean is rebuilt.
+Runtime for that CLI launch.
+
+13
+00:02:04,079 --> 00:02:16,415
+Boot (or a manually prepared context)
+builds the Environment *before* refreshing
+most application beans. Command-line
+property source is consulted first for
+tolling.express-lane.enabled → false.
+
+14
+00:02:16,535 --> 00:02:26,567
+The YAML true and any ConfigMap-derived
+env var never win for that key.
+LanePricingService constructs with false;
+express discounts stay off.
+
+15
+00:02:26,687 --> 00:02:34,007
+Change only the ConfigMap, omit the CLI
+flag, restart, and the same code path
+yields true without recompilation.
+
+16
+00:02:34,127 --> 00:02:46,559
+If someone adds @Value("${tolling.express-
+lane.enabled}") on another bean while a
+third class calls Boolean.parseBoolean(Sys
+tem.getenv("TOLLING_EXPRESS_LANE_ENABLED")
+),
+
+17
+00:02:46,679 --> 00:02:52,871
+you can get split decisions inside one
+process — the failure mode that made ops
+distrust the kill switch.
+
+18
+00:02:52,991 --> 00:02:58,871
+Failure mode symptoms: CLI says false,
+plaza receipts still show express
+discounts.
+
+19
+00:02:58,991 --> 00:03:10,727
+Checklist: confirm the property key
+spelling matches exactly (relaxed binding
+helps for env vars like
+TOLLING_EXPRESS_LANE_ENABLED, but only
+when read *through* Environment);
+
+20
+00:03:10,847 --> 00:03:21,527
+confirm the bean actually injected
+Environment/@Value rather than a static
+getenv; dump high-precedence sources via a
+secured actuator env endpoint and look for
+an unexpected winner;
+
+21
+00:03:21,647 --> 00:03:27,551
+confirm the flag was not read only into a
+@Bean that was cached before you thought
+you changed config.
+
+22
+00:03:27,671 --> 00:03:40,535
+Another symptom: getRequiredProperty fails
+at startup naming spring.datasource.url
+even though DATABASE_URL is set — wrong
+key, or a custom property source never
+added. Trade-offs.
+
+23
+00:03:40,655 --> 00:03:47,759
+Reading Environment in constructors is
+simple and testable with a
+MockEnvironment; it freezes values at
+creation.
+
+24
+00:03:47,879 --> 00:03:56,759
+Re-querying Environment per call picks up
+refreshed property sources if you adopt a
+refresh mechanism, at the cost of
+scattered lookups and harder reasoning.
+
+25
+00:03:56,879 --> 00:04:05,543
+@ConfigurationProperties groups keys with
+validation — usually better than many raw
+getProperty calls — but still sits on the
+same precedence stack.
+
+26
+00:04:05,663 --> 00:04:15,143
+Bypassing Environment with System.getenv
+or System.getProperty is occasionally
+needed for code outside Spring; inside
+beans it is how precedence bugs are born.
+
+27
+00:04:15,263 --> 00:04:30,527
+Misconception unique to Environment:
+"System.getenv and Environment.getProperty
+always see the same map." Environment
+includes env vars as one source, but also
+JVM system properties, config files,
+random value sources,
+
+28
+00:04:30,647 --> 00:04:33,791
+and command-line args, with precedence.
+
+29
+00:04:33,911 --> 00:04:43,847
+Reading System.getenv bypasses that merge
+and can disagree with what Spring injected
+elsewhere. Tolling pricing finally
+respects the CLI kill switch.
+
+30
+00:04:43,967 --> 00:04:49,823
+The remaining mystery is sharper: which
+exact property sources sit in the chain,
+who adds them,
+
+31
+00:04:49,943 --> 00:04:59,591
+and how Boot's opinionated startup
+sequence wires that chain before your
+first bean constructor runs — the reason
+teams reach for Spring Boot instead of
+assembling contexts by hand.

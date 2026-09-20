@@ -1,0 +1,30 @@
+The Spring Story — Episode 33: Exception Handling
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• A trucker app asks for parcel PRC-90210.
+• What should the JSON look like — and will every other missing-id path in the harbor API look the same?
+• Without a shared approach, each controller invents an answer.
+• A third lets Tomcat render an HTML error page to a JSON client.
+• Operators cannot alert on status codes consistently.
+• Spring MVC gives you structured hooks: @ExceptionHandler on a controller, @RestControllerAdvice for…
+• Start from a domain signal and a stable error shape — Problem+JSON style fields work well even if you keep…
+• Advice owns status and envelope.
+• …and more
+
+Timestamps
+0:00 A trucker app asks for parcel PRC-90210. The id does not exist.…
+0:39 Start from a domain signal and a stable error shape — Problem+JSON…
+1:24 Failures now have a deliberate model. Some concerns still must…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 34 — Filters
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

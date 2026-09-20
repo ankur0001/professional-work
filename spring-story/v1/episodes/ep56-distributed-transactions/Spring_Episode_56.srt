@@ -1,0 +1,132 @@
+1
+00:00:00,000 --> 00:00:13,151
+Harbor booking wants one sentence to be
+true: “berth reserved and carrier
+notified.” The reservation lands in
+PostgreSQL. The notification leaves on a
+JMS queue for the carrier gateway.
+
+2
+00:00:13,271 --> 00:00:27,359
+If the database commits and the message
+never sends, trucks arrive to a berth
+nobody told them about. If the message
+sends and the database rolls back,
+carriers prepare for a booking that does
+not exist. Two resources.
+
+3
+00:00:27,479 --> 00:00:34,367
+One business promise. A local
+@Transactional on the database alone
+cannot cover both.
+
+4
+00:00:34,487 --> 00:00:47,088
+Historically the industry answer was a
+distributed transaction: a coordinator,
+XA-capable resource managers, and a
+protocol that tries to commit everywhere
+or nowhere. Two-phase commit is that
+protocol.
+
+5
+00:00:47,207 --> 00:01:00,384
+Phase one: the coordinator asks every
+participant to prepare — flush, lock, vote
+yes or no. If all vote yes, phase two
+tells everyone to commit. If any votes no,
+everyone rolls back.
+
+6
+00:01:00,503 --> 00:01:13,007
+On paper, atomicity spans the booking
+database and the JMS broker. In
+production, the coordinator can crash
+between phases, participants can block
+holding locks, and networks can partition.
+
+7
+00:01:13,128 --> 00:01:25,920
+You trade local simplicity for global
+coordination cost and operational pain —
+which is why 2PC hurts even when it
+“works.” Look at this java for a moment.
+Look at this java for a moment.
+
+8
+00:01:26,039 --> 00:01:37,871
+In a true XA arrangement, that single
+annotation enlists both the XA datasource
+and the XA connection factory under a
+JtaTransactionManager. The programming
+model looks familiar.
+
+9
+00:01:37,991 --> 00:01:49,175
+The runtime does not: application server
+or standalone manager (Atomikos,
+Narayana), XA drivers, recovery logs, and
+runbooks for in-doubt transactions after a
+crash mid-protocol.
+
+10
+00:01:49,295 --> 00:01:58,703
+Modern Boot services often never go there.
+Managed Kafka, cloud datastores, and
+polyglot stores frequently lack honest XA
+support.
+
+11
+00:01:58,823 --> 00:02:05,543
+Even when XA is available, holding locks
+across prepare and commit under harbor-
+scale latency kills throughput.
+
+12
+00:02:05,663 --> 00:02:21,431
+Teams learned that “just enable two-phase
+commit” for DB plus JMS booking was rarely
+the product-friendly answer. Still own the
+vocabulary. Global versus local
+transaction. Resource manager versus
+transaction manager.
+
+13
+00:02:21,551 --> 00:02:36,120
+Raw UserTransaction begin/commit versus
+Spring’s declarative boundary on top.
+Heuristic exceptions when participants
+disagree after prepare. Those words appear
+in postmortems even when your team refused
+XA.
+
+14
+00:02:36,239 --> 00:02:49,151
+A misconception is assuming @Transactional
+automatically spans REST calls, Redis, and
+Mongo because they happen in the same
+method. A local
+DataSourceTransactionManager covers one
+JDBC resource.
+
+15
+00:02:49,271 --> 00:03:00,239
+Another misconception is blaming Spring
+when 2PC hurts. The protocol’s cost is
+inherent; Spring only integrates with it.
+So the fork is honest.
+
+16
+00:03:00,359 --> 00:03:11,375
+Invest in XA where both resources truly
+support it and the business demands strict
+atomicity across DB and JMS — or stop
+pretending one ACID transaction covers a
+multi-system booking.
+
+17
+00:03:11,495 --> 00:03:19,823
+The second path needs a sequence of local
+commits plus compensations when a later
+step fails. That pattern is the saga.

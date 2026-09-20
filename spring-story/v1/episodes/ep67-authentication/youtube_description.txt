@@ -1,0 +1,32 @@
+The Spring Story — Episode 67: Authentication
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• A crane operator taps “release gate” on a handheld.
+• The HTTP request carries a claim of identity: a session cookie from an earlier login, Authorization: Basic…
+• Until something in your process turns that claim into a trusted principal, every downstream authorization…
+• Authentication is that step: prove identity, then remember it for the rest of the request in the…
+• Without a shared mechanism, teams invent private patterns.
+• One filter parses Basic auth.
+• Another servlet reads a custom header.
+• A controller hashes passwords with a hand-rolled salt.
+• …and more
+
+Timestamps
+0:00 A crane operator taps “release gate” on a handheld. The HTTP…
+0:51 Spring Security answers with a filter chain that runs before your…
+1:55 Say the flow once: request → security filter chain →…
+2:32 A topic-specific trap is conflating “the operator sent a password”…
+3:17 That pressure is authorization.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 68 — Authorization
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

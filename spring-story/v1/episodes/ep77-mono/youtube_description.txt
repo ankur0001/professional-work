@@ -1,0 +1,32 @@
+The Spring Story — Episode 77: Mono
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Reactive programming introduced publishers.
+• Most harbor lookups are not streams of thousands of rows — they are “give me this vessel by MMSI,” “load…
+• Think of Mono as a lazy asynchronous Optional with operators — but do not implement it by wrapping…
+• Mono.just(repo.findByMmsi(mmsi)) still blocks the caller thread before the Mono even exists.
+• Prefer sources that are non-blocking, or defer blocking work explicitly.
+• Operator vocabulary you should say out loud.
+• map transforms the item synchronously.
+• flatMap chains another Mono or Flux when each item needs an async call — the reactive replacement for…
+• …and more
+
+Timestamps
+0:00 Reactive programming introduced publishers. Most harbor lookups…
+0:38 // Cold: nothing runs until subscribe / WebFlux returns this Mono…
+1:12 Cardinality is the contract. If you accidentally emit two items…
+1:51 A misconception is calling .block() on a Mono inside WebFlux…
+2:33 That publisher is Flux.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 78 — Flux
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

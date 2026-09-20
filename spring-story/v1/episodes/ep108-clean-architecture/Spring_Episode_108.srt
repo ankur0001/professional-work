@@ -1,0 +1,162 @@
+1
+00:00:00,000 --> 00:00:14,208
+Hexagonal said ports and adapters for gate
+release. Clean Architecture — Robert C.
+Martin’s rings — states the dependency
+rule bluntly: source code dependencies
+point only inward. The domain must not
+import Spring Web.
+
+2
+00:00:14,327 --> 00:00:28,991
+Controllers, Feign, and JPA may depend on
+the domain; the domain depends on nothing
+from those frameworks. Map the rings onto
+the harbor gate service: 1. Entities —
+GateRelease, HazardClass, money
+invariants. 2.
+
+3
+00:00:29,111 --> 00:00:46,223
+Use cases — ReleaseGateInteractor,
+input/output models. Pure Java; depends
+only on entities and outbound ports. 3.
+Interface adapters — MVC controllers,
+presenters, JPA gateways, Feign billing
+adapters. 4.
+
+4
+00:00:46,343 --> 00:00:59,639
+Frameworks & drivers — Spring Boot, the
+servlet container, Postgres drivers. Look
+at this java for a moment. Look at this
+java for a moment. Where does
+@Transactional live?
+
+5
+00:00:59,819 --> 00:01:05,819
+Often on the adapter or a thin application
+service around the interactor — not on
+domain entities.
+
+6
+00:01:05,939 --> 00:01:19,188
+The dependency rule cares about imports:
+if GateRelease.java contains import org.sp
+ringframework.web.bind.annotation..., you
+broke the ring regardless of folder names.
+ArchUnit can assert that ..domain..
+
+7
+00:01:19,307 --> 00:01:29,219
+does not depend on
+org.springframework.web.. or
+org.springframework.data... Walk a
+violation that bites at runtime.
+
+8
+00:01:29,339 --> 00:01:37,955
+An entity annotated with both JPA and
+Jackson live on the wire; a lazy field
+serializes after the session closes;
+truckers see 500s.
+
+9
+00:01:38,075 --> 00:01:43,787
+Clean’s pressure is to keep GateRelease
+free of those annotations so adapters map
+explicitly.
+
+10
+00:01:43,907 --> 00:01:54,683
+Another violation: use case imports
+FeignException and branches on HTTP status
+— billing transport details leaked inward;
+prefer a domain BillingUnavailable mapped
+at the adapter.
+
+11
+00:01:54,803 --> 00:02:05,579
+Clean and hexagonal overlap heavily in
+Spring shops. Use whichever vocabulary
+your team shares; enforce the same arrow:
+frameworks outward, policy inward.
+
+12
+00:02:05,699 --> 00:02:17,891
+Pragmatism still applies — not every admin
+CRUD screen needs a full interactor
+ceremony on day one. Carve rings where
+change and risk concentrate: gate release,
+tariff quoting, berth assignment.
+
+13
+00:02:18,012 --> 00:02:25,860
+Composition root remains Spring:
+@Configuration beans wire
+ReleaseGateInteractor with JPA and Feign
+adapters at the outer ring.
+
+14
+00:02:25,979 --> 00:02:38,603
+Failure symptoms of cargo-cult Clean:
+package names copied from a blog while
+entities still import Spring Web; every
+class named *Impl twice; use cases that
+are pass-throughs with no policy —
+ceremony without benefit.
+
+15
+00:02:38,723 --> 00:02:51,275
+Opposite failure: a “pragmatic” domain
+that absorbs controllers until tests need
+MockMvc to prove money rounding. Trade-
+offs: more types and mappers versus a
+domain you can unit-test with plain new
+and fakes.
+
+16
+00:02:51,395 --> 00:03:01,355
+Teams new to the harbor often start
+layered and extract rings when Spring
+imports appear in core. Do not rewrite the
+whole monolith overnight for purity
+points.
+
+17
+00:03:01,475 --> 00:03:09,731
+A practical gate: can
+ReleaseGateInteractorTest run without
+@SpringBootTest? If yes, the ring is
+earning its keep.
+
+18
+00:03:09,852 --> 00:03:20,604
+If every policy test needs MockMvc and a
+DataSource, Spring has crept inward and
+the dependency rule is theater. Fix
+imports first; rename packages second.
+
+19
+00:03:20,723 --> 00:03:32,867
+A misconception is “Clean Architecture
+means no Spring.” Spring is an excellent
+outer-ring composition root. Another is
+copying package templates from a blog
+without moving imports.
+
+20
+00:03:32,987 --> 00:03:42,876
+A third is putting JPA annotations on
+entities “temporarily” until temporary
+becomes the permanent domain model. Rings
+protect dependency direction.
+
+21
+00:03:42,996 --> 00:03:55,116
+They do not by themselves give you a
+shared language for berth capacity,
+reservations, and what “assigned” means to
+scheduling versus billing. That language
+work is domain-driven design around the
+Berth aggregate.

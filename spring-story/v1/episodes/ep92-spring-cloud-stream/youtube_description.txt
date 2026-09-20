@@ -1,0 +1,33 @@
+The Spring Story — Episode 92: Spring Cloud Stream
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• When scheduling assigns berth B7 to vessel IMO 9321483, billing needs a reservation signal and the yard…
+• Synchronous fan-out from scheduling couples availability: if billing is down, does the berth assignment…
+• Scheduling publishes BerthChanged events; consumers react on their own clocks.
+• Spring Cloud Stream binds your functions (or suppliers/consumers) to a broker through a binder — Kafka and…
+• You write a Function, Consumer, or Supplier bean; configuration maps it to destinations.
+• The business code stays about events, not about Kafka producer APIs.
+• That separation is the point: swap binders in a test or migrate brokers without rewriting applyReservation.
+• Scheduling commits the assignment and sends to berth.changed.
+• …and more
+
+Timestamps
+0:00 When scheduling assigns berth B7 to vessel IMO 9321483, billing…
+0:44 Walk the flow. Scheduling commits the assignment and sends to…
+1:18 Publishing inside a transaction without an outbox can still lose…
+1:51 Failure modes to operate: poison messages that throw forever need…
+2:33 A misconception is treating Cloud Stream as “Kafka with…
+3:10 That engine is JUnit 5.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 93 — JUnit 5
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

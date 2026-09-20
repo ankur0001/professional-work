@@ -1,0 +1,31 @@
+The Spring Story — Episode 72: Method Security
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• URL matchers catch coarse gates: authenticated, has role ADMIN, permit health checks.
+• They struggle with rules that need method arguments — “release this cargo only if the principal owns it,”…
+• Spring enables it with @EnableMethodSecurity (modern) or older @EnableGlobalMethodSecurity.
+• Under the hood, Spring AOP proxies the bean.
+• Before the target method runs, an interceptor evaluates @PreAuthorize, @PostAuthorize, @Secured, or…
+• SpEL expressions can reach authentication, method parameters by name, and beans you expose for custom checks.
+• For harbor gate release, ownership is the rule that path matchers cannot express cleanly.
+• @PreAuthorize runs before the call — use it to block work that should never start, like opening someone…
+• …and more
+
+Timestamps
+0:00 URL matchers catch coarse gates: authenticated, has role ADMIN,…
+0:40 For harbor gate release, ownership is the rule that path matchers…
+1:34 A misconception is annotating controllers only and believing…
+2:13 That attack is CSRF — and it needs its own defense, not another…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 73 — CSRF
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

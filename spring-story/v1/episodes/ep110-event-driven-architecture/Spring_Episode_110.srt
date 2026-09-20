@@ -1,0 +1,164 @@
+1
+00:00:00,000 --> 00:00:13,416
+Synchronous fan-out hurts. After
+Berth.reserve succeeds, scheduling used to
+call billing over Feign, then the yard
+board, then notifications. If billing was
+down, did the reservation roll back?
+
+2
+00:00:13,596 --> 00:00:24,780
+Event-driven architecture decouples that
+timeline: scheduling publishes
+BerthReserved; billing and others consume
+when they can. Distinguish in-process
+events from broker events.
+
+3
+00:00:24,899 --> 00:00:33,204
+Spring’s ApplicationEventPublisher
+notifies listeners inside the same JVM —
+useful for clearing caches or updating a
+local projection.
+
+4
+00:00:33,323 --> 00:00:40,451
+Cross-service decoupling needs a broker
+(Kafka via Cloud Stream, for example) and
+delivery rules you can operate.
+
+5
+00:00:40,571 --> 00:00:52,955
+Mixing them without care — a transactional
+listener that assumes local and remote are
+the same — is how phantom invoices appear.
+Look at this java for a moment. Look at
+this java for a moment.
+
+6
+00:00:53,075 --> 00:00:59,627
+AFTER_COMMIT matters: listeners that run
+before commit can publish a reservation
+that rolls back.
+
+7
+00:00:59,747 --> 00:01:08,363
+Outbox patterns upgrade this further —
+write the event to an outbox table in the
+same transaction, then relay to Kafka —
+when loss is unacceptable.
+
+8
+00:01:08,483 --> 00:01:17,603
+Walk dual-write loss: process dies after
+commit, before bridge.send; scheduling
+shows B7 reserved; billing never invoices
+until replay.
+
+9
+00:01:17,723 --> 00:01:30,947
+Walk dual-write phantom: send before
+commit, transaction rolls back on a later
+constraint; billing invoices a ghost.
+Outbox makes the event row commit
+atomically with the berth row; a relay
+polls or tails that table.
+
+10
+00:01:31,067 --> 00:01:43,835
+Consumers must be idempotent; at-least-
+once delivery will replay BerthReserved
+for B7. Key invoices by berthId + window
+or by event id. Failure modes stay honest.
+
+11
+00:01:43,955 --> 00:01:57,395
+Billing lag means invoices trail
+assignments — observe projection lag with
+a gauge
+(harbor.billing.projection.lag.seconds).
+Poison messages need a dead-letter path,
+not infinite retries that stall the
+partition.
+
+12
+00:01:57,515 --> 00:02:06,491
+Events are facts about the past
+(Reserved), not commands (ReserveBerth)
+dressed as events — commands ask for work;
+events announce what already happened.
+
+13
+00:02:06,611 --> 00:02:20,003
+Runtime symptoms: operators see the board
+update instantly (same JVM projection)
+while billing invoices appear minutes
+later (broker consumer) — that is eventual
+consistency working, not a bug, unless lag
+SLO burns.
+
+14
+00:02:20,123 --> 00:02:32,603
+Another: duplicate invoices after a
+rebalance when the consumer was not
+idempotent. Another: a “event” named
+CreateInvoice that still expects a
+synchronous response — that is an RPC on a
+topic.
+
+15
+00:02:32,723 --> 00:02:44,387
+Trade-offs: decoupling availability and
+fan-out versus harder end-to-end reasoning
+and eventual consistency UX. Keep
+synchronous APIs for trucker check-in; use
+events for facts many contexts must learn.
+
+16
+00:02:44,507 --> 00:02:55,523
+Payload size: ids plus enough fields for
+the consumer to act beats dragging full
+vessel graphs across Kafka. Ordering:
+partition by berthId when per-berth order
+matters.
+
+17
+00:02:55,643 --> 00:03:04,595
+Schema evolution needs the same honesty as
+Feign contracts. Add optional fields;
+avoid renaming imo under a live consumer
+group.
+
+18
+00:03:04,715 --> 00:03:12,323
+When a breaking change is unavoidable, a
+new topic version (berth.reserved.v2)
+beats silent poison on v1.
+
+19
+00:03:12,443 --> 00:03:19,475
+Measure consumer lag per group; a single
+stuck billing consumer should not be
+invisible because yard-board lag is fine.
+
+20
+00:03:19,595 --> 00:03:30,923
+A misconception is replacing every API
+with events until a trucker check-in
+requires five topics to return a response.
+Another is publishing from a transaction
+that has not committed.
+
+21
+00:03:31,043 --> 00:03:37,307
+A third is huge payloads on the bus
+instead of ids plus follow-up queries
+inside the billing context.
+
+22
+00:03:37,427 --> 00:03:48,731
+Once events feed read sides, a familiar
+split appears: the model you write for
+berth invariants is a bad shape for the
+schedule board screen. That intentional
+split is CQRS.

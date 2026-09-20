@@ -1,0 +1,150 @@
+1
+00:00:00,000 --> 00:00:09,720
+Gate is ops-ready and still structurally
+muddy: controllers call repositories,
+tariff rules sit in a @RestController, JPA
+entities serialize straight to truckers.
+
+2
+00:00:09,839 --> 00:00:18,839
+Layered architecture is the classic Spring
+map — web → service → persistence — with
+dependency arrows pointing inward toward
+the domain, not outward toward frameworks.
+
+3
+00:00:18,960 --> 00:00:26,832
+In a harbor app the packages usually look
+like: Look at this text for a moment. Look
+at this java for a moment.
+
+4
+00:00:26,952 --> 00:00:38,736
+Discipline at the boundary: HTTP DTOs in
+web, domain commands in service/domain,
+JPA entities stay in persistence unless
+you consciously accept the coupling. Walk
+a leak.
+
+5
+00:00:38,856 --> 00:00:48,695
+GateRelease entity gains a Lazy
+collection; Jackson serializes it on the
+way out; a trucker GET triggers
+LazyInitializationException or an
+accidental N+1.
+
+6
+00:00:48,816 --> 00:00:55,752
+The layered fix is a dedicated
+CheckInResponse assembled in the service —
+not “open session in view” as
+architecture.
+
+7
+00:00:55,871 --> 00:01:05,135
+Another leak: controller injects
+GateLedgerRepository and duplicates
+release rules for a “quick” admin path
+until two definitions of release diverge
+at 2am.
+
+8
+00:01:05,256 --> 00:01:13,487
+ArchUnit can enforce “web does not import
+persistence” when code review fatigue sets
+in. Look at this java for a moment.
+
+9
+00:01:13,608 --> 00:01:23,975
+Runtime and team symptoms of layer
+collapse: every feature touches four
+packages for one field rename; mobile
+breaks when a JPA column rename ships
+because the entity was the API;
+
+10
+00:01:24,096 --> 00:01:30,024
+transactional boundaries unclear because
+repositories are called from controllers
+without a service.
+
+11
+00:01:30,144 --> 00:01:39,624
+Layers still help onboarding — most Spring
+developers can navigate
+web/service/persistence in minutes — but
+package names without dependency direction
+are cosplay.
+
+12
+00:01:39,743 --> 00:01:52,079
+Trade-offs: strict layering adds mapping
+boilerplate (DTO ↔ domain ↔ entity). That
+cost buys independent change rates: HTTP
+can version while persistence evolves.
+
+13
+00:01:52,200 --> 00:01:58,775
+For tiny admin CRUD, a thinner path may be
+fine — document the exception so gate
+release does not copy it.
+
+14
+00:01:58,896 --> 00:02:09,264
+A single service package that absorbs
+everything becomes a dumping ground; split
+by capability (release, tariff, ais)
+before you invent microservices to escape
+the ball of mud.
+
+15
+00:02:09,384 --> 00:02:19,032
+Onboarding test: a new engineer should
+find “where does check-in authorization
+live?” in one service method, not half in
+the controller and half in a repository
+@Query.
+
+16
+00:02:19,152 --> 00:02:26,304
+When that answer takes a tour of four
+packages with duplicated ifs, layers have
+already collapsed regardless of folder
+names.
+
+17
+00:02:26,424 --> 00:02:34,824
+Fix by moving policy inward and leaving
+web as translation — status codes, JSON,
+validation annotations — not berth or
+tariff rules.
+
+18
+00:02:34,944 --> 00:02:46,584
+A misconception is renaming packages
+without changing dependencies and calling
+it architecture. Another is a single
+service package that becomes a dumping
+ground for everything not named
+controller.
+
+19
+00:02:46,704 --> 00:02:53,448
+A third is forbidding DTOs “to move
+faster” and then breaking mobile clients
+when a JPA field rename ships.
+
+20
+00:02:53,568 --> 00:03:01,176
+When the pain is “domain must not know
+Spring Web or JPA at all,” layers need
+ports, adapters, and an inside that stays
+pure.
+
+21
+00:03:01,296 --> 00:03:10,608
+That tightening is hexagonal architecture
+around gate release — same harbor check-in
+story, stricter arrows, fewer excuses for
+a controller that speaks SQL.

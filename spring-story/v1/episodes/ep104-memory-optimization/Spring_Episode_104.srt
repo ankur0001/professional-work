@@ -1,0 +1,165 @@
+1
+00:00:00,000 --> 00:00:08,976
+Gate’s heap chart looks like a staircase:
+climb, small drop, higher climb, OOMKill.
+Latency was fine until the pod died.
+
+2
+00:00:09,096 --> 00:00:21,936
+The suspect in this harbor is an unbounded
+AIS position cache — every vessel ping
+retained “for the map,” nothing ever
+evicted. Memory optimization starts with
+meters, then dumps, then a bounded
+structure.
+
+3
+00:00:22,055 --> 00:00:35,759
+Look at this java for a moment. Look at
+this java for a moment. Read JVM gauges
+first: jvm.memory.used for heap pools, GC
+pause timers, and your custom
+harbor.ais.cache.size.
+
+4
+00:00:35,879 --> 00:00:41,039
+If the cache size metric tracks the
+staircase, you found the villain without a
+dump.
+
+5
+00:00:41,159 --> 00:00:43,247
+When you need proof,
+
+6
+00:00:43,367 --> 00:00:55,871
+capture a heap dump on OOM
+(-XX:+HeapDumpOnOutOfMemoryError) or via
+jcmd and look for ConcurrentHashMap
+retaining millions of Position instances —
+often reachable from a static or a long-
+lived @Service.
+
+7
+00:00:55,991 --> 00:01:09,719
+Soft/weak references are not a strategy by
+themselves — bounds and TTLs are. After
+bounding, watch hit rate: a bound so tight
+the yard map thrashes is a different
+incident (CPU + Feign refetch), not
+success.
+
+8
+00:01:09,839 --> 00:01:18,647
+Container cgroups matter. A JVM that
+believes it has the node’s RAM will not GC
+as a 512Mi limit requires.
+
+9
+00:01:18,767 --> 00:01:27,815
+Prefer container-aware heap settings on
+modern JDKs (UseContainerSupport is
+default on recent releases) and set
+requests/limits intentionally.
+
+10
+00:01:27,935 --> 00:01:36,119
+Symptom of mismatch: pod killed by the
+node while heap graphs look “only 40%
+used” because the JVM’s max heap exceeded
+the cgroup.
+
+11
+00:01:36,239 --> 00:01:47,615
+Native memory (direct buffers, metaspace,
+compressed class space) can kill a pod
+while heap looks calm — different tools
+(Native Memory Tracking, allocator
+profiles), same discipline of evidence.
+
+12
+00:01:47,735 --> 00:01:58,127
+Paging exports and large bill-of-lading
+byte arrays in memory deserve the same
+skepticism: stream to disk or object
+storage; do not buffer an entire PDF fleet
+in a byte[] list.
+
+13
+00:01:58,247 --> 00:02:09,887
+Hibernate session caches and “open
+EntityManager in view” surprises retain
+graphs longer than a request needs — close
+the persistence context at the boundary
+you designed. Walk the fix timeline.
+
+14
+00:02:10,007 --> 00:02:18,983
+Deploy Caffeine bounds;
+harbor.ais.cache.size plateaus near 50k;
+heap sawtooth returns to a healthy GC
+pattern; OOMKills stop.
+
+15
+00:02:19,103 --> 00:02:26,255
+If size plateaus but heap still climbs,
+you have a second retainer — continue with
+a dump instead of raising the cache again.
+
+16
+00:02:26,375 --> 00:02:38,687
+Raising -Xmx alone without a bound
+postpones the kill and takes neighboring
+pods with you when the node pressures.
+Trade-offs: larger heaps absorb spikes and
+lengthen GC pauses; smaller heaps fail
+fast.
+
+17
+00:02:38,807 --> 00:02:50,303
+Off-heap caches move pressure without
+removing the need for bounds. Eviction by
+size versus time depends on whether stale
+AIS is useless after thirty minutes
+regardless of map cardinality.
+
+18
+00:02:50,423 --> 00:02:57,191
+After an OOMKill, pull the dump from the
+crashed container’s volume or an object-
+store hook before the node reaps disk.
+
+19
+00:02:57,311 --> 00:03:04,559
+Annotate the incident with
+harbor.ais.cache.size at kill time and the
+dominant retained type from the dump
+analyzer.
+
+20
+00:03:04,679 --> 00:03:10,559
+That pair — metric plus dump class — is
+what stops the next “raise the heap”
+argument in the postmortem.
+
+21
+00:03:10,679 --> 00:03:22,895
+A misconception is “raising the heap” as
+the first fix for an unbounded cache — you
+postponed the OOM and raised the blast
+radius. Another is enabling every Spring
+cache region with eternal TTLs.
+
+22
+00:03:23,015 --> 00:03:34,967
+A third is ignoring cache hit/miss metrics
+after bounding, so you never see whether
+the bound is too tight for the yard map.
+Metrics, traces, memory hygiene — you have
+operational lenses.
+
+23
+00:03:35,087 --> 00:03:41,927
+What remains is bundling them into a
+definition of ready to serve production
+traffic, not merely feature complete.

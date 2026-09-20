@@ -1,0 +1,119 @@
+1
+00:00:00,000 --> 00:00:12,743
+WebFlux changed the HTTP engine under
+/positions/stream. Spring Security still
+has to authenticate and authorize — but it
+cannot assume ThreadLocal and servlet
+filters the way the MVC chain did.
+
+2
+00:00:12,863 --> 00:00:24,000
+Reactive security adapts the same ideas to
+WebFlux’s WebFilter chain and a context
+that rides with the reactive subscription
+— including JWT validation on that chain
+for harbor APIs.
+
+3
+00:00:24,119 --> 00:00:29,447
+In servlet apps, SecurityContextHolder
+defaulted to ThreadLocal storage.
+
+4
+00:00:29,567 --> 00:00:39,815
+In WebFlux, the security context is
+typically stored in Reactor’s Context and
+retrieved with reactive adapters so it
+survives thread hops from publishOn /
+Netty event loops.
+
+5
+00:00:39,935 --> 00:00:53,255
+You configure a SecurityWebFilterChain
+instead of a servlet SecurityFilterChain.
+Method security has reactive-aware
+expressions when return types are
+publishers. Look at this java for a
+moment.
+
+6
+00:00:53,375 --> 00:01:06,095
+Mirror the earlier JWT walk, now on the
+reactive chain: bearer token extracted,
+decoded without blocking the event loop,
+authentication placed in Reactor context,
+authorization decision on the exchange,
+
+7
+00:01:06,215 --> 00:01:09,671
+then the controller’s Flux streams
+positions.
+
+8
+00:01:09,791 --> 00:01:21,791
+CSRF and form login exist for browser-
+oriented WebFlux apps too — use cookie
+sessions only when you accept the same
+CSRF obligations you learned on the
+servlet side. Watch blocking habits.
+
+9
+00:01:21,911 --> 00:01:36,239
+A custom ReactiveAuthenticationManager
+that calls blocking JDBC inside
+authenticate without
+subscribeOn(boundedElastic) will stall the
+event loop under AIS load. Prefer reactive
+user stores or explicit offloads.
+
+10
+00:01:36,359 --> 00:01:48,335
+Similarly, @PreAuthorize on methods
+returning Mono / Flux must use reactive
+method-security support so the decision
+participates in the publisher chain
+instead of blocking for a context that is
+not on the thread.
+
+11
+00:01:48,455 --> 00:01:59,111
+A misconception is copying a servlet
+HttpSecurity config class into a WebFlux
+project unchanged — types differ
+(ServerHttpSecurity, authorizeExchange).
+
+12
+00:01:59,231 --> 00:02:12,071
+Another is reading
+SecurityContextHolder.getContext()
+imperatively inside a WebFlux handler
+after a thread hop and wondering why it is
+empty — use reactive context propagation
+and @AuthenticationPrincipal Mono<...>.
+
+13
+00:02:12,191 --> 00:02:21,695
+A third is assuming JWT on WebFlux is
+“just a filter bean” with no context story
+— without Reactor context, identity
+vanishes across schedulers.
+
+14
+00:02:21,815 --> 00:02:30,791
+Phase 8 closes the reactive web and
+security loop: publishers, WebFlux, and a
+filter chain that respects Reactor’s
+context with JWT.
+
+15
+00:02:30,911 --> 00:02:41,231
+Many production harbor systems are not one
+reactive service — they are many
+deployables that must discover each other,
+share config, and fail partially without
+taking the whole product down.
+
+16
+00:02:41,351 --> 00:02:45,359
+That organizational jump is microservices
+with Spring.

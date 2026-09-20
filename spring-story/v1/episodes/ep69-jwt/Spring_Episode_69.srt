@@ -1,0 +1,123 @@
+1
+00:00:00,000 --> 00:00:12,071
+Truckers do not live inside your VPN.
+Their mobile app hits the harbor API from
+a highway shoulder, proves identity
+without a sticky HTTP session store shared
+across pods, and moves on.
+
+2
+00:00:12,191 --> 00:00:28,223
+Session cookies that assume one browser
+and one server get awkward fast. A common
+answer is a bearer token — and the usual
+format is JWT. A JSON Web Token is three
+Base64url segments: header, payload,
+signature.
+
+3
+00:00:28,344 --> 00:00:34,752
+The payload carries claims — subject,
+expiry, issuer, scopes, custom fields like
+trucker id.
+
+4
+00:00:34,871 --> 00:00:42,192
+The signature binds those claims to a key
+so a resource server can validate the
+token without calling the issuer on every
+request.
+
+5
+00:00:42,311 --> 00:00:56,327
+That is the appeal and the danger:
+validation is local and fast, but a leaked
+token is a stolen identity until it
+expires. Spring Security’s OAuth2 Resource
+Server support treats JWTs as first-class
+credentials.
+
+6
+00:00:56,447 --> 00:01:09,551
+On each request, a filter looks for
+Authorization: Bearer ..., parses the JWT,
+validates signature and claims, and builds
+an Authentication — often a
+JwtAuthenticationToken — into the
+SecurityContext.
+
+7
+00:01:09,671 --> 00:01:27,384
+Authorization rules then run against
+authorities mapped from scopes or roles in
+the token. Look at this java for a moment.
+Narrate failure modes as carefully as the
+happy path. Missing header → 401.
+Malformed JWT → 401.
+
+8
+00:01:27,503 --> 00:01:45,191
+Bad signature → 401. Expired exp → 401.
+Valid token but wrong scope for
+/api/admin/** → 403. Those statuses still
+mean what they meant in authorization;
+only the credential shape changed.
+
+9
+00:01:45,311 --> 00:01:58,343
+Do not treat JWTs as encrypted blobs. The
+payload is readable to anyone who holds
+the token. Put secrets in the token only
+if you accept that readers can see them —
+which means do not.
+
+10
+00:01:58,463 --> 00:02:10,151
+Prefer opaque references or short-lived
+access tokens with minimal claims. Rotate
+signing keys through a JWKS endpoint so
+resource servers refresh keys without
+redeploy theater.
+
+11
+00:02:10,271 --> 00:02:25,151
+A topic-specific misconception is “we use
+JWT, so we are doing OAuth2.” JWT is a
+token format. OAuth2 is a delegation
+protocol that often issues JWTs as access
+tokens.
+
+12
+00:02:25,271 --> 00:02:32,063
+You can validate JWTs without the full
+OAuth2 dance, and you can run OAuth2 with
+opaque tokens.
+
+13
+00:02:32,183 --> 00:02:41,855
+Another misconception is stuffing every
+trucker attribute into the access token
+until it rivals a session record — then
+wondering why logout and permission
+changes feel impossible.
+
+14
+00:02:41,975 --> 00:02:49,367
+Short TTL plus refresh (when you have a
+real authorization server) beats a forever
+token with a giant claim set.
+
+15
+00:02:49,487 --> 00:03:02,207
+The bearer path is now concrete:
+Authorization header → parse → signature
+and claim checks → SecurityContext →
+authority matchers. Format alone does not
+finish the story. Who issues these tokens?
+
+16
+00:03:02,388 --> 00:03:11,556
+How does a trucker consent? How does a
+client obtain them without embedding
+passwords? That is the OAuth2
+conversation.

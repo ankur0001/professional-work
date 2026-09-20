@@ -1,0 +1,1 @@
+The Spring Story Ep12: @Resource vs @Autowired vs @Inject

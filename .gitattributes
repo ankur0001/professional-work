@@ -1,0 +1,2 @@
+spring-story/v1/episodes/**/*.mp4 filter=lfs diff=lfs merge=lfs -text
+spring-story/**/*.mp4 filter=lfs diff=lfs merge=lfs -text

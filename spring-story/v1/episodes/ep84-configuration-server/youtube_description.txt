@@ -1,0 +1,31 @@
+The Spring Story — Episode 84: Configuration Server
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Thirty harbor services — gate pods, billing replicas, scheduling workers, tide adapters — each ship with…
+• The hazardous-goods surcharge changes on Monday.
+• By Wednesday, nineteen replicas still quote the old rate.
+• That drift is not a YAML taste problem.
+• It is a source-of-truth problem.
+• Spring Cloud Config Server is a Boot app that serves property sources from a backend — usually Git — keyed…
+• Clients bootstrap, ask the server for their properties, and merge them over local defaults.
+• One Git commit updates the fleet’s view of tariff rules when clients refresh or restart.
+• …and more
+
+Timestamps
+0:00 Thirty harbor services — gate pods, billing replicas, scheduling…
+0:41 On the client, import the config and name the application so the…
+1:19 Refresh is optional and operational. @RefreshScope beans rebuild…
+2:04 Tariff rules now have a home. The next failure mode appears the…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 85 — Service Discovery
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

@@ -1,0 +1,32 @@
+The Spring Story — Episode 93: JUnit 5
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• You are about to refactor TariffCalculator — the hazardous-surcharge rules that finance swears are correct.
+• The last change was verified by a spreadsheet on someone’s laptop.
+• You either ship blind or you invent a way to re-run the known cases after every edit.
+• That pressure is why Phase 10 starts here, underneath Spring’s @WebMvcTest and @SpringBootTest: you need…
+• Jupiter is the programming model you write against.
+• The JUnit Platform is what Maven Surefire or Gradle’s test task launches.
+• Vintage exists only if you still carry JUnit 4.
+• Hold three verbs for the whole episode: discovery, execution, reporting.
+• …and more
+
+Timestamps
+0:00 You are about to refactor TariffCalculator — the…
+0:32 That engine is JUnit 5. Jupiter is the programming model you write…
+1:14 Execution: for each test, Jupiter creates an instance (per-method…
+1:47 Lifecycle annotations shape execution. @BeforeAll / @AfterAll run…
+2:41 JUnit runs the method. It does not invent stand-ins for…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 94 — Mockito
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

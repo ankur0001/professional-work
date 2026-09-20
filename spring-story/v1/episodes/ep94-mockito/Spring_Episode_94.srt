@@ -1,0 +1,156 @@
+1
+00:00:00,000 --> 00:00:13,055
+TariffCalculator was pure. Real billing
+services are not: they ask a DutyProvider
+port for customs duty rates before summing
+the quote. In production that port may
+call a remote duty table.
+
+2
+00:00:13,175 --> 00:00:28,463
+In a unit test you do not want that
+network. Mockito creates the stand-in,
+stubs returns, and verifies interactions
+while JUnit executes the real subject.
+Look at this java for a moment. Walk the
+first test.
+
+3
+00:00:28,583 --> 00:00:38,087
+@ExtendWith(MockitoExtension.class) hooks
+Mockito into Jupiter. @Mock creates fake
+DutyProvider and TariffRepository.
+
+4
+00:00:38,207 --> 00:00:51,576
+@InjectMocks builds TariffService with
+those mocks — it prefers constructor
+injection when the class is written that
+way, which is another reason constructor
+DI pays off. when(...).thenReturn(...)
+stubs duty and base.
+
+5
+00:00:51,695 --> 00:01:05,640
+The service runs real branching: multiply,
+round, assemble money. verify asserts the
+port was consulted.
+verifyNoMoreInteractions catches a quiet
+second call someone added during a
+“cleanup” refactor.
+
+6
+00:01:05,759 --> 00:01:17,567
+The second test stubs a duty outage,
+asserts the domain exception, and verifies
+the repository never ran — the regression
+you want when someone loads base rates
+before checking duty availability and then
+throws anyway.
+
+7
+00:01:17,687 --> 00:01:28,919
+Prefer explicit construction when
+teaching: Look at this java for a moment.
+Argument captors refine verification when
+the invoice payload matters: Look at this
+java for a moment.
+
+8
+00:01:29,039 --> 00:01:39,479
+Runtime failure modes of bad Mockito use
+show up as green tests that miss
+production bugs. Stubbing any() so widely
+that every path looks successful hides
+branching.
+
+9
+00:01:39,599 --> 00:01:51,407
+Returning null from a mock where the
+production port never returns null turns
+NPEs into “flaky” CI. Over-verifying call
+order with inOrder couples tests to
+incidental sequencing.
+
+10
+00:01:51,527 --> 00:02:01,007
+Strict stubbing (Mockito’s default with
+the Jupiter extension) failing on unused
+stubs is a feature — it catches tests that
+no longer mean what you think after a
+rename.
+
+11
+00:02:01,127 --> 00:02:08,471
+Spies wrap real objects; use them
+sparingly when you need a partial fake of
+a collaborator that is awkward to stub
+entirely.
+
+12
+00:02:08,591 --> 00:02:15,215
+In Boot slice tests you will meet
+@MockBean, which places a Mockito mock
+inside the ApplicationContext.
+
+13
+00:02:15,335 --> 00:02:22,271
+Same library, different lifecycle — the
+mock must satisfy every bean that injects
+that type for the context to start.
+
+14
+00:02:22,391 --> 00:02:35,400
+This episode’s unit test never starts a
+context; that speed is the point when you
+are proving tariff math. Trade-offs: mocks
+buy isolation and speed; they lie about
+serialization, SQL, and wire formats.
+
+15
+00:02:35,519 --> 00:02:48,191
+Ports at the edge of the domain
+(DutyProvider) make mocking honest.
+Mocking types you do not own (HTTP
+clients, EntityManager) tends toward
+brittle stubbing — wrap them behind a
+narrow interface first.
+
+16
+00:02:48,311 --> 00:02:55,775
+When a stub must simulate slow duty
+lookups, thenAnswer with a sleep is a last
+resort that makes unit tests flaky under
+load;
+
+17
+00:02:55,895 --> 00:03:03,911
+prefer injecting a clock or a DutyProvider
+fake that returns immediately with a
+“stale” flag and keep timing tests at the
+integration layer.
+
+18
+00:03:04,031 --> 00:03:18,551
+For void collaborators (audit publishers),
+verify(publisher).publish(any()) beats
+asserting on log output. A misconception
+is mocking TariffService itself. Mock
+DutyProvider; run the real service.
+
+19
+00:03:18,671 --> 00:03:32,663
+Another is verifying every getter until
+tests mirror implementation noise. A third
+is elaborately faking types you do not own
+(HTTP containers, JDBC drivers) when a
+narrow port interface would make stubbing
+trivial.
+
+20
+00:03:32,783 --> 00:03:45,383
+Mocks prove branching. They do not load a
+@RestController advice chain or bind
+@WebMvcTest filters. For gate’s HTTP
+slice, you need the Spring TestContext
+Framework.

@@ -1,0 +1,166 @@
+1
+00:00:00,000 --> 00:00:14,640
+Discovery returns three billing pods. Gate
+still has to pick one for this quote.
+Round-robin across healthy instances is
+the boring, correct default. Sticky
+routing to a dying pod is the expensive
+mistake.
+
+2
+00:00:14,759 --> 00:00:20,856
+Spring Cloud LoadBalancer sits between the
+logical name billing-service and the
+concrete URI.
+
+3
+00:00:20,975 --> 00:00:32,927
+Wire a load-balanced WebClient (or
+RestTemplate) so the hostname in the URL
+is a service id, not a DNS A record you
+own: Look at this java for a moment. Look
+at this example.
+
+4
+00:00:33,048 --> 00:00:51,671
+spring: The @LoadBalanced builder
+registers a filter that intercepts host
+billing-service, asks the load balancer
+for an instance, and rewrites the request
+to http://10.0.8.11:8080/.... Next call
+may land on 10.0.8.12.
+
+5
+00:00:51,792 --> 00:01:04,775
+Health-aware configurations skip instances
+that fail actuator checks. Feign clients
+with a service name ride the same
+mechanism — declarative clients and load
+balancing compose. Walk a bad morning.
+
+6
+00:01:04,896 --> 00:01:18,000
+Pod B1’s health flips DOWN because its
+Hikari pool is exhausted. Without health-
+check configuration, round-robin still
+sends one third of quotes to B1; gate sees
+intermittent timeouts while B2 and B3 are
+fine.
+
+7
+00:01:18,120 --> 00:01:27,648
+With health-check enabled, B1 drops from
+the usable set until it recovers. Symptom
+shift: error rate collapses to the pods
+still marked UP.
+
+8
+00:01:27,768 --> 00:01:37,944
+If your debug logs show the same IP for
+every call after a sticky-session
+experiment, you have reintroduced affinity
+— fine for rare sticky needs, wrong for a
+stateless tariff quote.
+
+9
+00:01:38,063 --> 00:01:51,791
+Inside Kubernetes, a ClusterIP already
+balances at the platform layer. Adding
+Spring Cloud LoadBalancer can be redundant
+or complementary depending on whether you
+use Spring Cloud Kubernetes discovery or
+plain DNS.
+
+10
+00:01:51,911 --> 00:02:00,167
+Know your platform before stacking
+balancers. Two layers both retrying can
+amplify a partial outage into a retry
+storm.
+
+11
+00:02:00,287 --> 00:02:09,527
+Zone preference and weighted instances
+matter when quay-A and quay-B have
+different latency to billing’s database —
+prefer same-zone instances when metadata
+carries zone,
+
+12
+00:02:09,647 --> 00:02:13,704
+and accept cross-zone only when local
+capacity is gone.
+
+13
+00:02:13,823 --> 00:02:23,063
+Trade-offs: client-side balancing gives
+the caller control and rich instance
+metadata; platform balancing is simpler
+ops when every consumer is inside the
+mesh.
+
+14
+00:02:23,183 --> 00:02:30,215
+Weighted response-time policies help when
+one billing pod shares a noisy neighbor,
+but they need good metrics or they thrash.
+
+15
+00:02:30,335 --> 00:02:40,799
+Caching the instance list reduces registry
+chatter; stale cache after a scale-down is
+the failure mode you watch with short TTLs
+and health probes. Debug with intent.
+
+16
+00:02:40,919 --> 00:02:55,919
+Log the chosen instance id on quote
+failures (low cardinality — pod name, not
+URL with query strings). If every error
+shares one pod id, drain it. If errors
+spray evenly, the problem is billing-wide,
+not balancing.
+
+17
+00:02:56,039 --> 00:03:07,415
+Retry policies on the client must not
+silently pin forever to a bad instance;
+combine short retries with removal of
+failing instances from the usable set when
+your load-balancer implementation supports
+it.
+
+18
+00:03:07,535 --> 00:03:19,607
+A misconception is assuming client-side
+balancing replaces platform Services
+everywhere — sometimes DNS is enough.
+Another is enabling session affinity by
+default on a stateless gate API.
+
+19
+00:03:19,727 --> 00:03:33,839
+A third is creating a plain
+WebClient.create("http://billing-service")
+without @LoadBalanced and watching it fail
+DNS lookup in Eureka-only setups — the
+hostname is a service id only when the
+load-balancer filter is pres
+
+20
+00:03:33,959 --> 00:03:35,831
+ent.
+
+21
+00:03:35,951 --> 00:03:49,679
+Selecting an instance still leaves you
+writing HTTP verbs, paths, and DTO
+decoding by hand. Teams that call billing
+from many gate classes want a thinner
+surface: a Java interface that looks like
+a local collaborator.
+
+22
+00:03:49,799 --> 00:03:54,359
+Declarative HTTP clients — OpenFeign — are
+that surface.

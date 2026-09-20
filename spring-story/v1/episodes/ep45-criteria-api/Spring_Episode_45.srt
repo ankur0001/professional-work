@@ -1,0 +1,101 @@
+1
+00:00:00,000 --> 00:00:12,432
+A port-search screen starts with three
+optional filters: flag state, minimum
+gross tonnage, and a name fragment. On
+Monday the planner uses only the name box.
+On Tuesday all three.
+
+2
+00:00:12,551 --> 00:00:25,943
+If you concatenate JPQL strings for each
+combination, you either miss a combination
+or invite injection-shaped bugs. The
+Criteria API builds the same query tree in
+Java, predicate by predicate, at runtime.
+
+3
+00:00:26,064 --> 00:00:35,399
+Criteria is verbose on purpose. You get a
+typesafe-ish query graph from the
+EntityManager (or from a custom repository
+fragment).
+
+4
+00:00:35,519 --> 00:00:48,935
+Bootstrapped metamodels can make paths
+fully typesafe; even without them,
+structured predicates beat string soup.
+Look at this java for a moment. Each
+optional filter adds a Predicate only when
+present.
+
+5
+00:00:49,055 --> 00:01:00,815
+An empty predicate list means "all
+vessels" — decide whether that is allowed
+for your screen. CriteriaBuilder supplies
+equal, like, greaterThanOrEqualTo,
+conjunctions, and disjunctions.
+
+6
+00:01:00,935 --> 00:01:15,191
+Joins exist when you need cargo or berth
+associations in the filter. Wire this
+behind a custom repository fragment so
+controllers never see EntityManager: Look
+at this java for a moment. Walk one Monday
+query.
+
+7
+00:01:15,311 --> 00:01:26,231
+Only nameContains = "pacific" is set. The
+predicate list holds a single like on
+lowercased name. Hibernate emits one
+SELECT with one WHERE clause.
+
+8
+00:01:26,352 --> 00:01:37,656
+On Tuesday, flag state and tonnage join in
+— same Java method, wider WHERE, still no
+string concatenation of JPQL fragments.
+Criteria shines for dynamic port search.
+
+9
+00:01:37,776 --> 00:01:43,392
+It is heavy for a static findByImoNumber —
+use a derived method or JPQL there.
+
+10
+00:01:43,512 --> 00:01:55,872
+Generating the JPA static metamodel
+(Vessel_.flagState) removes magic strings
+in get("flagState") and catches renames at
+compile time; invest in that when Criteria
+becomes common in the codebase.
+
+11
+00:01:55,992 --> 00:02:09,480
+People rebuild Criteria for every fixed
+query and drown in boilerplate. Others
+paste user input into cb.literal(...)
+paths incorrectly — still bind and compare
+through the API rather than inventing SQL
+fragments.
+
+12
+00:02:09,600 --> 00:02:20,784
+A third trap is creating a new
+EntityManager manually in a Spring app
+instead of injecting one and participating
+in the transactional persistence context.
+Dynamic filters work.
+
+13
+00:02:20,904 --> 00:02:34,704
+When the same building blocks recur — "is
+hazardous," "in port SGSIN" — you want
+composable, named pieces you can and
+together in tests and in services. Spring
+Data Specifications are that vocabulary on
+top of Criteria.

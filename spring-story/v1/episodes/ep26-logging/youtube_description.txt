@@ -1,0 +1,33 @@
+The Spring Story — Episode 26: Logging
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Ferry-booking logs in the aggregator.
+• A customer says checkout charged twice.
+• You search the booking reference and get fragments: one line from pod A at payment start, nothing from the…
+• Missing correlation IDs turn a distributed request into archaeology.
+• Boot's default console pattern is fine for a laptop; it is not an incident strategy for multi-pod ferry…
+• Boot's default logging uses Logback behind SLF4J, with logging.level.* and logging.pattern.* properties,…
+• The framework lesson is not "how to print." It is structured, correlatable output that survives multi-pod…
+• Walk the filter and encoder.
+• …and more
+
+Timestamps
+0:00 02:00. Ferry-booking logs in the aggregator. Four pods. A customer…
+0:33 Boot's default logging uses Logback behind SLF4J, with…
+1:31 Runtime for one checkout. Request enters pod A; filter assigns id…
+2:17 Failure mode symptoms: duplicate charge investigation finds four…
+2:49 Trade-offs. JSON + correlation costs a dependency and filter…
+3:36 Misconception unique to logging in Boot: "Setting…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 27 — Profiles (Boot)
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

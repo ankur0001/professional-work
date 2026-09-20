@@ -1,0 +1,31 @@
+The Spring Story — Episode 45: Criteria API
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• A port-search screen starts with three optional filters: flag state, minimum gross tonnage, and a name…
+• On Monday the planner uses only the name box.
+• If you concatenate JPQL strings for each combination, you either miss a combination or invite…
+• The Criteria API builds the same query tree in Java, predicate by predicate, at runtime.
+• Criteria is verbose on purpose.
+• You get a typesafe-ish query graph from the EntityManager (or from a custom repository fragment).
+• Bootstrapped metamodels can make paths fully typesafe; even without them, structured predicates beat…
+• Each optional filter adds a Predicate only when present.
+• …and more
+
+Timestamps
+0:00 A port-search screen starts with three optional filters: flag…
+0:38 List<Predicate predicates = new ArrayList<();
+1:25 Criteria shines for dynamic port search. It is heavy for a static…
+2:06 Dynamic filters work. When the same building blocks recur — "is…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 46 — Specifications
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

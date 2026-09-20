@@ -1,0 +1,166 @@
+1
+00:00:00,000 --> 00:00:15,720
+A trucker reports check-in took forty
+seconds. Gateway logs look fine. Gate logs
+show a slow billing call. Billing logs
+show a slow DB. Without shared
+identifiers, those three files are three
+novels.
+
+2
+00:00:15,839 --> 00:00:23,951
+Distributed tracing stitches them: one
+trace id for the whole check-in, one span
+per hop, parent-child links across gateway
+→ gate → billing.
+
+3
+00:00:24,071 --> 00:00:31,367
+In modern Spring, Micrometer Tracing with
+an OpenTelemetry or Brave bridge
+propagates context over HTTP.
+
+4
+00:00:31,487 --> 00:00:41,567
+Boot instruments servlet/WebFlux requests
+and outbound clients — RestTemplate,
+WebClient, Feign — so W3C traceparent (or
+B3) headers ride along.
+
+5
+00:00:41,688 --> 00:00:47,280
+You rarely hand-roll headers; you verify
+they appear and that your sampler is
+intentional.
+
+6
+00:00:47,400 --> 00:01:00,480
+When a hop is missing from the waterfall,
+the usual culprit is an outbound client
+built without the instrumented builder — a
+plain WebClient.create() that never
+inherited the observation filter. Look at
+this example.
+
+7
+00:01:00,600 --> 00:01:13,392
+# gate-service & billing-service Look at
+this java for a moment. Follow one check-
+in. Gateway creates root span http POST
+/api/gates/G12/check-ins.
+
+8
+00:01:13,512 --> 00:01:25,968
+Gate continues the trace on inbound
+because traceparent arrived, adds
+gate.accept, Feign starts a child span for
+GET billing-service/tariffs/quote.
+Billing’s inbound span nests under that
+child.
+
+9
+00:01:26,087 --> 00:01:33,815
+In a trace UI you see where the forty
+seconds went — connection wait, SQL, or a
+circuit-open fail-fast that returns in
+milliseconds.
+
+10
+00:01:33,935 --> 00:01:40,919
+Breaker opens that finish in 2ms look
+different from 8s timeouts; traces make
+that visible without guessing.
+
+11
+00:01:41,039 --> 00:01:51,791
+Log lines carrying %X{traceId} let you
+jump from a booth complaint ticket to the
+exact waterfall when the trucker gives you
+a time window. Sampling is policy.
+
+12
+00:01:51,911 --> 00:02:00,743
+probability: 1.0 is fine for a staging
+quay; production usually samples a
+fraction and always keeps error traces if
+your stack supports it.
+
+13
+00:02:00,863 --> 00:02:15,479
+High-cardinality tags — raw truck plate on
+every span — explode storage the same way
+metric tags do. Prefer low-cardinality
+dimensions (gate.id, hazard.class) and put
+unique identifiers in logs correlated by
+trace id.
+
+14
+00:02:15,599 --> 00:02:24,335
+Failure symptoms without tracing
+discipline: three teams each swear their
+service was fine; MTTR stretches while
+someone greps by approximate timestamp;
+
+15
+00:02:24,455 --> 00:02:29,831
+a missing child span makes billing look
+instantaneous when Feign was never
+instrumented.
+
+16
+00:02:29,951 --> 00:02:43,776
+With tracing but bad clocks, skew across
+pods confuses duration math — keep NTP
+healthy. With 100% sampling on a hot
+gateway, the collector lags and operators
+lose the tool during the incident they
+need it for.
+
+17
+00:02:43,895 --> 00:02:50,639
+Trade-offs: full tracing everywhere is
+expensive; metrics alone cannot show
+critical path across processes.
+
+18
+00:02:50,759 --> 00:03:01,055
+Start with ingress + inter-service HTTP,
+add custom spans where business methods
+hide time (gate.accept, ledger.record),
+and leave getter noise out of the
+waterfall.
+
+19
+00:03:01,175 --> 00:03:08,519
+Baggage can carry a check-in correlation
+across hops, but treat it as carefully as
+headers — do not put secrets in baggage.
+
+20
+00:03:08,639 --> 00:03:19,127
+A misconception is equating “we added a
+correlation id filter years ago” with full
+distributed tracing; a log field without
+parent/child spans does not give you a
+critical path.
+
+21
+00:03:19,247 --> 00:03:31,679
+Another is enabling 100% sampling on a hot
+gateway and surprising the collector
+budget. A third is forgetting outbound
+Feign instrumentation and wondering why
+gate spans never show billing children.
+
+22
+00:03:31,799 --> 00:03:44,447
+Traces explain one request. Resilience
+still needs more than open/closed: retries
+with backoff, rate limits against a flaky
+tide vendor, bulkheads so tide threads
+cannot starve gate’s billing pool.
+
+23
+00:03:44,567 --> 00:03:49,511
+That toolbox is Resilience4j beyond the
+single breaker annotation.

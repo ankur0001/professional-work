@@ -1,0 +1,32 @@
+The Spring Story — Episode 21: @SpringBootApplication
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Failing test output from the bike-share CI: The controller class has @RestController.
+• The starter-web is on the classpath.
+• The slice test even looks right.
+• Root cause: @SpringBootApplication(scanBasePackages = "com.bikeshare.service") on the main class — written…
+• Auto-configuration still runs.
+• Component scan does not see the controllers.
+• Fusion hid the knob that was turned.
+• @SpringBootApplication is a composed annotation.
+• …and more
+
+Timestamps
+0:00 Failing test output from the bike-share CI:
+0:34 Walk the happy path. BikeShareApi lives in com.bikeshare. Default…
+1:41 Failure mode variants: main class in com.bikeshare.Bootstrap under…
+2:36 Unpack the composition when debugging the next 404. Open…
+3:12 Misconception unique to @SpringBootApplication: "It only enables…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 22 — Configuration Properties
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

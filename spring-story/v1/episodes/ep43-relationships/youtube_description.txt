@@ -1,0 +1,31 @@
+The Spring Story — Episode 43: Relationships
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• A ship’s manifest is a document with lines.
+• In the database that is two tables.
+• In Java you want a Manifest that owns a list of CargoLine — and when a clerk deletes a line from the list,…
+• That is relationship mapping with orphan removal.
+• JPA association annotations describe cardinality and ownership.
+• @OneToMany / @ManyToOne cover the manifest↔line case.
+• @ManyToMany and @OneToOne exist too; misuse them and join tables multiply.
+• For harbor cargo, start with the classic parent-child: mappedBy = "manifest" says the child owns the…
+• …and more
+
+Timestamps
+0:00 A ship’s manifest is a document with lines. In the database that…
+0:34 mappedBy = "manifest" says the child owns the foreign key column…
+1:14 Bidirectional relationships are not free. Equals/hashCode on…
+2:03 Associations give you a graph. Querying that graph without…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 44 — JPQL
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

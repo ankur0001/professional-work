@@ -1,0 +1,32 @@
+The Spring Story — Episode 104: Memory Optimization
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Gate’s heap chart looks like a staircase: climb, small drop, higher climb, OOMKill.
+• Latency was fine until the pod died.
+• The suspect in this harbor is an unbounded AIS position cache — every vessel ping retained “for the map,”…
+• Memory optimization starts with meters, then dumps, then a bounded structure.
+• Read JVM gauges first: jvm.memory.used for heap pools, GC pause timers, and your custom harbor.ais.cache.size.
+• If the cache size metric tracks the staircase, you found the villain without a dump.
+• When you need proof, capture a heap dump on OOM (-XX:+HeapDumpOnOutOfMemoryError) or via jcmd and look for…
+• Soft/weak references are not a strategy by themselves — bounds and TTLs are.
+• …and more
+
+Timestamps
+0:00 Gate’s heap chart looks like a staircase: climb, small drop,…
+1:00 Container cgroups matter. A JVM that believes it has the node’s…
+1:36 Paging exports and large bill-of-lading byte arrays in memory…
+2:23 Trade-offs: larger heaps absorb spikes and lengthen GC pauses;…
+3:03 A misconception is “raising the heap” as the first fix for an…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 105 — Production Readiness
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

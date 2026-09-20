@@ -1,0 +1,31 @@
+The Spring Story — Episode 63: Pointcuts
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Someone ships a logging @Around with execution(* com.harbor..*(..)).
+• Overnight the metrics bus melts.
+• Repository findById calls, mapper methods, and gate services all sprout advice.
+• The advice body was harmless.
+• Pointcuts are the aiming language: predicates that select join points so advice runs only where you intend.
+• In Spring AOP the dominant join point is method execution.
+• The dominant expression language is AspectJ pointcut syntax, interpreted for proxy-based weaving.
+• Narrow the harbor story so advice hits gate services — not repositories.
+• …and more
+
+Timestamps
+0:00 Someone ships a logging @Around with execution( com.harbor..(..)).…
+0:33 Design expressions like APIs. execution selects by method…
+1:17 What Spring AOP will not do: advise join points proxies cannot…
+1:55 So advice aims through pointcuts, and named compositions keep that…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 64 — Aspect Ordering
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

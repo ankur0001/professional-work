@@ -1,0 +1,127 @@
+1
+00:00:00,000 --> 00:00:12,167
+Every security feature in this phase
+eventually lands in the same place: a
+filter chain that runs before your harbor
+controllers. If you can narrate that
+chain, configuration stops feeling like
+folklore.
+
+2
+00:00:12,287 --> 00:00:22,103
+Servlet containers have a filter chain.
+Spring Security installs
+DelegatingFilterProxy (named
+springSecurityFilterChain) into that
+chain.
+
+3
+00:00:22,223 --> 00:00:33,695
+The proxy forwards to FilterChainProxy,
+which selects a SecurityFilterChain bean
+for the request — useful when you have
+separate chains for /api/** and browser
+ops consoles.
+
+4
+00:00:33,815 --> 00:00:46,895
+Inside the chosen chain, a list of
+security filters runs in a deliberate
+order: channel security, CORS, CSRF,
+authentication mechanisms, session
+management, authorization, exception
+translation, and more.
+
+5
+00:00:47,015 --> 00:01:02,807
+Order is not academic. CORS must handle
+preflight early. CSRF must see the request
+before controllers mutate state.
+Authentication filters must populate the
+SecurityContext before authorization reads
+it.
+
+6
+00:01:02,927 --> 00:01:10,463
+ExceptionTranslationFilter converts
+security exceptions into 401/403 responses
+or login redirects.
+
+7
+00:01:10,583 --> 00:01:21,335
+Insert a custom filter in the wrong
+relative position and you will debug
+symptoms that look like “Spring is broken”
+when the chain is merely misordered. Look
+at this java for a moment.
+
+8
+00:01:21,455 --> 00:01:30,215
+You can list the filters at runtime by
+enabling debug security or inspecting the
+chain bean — useful when a custom
+OncePerRequestFilter never fires.
+
+9
+00:01:30,335 --> 00:01:43,223
+Relative placement APIs on HttpSecurity
+(addFilterBefore, addFilterAfter,
+addFilterAt) only make sense when you know
+the anchor filter’s job. SecurityContext
+persistence deserves a beat.
+
+10
+00:01:43,343 --> 00:01:51,911
+In classic servlet apps, persistence
+filters load and store context around the
+request, often tied to the HTTP session
+for form login.
+
+11
+00:01:52,031 --> 00:02:02,087
+Stateless JWT APIs typically use a
+session-creation policy of stateless:
+authenticate from the bearer token every
+request, do not create an HTTP session.
+
+12
+00:02:02,207 --> 00:02:08,735
+Mixing those modes accidentally is a
+common source of sticky sessions and
+surprising logouts on the harbor edge.
+
+13
+00:02:08,855 --> 00:02:19,487
+A misconception is treating
+SecurityFilterChain as “the servlet
+container’s only filters.” Your logging
+and correlation filters may still sit
+outside Spring Security.
+
+14
+00:02:19,608 --> 00:02:27,743
+Another is adding ten custom filters that
+each re-parse the Authorization header —
+compose with providers and one
+authentication filter instead.
+
+15
+00:02:27,864 --> 00:02:39,072
+Phase 7 ends with a coherent servlet
+security story: credentials become
+Authentication, filters enforce
+CSRF/CORS/authorization, method security
+deepens domain rules.
+
+16
+00:02:39,192 --> 00:02:51,768
+The stack so far assumes a thread-per-
+request servlet model. The next phase asks
+what changes when AIS vessel positions fan
+in faster than threads can wait — and why
+that model needs publishers instead of
+eager values.
+
+17
+00:02:51,888 --> 00:02:54,743
+That door is reactive programming.

@@ -1,0 +1,32 @@
+The Spring Story — Episode 53: Propagation
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Support opens a ticket: “checkout failed, but we have no audit row saying it even started.” Engineering…
+• Two different truths people need from nested writes.
+• Propagation is the dial between those truths: when a transactional method calls another, does the inner…
+• Spring’s default is Propagation.REQUIRED.
+• No transaction on the thread?
+• Nested REQUIRED collaborators share one fate.
+• One rollback undoes everyone who joined.
+• Propagation.REQUIRES_NEW does the opposite split.
+• …and more
+
+Timestamps
+0:00 Support opens a ticket: “checkout failed, but we have no audit row…
+0:39 Propagation.REQUIRESNEW does the opposite split. Suspend the outer…
+1:30 Flip only the propagation on record to plain @Transactional —…
+2:10 Keep the interview sentence short. Propagation is not “how many…
+2:50 Joining or splitting still says nothing about what concurrent…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 54 — Isolation Levels
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

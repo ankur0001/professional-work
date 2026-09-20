@@ -1,0 +1,31 @@
+The Spring Story — Episode 32: Validation
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Customs will reject a declaration long before a crane moves.
+• Your API should do the same: a request body that parses as JSON can still be garbage, and that garbage…
+• Without bean validation, customs controllers grow hand-written checks — null tests, HS-code length tests,…
+• Rules drift between "create declaration" and "amend declaration." Services re-check the same fields…
+• Spring’s integration with Jakarta Bean Validation gives you declarative constraints on DTOs and a standard…
+• Put the rules on the request type the controller accepts: @Valid is the switch that turns annotations into…
+• Without it, Spring binds the JSON and your method runs even when hsCode is blank.
+• With it, the HandlerAdapter validates before your method body executes.
+• …and more
+
+Timestamps
+0:00 Customs will reject a declaration long before a crane moves. Your…
+0:39 Put the rules on the request type the controller accepts:
+1:24 People forget @Valid and then blame Bean Validation for "not…
+2:04 That craft is exception handling.
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 33 — Exception Handling
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

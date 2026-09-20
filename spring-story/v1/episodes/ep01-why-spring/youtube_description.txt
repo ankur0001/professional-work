@@ -1,0 +1,35 @@
+The Spring Story — Episode 01: Why Spring?
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Before we talk about annotations or Boot starters, let's start with a situation teams kept hitting in…
+• Imagine you are building a banking or logistics backend in the early two-thousands.
+• You may even have an application server.
+• And yet every new feature feels heavier than the business logic itself.
+• You need an object that talks to payments, another that talks to orders, another that logs, another that…
+• So where do you create them?
+• Inside constructors with new?
+• Through JNDI lookups that only work inside the server?
+• …and more
+
+Timestamps
+0:00 Before we talk about annotations or Boot starters, let's start…
+0:41 That is not a syntax problem. That is an assembly problem.
+1:21 That question is why Spring exists.
+2:18 A little history makes the design less mysterious. Rod Johnson…
+3:19 Let's make the before-and-after concrete. In a pre-Spring style,…
+3:57 Read that again slowly. There is no Spring import in the domain…
+4:48 A common misunderstanding is to treat Spring as "annotations you…
+5:35 The next natural question is unavoidable. If Spring is a container…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 02 — Spring Architecture
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

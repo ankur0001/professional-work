@@ -1,0 +1,31 @@
+The Spring Story — Episode 61: CGLIB
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Many harbor beans are concrete classes with no interface.
+• A @Service that prints gate passes, a @Component that scores tide windows — injected by their own type.
+• JDK’s Proxy cannot wrap those: it only implements interfaces.
+• Spring’s answer is a class-based proxy via CGLIB (and related subclass generation in modern Spring).
+• Runtime bytecode creates a subclass of your concrete class, overrides methods, and weaves interceptor…
+• The object you inject is-a your class — a subclass instance — while still delegating through the advice chain.
+• Use a concrete gate helper on purpose — no interface in sight.
+• Collaborators inject GatePassPrinter.
+• …and more
+
+Timestamps
+0:00 Many harbor beans are concrete classes with no interface. A…
+0:34 Use a concrete gate helper on purpose — no interface in sight.
+1:21 Compared with JDK proxies: interface wrapper versus subclass…
+1:57 A misconception is believing CGLIB “enhances the original class in…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 62 — Advice
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

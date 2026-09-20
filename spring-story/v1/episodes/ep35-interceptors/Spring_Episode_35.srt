@@ -1,0 +1,108 @@
+1
+00:00:00,000 --> 00:00:09,215
+Filters speak Servlet. Interceptors speak
+Spring MVC: handlers, handler mappings,
+and the lifecycle around controller
+invocation.
+
+2
+00:00:09,335 --> 00:00:20,327
+The port operations console makes that
+distinction concrete — you want timing on
+/admin/ handler methods, not on every
+static asset and health ping. Recall the
+dispatcher pipeline.
+
+3
+00:00:20,448 --> 00:00:32,472
+After HandlerMapping resolves a
+HandlerExecutionChain, that chain includes
+interceptors. DispatcherServlet calls
+preHandle on each interceptor before the
+HandlerAdapter invokes the controller.
+
+4
+00:00:32,591 --> 00:00:45,960
+After a successful invocation it calls
+postHandle. After completion — including
+when an exception was thrown — it calls
+afterCompletion. That timeline is inside
+MVC, after a handler was chosen.
+
+5
+00:00:46,079 --> 00:01:01,128
+Look at this java for a moment. Look at
+this java for a moment. Path patterns on
+the registry are the point of this
+lesson’s scenario: only /admin/ pays the
+timing tax. Berth boards and public parcel
+GETs stay quiet.
+
+6
+00:01:01,247 --> 00:01:14,015
+Returning false from preHandle aborts the
+chain — useful for annotation-driven
+gates, dangerous if you forget to write a
+response. A second interceptor pattern
+clarifies why filters cannot replace this
+layer.
+
+7
+00:01:14,135 --> 00:01:24,551
+Suppose only methods marked @Audited
+should emit console audit events. In
+preHandle, cast handler to HandlerMethod,
+look for the annotation, and stash a flag.
+
+8
+00:01:24,671 --> 00:01:34,128
+In afterCompletion, if the flag is set and
+ex is null, write the audit record. A
+servlet filter never receives that handler
+method metadata.
+
+9
+00:01:34,247 --> 00:01:45,071
+postHandle runs only after a successful
+handler return and before the view is
+rendered — less useful for pure
+@RestController JSON, still useful for
+adding model attributes on view
+controllers.
+
+10
+00:01:45,191 --> 00:01:56,903
+Prefer afterCompletion for timing and
+cleanup because it runs on success and
+failure. Registering the same logic as
+both a filter and an interceptor "just in
+case" doubles work and muddies logs.
+
+11
+00:01:57,023 --> 00:02:07,007
+Putting security authentication solely in
+an interceptor also fails closed paths
+that never map — authentication that must
+run even when no handler exists remains
+filter work.
+
+12
+00:02:07,127 --> 00:02:19,127
+And measuring every path under / recreates
+the noise you avoided by scoping to
+/admin/. Servlet filters cover early HTTP
+wrapping; MVC interceptors cover handler-
+aware hooks.
+
+13
+00:02:19,247 --> 00:02:29,111
+One request shape still sits outside
+ordinary JSON bodies: clients upload files
+— bill-of-lading PDFs — as multipart
+streams with size limits and different
+binding rules.
+
+14
+00:02:29,231 --> 00:02:33,383
+How Spring exposes that without hand-
+parsing MIME is next.

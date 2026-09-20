@@ -1,0 +1,189 @@
+1
+00:00:00,000 --> 00:00:08,688
+02:00. Ferry-booking logs in the
+aggregator. Four pods. A customer says
+checkout charged twice.
+
+2
+00:00:08,807 --> 00:00:20,664
+You search the booking reference and get
+fragments: one line from pod A at payment
+start, nothing from the gateway callback,
+an ERROR on pod C without a booking id, a
+stack trace on pod B for an unrelated
+sailing.
+
+3
+00:00:20,783 --> 00:00:32,783
+Missing correlation IDs turn a distributed
+request into archaeology. Boot's default
+console pattern is fine for a laptop; it
+is not an incident strategy for multi-pod
+ferry checkout.
+
+4
+00:00:32,903 --> 00:00:45,143
+Boot's default logging uses Logback behind
+SLF4J, with logging.level.* and
+logging.pattern.* properties, and optional
+logback-spring.xml for profiles and
+advanced appenders.
+
+5
+00:00:45,263 --> 00:00:58,847
+The framework lesson is not "how to
+print." It is structured, correlatable
+output that survives multi-pod reality —
+and the MDC (Mapped Diagnostic Context) as
+the carrier for per-request identifiers on
+a thread.
+
+6
+00:00:58,967 --> 00:01:12,311
+Look at this example. <!-- logback-
+spring.xml --> Look at this java for a
+moment. Walk the filter and encoder.
+OncePerRequestFilter guarantees one
+execution per dispatch.
+
+7
+00:01:12,431 --> 00:01:28,055
+Read X-Correlation-Id if a gateway already
+set it; otherwise mint a UUID.
+MDC.put("correlationId", cid) stores the
+value on the current thread. res.setHeader
+returns the id to clients and support
+tools.
+
+8
+00:01:28,175 --> 00:01:43,127
+try/finally with MDC.remove prevents leaks
+onto pooled threads — a classic bug where
+later requests inherit someone else's
+correlation id. The Logback pattern
+%X{correlationId} pulls from MDC into JSON
+as corr.
+
+9
+00:01:43,247 --> 00:02:00,287
+springProperty reads
+spring.application.name so every line
+names the ferry service. Runtime for one
+checkout. Request enters pod A; filter
+assigns id c-9f3. Payment service logs
+"charging" with corr=c-9f3.
+
+10
+00:02:00,407 --> 00:02:10,679
+WebClient/Feign to the payment gateway
+should forward X-Correlation-Id — if it
+does not, the callback lands on pod C with
+a *new* id and your aggregator cannot join
+charge and callback.
+
+11
+00:02:10,799 --> 00:02:23,471
+With propagation, refund decision logs
+share c-9f3 across pods. Without MDC,
+Boot's nice default console pattern still
+leaves you string-matching timestamps and
+booking refs that half the lines omit.
+
+12
+00:02:23,591 --> 00:02:35,783
+logging.level.com.ferry=DEBUG raises
+detail for one package without
+recompiling; Actuator's loggers endpoint
+can change levels live when secured —
+useful at 02:00 if you already have
+correlation.
+
+13
+00:02:35,903 --> 00:02:48,431
+Failure mode symptoms: duplicate charge
+investigation finds four unrelated corr
+values for one customer journey — header
+not propagated on outbound calls, or MDC
+cleared too early, or async work (@Async,
+
+14
+00:02:48,551 --> 00:02:53,663
+reactive) lost MDC because it changed
+threads without copying context.
+
+15
+00:02:53,783 --> 00:03:00,816
+Symptom of MDC leak: support searches one
+id and sees fragments of other customers'
+checkouts on the same pod.
+
+16
+00:03:00,935 --> 00:03:12,815
+Symptom of logging.level.root=DEBUG in
+prod during panic: disk full, log pipeline
+lag, real ERROR lines drowned — and
+sometimes added latency from logging
+volume. Trade-offs.
+
+17
+00:03:12,935 --> 00:03:24,047
+JSON + correlation costs a dependency and
+filter discipline; it buys queryable
+incidents. Text patterns are easier to
+read in a terminal and worse in
+aggregators.
+
+18
+00:03:24,167 --> 00:03:38,399
+Putting booking ids only in free-text
+messages fails when the message format
+changes; first-class MDC fields stay
+stable. Sampling debug logs or using
+traces (later episodes) handles volume
+better than permanent DEBUG.
+
+19
+00:03:38,519 --> 00:03:53,303
+One ferry-specific discipline: log the
+booking reference as an MDC field too
+(MDC.put("bookingRef", ...) once the ref
+exists), not only inside message strings.
+Aggregators index fields; they do not
+reliably parse prose.
+
+20
+00:03:53,423 --> 00:04:03,263
+Correlation id joins hops; booking ref
+joins business. Together they turn
+"charged twice" from four pods into two
+queries instead of a scavenger hunt.
+
+21
+00:04:03,383 --> 00:04:17,351
+Misconception unique to logging in Boot:
+"Setting logging.level.root=DEBUG in
+production is the responsible way to 'get
+more detail' during an incident." It
+floods disks, hides the signal, and can
+itself cause latency.
+
+22
+00:04:17,471 --> 00:04:27,719
+Prefer targeted packages, already-
+correlated IDs, and metrics/traces for
+volume. Checkout archaeology becomes a
+single query on corr.
+
+23
+00:04:27,839 --> 00:04:38,639
+Finance still deploys the same ferry
+artifact to staging and prod with
+different payment merchant IDs — and last
+week staging charged the prod merchant
+because the Boot profile document never
+activated.
+
+24
+00:04:38,759 --> 00:04:43,295
+Profile-specific YAML in Boot packaging is
+the next seam to tighten.

@@ -1,0 +1,32 @@
+The Spring Story — Episode 13: @Configuration
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• No stereotype on TicketService.
+• The full-screen cinema box office wires every collaborator in one @Configuration class so the seating map…
+• @Configuration marks a class as a source of bean definitions via @Bean methods.
+• In full (default) mode, Spring enhances the configuration class — historically with CGLIB — so calls…
+• When ticketService() calls seatMap(), that call is intercepted and returns the singleton already managed…
+• That interception is the whole point of default @Configuration semantics.
+• seatMap() loads auditorium JSON once when the bean is first created; method name seatMap becomes the…
+• pricingPolicy() returns a matinee policy singleton.
+• …and more
+
+Timestamps
+0:00 No @ComponentScan. No stereotype on TicketService. The full-screen…
+0:51 Runtime refresh for the cinema app, in order. Context registers…
+1:32 Lite mode flips the footgun back on.…
+2:12 Failure mode without lite mode involved: forgetting @Configuration…
+3:00 Misconception unique to @Configuration: "A @Configuration class is…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 14 — @Bean
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

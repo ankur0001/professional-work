@@ -1,0 +1,197 @@
+1
+00:00:00,000 --> 00:00:09,839
+Ship a harbor API on the public internet
+and the first reviewer question is not
+about JPA mappings. It is: who can call
+/gates/release?
+
+2
+00:00:10,019 --> 00:00:24,036
+Controllers, repositories, and
+transactions can all be correct while the
+door stays open. Security fundamentals are
+the shared vocabulary for closing that
+door without scattering if (user == null)
+through every method.
+
+3
+00:00:24,155 --> 00:00:39,420
+Two questions appear on every request, and
+they are not the same. First: who is
+calling? That is authentication —
+establishing identity. Second: given that
+identity, may they perform this action on
+this resource?
+
+4
+00:00:39,599 --> 00:00:50,111
+That is authorization. Teams that blur the
+words build filters that “check the token”
+and then forget ownership, or build role
+checks with no trustworthy identity behind
+them.
+
+5
+00:00:50,231 --> 00:00:58,223
+On the quay that confusion shows up as a
+trucker JWT that validates, yet still
+releases cargo that belongs to another
+carrier,
+
+6
+00:00:58,343 --> 00:01:10,175
+or as an admin berth UI that only checked
+“logged in” and never “is ADMIN.” Spring
+Security models the pipeline as a filter
+chain in front of your servlets (and a
+WebFilter chain for WebFlux later).
+
+7
+00:01:10,295 --> 00:01:21,647
+A request enters. Filters may attempt
+authentication, build a SecurityContext,
+enforce authorization rules, handle
+logout, or reject the call before a
+controller runs.
+
+8
+00:01:21,767 --> 00:01:32,735
+When authentication succeeds, the context
+holds an Authentication — principal,
+authorities, authenticated flag —
+typically stored via SecurityContextHolder
+on a thread for servlet apps.
+
+9
+00:01:32,855 --> 00:01:43,463
+Controllers and @PreAuthorize methods read
+that context; they should not invent a
+parallel “current user” stash in a request
+attribute unless you have a deliberate
+reason and a clear owner for clearing it.
+
+10
+00:01:43,583 --> 00:01:54,791
+Look at this java for a moment. Read that
+as policy, not decoration. Health may stay
+public for probes — Kubernetes needs a
+cheap answer without credentials.
+
+11
+00:01:54,911 --> 00:02:05,543
+Admin berth routes demand an admin role;
+Spring’s hasRole("ADMIN") expects
+authority ROLE_ADMIN. Everything else
+demands an authenticated principal.
+
+12
+00:02:05,663 --> 00:02:18,431
+Walk a failure: an anonymous POST
+/gates/G12/check-ins never reaches
+GateController. The authorization filter
+short-circuits with 401 (or a challenge,
+depending on the entry point).
+
+13
+00:02:18,551 --> 00:02:32,519
+An authenticated crane operator without
+ROLE_ADMIN hitting /api/admin/berths gets
+403 — identity existed; permission did
+not. That distinction is the whole point
+of separating authn from authz.
+
+14
+00:02:32,639 --> 00:02:38,615
+A controller for gate status can then
+assume identity already exists — or it
+should not be public.
+
+15
+00:02:38,735 --> 00:02:49,247
+Runtime symptoms when the vocabulary is
+wrong: actuators open on the public
+gateway because someone copied permitAll
+too widely; Basic auth left on for
+browsers that needed CSRF;
+
+16
+00:02:49,367 --> 00:02:55,559
+method security enabled in config but
+never annotated, so “we thought services
+were protected”;
+
+17
+00:02:55,679 --> 00:03:04,991
+or a custom filter that sets a principal
+but forgets
+SecurityContextHolder.clearContext() on
+the thread pool path and leaks identity
+across requests.
+
+18
+00:03:05,111 --> 00:03:12,839
+Those are not exotic exploits. They are
+everyday miswirings that fundamentals
+language helps you name in review.
+
+19
+00:03:12,959 --> 00:03:23,735
+A misconception that shows up early:
+“Spring Security is just annotations.”
+Method security matters, but the
+foundation is the filter chain and the
+security context.
+
+20
+00:03:23,855 --> 00:03:32,399
+Another: enabling default form login means
+the harbor API is safe. Defaults are a
+starting point, not a threat model.
+
+21
+00:03:32,519 --> 00:03:45,503
+You still decide which paths are public,
+how credentials are presented, where
+passwords live, and how sessions or tokens
+travel. A third: treating “HTTPS at the
+load balancer” as application
+authorization.
+
+22
+00:03:45,623 --> 00:03:59,759
+TLS protects the pipe; it does not decide
+whether Alice may release Bob’s container.
+Trade-offs sit in the open once vocabulary
+is shared. Session cookies fit browser ops
+consoles and force CSRF discipline.
+
+23
+00:03:59,879 --> 00:04:12,935
+Stateless bearer tokens fit trucker mobile
+clients and force careful validation and
+expiry. Coarse URL rules are fast to
+audit; fine-grained ownership checks need
+method security or domain checks inside
+the use case.
+
+24
+00:04:13,055 --> 00:04:20,279
+Pick deliberately per surface — public
+gate API versus internal berth admin —
+instead of one default for the whole
+harbor.
+
+25
+00:04:20,399 --> 00:04:31,512
+Once the vocabulary is clear —
+authentication versus authorization,
+filters versus controllers, security
+context versus ad-hoc request attributes —
+the engineering problem is unavoidable.
+
+26
+00:04:31,631 --> 00:04:45,431
+How does a request actually prove identity
+for a crane operator? Basic credentials? A
+form login? A bearer token? That is where
+authentication mechanisms begin.

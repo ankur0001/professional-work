@@ -1,0 +1,206 @@
+1
+00:00:00,000 --> 00:00:09,984
+The cargo routing service passes every
+unit test on a laptop and fails contract
+tests in the pipeline with a bizarre bean:
+FakeGpsClock from com.cargo.testsupport.
+
+2
+00:00:10,103 --> 00:00:15,384
+Production logs show the clock advancing
+in 15-minute jumps designed for demos.
+
+3
+00:00:15,503 --> 00:00:21,311
+Someone set @ComponentScan("com.cargo") on
+the Boot application in cargo-app,
+
+4
+00:00:21,431 --> 00:00:32,927
+and the cargo-test-support JAR — depended
+on as test scope in the library module but
+somehow compile-scoped in the app — sat on
+the runtime classpath with @Component
+classes under com.cargo.testsupport.
+
+5
+00:00:33,048 --> 00:00:38,736
+Scanning did exactly what it was told. The
+package boundary did not.
+
+6
+00:00:38,856 --> 00:00:53,352
+Component scanning walks packages looking
+for stereotype annotations — @Component,
+@Service, @Repository, @Controller, and
+meta-annotated types — and registers bean
+definitions for each hit. It is
+convenience, not magic.
+
+7
+00:00:53,472 --> 00:01:06,960
+Convenience without package discipline
+becomes a production classpath mine:
+anything annotated and reachable under the
+scan base becomes a candidate singleton.
+Look at this java for a moment. Walk that
+fix.
+
+8
+00:01:07,079 --> 00:01:13,103
+@SpringBootApplication already includes a
+@ComponentScan defaulted to the main class
+package.
+
+9
+00:01:13,224 --> 00:01:22,103
+The explicit @ComponentScan replaces that
+default with basePackages =
+"com.cargo.routing" — only that tree and
+its subpackages are candidates.
+
+10
+00:01:22,224 --> 00:01:33,432
+excludeFilters with a REGEX pattern is
+belt-and-suspenders if a testsupport class
+somehow still shares the prefix; filter
+types also include ANNOTATION,
+ASSIGNABLE_TYPE, and ASPECTJ.
+
+11
+00:01:33,552 --> 00:01:44,208
+Better still in many apps: put the
+application class in com.cargo.routing and
+rely on the default scan of that package
+and below — never com.cargo if sibling
+modules share the prefix.
+
+12
+00:01:44,328 --> 00:01:55,752
+Keep test helpers in src/test or in a JAR
+that production never depends on; scope
+mistakes are half of this outage class.
+Runtime of a scan during context refresh.
+
+13
+00:01:55,871 --> 00:02:03,168
+ClassPathBeanDefinitionScanner (or Boot's
+equivalent path) obtains candidate
+resource paths under the base packages.
+
+14
+00:02:03,287 --> 00:02:16,608
+For each .class resource it reads
+*metadata* via a metadata reader — often
+without fully initializing the class — and
+checks for stereotype annotations and
+include/exclude filters. Hits become
+BeanDefinition entries.
+
+15
+00:02:16,728 --> 00:02:24,336
+Default bean name is the short class name
+decapitalized (fakeGpsClock), unless
+@Component("explicit") overrides.
+
+16
+00:02:24,456 --> 00:02:31,680
+Instantiation happens later when the bean
+is needed or when non-lazy singletons are
+pre-instantiated at end of refresh.
+
+17
+00:02:31,800 --> 00:02:40,032
+That timing is why FakeGpsClock can become
+a real singleton before any HTTP request:
+the scan already decided it was a bean,
+
+18
+00:02:40,152 --> 00:02:48,864
+and something depended on Clock or
+GpsClock by type — or the fake was simply
+created as an eager singleton and started
+ticking in a @PostConstruct.
+
+19
+00:02:48,984 --> 00:03:00,240
+Failure mode symptoms in the cargo outage:
+contract tests assert arrival ETAs against
+wall-clock windows and fail
+intermittently; production metrics show
+routes recalculated on a 15-minute grid;
+
+20
+00:03:00,360 --> 00:03:10,824
+beans actuator (if exposed) lists
+fakeGpsClock; debug logging of
+ClassPathBeanDefinitionScanner shows
+com.cargo.testsupport.FakeGpsClock as a
+candidate.
+
+21
+00:03:10,944 --> 00:03:25,392
+Another related symptom: duplicate type
+matches — both SystemGpsClock and
+FakeGpsClock implement GpsClock, startup
+fails with
+NoUniqueBeanDefinitionException, or
+@Primary on the wrong one silently wins.
+Trade-offs.
+
+22
+00:03:25,512 --> 00:03:35,448
+Wide scans (com.company) onboard new
+@Service classes with zero registration
+code and maximize accidental inclusion of
+demos, fakes, and abandoned packages.
+
+23
+00:03:35,568 --> 00:03:41,520
+Narrow scans and explicit @Bean methods
+cost a line of registration but make the
+graph auditable.
+
+24
+00:03:41,640 --> 00:03:50,664
+Filters help, but filters that exist
+because the classpath is dirty are
+treating the symptom; fixing Maven/Gradle
+scopes and package layout treats the
+cause.
+
+25
+00:03:50,784 --> 00:04:01,320
+Scanning also interacts with multi-module
+builds: a dependency's @Component classes
+are visible if that dependency is on the
+runtime classpath — "it's only a library"
+is not isolation.
+
+26
+00:04:01,440 --> 00:04:13,008
+Misconception unique to scanning:
+"@SpringBootApplication only scans the
+package of the main class, so deep package
+trees are always safe." It scans that
+package *and all subpackages*.
+
+27
+00:04:13,128 --> 00:04:24,360
+If you place main in com.cargo to "see
+everything," you opted into everything
+under com.cargo, including modules you
+forgot existed. FakeGpsClock is gone from
+prod.
+
+28
+00:04:24,480 --> 00:04:33,336
+The next fight is subtler: the same app
+declares two DataSource beans — OLTP and
+reporting — and developers disagree
+whether @Autowired, @Resource,
+
+29
+00:04:33,456 --> 00:04:38,304
+or @Inject will pick the right one when a
+field is named reportingDataSource.

@@ -1,0 +1,151 @@
+1
+00:00:00,000 --> 00:00:14,519
+Unit tests construct TariffService with
+mocks. Gate’s GateController still needs
+Spring MVC: mapping, JSON conversion,
+validation, exception advice. Booting the
+whole harbor for every controller tweak is
+slow.
+
+2
+00:00:14,639 --> 00:00:25,583
+@WebMvcTest loads a slice — just the web
+layer for named controllers — and MockMvc
+drives DispatcherServlet without opening a
+socket. Look at this java for a moment.
+
+3
+00:00:25,704 --> 00:00:34,536
+MockMvc exercises the dispatcher pipeline:
+handler mapping, argument resolution,
+message conversion, @Valid,
+@ControllerAdvice.
+
+4
+00:00:34,655 --> 00:00:44,399
+@MockBean puts a Mockito mock into the
+slice’s ApplicationContext, replacing the
+real GateReleaseService — different from a
+field @Mock that never enters the
+container.
+
+5
+00:00:44,519 --> 00:00:55,031
+If you forget @MockBean for a required
+collaborator, the slice context fails to
+start with an unsatisfied dependency —
+that failure is useful; it tells you the
+controller’s true wiring.
+
+6
+00:00:55,151 --> 00:01:08,039
+Security can be disabled for the slice or
+shaped with @WithMockUser when the
+controller relies on the security context.
+Validation annotations on TruckCheckIn
+fire here; that is the point of the
+malformed-body test.
+
+7
+00:01:08,159 --> 00:01:22,055
+A green unit test of the service would
+never see a missing containerId rejected
+at the edge. Other slices exist.
+@DataJpaTest focuses repositories and an
+embedded or Testcontainers database.
+
+8
+00:01:22,176 --> 00:01:34,008
+@JsonTest focuses ObjectMapper and Jackson
+modules — handy when tariff money
+serialization is picky. @SpringBootTest
+loads the full context — save that for
+integration flows.
+
+9
+00:01:34,128 --> 00:01:43,944
+The dial is intentional: narrow when you
+are testing mapping and JSON, widen when
+you are testing wiring across layers. Look
+at this java for a moment.
+
+10
+00:01:44,063 --> 00:01:51,719
+Runtime symptoms of misuse: every
+controller change waits on full Boot
+startup because someone standardized on
+@SpringBootTest;
+
+11
+00:01:51,839 --> 00:01:57,911
+or the opposite — slices so hollowed by
+@MockBean that advice and converters you
+care about never load.
+
+12
+00:01:58,031 --> 00:02:07,823
+Another symptom: tests assert isOk() while
+the trucker app needs 202 Accepted and a
+body shape — status-only assertions hide
+contract drift until mobile QA.
+
+13
+00:02:07,943 --> 00:02:18,743
+A subtler miss: @WebMvcTest without your
+@ControllerAdvice bean — if advice is
+component-scanned only in the full app,
+Problem+JSON mapping never loads in the
+slice until you @Import it.
+
+14
+00:02:18,863 --> 00:02:24,743
+Green tests return default Spring error
+bodies; production returns your harbor
+problem type.
+
+15
+00:02:24,863 --> 00:02:36,551
+Trade-offs: slices are fast and focused;
+they will not catch a missing
+@Transactional on GateReleaseService or a
+Feign decoder mismatch. Use them for HTTP
+shape and validation.
+
+16
+00:02:36,671 --> 00:02:49,151
+Pair with Mockito unit tests for domain
+branching and broader tests for
+collaboration. Caching the TestContext
+across methods keeps CI honest about speed
+without pretending a slice is an
+integration test.
+
+17
+00:02:49,271 --> 00:02:59,183
+When you add security filters back, expect
+more setup — @WithMockUser or a test
+SecurityFilterChain — and treat that as
+the price of testing the booth’s real
+denial paths.
+
+18
+00:02:59,303 --> 00:03:10,919
+A misconception is using @SpringBootTest
+for every controller assertion and waiting
+minutes per CI job. Another is @MockBean
+on half the context until the slice is no
+longer a slice.
+
+19
+00:03:11,039 --> 00:03:20,975
+A third is asserting only HTTP 200 without
+checking JSON fields the trucker app
+depends on. Controller slices prove HTTP
+shape.
+
+20
+00:03:21,095 --> 00:03:30,743
+They do not prove that gate release
+commits a ledger row and talks to a wired
+billing client under security. That wider
+confidence is integration testing.

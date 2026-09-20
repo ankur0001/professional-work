@@ -1,0 +1,165 @@
+1
+00:00:00,000 --> 00:00:14,327
+Billing’s p99 jumps from 80ms to 8
+seconds. Without protection, every gate
+check-in thread blocks on Feign until the
+pool saturates. Trucks wait at the booth
+while healthy gate CPU sits in socket
+reads.
+
+2
+00:00:14,447 --> 00:00:25,727
+A circuit breaker flips that failure mode:
+after enough errors or slow calls, the
+breaker opens, subsequent calls fail fast
+(or hit a fallback), and a half-open probe
+later checks whether billing recovered.
+
+3
+00:00:25,847 --> 00:00:37,775
+Spring Cloud CircuitBreaker provides an
+abstraction; Resilience4j is the usual
+implementation on Boot 3. Annotate the
+gate method that calls billing, or wrap
+the call programmatically.
+
+4
+00:00:37,896 --> 00:00:48,504
+The important part is the state machine —
+closed, open, half-open — around the
+gate↔billing boundary. Closed means
+traffic flows and outcomes fill a sliding
+window.
+
+5
+00:00:48,624 --> 00:01:05,064
+Open means the library short-circuits
+before the network. Half-open means a few
+trial calls decide whether to trust
+billing again. Look at this java for a
+moment. Look at this example.
+resilience4j: Walk a burst.
+
+6
+00:01:05,183 --> 00:01:16,727
+Twenty quote calls, half time out past
+slowCallDurationThreshold or throw
+recorded exceptions. Failure or slow-call
+rate crosses 50%. The breaker opens.
+
+7
+00:01:16,847 --> 00:01:29,519
+The next check-ins skip the network and
+enter quoteFallback — maybe a cached
+tariff with a degraded=true flag so the
+booth knows to reconcile later. After
+waitDurationInOpenState, a few calls probe
+half-open.
+
+8
+00:01:29,640 --> 00:01:39,120
+If they succeed, the circuit closes; if
+not, it opens again. Gate capacity stays
+available for local ledger work even while
+billing burns.
+
+9
+00:01:39,239 --> 00:01:49,055
+Symptoms you can hear from ops: before the
+breaker, gate thread dumps show stacks
+stuck in Feign read; Tomcat’s pool fills;
+unrelated endpoints on the same JVM slow
+down.
+
+10
+00:01:49,175 --> 00:01:58,775
+After a correct open, those stacks
+disappear and
+resilience4j.circuitbreaker.state (via
+Micrometer) shows OPEN while check-in
+latency drops to fallback time.
+
+11
+00:01:58,895 --> 00:02:08,615
+If latency stays high with the breaker
+“enabled,” Feign’s connect/read timeouts
+are longer than the booth’s patience — the
+breaker never sees failures in time
+because threads are still waiting.
+
+12
+00:02:08,735 --> 00:02:16,103
+Align client timeouts below user patience
+and below cascading budgets. Compose with
+Feign carefully.
+
+13
+00:02:16,223 --> 00:02:23,663
+Fallbacks must be honest: returning a
+zero-amount invoice and writing nothing
+durable is hidden data loss, not
+resilience.
+
+14
+00:02:23,783 --> 00:02:32,039
+Prefer explicit degraded responses,
+metrics on fallback invocations, and a
+runbook that says whether the booth may
+release on cached tariff.
+
+15
+00:02:32,159 --> 00:02:40,079
+Ignore exceptions you should not trip on —
+a 400 for a bad hazard class is a client
+bug, not a reason to open the circuit for
+everyone.
+
+16
+00:02:40,199 --> 00:02:48,167
+Trade-offs: a tight failureRateThreshold
+protects gate fast but flaps on blips; a
+loose threshold lets billing poison the
+booth longer.
+
+17
+00:02:48,287 --> 00:02:56,375
+Per-dependency breakers (billingQuote vs
+tideApi) isolate blast radius; one global
+breaker couples unrelated outages.
+
+18
+00:02:56,495 --> 00:03:03,959
+Fail-fast without a fallback returns
+errors quickly — sometimes that is better
+than a stale tariff — but the booth UX
+must match.
+
+19
+00:03:04,079 --> 00:03:12,407
+A misconception is setting thresholds so
+tight that normal blips permanently open
+the circuit, or so loose that a real
+billing outage never trips it.
+
+20
+00:03:12,527 --> 00:03:17,807
+Another is a fallback that looks like
+success in metrics while operators see no
+signal.
+
+21
+00:03:17,927 --> 00:03:30,743
+A third is wrapping purely in-process
+calls “for consistency”; breakers earn
+their keep on unreliable boundaries —
+network, process, shared resource
+contention. Fail-fast at the billing hop
+stops the cascade.
+
+22
+00:03:30,864 --> 00:03:42,912
+It does not tell you *which* hop in
+gateway→gate→billing ate the latency for
+one truck. For that you need a single
+trace id that survives process boundaries.
+Distributed tracing is next.

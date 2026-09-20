@@ -1,0 +1,32 @@
+The Spring Story — Episode 98: Contract Testing
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Gate’s BillingClient expects GET /tariffs/quote to return { "amount": "108.00", "currency": "USD" }.
+• Billing renames amount to total on a Friday.
+• Gate’s Feign decoder fails on Monday’s shift change.
+• Neither side’s unit tests lied — they never shared a wire contract.
+• Contract testing makes that share explicit: a pact or Spring Cloud Contract stub that billing must satisfy…
+• With Spring Cloud Contract, billing authors a contract DSL; the build generates verification tests for the…
+• Gate’s tests run Feign against the stub, not against a hope.
+• Producer side: billing’s CI runs the generated smoke tests against its controllers — if the stub says 200…
+• …and more
+
+Timestamps
+0:00 Gate’s BillingClient expects GET /tariffs/quote to return {…
+0:39 Producer side: billing’s CI runs the generated smoke tests against…
+1:12 Contracts are not end-to-end substitutes. They lock shapes and…
+2:02 Trade-offs: consumer-driven contracts (Pact-style) put gate in…
+2:54 A misconception is writing contracts so loose (byRegex(".")…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 99 — Micrometer
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory

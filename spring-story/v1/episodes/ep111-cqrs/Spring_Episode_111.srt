@@ -1,0 +1,152 @@
+1
+00:00:00,000 --> 00:00:13,247
+Write berth assignments under row locks
+and overlap rules. The schedule board
+wants a denormalized view: berth, vessel
+name, ETA, tide window, billing status —
+refreshed for operators who refresh every
+few seconds.
+
+2
+00:00:13,367 --> 00:00:25,320
+One normalized write model serving both
+jobs creates lock contention and ugly
+queries. CQRS — Command Query
+Responsibility Segregation — separates the
+write path from the read model.
+
+3
+00:00:25,439 --> 00:00:38,975
+Commands go through the Berth aggregate.
+Queries hit a projection built for the
+board. Look at this java for a moment.
+Look at this java for a moment. Look at
+this example.
+
+4
+00:00:39,095 --> 00:00:52,128
+-- read model tailored to the board
+Operators query schedule_board_view
+without touching the write aggregate’s
+reservation collection. Billing state can
+update from BerthReserved consumers
+without blocking reserve.
+
+5
+00:00:52,247 --> 00:00:58,896
+Observe projection lag — a Micrometer
+gauge of “seconds behind last write” — so
+on-call knows when the board lies.
+
+6
+00:00:59,015 --> 00:01:10,512
+Walk a lag incident: write succeeds at T0;
+projector stalls; board still shows EMPTY;
+a second scheduler tries to reserve; write
+model correctly rejects overlap while the
+board confused the human.
+
+7
+00:01:10,632 --> 00:01:26,448
+The fix is lag alerts and honest UI
+(“updated 12s ago”), not putting board
+queries back on the locked aggregate. CQRS
+is a spectrum. Mild CQRS is a SQL view or
+upsert table updated after commit in the
+same database.
+
+8
+00:01:26,568 --> 00:01:32,592
+Strong CQRS is separate stores and
+eventual consistency you must explain to
+operators.
+
+9
+00:01:32,712 --> 00:01:44,328
+Start mild when the schedule board hurts;
+do not duplicate every entity “for
+purity.” Projector tests matter: feed
+BerthReserved and BerthReleased fixtures
+and assert row shape — without them,
+
+10
+00:01:44,448 --> 00:01:48,048
+read and write drift until the board
+invents berths.
+
+11
+00:01:48,168 --> 00:01:56,952
+Failure symptoms: two models with
+duplicated business rules (board
+“validates” overlaps in SQL while
+Berth.reserve also does — they diverge).
+
+12
+00:01:57,072 --> 00:02:09,600
+Commands that query the read model to make
+decisions — you just coupled consistency
+to lag. Event sourcing assumed mandatory —
+you can project from domain events without
+storing the full event log as source of
+truth.
+
+13
+00:02:09,720 --> 00:02:16,944
+Trade-offs: faster, simpler reads and
+concentrated write invariants versus
+eventual consistency and more moving
+parts.
+
+14
+00:02:17,064 --> 00:02:30,144
+For a board that refreshes every few
+seconds, seconds of lag are often
+acceptable; for a gate release decision,
+do not read a stale projection to
+authorize cargo. Keep authorization and
+invariants on the command side.
+
+15
+00:02:30,264 --> 00:02:40,776
+When billing_state on the board updates
+from a separate consumer, design for
+partial rows: vessel name may fill in
+after a lookup, billing_state after
+invoice open.
+
+16
+00:02:40,896 --> 00:02:52,920
+The UI should render “pending” rather than
+invent defaults that look like unpaid.
+Projector idempotency matters here too —
+replaying BerthReserved must upsert, not
+insert a second board row for B7.
+
+17
+00:02:53,040 --> 00:03:05,496
+A misconception is equating CQRS with
+event sourcing — you can project from
+domain events without storing the full
+event log as the source of truth. Another
+is two models that drift with no projector
+tests.
+
+18
+00:03:05,616 --> 00:03:14,472
+A third is using CQRS as an excuse for
+duplicate incoherent business rules on
+both sides; commands own invariants,
+queries own presentation.
+
+19
+00:03:14,592 --> 00:03:26,280
+Patterns earn trust when they survive
+messy production constraints — traffic,
+people, legacy, and tradeoffs. The last
+episode synthesizes three harbor
+postmortems from the whole series.
+
+20
+00:03:26,400 --> 00:03:29,975
+There is no further handbook lesson after
+that.

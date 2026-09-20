@@ -1,0 +1,145 @@
+1
+00:00:00,000 --> 00:00:13,992
+Two clerks book berths for the same
+evening tide window. Clerk A counts free
+slots in quay 7 and sees three. Clerk B, a
+moment later, counts the same range and
+also sees three. Both assign.
+
+2
+00:00:14,112 --> 00:00:26,496
+The schedule board briefly shows four
+vessels on three berths. Nobody rolled
+back. Atomicity held inside each
+transaction. Concurrent visibility did
+not.
+
+3
+00:00:26,615 --> 00:00:35,807
+Isolation is the contract for what
+concurrent readers and writers are allowed
+to observe of each other. Name the classic
+anomalies in berth language.
+
+4
+00:00:35,927 --> 00:00:41,351
+A dirty read would see another clerk’s
+uncommitted assignment — one that might
+still vanish.
+
+5
+00:00:41,471 --> 00:00:50,639
+A non-repeatable read means you re-read
+the same berth row inside one transaction
+and get a different committed value
+because someone else finished an update
+between your reads.
+
+6
+00:00:50,759 --> 00:00:59,495
+A phantom read is the quay-7 story: a
+range query returns a new row the second
+time because another transaction inserted
+into that range and committed.
+
+7
+00:00:59,615 --> 00:01:11,039
+Phantoms are how “three free berths”
+becomes a lie without any single row
+looking corrupted. Isolation levels are
+the dials that permit or forbid those
+anomalies, trading correctness for
+throughput.
+
+8
+00:01:11,159 --> 00:01:26,783
+Look at this java for a moment. Look at
+this java for a moment. Spring exposes the
+JDBC vocabulary on @Transactional.
+READ_UNCOMMITTED allows dirty reads —
+almost never what harbor scheduling wants.
+
+9
+00:01:26,903 --> 00:01:38,087
+READ_COMMITTED blocks dirty reads; each
+statement sees committed data, but two
+reads of the same row inside one
+transaction can disagree. Many engines
+default here.
+
+10
+00:01:38,207 --> 00:01:46,512
+REPEATABLE_READ keeps rows you already
+read stable for the rest of the
+transaction; phantoms may still appear
+depending on the database.
+
+11
+00:01:46,632 --> 00:01:57,504
+SERIALIZABLE aims at one-after-another
+behavior, paid for with locks, retries, or
+aborted transactions under contention.
+Spring does not invent these guarantees.
+
+12
+00:01:57,624 --> 00:02:05,520
+It asks the PlatformTransactionManager to
+set isolation on the connection when the
+transaction begins — if the driver and
+engine honor it.
+
+13
+00:02:05,640 --> 00:02:17,856
+PostgreSQL, MySQL, and Oracle do not
+implement every textbook promise the same
+way. Raising isolation on a hot berth path
+without reading your engine’s docs is
+optimism, not safety.
+
+14
+00:02:17,975 --> 00:02:28,752
+Why declare isolation on the method at
+all? Because the connection pool default
+may be fine for a quay board read and too
+weak for an assignment that must not
+invent phantom capacity.
+
+15
+00:02:28,871 --> 00:02:37,727
+Putting the level next to the boundary
+documents intent for the next engineer who
+touches concurrent booking. Misconceptions
+cluster here.
+
+16
+00:02:37,847 --> 00:02:51,431
+People assume REPEATABLE_READ alone
+prevents lost updates without locking or
+version checks — isolation addresses read
+phenomena; lost updates still need careful
+update patterns, @Version, or SELECT … FOR
+UPDATE.
+
+17
+00:02:51,551 --> 00:03:04,151
+Others set everything to SERIALIZABLE “to
+be safe,” then drown in serialization
+failures. Another trap: believing the
+annotation alone fixes two requests that
+each read “three free” before either
+writes.
+
+18
+00:03:04,271 --> 00:03:16,919
+You still need constraints or explicit
+locks. Isolation is one tool, not the
+whole kit. We can commit cleanly and still
+be wrong under concurrency unless we name
+the visibility contract.
+
+19
+00:03:17,039 --> 00:03:26,087
+The next knob is different: which
+exceptions should undo the work when a
+business rule fails as a checked type.
+Rollback rules encode that policy.

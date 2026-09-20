@@ -1,0 +1,30 @@
+The Spring Story — Episode 48: Optimistic Locking
+
+The Spring Story is a structured series that teaches Spring Framework and Spring Boot from first principles through production practice — one clear episode at a time.
+
+In this episode:
+• Two clerks open berth B7 at the same moment.
+• Both screens show capacity 4 remaining.
+• Anya assigns a feeder that needs 2 slots.
+• Ben assigns a coastal freighter that needs 3.
+• Without protection, last write wins and you overbook the pier.
+• Optimistic locking assumes conflict is uncommon, lets both read, and detects the collision at write time…
+• JPA’s tool is @Version on the berth capacity aggregate: Hibernate includes the version in UPDATE…
+• The loser must reload, reapply business logic, and retry — or tell the clerk the berth changed under them.
+• …and more
+
+Timestamps
+0:00 Two clerks open berth B7 at the same moment. Both screens show…
+0:46 Walk the collision. Transaction A and B both load version = 3,…
+1:26 Optimistic locking fits collaborative berth edits when contention…
+
+Resources
+- Narration / transcript: see narration.md in this episode folder
+- Series index: spring-story/v1/INDEX.md
+
+Next up: Episode 49 — Pessimistic Locking
+
+If this helped, like the video and subscribe for the next episode.
+Comment with questions — I read them.
+
+#Spring #SpringBoot #Java #TheSpringStory
