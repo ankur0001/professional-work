@@ -1,9 +1,9 @@
 [
   {
-    "ep": 72,
-    "title": "Method Security",
-    "beats": 17,
-    "duration_sec": 158.97,
-    "mp4": "/workspace/spring-story/v1/episodes/ep72-method-security/Spring_Episode_72_Method_Security.mp4"
+    "ep": 73,
+    "title": "CSRF",
+    "beats": 20,
+    "duration_sec": 211.65,
+    "mp4": "/workspace/spring-story/v1/episodes/ep73-csrf/Spring_Episode_73_CSRF.mp4"
   }
 ]
