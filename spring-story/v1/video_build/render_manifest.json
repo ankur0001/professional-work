@@ -1,9 +1,9 @@
 [
   {
-    "ep": 38,
-    "title": "JPA Fundamentals",
-    "beats": 19,
-    "duration_sec": 221.85,
-    "mp4": "/workspace/spring-story/v1/episodes/ep38-jpa-fundamentals/Spring_Episode_38_JPA_Fundamentals.mp4"
+    "ep": 39,
+    "title": "Hibernate Internals",
+    "beats": 14,
+    "duration_sec": 162.21,
+    "mp4": "/workspace/spring-story/v1/episodes/ep39-hibernate-internals/Spring_Episode_39_Hibernate_Internals.mp4"
   }
 ]
