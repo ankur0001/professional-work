@@ -1,11 +1,11 @@
 1
-00:00:00,000 --> 00:00:06,000
+00:00:00,000 --> 00:00:05,559
 URL matchers catch coarse gates:
 authenticated, has role ADMIN, permit
 health checks.
 
 2
-00:00:06,120 --> 00:00:19,224
+00:00:05,679 --> 00:00:18,240
 They struggle with rules that need method
 arguments — “release this cargo only if
 the principal owns it,” “export the
@@ -14,26 +14,26 @@ claim.” Method security moves those
 decisions onto the servic
 
 3
-00:00:19,343 --> 00:00:23,567
+00:00:18,359 --> 00:00:21,800
 e layer with the same Authentication you
 already established.
 
 4
-00:00:23,687 --> 00:00:33,983
+00:00:21,919 --> 00:00:33,119
 Spring enables it with
 @EnableMethodSecurity (modern) or older
 @EnableGlobalMethodSecurity. Under the
 hood, Spring AOP proxies the bean.
 
 5
-00:00:34,103 --> 00:00:42,936
+00:00:33,239 --> 00:00:43,599
 Before the target method runs, an
 interceptor evaluates @PreAuthorize,
 @PostAuthorize, @Secured, or JSR-250
 @RolesAllowed.
 
 6
-00:00:43,055 --> 00:00:55,727
+00:00:43,719 --> 00:00:55,999
 SpEL expressions can reach authentication,
 method parameters by name, and beans you
 expose for custom checks. For harbor gate
@@ -41,21 +41,21 @@ release, ownership is the rule that path
 matchers cannot express cleanly.
 
 7
-00:00:55,847 --> 00:01:05,111
+00:00:56,119 --> 00:01:06,999
 Look at this java for a moment.
 @PreAuthorize runs before the call — use
 it to block work that should never start,
 like opening someone else’s boom.
 
 8
-00:01:05,231 --> 00:01:14,352
+00:01:07,119 --> 00:01:16,839
 @PostAuthorize runs after and can veto
 based on the return value — useful for
 read paths where you load then confirm
 visibility, with care about side effects.
 
 9
-00:01:14,471 --> 00:01:29,327
+00:01:16,959 --> 00:01:31,399
 @PreFilter / @PostFilter trim collections
 in place; know they mutate return values
 and can surprise callers. Method security
@@ -63,13 +63,13 @@ does not replace HTTP security. Filters
 still authenticate and apply path rules.
 
 10
-00:01:29,447 --> 00:01:35,015
+00:01:31,519 --> 00:01:36,359
 Method rules add defense in depth and
 express domain authorization where the
 arguments live.
 
 11
-00:01:35,135 --> 00:01:46,536
+00:01:36,479 --> 00:01:48,719
 If someone invokes releaseGate from a
 messaging listener or another bean inside
 the JVM, the HTTP matcher never ran — the
@@ -77,7 +77,7 @@ method annotation still can, as long as
 the call goes through the Spring proxy.
 
 12
-00:01:46,655 --> 00:01:59,111
+00:01:48,839 --> 00:02:01,439
 Self-invocation inside the same class
 bypasses the proxy, same AOP footgun you
 met earlier. A misconception is annotating
@@ -85,26 +85,26 @@ controllers only and believing services
 are safe when called from adapters.
 
 13
-00:01:59,231 --> 00:02:04,679
+00:02:01,559 --> 00:02:06,039
 Put the rule on the service that owns the
 invariant when multiple entry points
 exist.
 
 14
-00:02:04,799 --> 00:02:13,487
+00:02:06,159 --> 00:02:15,359
 Another is writing SpEL so complex nobody
 can audit it — extract
 @gateSecurity.isOwner(...) style beans so
 security reviews stay readable.
 
 15
-00:02:13,607 --> 00:02:20,351
+00:02:15,479 --> 00:02:21,719
 We can now deny an authenticated user on a
 specific business operation, not only on a
 URL prefix.
 
 16
-00:02:20,471 --> 00:02:30,527
+00:02:21,840 --> 00:02:32,759
 Browser-based harbor consoles that use
 cookies for the session still have a
 different attack to respect: a forged
@@ -112,6 +112,6 @@ request from another site that rides the
 user’s cookies to release cargo.
 
 17
-00:02:30,647 --> 00:02:36,215
+00:02:32,879 --> 00:02:38,519
 That attack is CSRF — and it needs its own
 defense, not another @PreAuthorize.
