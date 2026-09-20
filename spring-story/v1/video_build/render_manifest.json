@@ -1,9 +1,9 @@
 [
   {
-    "ep": 37,
-    "title": "REST Best Practices",
-    "beats": 14,
-    "duration_sec": 177.81,
-    "mp4": "/workspace/spring-story/v1/episodes/ep37-rest-best-practices/Spring_Episode_37_REST_Best_Practices.mp4"
+    "ep": 38,
+    "title": "JPA Fundamentals",
+    "beats": 19,
+    "duration_sec": 221.85,
+    "mp4": "/workspace/spring-story/v1/episodes/ep38-jpa-fundamentals/Spring_Episode_38_JPA_Fundamentals.mp4"
   }
 ]
