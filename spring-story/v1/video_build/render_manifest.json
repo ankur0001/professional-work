@@ -1,9 +1,9 @@
 [
   {
-    "ep": 23,
-    "title": "External Configuration",
-    "beats": 31,
-    "duration_sec": 299.21,
-    "mp4": "/workspace/spring-story/v1/episodes/ep23-external-configuration/Spring_Episode_23_External_Configuration.mp4"
+    "ep": 24,
+    "title": "Actuator",
+    "beats": 27,
+    "duration_sec": 291.81,
+    "mp4": "/workspace/spring-story/v1/episodes/ep24-actuator/Spring_Episode_24_Actuator.mp4"
   }
 ]
