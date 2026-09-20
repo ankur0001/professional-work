@@ -1,9 +1,9 @@
 [
   {
-    "ep": 51,
-    "title": "N+1 Problem",
-    "beats": 15,
-    "duration_sec": 175.61,
-    "mp4": "/workspace/spring-story/v1/episodes/ep51-n-1-problem/Spring_Episode_51_N_1_Problem.mp4"
+    "ep": 52,
+    "title": "@Transactional",
+    "beats": 17,
+    "duration_sec": 200.21,
+    "mp4": "/workspace/spring-story/v1/episodes/ep52-transactional/Spring_Episode_52_Transactional.mp4"
   }
 ]
