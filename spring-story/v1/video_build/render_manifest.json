@@ -1,9 +1,9 @@
 [
   {
-    "ep": 16,
-    "title": "Environment",
-    "beats": 31,
-    "duration_sec": 300.875,
-    "mp4": "/workspace/spring-story/v1/episodes/ep16-environment/Spring_Episode_16_Environment.mp4"
+    "ep": 17,
+    "title": "Why Spring Boot?",
+    "beats": 26,
+    "duration_sec": 280.875,
+    "mp4": "/workspace/spring-story/v1/episodes/ep17-why-spring-boot/Spring_Episode_17_Why_Spring_Boot.mp4"
   }
 ]
