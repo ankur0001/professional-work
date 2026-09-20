@@ -1,12 +1,12 @@
 1
-00:00:00,000 --> 00:00:10,080
+00:00:00,000 --> 00:00:08,759
 Production dashboard for the tolling
 service shows plaza 4 still using the
 staging merchant schedule after a "config-
 only" rollout. The JAR did not change.
 
 2
-00:00:10,199 --> 00:00:23,303
+00:00:08,879 --> 00:00:21,879
 The ConfigMap did — except the pod still
 mounts an old volume because the
 Deployment annotation never bounced. A
@@ -15,14 +15,14 @@ cluster store but the process environment
 was set once at start.
 
 3
-00:00:23,423 --> 00:00:31,799
+00:00:22,000 --> 00:00:29,320
 External configuration is not a file
 format. It is the live story of what the
 running process sees — and when it last
 read it.
 
 4
-00:00:31,919 --> 00:00:42,695
+00:00:29,440 --> 00:00:40,480
 Boot's externalized configuration loads
 many sources into the Environment with a
 documented precedence: command-line
@@ -30,14 +30,14 @@ arguments, Java system properties, OS
 environment variables,
 
 5
-00:00:42,815 --> 00:00:52,967
+00:00:40,600 --> 00:00:50,840
 profile-specific application files outside
 the jar, profile-specific files inside the
 jar, then non-profile defaults —
 simplified, but directionally higher wins.
 
 6
-00:00:53,087 --> 00:01:04,607
+00:00:50,960 --> 00:01:02,320
 Kubernetes ConfigMaps and Secrets usually
 appear as mounted files or env vars; they
 only affect Spring after the process reads
@@ -45,7 +45,7 @@ them at startup (or via a refresh
 mechanism you deliberately add).
 
 7
-00:01:04,727 --> 00:01:19,175
+00:01:02,439 --> 00:01:16,200
 "We updated the ConfigMap" is not the same
 sentence as "the JVM bound new values."
 Look at this example. # k8s ConfigMap data
@@ -53,7 +53,7 @@ mounted at /config/application.yml Look at
 this example.
 
 8
-00:01:19,295 --> 00:01:32,831
+00:01:16,319 --> 00:01:29,719
 # Deployment fragment Walk the deploy
 fragment. envFrom.secretRef injects Secret
 keys as environment variables — typically
@@ -61,7 +61,7 @@ SPRING_DATASOURCE_PASSWORD via relaxed
 binding if named that way.
 
 9
-00:01:32,951 --> 00:01:47,231
+00:01:29,839 --> 00:01:44,159
 volumeMounts places the ConfigMap file on
 disk at /config. args with
 --spring.config.additional-
@@ -70,21 +70,21 @@ application documents from that directory
 in addition to the classpath jar.
 
 10
-00:01:47,352 --> 00:01:56,927
+00:01:44,279 --> 00:01:53,839
 The checksum/config annotation is an ops
 pattern: change the ConfigMap, change the
 checksum, Kubernetes rolls pods so
 processes restart and re-read files.
 
 11
-00:01:57,048 --> 00:02:06,216
+00:01:53,959 --> 00:02:02,439
 Without that roll, new file bytes on a
 mount may exist while beans still hold old
 constructor-captured values. Runtime at
 process start.
 
 12
-00:02:06,335 --> 00:02:20,951
+00:02:02,559 --> 00:02:17,159
 Boot builds the Environment, adds property
 sources for system props, env vars,
 additional config locations, and packaged
@@ -93,12 +93,12 @@ tolling.schedule.merchant-id binds into
 your @ConfigurationProperties.
 
 13
-00:02:21,072 --> 00:02:25,367
+00:02:17,279 --> 00:02:20,439
 Env vars from the Secret populate
 datasource password.
 
 14
-00:02:25,487 --> 00:02:35,975
+00:02:20,559 --> 00:02:32,999
 A leftover debug flag in container args
 such as --tolling.schedule.merchant-
 id=toll-staging-7 outranks the ConfigMap
@@ -106,7 +106,7 @@ file — same staging-merchant bug,
 different source.
 
 15
-00:02:36,096 --> 00:02:48,623
+00:02:33,119 --> 00:02:45,799
 Precedence charts are how you explain that
 without guessing. Failure mode symptoms
 from the plaza 4 incident: ConfigMap in
@@ -114,7 +114,7 @@ the cluster shows toll-prod-42; running
 pod still prices with staging merchant.
 
 16
-00:02:48,743 --> 00:03:00,840
+00:02:45,919 --> 00:03:00,639
 Checklist: kubectl describe pod for mount
 and age; exec in and cat
 /config/application.yml — is the new file
@@ -122,52 +122,52 @@ even there?; hit a secured actuator env
 for the property's active source;
 
 17
-00:03:00,960 --> 00:03:07,656
+00:03:00,759 --> 00:03:06,919
 confirm Deployment rolled after ConfigMap
 change; search container args for
 overriding CLI properties.
 
 18
-00:03:07,776 --> 00:03:14,400
+00:03:07,039 --> 00:03:12,599
 Secret rotation without restart: DB
 connections start failing with auth errors
 after password invalidate,
 
 19
-00:03:14,520 --> 00:03:22,632
+00:03:12,719 --> 00:03:20,719
 while the app still holds the old password
 string — symptom is connection pool
 exhaustion and authentication failures,
 not a Spring bind exception.
 
 20
-00:03:22,752 --> 00:03:32,472
+00:03:20,840 --> 00:03:30,439
 Trade-offs. External config lets one
 artifact ride many environments; it shifts
 failure modes into ops plumbing (mounts,
 rolls, precedence).
 
 21
-00:03:32,592 --> 00:03:39,096
+00:03:30,560 --> 00:03:36,599
 Baking config into the jar is simpler to
 reason about and worse for secret rotation
 and per-cluster overlays.
 
 22
-00:03:39,216 --> 00:03:47,568
+00:03:36,719 --> 00:03:44,759
 Spring Cloud Config or refresh scopes can
 hot-reload some properties — useful and
 complex; do not assume file watchers exist
 in plain Boot.
 
 23
-00:03:47,688 --> 00:03:53,304
+00:03:44,879 --> 00:03:49,840
 Prefer failing startup on missing required
 secrets over defaulting production
 passwords.
 
 24
-00:03:53,424 --> 00:04:04,152
+00:03:49,960 --> 00:04:02,040
 Precedence worth memorizing for tolling
 on-call, short form: command-line args and
 system properties beat OS environment
@@ -175,12 +175,12 @@ variables; those beat profile-specific
 files outside the jar;
 
 25
-00:04:04,271 --> 00:04:09,623
+00:04:02,159 --> 00:04:07,000
 those beat packaged application-prod.yml;
 those beat packaged defaults.
 
 26
-00:04:09,743 --> 00:04:19,872
+00:04:07,120 --> 00:04:18,600
 A ConfigMap mounted as a file competes in
 the "file location" tier you configured
 with additional-location; a ConfigMap
@@ -188,20 +188,20 @@ projected as env vars competes in the env
 tier.
 
 27
-00:04:19,992 --> 00:04:26,855
+00:04:18,720 --> 00:04:25,120
 Knowing which projection your Deployment
 uses tells you which tier to inspect first
 when plaza 4 disagrees with git.
 
 28
-00:04:26,975 --> 00:04:36,624
+00:04:25,240 --> 00:04:33,360
 Misconception unique to external
 configuration: "Putting config in a
 ConfigMap automatically hot-reloads the
 Spring Environment." It does not.
 
 29
-00:04:36,743 --> 00:04:48,119
+00:04:33,480 --> 00:04:43,960
 Mount updates may update files on disk;
 beans already constructed keep their
 fields until restart or a refresh
@@ -209,7 +209,7 @@ implementation. Tolling config finally
 matches prod after the roll.
 
 30
-00:04:48,239 --> 00:04:59,927
+00:04:44,080 --> 00:04:56,920
 At 02:10 the seaport integration that
 shares the platform pages on-call: traffic
 dies, and the first question is whether
@@ -217,5 +217,5 @@ the process is alive, the DB is up, or the
 disk is full — preferably with one curl,
 
 31
-00:05:00,047 --> 00:05:02,519
+00:04:57,040 --> 00:04:58,760
 not a JVM attach.
