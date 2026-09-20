@@ -1,12 +1,12 @@
 1
-00:00:00,000 --> 00:00:10,631
+00:00:00,000 --> 00:00:09,800
 Before: bank-batch-context.xml at 2,400
 lines, last touched in 2012, wiring a
 nightly clearing job with property
 placeholders nobody dares rename.
 
 2
-00:00:10,751 --> 00:00:21,960
+00:00:09,919 --> 00:00:20,640
 After the first migration slice: a
 @Configuration class for the new ledger
 writer, still importing the old XML for
@@ -14,7 +14,7 @@ the parts that work. The bank does not get
 a greenfield rewrite.
 
 3
-00:00:22,079 --> 00:00:32,423
+00:00:20,759 --> 00:00:29,679
 It gets coexistence — and Spring has
 always been built for that mid-history
 reality. Spring accepts multiple
@@ -22,7 +22,7 @@ configuration styles because teams arrive
 mid-flight.
 
 4
-00:00:32,543 --> 00:00:47,063
+00:00:29,799 --> 00:00:43,839
 XML bean definitions, Java @Configuration
 / @Bean methods, component scanning of
 stereotype annotations, and Groovy DSL in
@@ -31,14 +31,14 @@ definitions that land in the same
 BeanDefinitionRegistry.
 
 5
-00:00:47,183 --> 00:00:58,871
+00:00:43,959 --> 00:00:54,919
 Style is presentation; the registry is the
 truth. Migrating means changing how
 definitions are *authored*, not inventing
 a second container. Look at this example.
 
 6
-00:00:58,991 --> 00:01:11,664
+00:00:55,039 --> 00:01:08,239
 <!-- still in production for the 2012
 clearing reader --> Look at this java for
 a moment. Walk the migration code.
@@ -46,7 +46,7 @@ a moment. Walk the migration code.
 as a definition source.
 
 7
-00:01:11,783 --> 00:01:24,071
+00:01:08,359 --> 00:01:21,279
 @ImportResource("classpath:bank-batch-
 context.xml") tells the context: while
 processing this Java config, also run an
@@ -55,7 +55,7 @@ those definitions into the *same*
 registry.
 
 8
-00:01:24,191 --> 00:01:36,959
+00:01:21,399 --> 00:01:34,839
 ledgerWriter(DataSource dataSource) is a
 factory method — Spring calls it when the
 ledgerWriter bean is needed, injecting
@@ -64,7 +64,7 @@ whatever DataSource bean already exists
 infra config).
 
 9
-00:01:37,079 --> 00:01:46,968
+00:01:34,959 --> 00:01:46,479
 clearingJob(...) asks for
 ClearingFileReader and LedgerWriter by
 type; the reader still comes from the XML
@@ -72,12 +72,12 @@ id="clearingFileReader", the writer from
 the @Bean method.
 
 10
-00:01:47,087 --> 00:01:51,551
+00:01:46,599 --> 00:01:50,519
 Constructor args do not care which style
 authored the collaborator.
 
 11
-00:01:51,671 --> 00:02:04,560
+00:01:50,639 --> 00:02:03,079
 ${clearing.inbox} in XML still resolves
 through the Environment when the reader
 bean is created — placeholders are not
@@ -86,21 +86,21 @@ resolution against the same Environment
 the Java side uses.
 
 12
-00:02:04,679 --> 00:02:13,487
+00:02:03,199 --> 00:02:10,639
 Runtime during a nightly run after the
 first slice. Context refresh registers
 definitions from XML and from @Bean
 methods.
 
 13
-00:02:13,608 --> 00:02:21,840
+00:02:10,759 --> 00:02:19,079
 If both styles accidentally define the
 same bean id, you get an override or a
 conflict depending on settings — a real
 migration hazard.
 
 14
-00:02:21,960 --> 00:02:33,216
+00:02:19,199 --> 00:02:32,159
 Instantiation of ClearingJob triggers
 creation of clearingFileReader (XML path:
 property injection of directory and
@@ -108,7 +108,7 @@ charset) and ledgerWriter (Java path: new
 JdbcLedgerWriter).
 
 15
-00:02:33,336 --> 00:02:44,592
+00:02:32,280 --> 00:02:45,159
 The job runs; file lines become ledger
 rows. You can move one bean at a time:
 delete the XML <bean> for a collaborator,
@@ -116,14 +116,14 @@ add a @Bean, redeploy, watch the clearing
 job.
 
 16
-00:02:44,712 --> 00:02:53,712
+00:02:45,280 --> 00:02:54,800
 Component scanning can join later for
 *new* services under a controlled base
 package — another producer of definitions,
 not a mandate to delete XML overnight.
 
 17
-00:02:53,832 --> 00:03:05,400
+00:02:54,919 --> 00:03:08,639
 Failure mode with symptoms ops actually
 see: two definitions for
 clearingFileReader — one left in XML, one
@@ -132,13 +132,13 @@ spring.main.allow-bean-definition-
 overriding false.
 
 18
-00:03:05,520 --> 00:03:10,272
+00:03:08,759 --> 00:03:13,159
 Startup fails with
 BeanDefinitionOverrideException naming the
 id.
 
 19
-00:03:10,391 --> 00:03:22,127
+00:03:13,280 --> 00:03:26,800
 Or overriding is allowed, the wrong
 implementation wins, and clearing silently
 writes with a stub reader that always
@@ -147,7 +147,7 @@ ledger stays flat, business thinks the
 inbox was empty.
 
 20
-00:03:22,247 --> 00:03:33,527
+00:03:26,919 --> 00:03:41,560
 Another symptom of mixed-style confusion:
 XML still references ref="oldLedgerWriter"
 after you renamed the Java @Bean method to
@@ -156,19 +156,19 @@ NoSuchBeanDefinitionException at job
 creation,
 
 21
-00:03:33,647 --> 00:03:38,111
+00:03:41,679 --> 00:03:45,399
 stack rooted in
 AbstractBeanFactory.resolveDependency.
 
 22
-00:03:38,231 --> 00:03:48,623
+00:03:45,519 --> 00:03:55,079
 Trade-offs. XML keeps working systems
 alive and is explicit about every wire; it
 loses IDE rename safety and grows hostile
 past a few hundred beans.
 
 23
-00:03:48,743 --> 00:03:58,752
+00:03:55,199 --> 00:04:06,639
 Java config wins on navigation,
 refactoring, and type checking, but
 method-call semantics inside
@@ -176,7 +176,7 @@ method-call semantics inside
 lite mode — later).
 
 24
-00:03:58,871 --> 00:04:12,071
+00:04:06,759 --> 00:04:20,319
 Component scanning minimizes ceremony and
 maximizes "who registered this?" surprises
 when packages are wide. Coexistence via
@@ -184,7 +184,7 @@ when packages are wide. Coexistence via
 banks; purity is a rewrite fantasy.
 
 25
-00:04:12,191 --> 00:04:25,751
+00:04:20,439 --> 00:04:34,279
 Misconception unique to configuration
 styles: "XML configuration does not
 support constructor injection or strong
@@ -193,24 +193,24 @@ can express constructor args and factory
 methods;
 
 26
-00:04:25,871 --> 00:04:30,575
+00:04:34,399 --> 00:04:38,560
 the real costs are tooling, refactor
 safety, and readability.
 
 27
-00:04:30,695 --> 00:04:37,559
+00:04:38,679 --> 00:04:45,279
 Java config wins on IDE navigation and
 compile-time checks — not because XML is
 incapable of wiring.
 
 28
-00:04:37,679 --> 00:04:47,303
+00:04:45,399 --> 00:04:54,319
 Halfway migrated, a cargo multi-module
 build introduces a new style hazard:
 component scan base packages so wide that
 test utilities become production beans.
 
 29
-00:04:47,423 --> 00:04:52,487
+00:04:54,439 --> 00:04:58,879
 The question shifts from XML versus Java
 to what scanning actually picks up.

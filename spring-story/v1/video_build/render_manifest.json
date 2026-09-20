@@ -1,9 +1,9 @@
 [
   {
-    "ep": 9,
-    "title": "Bean Lifecycle",
-    "beats": 30,
-    "duration_sec": 310.25,
-    "mp4": "/workspace/spring-story/v1/episodes/ep09-bean-lifecycle/Spring_Episode_09_Bean_Lifecycle.mp4"
+    "ep": 10,
+    "title": "Configuration Styles",
+    "beats": 29,
+    "duration_sec": 299.33,
+    "mp4": "/workspace/spring-story/v1/episodes/ep10-configuration-styles/Spring_Episode_10_Configuration_Styles.mp4"
   }
 ]
