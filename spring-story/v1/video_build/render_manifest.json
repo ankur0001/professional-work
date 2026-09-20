@@ -1,9 +1,9 @@
 [
   {
-    "ep": 28,
-    "title": "Packaging",
+    "ep": 29,
+    "title": "DispatcherServlet",
     "beats": 27,
-    "duration_sec": 283.05,
-    "mp4": "/workspace/spring-story/v1/episodes/ep28-packaging/Spring_Episode_28_Packaging.mp4"
+    "duration_sec": 276.25,
+    "mp4": "/workspace/spring-story/v1/episodes/ep29-dispatcherservlet/Spring_Episode_29_DispatcherServlet.mp4"
   }
 ]
