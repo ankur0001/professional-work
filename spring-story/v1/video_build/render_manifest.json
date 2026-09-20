@@ -1,9 +1,9 @@
 [
   {
-    "ep": 29,
-    "title": "DispatcherServlet",
-    "beats": 27,
-    "duration_sec": 276.25,
-    "mp4": "/workspace/spring-story/v1/episodes/ep29-dispatcherservlet/Spring_Episode_29_DispatcherServlet.mp4"
+    "ep": 31,
+    "title": "REST APIs",
+    "beats": 19,
+    "duration_sec": 204.47,
+    "mp4": "/workspace/spring-story/v1/episodes/ep31-rest-apis/Spring_Episode_31_REST_APIs.mp4"
   }
 ]
