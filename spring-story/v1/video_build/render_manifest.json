@@ -1,9 +1,9 @@
 [
   {
-    "ep": 39,
-    "title": "Hibernate Internals",
-    "beats": 14,
-    "duration_sec": 162.21,
-    "mp4": "/workspace/spring-story/v1/episodes/ep39-hibernate-internals/Spring_Episode_39_Hibernate_Internals.mp4"
+    "ep": 40,
+    "title": "Entity Lifecycle",
+    "beats": 13,
+    "duration_sec": 155.5,
+    "mp4": "/workspace/spring-story/v1/episodes/ep40-entity-lifecycle/Spring_Episode_40_Entity_Lifecycle.mp4"
   }
 ]
