@@ -1,9 +1,9 @@
 [
   {
-    "ep": 66,
-    "title": "Security Fundamentals",
-    "beats": 26,
-    "duration_sec": 271.625,
-    "mp4": "/workspace/spring-story/v1/episodes/ep66-security-fundamentals/Spring_Episode_66_Security_Fundamentals.mp4"
+    "ep": 67,
+    "title": "Authentication",
+    "beats": 22,
+    "duration_sec": 236.41,
+    "mp4": "/workspace/spring-story/v1/episodes/ep67-authentication/Spring_Episode_67_Authentication.mp4"
   }
 ]

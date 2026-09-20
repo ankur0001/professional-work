@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:14,400
+00:00:00,000 --> 00:00:15,359
 A crane operator taps “release gate” on a
 handheld. The HTTP request carries a claim
 of identity: a session cookie from an
@@ -8,13 +8,13 @@ or — more often for APIs — Authorization:
 Bearer eyJ....
 
 2
-00:00:14,519 --> 00:00:21,527
+00:00:15,479 --> 00:00:22,039
 Until something in your process turns that
 claim into a trusted principal, every
 downstream authorization rule is guessing.
 
 3
-00:00:21,647 --> 00:00:35,399
+00:00:22,159 --> 00:00:35,640
 Authentication is that step: prove
 identity, then remember it for the rest of
 the request in the SecurityContext.
@@ -23,7 +23,7 @@ private patterns. One filter parses Basic
 auth.
 
 4
-00:00:35,519 --> 00:00:48,767
+00:00:35,759 --> 00:00:47,479
 Another servlet reads a custom header. A
 controller hashes passwords with a hand-
 rolled salt. Session fixation, plaintext
@@ -31,7 +31,7 @@ credentials in logs, and “forgot this
 endpoint” become weekly incidents.
 
 5
-00:00:48,887 --> 00:01:02,063
+00:00:47,599 --> 00:00:59,639
 The question is not whether the harbor app
 should be secured. It is where identity
 gets established once so controllers can
@@ -40,7 +40,7 @@ filter chain that runs before your
 controllers.
 
 6
-00:01:02,183 --> 00:01:19,295
+00:00:59,759 --> 00:01:19,919
 Walk one crane-operator request as a
 sequence, not a class list. POST
 /api/gates/release arrives with
@@ -49,7 +49,7 @@ a bearer token). The servlet container
 enters the SecurityFilterChain.
 
 7
-00:01:19,415 --> 00:01:31,103
+00:01:20,039 --> 00:01:33,839
 A mechanism-specific filter — Basic, form-
 login, or bearer — extracts the claim from
 the request and builds an unauthenticated
@@ -57,17 +57,17 @@ Authentication object (credentials
 present, authenticated=false).
 
 8
-00:01:31,223 --> 00:01:36,023
+00:01:33,959 --> 00:01:37,799
 That filter asks the AuthenticationManager
 to authenticate the token.
 
 9
-00:01:36,143 --> 00:01:39,503
+00:01:37,919 --> 00:01:40,479
 The manager does not check passwords
 itself;
 
 10
-00:01:39,623 --> 00:01:50,039
+00:01:40,599 --> 00:01:51,119
 it delegates to an AuthenticationProvider
 that understands this kind of token —
 often a DaoAuthenticationProvider that
@@ -75,32 +75,32 @@ loads UserDetails and verifies the
 password with a PasswordEncoder,
 
 11
-00:01:50,159 --> 00:01:54,959
+00:01:51,239 --> 00:01:54,640
 or a JWT provider that validates a
 signature and claims.
 
 12
-00:01:55,079 --> 00:02:03,024
+00:01:54,759 --> 00:02:01,999
 On success, the provider returns an
 authenticated Authentication (principal +
 authorities, authenticated=true).
 
 13
-00:02:03,144 --> 00:02:10,632
+00:02:02,119 --> 00:02:09,239
 The filter stores it in the
 SecurityContext, held by
 SecurityContextHolder (typically thread-
 local on servlet apps).
 
 14
-00:02:10,752 --> 00:02:20,064
+00:02:09,359 --> 00:02:18,639
 Downstream filters and the controller call
 SecurityContextHolder.getContext().getAuth
 entication() and know who is calling —
 without parsing headers again.
 
 15
-00:02:20,183 --> 00:02:30,599
+00:02:18,759 --> 00:02:35,680
 Say the flow once: request → security
 filter chain → authentication filter →
 AuthenticationManager →
@@ -108,7 +108,7 @@ AuthenticationProvider → authenticated
 principal in SecurityContext → controller.
 
 16
-00:02:30,719 --> 00:02:46,584
+00:02:35,799 --> 00:02:49,399
 Authorization comes later; this episode
 stops at “who is this?” Look at this java
 for a moment. That configuration says:
@@ -117,7 +117,7 @@ authenticated principal. Basic auth is
 only one mechanism.
 
 17
-00:02:46,704 --> 00:02:58,536
+00:02:49,519 --> 00:03:00,719
 The same SecurityContext contract works
 when credentials are a form POST, a
 session already established, or a bearer
@@ -125,7 +125,7 @@ token validated elsewhere. Controllers
 should not re-implement login.
 
 18
-00:02:58,656 --> 00:03:10,704
+00:03:00,839 --> 00:03:12,359
 They should consume the principal. A
 topic-specific trap is conflating “the
 operator sent a password” with “the
@@ -133,12 +133,12 @@ operator is authenticated.” Credentials on
 the wire are a claim.
 
 19
-00:03:10,824 --> 00:03:16,200
+00:03:12,479 --> 00:03:16,879
 Authentication is successful verification
 of that claim and recording of the result.
 
 20
-00:03:16,320 --> 00:03:28,056
+00:03:16,999 --> 00:03:30,519
 Another trap is stuffing identity checks
 into every service method by hand while
 leaving the HTTP layer wide open — or the
@@ -146,7 +146,7 @@ reverse: locking HTTP and forgetting
 internal callers bypass the filter chain.
 
 21
-00:03:28,176 --> 00:03:41,112
+00:03:30,639 --> 00:03:44,839
 Establish identity at the boundary you
 trust; propagate the principal inward. So
 authentication is request-scoped identity:
@@ -154,7 +154,7 @@ credentials or token in, verified
 Authentication in the SecurityContext out.
 
 22
-00:03:41,232 --> 00:03:53,160
+00:03:44,959 --> 00:03:55,959
 Knowing who is calling is necessary — and
 still not enough. Alice and Bob can both
 authenticate and still disagree about
