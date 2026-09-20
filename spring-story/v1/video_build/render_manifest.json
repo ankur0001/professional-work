@@ -1,9 +1,9 @@
 [
   {
-    "ep": 7,
-    "title": "Bean Definition",
-    "beats": 32,
-    "duration_sec": 300.21,
-    "mp4": "/workspace/spring-story/v1/episodes/ep07-bean-definition/Spring_Episode_07_Bean_Definition.mp4"
+    "ep": 8,
+    "title": "Bean Scopes",
+    "beats": 17,
+    "duration_sec": 153.53,
+    "mp4": "/workspace/spring-story/v1/episodes/ep08-bean-scopes/Spring_Episode_08_Bean_Scopes.mp4"
   }
 ]

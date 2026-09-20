@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:13,704
+00:00:00,000 --> 00:00:15,080
 Incident channel, 19:40. Two guests
 booking the Harborview Hotel on different
 laptops somehow share a cart. Guest A
@@ -8,7 +8,7 @@ refreshes and sees A's room with A's
 loyalty rate.
 
 2
-00:00:13,823 --> 00:00:25,800
+00:00:15,199 --> 00:00:28,839
 Support screenshots prove it. Engineering
 finds BookingCart registered as the
 default singleton — one instance for the
@@ -17,7 +17,7 @@ that was never meant to hold per-user
 state.
 
 3
-00:00:25,920 --> 00:00:39,695
+00:00:28,960 --> 00:00:46,000
 Scope is the answer to "how many
 instances, and over what boundary?"
 Spring's built-in scopes include singleton
@@ -26,11 +26,11 @@ instance every retrieval), and, in web-
 aware contexts, request, session,
 
 4
-00:00:39,816 --> 00:00:41,904
+00:00:46,120 --> 00:00:47,640
 and application.
 
 5
-00:00:42,024 --> 00:00:55,079
+00:00:47,760 --> 00:01:00,840
 Default is singleton. That default is
 correct for stateless services and wrong
 for a mutable cart. Look at this java for
@@ -38,50 +38,50 @@ a moment. Runtime for session scope with a
 scoped proxy.
 
 6
-00:00:55,200 --> 00:01:02,615
+00:01:00,960 --> 00:01:06,840
 On context refresh Spring does not put one
 shared BookingCart into the controller. It
 injects a proxy.
 
 7
-00:01:02,736 --> 00:01:13,032
+00:01:06,960 --> 00:01:17,840
 On each HTTP call, when the controller
 touches cart.add, the proxy resolves the
 real cart for the current HTTP session —
 creating one on first use — and delegates.
 
 8
-00:01:13,152 --> 00:01:23,376
+00:01:17,960 --> 00:01:27,520
 Guest A's session id maps to cart instance
 A; Guest B gets cart instance B. When the
 session expires, that cart becomes
 eligible for destruction callbacks.
 
 9
-00:01:23,495 --> 00:01:30,311
+00:01:27,640 --> 00:01:34,240
 Singleton ReservationService stays one
 shared instance, which is what you want
 for a stateless booking API client.
 
 10
-00:01:30,431 --> 00:01:38,783
+00:01:34,360 --> 00:01:43,040
 Prototype scope would create a new cart on
 every getBean or injection point
 resolution — usually wrong for a cart you
 mutate across several requests.
 
 11
-00:01:38,903 --> 00:01:46,655
+00:01:43,160 --> 00:01:51,640
 Request scope lives for one HTTP request
 only; useful for per-request buffers,
 useless for a multi-step booking wizard.
 
 12
-00:01:46,775 --> 00:01:49,679
+00:01:51,760 --> 00:01:54,000
 Misconception unique to scopes:
 
 13
-00:01:49,799 --> 00:02:02,111
+00:01:54,120 --> 00:02:07,480
 "Annotating @Scope("session") without a
 proxy is enough when injecting into a
 singleton." If a singleton controller
@@ -89,18 +89,18 @@ receives a session-scoped object without
 proxyMode (or ObjectFactory/Provider),
 
 14
-00:02:02,231 --> 00:02:08,687
+00:02:07,600 --> 00:02:14,080
 it may capture one session's instance at
 injection time and share it forever — the
 Harborview bug in a tuxedo.
 
 15
-00:02:08,807 --> 00:02:15,503
+00:02:14,200 --> 00:02:19,440
 The proxy (or lookup API) re-resolves per
 call. Carts are isolated again.
 
 16
-00:02:15,623 --> 00:02:25,415
+00:02:19,560 --> 00:02:29,640
 The next outage is different: Redis
 connections for rate caching are created
 lazily on the first booking spike after
@@ -108,6 +108,6 @@ deploy, and the pool warms under traffic
 instead of before it.
 
 17
-00:02:25,536 --> 00:02:29,448
+00:02:29,760 --> 00:02:33,080
 Creation timing — not instance count — is
 now the problem.
