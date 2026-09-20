@@ -1,11 +1,11 @@
 1
-00:00:00,000 --> 00:00:08,976
+00:00:00,000 --> 00:00:08,720
 The AIS feed publishes dozens of fixes per
 second. The operator UI on a congested
 laptop paints one map update at a time.
 
 2
-00:00:09,096 --> 00:00:23,399
+00:00:08,839 --> 00:00:22,719
 Without a demand signal, the reactive
 chain buffers until memory hurts, latency
 spikes, then the console collapses.
@@ -14,7 +14,7 @@ Backpressure answers how much work is
 allowed to be outstanding.
 
 3
-00:00:23,519 --> 00:00:35,759
+00:00:22,839 --> 00:00:34,039
 In Reactive Streams, the subscriber tells
 the publisher how many items it requests
 through the Subscription. Publishers
@@ -22,27 +22,27 @@ should respect that demand. That
 conversation is backpressure.
 
 4
-00:00:35,879 --> 00:00:46,007
+00:00:34,159 --> 00:00:44,519
 Classic imperative code hides the same
 problem behind thread pools and blocking
 queues; reactive makes the demand signal
 explicit. Look at this java for a moment.
 
 5
-00:00:46,127 --> 00:00:52,631
+00:00:44,639 --> 00:00:51,079
 Those two chains are different policies
 for the same producer/consumer mismatch —
 not interchangeable knobs.
 
 6
-00:00:52,751 --> 00:01:02,135
+00:00:51,199 --> 00:01:02,879
 Buffering with onBackpressureBuffer(n)
 keeps up to *n* fixes when the consumer
 hiccups, then applies an overflow policy
 (error, drop oldest, and so on).
 
 7
-00:01:02,255 --> 00:01:13,127
+00:01:02,999 --> 00:01:14,239
 Use it for short bursts you cannot afford
 to lose — a brief UI freeze while
 archiving still wants those positions.
@@ -50,7 +50,7 @@ Always bound the buffer; unbounded buffer
 is a deferred OOM.
 
 8
-00:01:13,247 --> 00:01:26,951
+00:01:14,359 --> 00:01:26,279
 Dropping with onBackpressureDrop()
 discards new signals when demand is zero.
 Use it when a missed AIS tick is
@@ -59,7 +59,7 @@ telemetry fits here. It is wrong for
 ledger-like persistence.
 
 9
-00:01:27,071 --> 00:01:39,599
+00:01:26,399 --> 00:01:39,639
 Latest-value with onBackpressureLatest()
 keeps only the newest unread fix; older
 pending values lose. That fits operator
@@ -67,7 +67,7 @@ map gauges, where a stale ship position is
 worse than a skipped intermediate one.
 
 10
-00:01:39,719 --> 00:01:51,071
+00:01:39,759 --> 00:01:52,559
 It is wrong when every event must be
 processed. Rate shaping — limitRate, or
 flatMap concurrency — controls how demand
@@ -75,7 +75,7 @@ is requested upstream or how many inner
 publishers run at once.
 
 11
-00:01:51,191 --> 00:02:04,727
+00:01:52,679 --> 00:02:04,839
 That is still backpressure: you are
 limiting outstanding work, even when the
 method name does not start with
@@ -84,7 +84,7 @@ same story. Many operators request a batch
 ahead for throughput.
 
 12
-00:02:04,847 --> 00:02:17,207
+00:02:04,959 --> 00:02:17,479
 That helps until the batch is larger than
 the consumer can absorb — then you are
 back to choosing buffer, drop, latest, or
@@ -92,7 +92,7 @@ fail. There is no universal default that
 saves you from naming the product policy.
 
 13
-00:02:17,327 --> 00:02:30,935
+00:02:17,599 --> 00:02:32,239
 In WebFlux, the HTTP response and Netty
 watermarks participate in demand. If you
 return a Flux as SSE for
@@ -101,7 +101,7 @@ slow generation when the pipeline is wired
 correctly.
 
 14
-00:02:31,055 --> 00:02:41,471
+00:02:32,359 --> 00:02:43,559
 If you assemble an in-memory list with
 collectList() first, you already opted out
 of streaming backpressure for that payload
@@ -109,7 +109,7 @@ of streaming backpressure for that payload
 unbounded AIS history.
 
 15
-00:02:41,591 --> 00:02:56,639
+00:02:43,679 --> 00:02:56,559
 A misconception is “reactive automatically
 prevents OOM.” It prevents OOM only when
 operators and sources honor bounded
@@ -118,7 +118,7 @@ hammering a cursor without limits can
 still blow memory.
 
 16
-00:02:56,759 --> 00:03:11,087
+00:02:56,679 --> 00:03:09,839
 Another misconception is using unbounded
 onBackpressureBuffer() and calling it
 production-ready. Name the bound. A third
@@ -127,12 +127,12 @@ breaking — related resilience themes,
 different mechanisms.
 
 17
-00:03:11,207 --> 00:03:15,527
+00:03:09,959 --> 00:03:13,279
 We now have publishers, thread control,
 and demand control.
 
 18
-00:03:15,647 --> 00:03:27,000
+00:03:13,399 --> 00:03:25,999
 The missing piece in the Spring stack is
 the web layer that speaks HTTP with these
 types end to end — routers, annotated
@@ -140,5 +140,5 @@ controllers returning Mono/Flux, and a
 runtime that is not DispatcherServlet.
 
 19
-00:03:27,120 --> 00:03:29,903
+00:03:26,119 --> 00:03:28,279
 That layer is Spring WebFlux.
