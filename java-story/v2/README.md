@@ -9,3 +9,11 @@ Shared:
 - [`video_build/`](video_build/) — render tooling
 
 See [`INDEX.md`](INDEX.md).
+
+## Thumbnails
+
+Episode `thumbnail.jpg` files are **branded stills** (1920×1080) in a blue Spring-Story-style layout — not video frames and not captioned frames. Regenerate with:
+
+```bash
+python3 java-story/v2/video_build/regenerate_blue_thumbnails.py
+```
