@@ -1,9 +1,9 @@
 [
   {
-    "ep": 25,
-    "title": "DevTools",
-    "beats": 29,
-    "duration_sec": 290.57,
-    "mp4": "/workspace/spring-story/v1/episodes/ep25-devtools/Spring_Episode_25_DevTools.mp4"
+    "ep": 27,
+    "title": "Profiles (Boot)",
+    "beats": 27,
+    "duration_sec": 295.21,
+    "mp4": "/workspace/spring-story/v1/episodes/ep27-profiles-boot/Spring_Episode_27_Profiles_Boot.mp4"
   }
 ]

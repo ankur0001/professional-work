@@ -1,19 +1,19 @@
 1
-00:00:00,000 --> 00:00:09,503
+00:00:00,000 --> 00:00:09,039
 Staging ferry checkout fails a payment
 smoke test — or rather, succeeds against
 the wrong place. The charge appears on the
 production merchant dashboard.
 
 2
-00:00:09,623 --> 00:00:20,975
+00:00:09,159 --> 00:00:21,439
 Root cause: application-prod.yml held
 payment.merchant-id: ferry_live_9f3, and
 the staging Deployment set
 SPRING_PROFILES_ACTIVE empty.
 
 3
-00:00:21,095 --> 00:00:35,063
+00:00:21,559 --> 00:00:33,799
 Only application.yml loaded, and someone
 had "temporarily" put the live merchant id
 in the default file during a firefight.
@@ -22,7 +22,7 @@ merchant IDs apart. Defaults betrayed
 them.
 
 4
-00:00:35,183 --> 00:00:48,119
+00:00:33,919 --> 00:00:50,279
 Boot builds on Framework profiles with
 file conventions: application.yml plus
 application-{profile}.yml, multi-document
@@ -30,7 +30,7 @@ YAML with spring.config.activate.on-
 profile, and profile groups.
 
 5
-00:00:48,239 --> 00:01:03,263
+00:00:50,399 --> 00:01:04,039
 Active profiles select which documents
 join the Environment. The same artifact
 carries every profile's config; activation
@@ -39,7 +39,7 @@ means "we are in prod." Look at this
 example.
 
 6
-00:01:03,383 --> 00:01:16,823
+00:01:04,159 --> 00:01:16,199
 # application.yml — safe defaults only
 Look at this java for a moment. Walk the
 documents. Default application.yml holds
@@ -47,7 +47,7 @@ only safe local values — never live
 merchant IDs.
 
 7
-00:01:16,943 --> 00:01:30,383
+00:01:16,319 --> 00:01:28,719
 The staging document activates only when
 profile staging is on and overlays
 payment.merchant-id. Prod document
@@ -55,14 +55,14 @@ likewise. PaymentProperties binds whatever
 won in the Environment after activation.
 
 8
-00:01:30,503 --> 00:01:38,471
+00:01:28,839 --> 00:01:37,319
 FerryPaymentClient.charge passes
 props.merchantId() to the gateway — one
 code path, environment-selected
 credentials.
 
 9
-00:01:38,591 --> 00:01:51,143
+00:01:37,439 --> 00:01:51,279
 Scrubbing defaults after the incident is
 as important as setting
 SPRING_PROFILES_ACTIVE=staging on the
@@ -70,33 +70,33 @@ Deployment. Runtime with
 SPRING_PROFILES_ACTIVE=staging.
 
 10
-00:01:51,263 --> 00:02:02,831
+00:01:51,399 --> 00:02:02,919
 Boot loads default documents, then staging
 overlays payment.merchant-id →
 ferry_staging_4a1. PaymentProperties binds
 that value at context refresh.
 
 11
-00:02:02,951 --> 00:02:11,447
+00:02:03,039 --> 00:02:11,879
 Empty active profiles leave
 ferry_dev_local — or whatever unsafe value
 you left in defaults, which is how live
 ids leaked.
 
 12
-00:02:11,567 --> 00:02:18,719
+00:02:11,999 --> 00:02:18,959
 Profile-specific beans (@Profile("prod")
 payment circuit breakers) register only
 when that profile is on.
 
 13
-00:02:18,839 --> 00:02:26,759
+00:02:19,079 --> 00:02:26,999
 Groups like spring.profiles.group.producti
 on=prod,metrics activate a bundle with one
 name so ops sets a single token.
 
 14
-00:02:26,879 --> 00:02:38,471
+00:02:27,119 --> 00:02:40,559
 Failure mode symptoms: staging smoke test
 charge appears on prod merchant dashboard;
 payment.merchant-id in a secured env dump
@@ -104,12 +104,12 @@ shows ferry_live_9f3 while hostname is
 staging;
 
 15
-00:02:38,591 --> 00:02:43,439
+00:02:40,679 --> 00:02:44,719
 Environment.getActiveProfiles() empty or
 unexpectedly prod.
 
 16
-00:02:43,559 --> 00:02:54,047
+00:02:44,839 --> 00:02:55,799
 Another failure: both staging and prod
 active by misconfiguration — last-wins
 overlay rules and document order decide
@@ -117,26 +117,26 @@ the merchant id; do not rely on "both" as
 a feature for payments.
 
 17
-00:02:54,167 --> 00:03:02,207
+00:02:55,919 --> 00:03:03,079
 CI that never asserts active profiles on a
 staging deploy will miss this class of bug
 until money moves. Trade-offs.
 
 18
-00:03:02,327 --> 00:03:11,951
+00:03:03,199 --> 00:03:12,119
 Boot profile documents keep one JAR for
 all environments and pair cleanly with
 @ConfigurationProperties; they concentrate
 risk in activation and default hygiene.
 
 19
-00:03:12,071 --> 00:03:17,903
+00:03:12,239 --> 00:03:16,879
 Separate artifacts per environment avoid
 activation mistakes and multiply build
 pipelines.
 
 20
-00:03:18,023 --> 00:03:29,951
+00:03:16,999 --> 00:03:29,239
 Prefer safe defaults + mandatory profile
 in non-local envs (fail startup if
 prod/staging missing when a property
@@ -144,7 +144,7 @@ app.require-profile=true) over clever
 multi-profile bags for payment config.
 
 21
-00:03:30,071 --> 00:03:42,767
+00:03:29,359 --> 00:03:42,639
 Compare Framework @Profile on beans with
 Boot's document overlays: both honor
 spring.profiles.active, but Boot adds the
@@ -153,7 +153,7 @@ can live in YAML without alternate @Bean
 methods.
 
 22
-00:03:42,887 --> 00:03:55,535
+00:03:42,759 --> 00:03:57,039
 The ferry bug was a document problem —
 wrong values in the default file — not a
 missing @Profile on a class. When both
@@ -162,7 +162,7 @@ Boot does not invent a profile from a
 hostname.
 
 23
-00:03:55,655 --> 00:04:07,031
+00:03:57,159 --> 00:04:09,119
 Put live secrets and merchant IDs only in
 profile-specific documents or external
 mounts, and keep defaults harmless enough
@@ -170,14 +170,14 @@ that an empty SPRING_PROFILES_ACTIVE
 cannot charge real cards.
 
 24
-00:04:07,151 --> 00:04:15,503
+00:04:09,239 --> 00:04:18,120
 A staging smoke test that asserts
 payment.merchant-id starts with
 ferry_staging_ catches this class of bug
 before money moves.
 
 25
-00:04:15,623 --> 00:04:26,399
+00:04:18,240 --> 00:04:28,360
 Misconception unique to Boot profiles:
 "application-prod.yml is used
 automatically in production because the
@@ -185,7 +185,7 @@ filename contains prod." Filename alone
 does nothing.
 
 26
-00:04:26,519 --> 00:04:41,375
+00:04:28,480 --> 00:04:41,000
 Something must activate prod — env var,
 config server, or argument. Filename is a
 convention for which document binds when
@@ -194,7 +194,7 @@ in the right environments after defaults
 are scrubbed.
 
 27
-00:04:41,495 --> 00:04:54,647
+00:04:41,120 --> 00:04:54,759
 Platform still ships a 180MB fat jar into
 every tram-timetable container layer, and
 image pulls dominate deploy time. How Boot
