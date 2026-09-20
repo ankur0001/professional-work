@@ -1,9 +1,9 @@
 [
   {
-    "ep": 2,
-    "title": "Spring Architecture",
-    "beats": 17,
-    "duration_sec": 179.05,
-    "mp4": "/workspace/spring-story/v1/episodes/ep02-spring-architecture/Spring_Episode_02_Spring_Architecture.mp4"
+    "ep": 3,
+    "title": "IoC (Inversion of Control)",
+    "beats": 14,
+    "duration_sec": 155.45,
+    "mp4": "/workspace/spring-story/v1/episodes/ep03-ioc-inversion-of-control/Spring_Episode_03_IoC_Inversion_of_Control.mp4"
   }
 ]
