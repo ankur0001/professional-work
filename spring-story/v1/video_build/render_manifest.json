@@ -1,9 +1,9 @@
 [
   {
-    "ep": 47,
-    "title": "Caching",
+    "ep": 49,
+    "title": "Pessimistic Locking",
     "beats": 14,
-    "duration_sec": 143.81,
-    "mp4": "/workspace/spring-story/v1/episodes/ep47-caching/Spring_Episode_47_Caching.mp4"
+    "duration_sec": 162.49,
+    "mp4": "/workspace/spring-story/v1/episodes/ep49-pessimistic-locking/Spring_Episode_49_Pessimistic_Locking.mp4"
   }
 ]
