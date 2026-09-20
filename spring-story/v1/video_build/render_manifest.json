@@ -1,9 +1,9 @@
 [
   {
-    "ep": 84,
-    "title": "Configuration Server",
-    "beats": 15,
-    "duration_sec": 157.5,
-    "mp4": "/workspace/spring-story/v1/episodes/ep84-configuration-server/Spring_Episode_84_Configuration_Server.mp4"
+    "ep": 85,
+    "title": "Service Discovery",
+    "beats": 22,
+    "duration_sec": 236.55,
+    "mp4": "/workspace/spring-story/v1/episodes/ep85-service-discovery/Spring_Episode_85_Service_Discovery.mp4"
   }
 ]

@@ -1,12 +1,12 @@
 1
-00:00:00,000 --> 00:00:12,023
+00:00:00,000 --> 00:00:11,160
 Gate needs billing. At 06:00 there are
 three billing pods. At 06:12 one dies
 during a deploy. At 06:15 a fourth starts
 on a different node.
 
 2
-00:00:12,143 --> 00:00:28,463
+00:00:11,279 --> 00:00:27,160
 If gate still dials http://10.0.4.22:8080,
 check-ins fail while healthy instances sit
 idle. Discovery answers a simple question:
@@ -14,7 +14,7 @@ given the logical name billing-service,
 which live instances exist right now?
 
 3
-00:00:28,643 --> 00:00:42,131
+00:00:27,340 --> 00:00:40,140
 A registry holds the catalog. Each
 instance registers on startup with host,
 port, health URL, and metadata. Clients —
@@ -22,7 +22,7 @@ or a platform DNS layer — query the
 catalog and choose a target.
 
 4
-00:00:42,251 --> 00:00:54,035
+00:00:40,260 --> 00:00:51,980
 In classic Spring Cloud demos that
 registry is Eureka. On Kubernetes, CoreDNS
 and Endpoints often play the same role;
@@ -30,7 +30,7 @@ Spring Cloud Kubernetes can adapt the
 programming model.
 
 5
-00:00:54,155 --> 00:01:08,867
+00:00:52,100 --> 00:01:05,700
 The pattern matters more than the brand:
 register, heartbeat, fetch, call by name.
 Look at this example. # billing-service
@@ -38,34 +38,34 @@ Look at this example. # gate-service Look
 at this java for a moment.
 
 6
-00:01:08,987 --> 00:01:21,587
+00:01:05,820 --> 00:01:17,020
 At runtime, billing heartbeats. Eureka (or
 your platform) marks it UP. Gate’s
 DiscoveryClient.getInstances("billing-
 service") returns the three healthy URIs.
 
 7
-00:01:21,707 --> 00:01:31,187
+00:01:17,140 --> 00:01:27,500
 Higher-level clients — load-balanced
 WebClient, Feign, Gateway lb:// URIs —
 consume that list so application code
 never embeds pod IPs.
 
 8
-00:01:31,307 --> 00:01:38,003
+00:01:27,620 --> 00:01:34,300
 Self-preservation and lease timeouts
 matter: a flapping network should not
 empty the registry and black-hole the
 quay,
 
 9
-00:01:38,123 --> 00:01:44,675
+00:01:34,420 --> 00:01:40,659
 but a dead pod that stops renewing must
 leave the catalog within tens of seconds
 or gate keeps selecting a corpse.
 
 10
-00:01:44,795 --> 00:01:57,299
+00:01:40,780 --> 00:01:52,180
 Walk a deploy failure. Billing pod B2
 stops heartbeats at 06:12. Until the lease
 expires, gate may still receive B2 in the
@@ -73,7 +73,7 @@ instance list and open sockets that time
 out.
 
 11
-00:01:57,419 --> 00:02:10,451
+00:01:52,299 --> 00:02:05,340
 Symptom at the booth: intermittent 504s on
 check-in while two other pods are fine.
 Your debug probe still shows three rows
@@ -81,7 +81,7 @@ until expiry; after expiry it shows two,
 then three again when B4 registers.
 
 12
-00:02:10,571 --> 00:02:22,283
+00:02:05,459 --> 00:02:17,579
 That timeline is why registry-fetch-
 interval-seconds and lease settings are
 operational knobs, not decoration. Too
@@ -90,7 +90,7 @@ you serve dead IPs through a whole truck
 queue.
 
 13
-00:02:22,403 --> 00:02:33,731
+00:02:17,699 --> 00:02:27,780
 Health integration is not optional
 decoration. If billing’s /actuator/health
 goes DOWN because Postgres is unreachable,
@@ -98,7 +98,7 @@ the registry should stop handing that
 instance to gate.
 
 14
-00:02:33,851 --> 00:02:46,259
+00:02:27,899 --> 00:02:40,899
 Otherwise discovery lies and load
 balancers keep selecting a dying pod.
 Prefer-IP versus hostname, zone metadata,
@@ -106,25 +106,25 @@ and secure-port flags show up the first
 time TLS or multi-AZ routing is real.
 
 15
-00:02:46,379 --> 00:02:52,715
+00:02:41,019 --> 00:02:47,379
 Zone quay-a on the instance is how later
 load balancers prefer local billing when
 cross-quay latency hurts.
 
 16
-00:02:52,835 --> 00:02:59,291
+00:02:47,499 --> 00:02:54,379
 Trade-offs: a Java registry (Eureka) gives
 Spring-native metadata and demos that
 teach the model;
 
 17
-00:02:59,411 --> 00:03:06,947
+00:02:54,499 --> 00:03:01,779
 Kubernetes DNS gives fewer moving parts if
 every service already lives in the cluster
 and you accept platform-shaped discovery.
 
 18
-00:03:07,067 --> 00:03:19,571
+00:03:01,899 --> 00:03:16,179
 Mixing both without a clear owner — some
 Feign clients on DNS, some on Eureka —
 produces “works in staging, wrong host in
@@ -133,7 +133,7 @@ billing-service and make gate’s clients
 use it.
 
 19
-00:03:19,691 --> 00:03:29,171
+00:03:16,299 --> 00:03:27,659
 A misconception is hard-coding hostnames
 “temporarily” beside discovery and then
 shipping both paths — callers diverge and
@@ -141,13 +141,13 @@ on-call cannot tell which URL is
 authoritative.
 
 20
-00:03:29,291 --> 00:03:36,611
+00:03:27,779 --> 00:03:34,259
 Another is assuming discovery replaces
 load balancing; discovery gives you
 candidates, balancing chooses among them.
 
 21
-00:03:36,731 --> 00:03:47,195
+00:03:34,379 --> 00:03:44,899
 A third is registering every batch job and
 one-off tool into the same registry
 namespace until billing-service returns
@@ -155,7 +155,7 @@ noise. Gate can now ask for billing-
 service by name.
 
 22
-00:03:47,315 --> 00:03:59,459
+00:03:45,019 --> 00:03:56,099
 Truckers on the public internet still
 should not open a VPN to every internal
 pod. Something at the edge must accept one
