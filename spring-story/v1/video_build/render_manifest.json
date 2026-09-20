@@ -1,9 +1,9 @@
 [
   {
-    "ep": 31,
-    "title": "REST APIs",
-    "beats": 19,
-    "duration_sec": 204.47,
-    "mp4": "/workspace/spring-story/v1/episodes/ep31-rest-apis/Spring_Episode_31_REST_APIs.mp4"
+    "ep": 32,
+    "title": "Validation",
+    "beats": 15,
+    "duration_sec": 161.73,
+    "mp4": "/workspace/spring-story/v1/episodes/ep32-validation/Spring_Episode_32_Validation.mp4"
   }
 ]
