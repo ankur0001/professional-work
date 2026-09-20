@@ -1,9 +1,9 @@
 [
   {
-    "ep": 3,
-    "title": "IoC (Inversion of Control)",
-    "beats": 14,
-    "duration_sec": 155.45,
-    "mp4": "/workspace/spring-story/v1/episodes/ep03-ioc-inversion-of-control/Spring_Episode_03_IoC_Inversion_of_Control.mp4"
+    "ep": 4,
+    "title": "Dependency Injection",
+    "beats": 23,
+    "duration_sec": 252.43,
+    "mp4": "/workspace/spring-story/v1/episodes/ep04-dependency-injection/Spring_Episode_04_Dependency_Injection.mp4"
   }
 ]
