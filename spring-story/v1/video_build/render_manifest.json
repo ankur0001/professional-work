@@ -1,9 +1,9 @@
 [
   {
-    "ep": 12,
-    "title": "@Resource vs @Autowired vs @Inject",
+    "ep": 13,
+    "title": "@Configuration",
     "beats": 30,
-    "duration_sec": 330.77,
-    "mp4": "/workspace/spring-story/v1/episodes/ep12-resource-vs-autowired-vs-inject/Spring_Episode_12_Resource_vs_Autowired_vs_Inject.mp4"
+    "duration_sec": 278.29,
+    "mp4": "/workspace/spring-story/v1/episodes/ep13-configuration/Spring_Episode_13_Configuration.mp4"
   }
 ]
