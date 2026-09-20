@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:14,423
+00:00:00,000 --> 00:00:13,279
 An operator clicks "export gate pass PDF"
 on a reactive harbor console. The chain
 that streamed AIS positions is non-
@@ -8,20 +8,20 @@ hammers CPU and filesystem APIs that
 block.
 
 2
-00:00:14,543 --> 00:00:22,007
+00:00:13,399 --> 00:00:21,719
 Drop that callable on a Netty event-loop
 thread and unrelated position streams
 stutter: SSE ticks pause, quay maps
 freeze,
 
 3
-00:00:22,128 --> 00:00:27,936
+00:00:21,839 --> 00:00:27,399
 and on-call sees "WebFlux is slow" when
 the real culprit is one blocking render on
 the wrong thread.
 
 4
-00:00:28,056 --> 00:00:42,408
+00:00:27,519 --> 00:00:41,039
 Mono and Flux describe what happens.
 Schedulers describe where it happens. In
 Reactor, you shift execution with
@@ -30,7 +30,7 @@ Schedulers factories — not with ad-hoc new
 Thread in handlers.
 
 5
-00:00:42,527 --> 00:00:53,807
+00:00:41,159 --> 00:00:52,519
 Know the common pools by role.
 Schedulers.parallel() is for non-blocking
 CPU-ish work across a fixed pool sized
@@ -38,13 +38,13 @@ around core count — pure transforms, not
 blocking I/O.
 
 6
-00:00:53,927 --> 00:01:01,007
+00:00:52,639 --> 00:00:58,999
 Schedulers.single() is one dedicated
 thread for tasks that must be serialized
 (a single-writer sequence).
 
 7
-00:01:01,128 --> 00:01:15,144
+00:00:59,119 --> 00:01:13,039
 Schedulers.boundedElastic() is for
 blocking or blocking-ish legacy calls — it
 grows elastically up to a bound so you do
@@ -53,7 +53,7 @@ an AIS storm. Schedulers.immediate() runs
 on the caller.
 
 8
-00:01:15,263 --> 00:01:30,527
+00:01:13,159 --> 00:01:26,000
 Netty event loops in WebFlux are precious:
 blocking on them stalls unrelated AIS
 subscribers that share the loop. Look at
@@ -62,14 +62,14 @@ click. WebFlux subscribes on an event-loop
 thread.
 
 9
-00:01:30,647 --> 00:01:42,863
+00:01:26,119 --> 00:01:38,519
 cargoRepository.findById should be a non-
 blocking reactive driver — it stays on the
 loop. When a Cargo arrives, flatMap builds
 Mono.fromCallable(legacyPdf.render).
 
 10
-00:01:42,983 --> 00:01:52,560
+00:01:38,639 --> 00:01:47,599
 Without subscribeOn(boundedElastic), that
 callable would run on the same thread that
 subscribed the inner Mono — often the
@@ -77,7 +77,7 @@ event loop — and hold it for the whole PDF
 render.
 
 11
-00:01:52,679 --> 00:02:03,671
+00:01:47,719 --> 00:02:00,159
 With
 subscribeOn(Schedulers.boundedElastic()),
 subscription of that callable is scheduled
@@ -86,7 +86,7 @@ free to service AIS SSE while PDF threads
 grind.
 
 12
-00:02:03,791 --> 00:02:17,135
+00:02:00,279 --> 00:02:16,519
 After bytes return, stampClient.watermark
 is reactive HTTP again;
 publishOn(Schedulers.parallel()) hops only
@@ -95,7 +95,7 @@ work onto the parallel pool if that
 transform is heavy.
 
 13
-00:02:17,255 --> 00:02:31,031
+00:02:16,639 --> 00:02:28,599
 Stacking hops without need adds latency
 and confusion. Prefer keeping pure
 reactive I/O on the event loop and
@@ -104,7 +104,7 @@ boundedElastic. Say the difference until
 it sticks under pressure.
 
 14
-00:02:31,151 --> 00:02:40,631
+00:02:28,719 --> 00:02:38,360
 subscribeOn affects the thread where the
 source is subscribed — useful when the
 source itself blocks, like the PDF
@@ -112,7 +112,7 @@ callable or a JDBC wrapper wrongly placed
 in a Mono.
 
 15
-00:02:40,751 --> 00:02:53,015
+00:02:38,479 --> 00:02:50,639
 Multiple subscribeOn calls — the closest
 to the source usually wins for that
 source. publishOn inserts a thread hop for
@@ -121,7 +121,7 @@ everything above keeps the previous
 thread.
 
 16
-00:02:53,135 --> 00:03:04,775
+00:02:50,759 --> 00:03:01,719
 Putting publishOn before a blocking call
 does not protect the event loop if
 subscription of the blocking work still
@@ -130,7 +130,7 @@ subscribeOn on the blocking wrapper.
 Failure mode symptoms.
 
 17
-00:03:04,895 --> 00:03:17,087
+00:03:01,840 --> 00:03:14,960
 PDF export without a scheduler: p99 on
 /positions/stream climbs whenever someone
 exports a gate pass; thread dumps show
@@ -138,7 +138,7 @@ event-loop threads inside legacyPdf.render
 or FileOutputStream.
 
 18
-00:03:17,207 --> 00:03:28,415
+00:03:15,080 --> 00:03:26,360
 Using Schedulers.parallel() for the PDF
 callable: parallel pool threads block, CPU
 work queues behind renders, and you still
@@ -146,14 +146,14 @@ did not isolate blocking the way
 boundedElastic intends.
 
 19
-00:03:28,535 --> 00:03:37,751
+00:03:26,480 --> 00:03:35,440
 Wrapping every operator in
 publishOn(parallel()) "for performance":
 thread hops dominate; latency rises; flame
 graphs show park/unpark noise.
 
 20
-00:03:37,871 --> 00:03:50,159
+00:03:35,560 --> 00:03:48,560
 Older Schedulers.elastic() habits under
 AIS load: thread count explodes until the
 host groans — prefer boundedElastic so
@@ -162,7 +162,7 @@ rejection behavior instead of silent
 thread creation.
 
 21
-00:03:50,279 --> 00:04:02,063
+00:03:48,680 --> 00:04:00,560
 Calling block() on the event loop "just
 for this admin export": one export freezes
 neighbors. In WebFlux, you often never
@@ -170,13 +170,13 @@ call subscribeOn because Netty already
 drives non-blocking I/O.
 
 22
-00:04:02,183 --> 00:04:10,031
+00:04:00,680 --> 00:04:07,560
 Reach for schedulers when you integrate a
 blocking library, parallelize CPU work, or
 time deferred tasks with Mono.delay.
 
 23
-00:04:10,151 --> 00:04:21,551
+00:04:07,680 --> 00:04:19,720
 Schedulers.fromExecutor wraps a pool you
 already size — use it when the platform
 owns that pool (named PDF pool with
@@ -184,7 +184,7 @@ metrics) and you want Reactor to hop onto
 it. Trade-offs.
 
 24
-00:04:21,671 --> 00:04:33,407
+00:04:19,840 --> 00:04:29,680
 Schedulers make mixed blocking/reactive
 systems operable; they do not make
 blocking free. Cap elastic size to what
@@ -192,14 +192,14 @@ the host can bear. Measure before adding
 hops.
 
 25
-00:04:33,527 --> 00:04:42,887
+00:04:29,800 --> 00:04:39,639
 Keep AIS streaming on the event loop; put
 gate-pass PDF on bounded elastic; put
 heavy pure CPU on parallel when profiling
 says the transform matters.
 
 26
-00:04:43,007 --> 00:04:54,959
+00:04:39,759 --> 00:04:51,639
 Misconception unique to schedulers:
 "subscribeOn and publishOn are
 interchangeable." They are not — one
@@ -208,14 +208,14 @@ switches downstream execution at a point
 in the chain.
 
 27
-00:04:55,079 --> 00:05:03,455
+00:04:51,759 --> 00:04:59,680
 Another: "boundedElastic is the default
 for everything." Using it for non-blocking
 Netty calls throws away the event-loop
 model.
 
 28
-00:05:03,575 --> 00:05:16,295
+00:04:59,800 --> 00:05:11,759
 A third: "Reactor always picks the right
 thread." It picks what you configured;
 wrong configuration is a production
@@ -223,7 +223,7 @@ incident. Pipelines now know what to emit
 and which threads may run stages.
 
 29
-00:05:16,415 --> 00:05:25,559
+00:05:11,879 --> 00:05:20,639
 When a fast AIS publisher meets a slow
 operator UI, you still need a rule for how
 much data may be in flight. That rule is
