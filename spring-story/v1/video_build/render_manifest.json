@@ -1,9 +1,9 @@
 [
   {
-    "ep": 80,
-    "title": "Backpressure",
-    "beats": 19,
-    "duration_sec": 208.73,
-    "mp4": "/workspace/spring-story/v1/episodes/ep80-backpressure/Spring_Episode_80_Backpressure.mp4"
+    "ep": 81,
+    "title": "Spring WebFlux",
+    "beats": 18,
+    "duration_sec": 177.73,
+    "mp4": "/workspace/spring-story/v1/episodes/ep81-spring-webflux/Spring_Episode_81_Spring_WebFlux.mp4"
   }
 ]
