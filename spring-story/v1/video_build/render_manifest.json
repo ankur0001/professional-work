@@ -1,9 +1,9 @@
 [
   {
-    "ep": 44,
-    "title": "JPQL",
-    "beats": 14,
-    "duration_sec": 163.45,
-    "mp4": "/workspace/spring-story/v1/episodes/ep44-jpql/Spring_Episode_44_JPQL.mp4"
+    "ep": 45,
+    "title": "Criteria API",
+    "beats": 13,
+    "duration_sec": 150.25,
+    "mp4": "/workspace/spring-story/v1/episodes/ep45-criteria-api/Spring_Episode_45_Criteria_API.mp4"
   }
 ]
