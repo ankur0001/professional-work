@@ -1,9 +1,9 @@
 [
   {
-    "ep": 68,
-    "title": "Authorization",
-    "beats": 17,
-    "duration_sec": 198.65,
-    "mp4": "/workspace/spring-story/v1/episodes/ep68-authorization/Spring_Episode_68_Authorization.mp4"
+    "ep": 69,
+    "title": "JWT",
+    "beats": 16,
+    "duration_sec": 190.0,
+    "mp4": "/workspace/spring-story/v1/episodes/ep69-jwt/Spring_Episode_69_JWT.mp4"
   }
 ]
