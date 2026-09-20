@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:12,144
+00:00:00,000 --> 00:00:12,199
 AIS feeds do not wait politely for your
 thread pool. Hundreds of vessels report
 positions; operators open live maps; each
@@ -7,7 +7,7 @@ connection holds a servlet thread while
 blocking I/O waits on the next read.
 
 2
-00:00:12,263 --> 00:00:25,055
+00:00:12,319 --> 00:00:25,000
 Under fan-in, the thread-per-request model
 collapses — not because the CPU is busy
 computing, but because every open socket
@@ -15,7 +15,7 @@ owns a worker sitting idle on the network.
 Reactive programming flips the default.
 
 3
-00:00:25,175 --> 00:00:37,704
+00:00:25,119 --> 00:00:36,679
 Instead of returning a finished value, you
 return a publisher that will emit values
 later. The thread that accepts the
@@ -24,7 +24,7 @@ a remote call; it schedules work and moves
 on.
 
 4
-00:00:37,823 --> 00:00:51,647
+00:00:36,799 --> 00:00:50,519
 Subscribers request data; operators
 transform streams; schedulers decide which
 threads run which stages. The goal is
@@ -33,12 +33,12 @@ I/O-bound workloads — not magic speed for
 CPU-bound math.
 
 5
-00:00:51,768 --> 00:00:55,992
+00:00:50,640 --> 00:00:54,039
 Project Reactor is the library Spring
 WebFlux builds on.
 
 6
-00:00:56,112 --> 00:01:07,152
+00:00:54,160 --> 00:01:06,159
 The Reactive Streams specification sits
 underneath: Publisher, Subscriber,
 Subscription, and Processor, with
@@ -47,7 +47,7 @@ subscribers request only what they can
 handle.
 
 7
-00:01:07,272 --> 00:01:19,871
+00:01:06,280 --> 00:01:19,240
 Reactor’s Mono and Flux are publishers
 with a rich operator vocabulary. You
 compose pipelines declaratively; nothing
@@ -55,21 +55,21 @@ runs until something subscribes. Look at
 this java for a moment.
 
 8
-00:01:19,992 --> 00:01:30,864
+00:01:19,359 --> 00:01:28,120
 Read that as assembly, not as imperative
 steps that already executed. zipWith and
 timeout describe a graph. Subscription
 triggers demand.
 
 9
-00:01:30,984 --> 00:01:38,928
+00:01:28,239 --> 00:01:36,039
 That laziness is why returning a Mono from
 a WebFlux controller works — the framework
 subscribes and wires the response when
 data arrives.
 
 10
-00:01:39,048 --> 00:01:52,296
+00:01:36,159 --> 00:01:49,479
 Reactive is not “async annotations on
 servlet code.” A blocking Thread.sleep or
 JDBC call inside a reactive operator still
@@ -78,27 +78,27 @@ thread you cannot afford to stall under
 AIS load.
 
 11
-00:01:52,415 --> 00:02:02,423
+00:01:49,599 --> 00:02:00,839
 The discipline is end-to-end non-blocking
 I/O (R2DBC, reactive HTTP clients) or
 explicit offloading of blocking work onto
 bounded elastic schedulers.
 
 12
-00:02:02,543 --> 00:02:10,536
+00:02:00,959 --> 00:02:08,039
 Mixing one blocking repository into a
 WebFlux app is a classic production
 footgun. When do you reach for this model?
 
 13
-00:02:10,716 --> 00:02:20,819
+00:02:08,219 --> 00:02:17,180
 Many concurrent slow I/O dependencies,
 streaming AIS positions, or gateways that
 multiplex downstream calls. When do you
 stay on Spring MVC?
 
 14
-00:02:21,000 --> 00:02:33,671
+00:02:17,360 --> 00:02:29,920
 Familiar blocking drivers, team expertise,
 and workloads that never needed tens of
 thousands of concurrent connections. Boot
@@ -107,7 +107,7 @@ clear boundaries usually creates
 confusion.
 
 15
-00:02:33,792 --> 00:02:46,920
+00:02:30,040 --> 00:02:43,200
 A misconception is equating reactive with
 faster CPU-bound algorithms. Another is
 treating subscribe() inside business code
@@ -116,14 +116,14 @@ return the publisher and let the framework
 subscribe.
 
 16
-00:02:47,039 --> 00:02:54,647
+00:02:43,320 --> 00:02:51,120
 A third is ignoring cancellation: when an
 operator closes a map, subscriptions
 cancel; your pipeline should not ignore
 that.
 
 17
-00:02:54,768 --> 00:03:08,039
+00:02:51,240 --> 00:03:04,879
 Today we named the shift: publishers
 instead of eager values, subscription as
 the start gun, backpressure as part of the
@@ -132,5 +132,5 @@ zero or one element — is where most vessel
 lookups live.
 
 18
-00:03:08,159 --> 00:03:10,391
+00:03:05,000 --> 00:03:06,439
 That shape is Mono.
