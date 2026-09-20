@@ -1,9 +1,9 @@
 [
   {
-    "ep": 49,
-    "title": "Pessimistic Locking",
-    "beats": 14,
-    "duration_sec": 162.49,
-    "mp4": "/workspace/spring-story/v1/episodes/ep49-pessimistic-locking/Spring_Episode_49_Pessimistic_Locking.mp4"
+    "ep": 50,
+    "title": "JPA Performance Tuning",
+    "beats": 15,
+    "duration_sec": 135.53,
+    "mp4": "/workspace/spring-story/v1/episodes/ep50-jpa-performance-tuning/Spring_Episode_50_JPA_Performance_Tuning.mp4"
   }
 ]

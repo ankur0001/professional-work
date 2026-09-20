@@ -1,18 +1,18 @@
 1
-00:00:00,000 --> 00:00:08,064
+00:00:00,000 --> 00:00:05,599
 The harbor schedule board takes four
 seconds to paint. The network is fine. The
 JVM is fine.
 
 2
-00:00:08,183 --> 00:00:15,936
+00:00:05,719 --> 00:00:13,080
 SQL logging shows dozens of similar
 selects and wide entity graphs for a
 screen that only needs vessel name, berth
 code, and ETA.
 
 3
-00:00:16,055 --> 00:00:29,759
+00:00:13,199 --> 00:00:26,960
 JPA performance tuning starts by measuring
 that gap — then applying batch size,
 entity graphs, and projections on purpose.
@@ -21,7 +21,7 @@ counter) in a lower environment and
 reproduce the board load.
 
 4
-00:00:29,879 --> 00:00:45,287
+00:00:27,079 --> 00:00:40,560
 Count statements. Note payload width. Only
 then pick a tool. Batch size reduces
 chatty lazy loads when you must keep
@@ -29,14 +29,14 @@ associations lazy: Look at this java for a
 moment. Look at this java for a moment.
 
 5
-00:00:45,407 --> 00:00:53,063
+00:00:40,679 --> 00:00:48,079
 When the board touches twenty vessels’
 lazy state, Hibernate can load them with
 fewer WHERE id IN (...) queries instead of
 twenty singles.
 
 6
-00:00:53,183 --> 00:01:04,775
+00:00:48,200 --> 00:01:00,520
 Batch size is a blunt instrument — better
 than N singles, not always better than one
 intentional join. Entity graphs declare
@@ -44,14 +44,14 @@ what a use case needs up front: Look at
 this java for a moment.
 
 7
-00:01:04,896 --> 00:01:13,415
+00:01:00,640 --> 00:01:09,200
 The graph tells Hibernate to fetch vessel
 and berth with the slots for that board
 query — without marking the associations
 EAGER globally for every other use case.
 
 8
-00:01:13,536 --> 00:01:26,424
+00:01:09,319 --> 00:01:20,599
 Projections shrink what comes back when
 the board does not need full entities:
 Look at this java for a moment. No managed
@@ -59,11 +59,11 @@ graph. No accidental lazy navigation in
 the JSON serializer.
 
 9
-00:01:26,543 --> 00:01:29,664
+00:01:20,719 --> 00:01:23,400
 Columns the screen needs — nothing more.
 
 10
-00:01:29,783 --> 00:01:40,295
+00:01:23,519 --> 00:01:35,879
 Other levers: pagination so the board
 cannot ask for a year of slots; read-only
 transactions for pure paints; avoiding
@@ -71,32 +71,32 @@ Open Session in View when it turns
 rendering into a query engine;
 
 11
-00:01:40,415 --> 00:01:44,495
+00:01:36,000 --> 00:01:38,959
 second-level cache only after you
 understand eviction.
 
 12
-00:01:44,615 --> 00:01:55,512
+00:01:39,079 --> 00:01:50,439
 Indexes still matter — JPA will not invent
 an index on eta for you. Marking every
 association EAGER "for performance" often
 makes writes and incidental loads worse.
 
 13
-00:01:55,632 --> 00:02:04,152
+00:01:50,560 --> 00:01:57,760
 Caching entities without a plan recreates
 stale berth boards. Micro-optimizing flush
 modes before counting SQL is folklore.
 
 14
-00:02:04,272 --> 00:02:13,343
+00:01:57,879 --> 00:02:07,039
 Even a tuned board can hide a sharper
 anti-pattern: one query for manifests,
 then one query per manifest for cargo
 lines as a loop touches the collection.
 
 15
-00:02:13,463 --> 00:02:20,352
+00:02:07,159 --> 00:02:15,079
 That classic explosion has a name — N+1 —
 and it deserves its own walkthrough with a
 real loop and a join-fetch fix.
