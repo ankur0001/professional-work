@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:12,144
+00:00:00,000 --> 00:00:11,119
 Before we talk about annotations or Boot
 starters, let's start with a situation
 teams kept hitting in enterprise Java.
@@ -8,14 +8,14 @@ logistics backend in the early two-
 thousands.
 
 2
-00:00:12,263 --> 00:00:24,839
+00:00:11,239 --> 00:00:20,640
 You already have Java. You already have
 servlets. You may even have an application
 server. And yet every new feature feels
 heavier than the business logic itself.
 
 3
-00:00:24,960 --> 00:00:39,576
+00:00:20,759 --> 00:00:34,280
 You need an object that talks to payments,
 another that talks to orders, another that
 logs, another that starts a transaction.
@@ -24,7 +24,7 @@ constructors with new? In a giant factory
 class?
 
 4
-00:00:39,756 --> 00:00:54,108
+00:00:34,459 --> 00:00:46,819
 Through JNDI lookups that only work inside
 the server? That is not a syntax problem.
 That is an assembly problem. Before Spring
@@ -32,7 +32,7 @@ became the default answer, many teams paid
 the same bill every week.
 
 5
-00:00:54,228 --> 00:01:08,603
+00:00:46,939 --> 00:01:00,379
 Enterprise JavaBeans asked for remote and
 local interfaces, home objects, and
 container callbacks. Deployment
@@ -41,14 +41,14 @@ domain code. Redeploys took minutes, so
 feedback loops died.
 
 6
-00:01:08,724 --> 00:01:18,420
+00:01:00,499 --> 00:01:09,779
 Tests were awkward because code reached
 into InitialContext lookups. And switching
 app servers was never "just a deploy" —
 vendor lock-in hid in the corners.
 
 7
-00:01:18,540 --> 00:01:31,740
+00:01:09,899 --> 00:01:23,459
 So a practical question appears: can we
 keep Java's strengths, keep POJOs
 readable, and still get transactions,
@@ -57,7 +57,7 @@ drowning in ceremony? That question is why
 Spring exists.
 
 8
-00:01:31,859 --> 00:01:43,811
+00:01:23,579 --> 00:01:36,259
 Spring Framework is an application
 framework for Java that simplifies
 enterprise development by providing
@@ -66,7 +66,7 @@ Injection, and Aspect-Oriented Programming
 on top of plain Java objects.
 
 9
-00:01:43,932 --> 00:01:57,707
+00:01:36,379 --> 00:01:48,659
 The shift is easy to say and easy to
 underestimate. Instead of your code
 hunting for collaborators, the Spring
@@ -75,7 +75,7 @@ manages the object graph. You describe
 what a type needs.
 
 10
-00:01:57,828 --> 00:02:09,804
+00:01:48,779 --> 00:01:59,419
 The container decides how the graph comes
 alive. Hold the three pillars in your head
 as promises, not buzzwords. IoC means the
@@ -83,13 +83,13 @@ container owns object creation and
 lifecycle.
 
 11
-00:02:09,924 --> 00:02:15,300
+00:01:59,539 --> 00:02:04,699
 DI means dependencies are supplied —
 usually through constructors — instead of
 looked up.
 
 12
-00:02:15,420 --> 00:02:27,540
+00:02:04,819 --> 00:02:16,179
 AOP means cross-cutting concerns like
 logging, security, and transactions can be
 modularized instead of copy-pasted into
@@ -97,7 +97,7 @@ every service method. We will deepen each
 pillar in later episodes.
 
 13
-00:02:27,660 --> 00:02:40,164
+00:02:16,299 --> 00:02:28,259
 Today we only need the shape of the stack.
 A little history makes the design less
 mysterious. Rod Johnson published *Expert
@@ -105,7 +105,7 @@ One-on-One J2EE Design and Development* in
 2002.
 
 14
-00:02:40,284 --> 00:02:52,572
+00:02:28,379 --> 00:02:38,460
 The book included tens of thousands of
 lines of educational framework code. That
 code became Spring. The thesis was blunt:
@@ -113,7 +113,7 @@ J2EE had over-engineered everyday
 problems.
 
 15
-00:02:52,692 --> 00:03:04,548
+00:02:38,579 --> 00:02:50,059
 Many teams did not need EJB-heavy
 solutions for wiring and cross-cutting
 concerns. Interfaces, factories, and a
@@ -122,14 +122,14 @@ enterprise features while staying
 testable.
 
 16
-00:03:04,668 --> 00:03:14,963
+00:02:50,179 --> 00:03:00,339
 Now separate three names people mash
 together. Spring Framework is the core IoC
 and DI engine plus modules for data
 access, web, AOP, and testing.
 
 17
-00:03:15,084 --> 00:03:29,676
+00:03:00,459 --> 00:03:14,139
 Spring Boot is an opinionated layer on top
 that removes boilerplate — auto-
 configuration, embedded servers, starters.
@@ -138,7 +138,7 @@ patterns on top of Boot. You can use the
 Framework alone.
 
 18
-00:03:29,795 --> 00:03:44,867
+00:03:14,259 --> 00:03:27,579
 In modern delivery, Boot is the usual on-
 ramp. Cloud is for multi-service systems.
 Lesson one is still Framework thinking:
@@ -146,7 +146,7 @@ who owns creation, wiring, and lifecycle?
 Let's make the before-and-after concrete.
 
 19
-00:03:44,987 --> 00:03:58,427
+00:03:27,699 --> 00:03:41,060
 In a pre-Spring style, an OrderService
 might construct a StripePaymentGateway
 with an environment variable inside the
@@ -155,7 +155,7 @@ repository the same way. It works on one
 laptop.
 
 20
-00:03:58,548 --> 00:04:14,243
+00:03:41,179 --> 00:03:54,499
 It fails in tests. It resists swapping
 implementations. It hides dependencies
 inside new. In a Spring style,
@@ -164,7 +164,7 @@ constructor — a payment gateway port and
 an order repository.
 
 21
-00:04:14,364 --> 00:04:30,324
+00:03:54,619 --> 00:04:08,179
 The container supplies implementations. In
 a test, you pass fakes. In production, you
 pass real adapters. The business method
@@ -173,14 +173,14 @@ construction. Look at this java for a
 moment.
 
 22
-00:04:30,444 --> 00:04:43,307
+00:04:08,299 --> 00:04:20,060
 Read that again slowly. There is no Spring
 import in the domain class. That is the
 point. Spring is invasive to configuration
 and assembly, not to every business type.
 
 23
-00:04:43,427 --> 00:04:56,148
+00:04:20,180 --> 00:04:32,540
 The framework earns trust when your domain
 can still be reasoned about as plain Java.
 Under the hood, at the highest level,
@@ -188,7 +188,7 @@ Spring splits into a core container, data
 access, web, AOP, and test modules.
 
 24
-00:04:56,267 --> 00:05:07,187
+00:04:32,660 --> 00:04:45,540
 The container reads bean definitions —
 metadata about classes, scope, properties,
 and dependencies — registers them in a
@@ -196,7 +196,7 @@ BeanFactory, and materializes objects on
 demand or at startup.
 
 25
-00:05:07,307 --> 00:05:19,596
+00:04:45,660 --> 00:04:58,220
 ApplicationContext extends that foundation
 with events, internationalization, and
 resource loading. Most applications talk
@@ -204,13 +204,13 @@ to an ApplicationContext, not to the
 lowest-level factory API.
 
 26
-00:05:19,716 --> 00:05:28,451
+00:04:58,340 --> 00:05:05,780
 We will open those layers in the next
 episodes. For now, remember the pipeline:
 metadata in, managed object graph out.
 
 27
-00:05:28,572 --> 00:05:39,827
+00:05:05,900 --> 00:05:17,060
 A common misunderstanding is to treat
 Spring as "annotations you sprinkle until
 the red lines go away." If you only
@@ -218,7 +218,7 @@ memorize @Component and @Autowired, you do
 not own the idea yet.
 
 28
-00:05:39,947 --> 00:05:54,227
+00:05:17,180 --> 00:05:31,100
 The idea is control inversion: your code
 stops being the composer of the orchestra
 and becomes one musician with a clear
@@ -227,7 +227,7 @@ Spring replaces Java or the servlet model.
 It does not.
 
 29
-00:05:54,347 --> 00:06:08,627
+00:05:31,220 --> 00:05:45,500
 It composes them with less glue code and
 more testability. So today we answered why
 Spring showed up: assembly pain,
@@ -236,7 +236,7 @@ duplication in enterprise Java. We named
 the three pillars.
 
 30
-00:06:08,747 --> 00:06:21,803
+00:05:45,620 --> 00:05:56,019
 We separated Framework, Boot, and Cloud.
 And we saw a tiny service that depends on
 interfaces instead of constructing
@@ -244,7 +244,7 @@ concrete collaborators. The next natural
 question is unavoidable.
 
 31
-00:06:21,923 --> 00:06:32,099
+00:05:56,139 --> 00:06:05,979
 If Spring is a container that builds
 object graphs, what are the moving parts
 of that container — and how do they fit

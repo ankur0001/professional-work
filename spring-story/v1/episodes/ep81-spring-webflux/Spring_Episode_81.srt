@@ -1,10 +1,10 @@
 1
-00:00:00,000 --> 00:00:04,535
+00:00:00,000 --> 00:00:04,200
 Reactor gave us Mono, Flux, schedulers,
 and backpressure.
 
 2
-00:00:04,655 --> 00:00:15,047
+00:00:04,320 --> 00:00:14,960
 Spring WebFlux is how those types become
 HTTP servers and clients on a non-blocking
 stack — typically Netty with Boot’s
@@ -12,7 +12,7 @@ WebFlux starter, not an embedded Tomcat
 servlet container.
 
 3
-00:00:15,167 --> 00:00:27,287
+00:00:15,080 --> 00:00:27,119
 For the harbor ops board, that means a
 reactive /positions/stream endpoint that
 writes AIS fixes as they arrive instead of
@@ -20,13 +20,13 @@ parking a servlet thread per open map.
 Contrast the center of gravity.
 
 4
-00:00:27,407 --> 00:00:34,943
+00:00:27,239 --> 00:00:34,839
 Spring MVC: DispatcherServlet, thread-per-
 request style, blocking signatures
 returning objects or ResponseEntity.
 
 5
-00:00:35,064 --> 00:00:47,567
+00:00:34,960 --> 00:00:47,719
 WebFlux: reactive HTTP, handlers that
 return Mono / Flux, and a choice of
 programming model — annotated
@@ -35,7 +35,7 @@ functional RouterFunction /
 HandlerFunction beans.
 
 6
-00:00:47,688 --> 00:01:00,432
+00:00:47,840 --> 00:01:00,120
 Same application for JSON APIs; different
 concurrency contract. This is not servlet
 DI with a new annotation coat — it is
@@ -43,14 +43,14 @@ publishers on the wire. Look at this java
 for a moment.
 
 7
-00:01:00,551 --> 00:01:09,936
+00:01:00,240 --> 00:01:08,120
 WebClient replaces blocking RestTemplate
 in this world. It returns publishers; you
 compose them with the same operators you
 already learned.
 
 8
-00:01:10,055 --> 00:01:20,567
+00:01:08,240 --> 00:01:21,600
 Connecting WebFlux to a blocking
 DataSource without offloading will stall
 Netty event loops — pair WebFlux with
@@ -58,7 +58,7 @@ R2DBC or wrap blocking JDBC on
 boundedElastic at a clear boundary.
 
 9
-00:01:20,688 --> 00:01:36,623
+00:01:21,720 --> 00:01:36,840
 Boot chooses the stack from the classpath.
 spring-boot-starter-web pulls MVC. spring-
 boot-starter-webflux pulls WebFlux.
@@ -67,14 +67,14 @@ prefer MVC unless you force a reactive
 application type.
 
 10
-00:01:36,743 --> 00:01:45,215
+00:01:36,960 --> 00:01:44,480
 Be explicit in multi-module builds so you
 do not accidentally ship a servlet stack
 while writing Mono return types that never
 get a reactive runtime.
 
 11
-00:01:45,335 --> 00:01:56,831
+00:01:44,600 --> 00:01:57,120
 Error handling and validation have
 reactive-aware variants, but the teaching
 point for this episode is the request
@@ -83,47 +83,47 @@ produces objects, your handler returns a
 publisher,
 
 12
-00:01:56,951 --> 00:02:02,447
+00:01:57,240 --> 00:02:02,080
 encoding writes when items arrive,
 cancellation propagates when clients
 disconnect.
 
 13
-00:02:02,567 --> 00:02:10,056
+00:02:02,200 --> 00:02:09,640
 That is why returning Flux for SSE on
 /positions/stream is natural here and
 awkward under a blocking servlet mindset.
 
 14
-00:02:10,175 --> 00:02:20,351
+00:02:09,759 --> 00:02:19,079
 A misconception is “WebFlux is always
 faster than MVC.” For modest concurrency
 and blocking drivers, MVC is often simpler
 and plenty fast.
 
 15
-00:02:20,471 --> 00:02:27,839
+00:02:19,199 --> 00:02:27,599
 WebFlux shines when concurrency and I/O
 wait dominate and the whole stack is non-
 blocking — AIS fan-in is the motivating
 shape.
 
 16
-00:02:27,959 --> 00:02:36,119
+00:02:27,719 --> 00:02:35,280
 Another misconception is using WebFlux
 only because it looks modern while calling
 .block() in every handler — that is the
 worst of both models.
 
 17
-00:02:36,239 --> 00:02:46,079
+00:02:35,400 --> 00:02:43,759
 A third is treating WebFlux as a different
 way to inject servlet beans rather than a
 reactive HTTP runtime. We can serve
 reactive HTTP.
 
 18
-00:02:46,199 --> 00:03:00,671
+00:02:43,879 --> 00:02:57,280
 Security still matters — identity and
 authorization cannot vanish because we
 changed the server. The filter story must

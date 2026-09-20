@@ -1,12 +1,12 @@
 1
-00:00:00,000 --> 00:00:11,832
+00:00:00,000 --> 00:00:11,560
 Criteria gives you dynamic predicates.
 Specifications give those predicates names
 you can reuse: CargoSpecs.isHazardous().an
 d(CargoSpecs.inPort("SGSIN")).
 
 2
-00:00:11,952 --> 00:00:25,247
+00:00:11,679 --> 00:00:25,960
 Harbor search stops being a private method
 full of if statements and becomes a
 library of composable rules. Spring Data
@@ -14,7 +14,7 @@ JPA’s JpaSpecificationExecutor adds
 findAll(Specification) to your repository.
 
 3
-00:00:25,367 --> 00:00:41,688
+00:00:26,079 --> 00:00:40,519
 A Specification is a functional bridge to
 Criteria — implement toPredicate, or build
 with lambdas. Look at this java for a
@@ -23,7 +23,7 @@ Look at this java for a moment.
 Composition is the win.
 
 4
-00:00:41,807 --> 00:00:53,064
+00:00:40,640 --> 00:00:51,840
 and / or / not combine specs without
 knowing how each one builds its predicate.
 Unit tests can assert combinations against
@@ -31,14 +31,14 @@ an in-memory database or a repository
 slice.
 
 5
-00:00:53,183 --> 00:01:04,295
+00:00:51,960 --> 00:01:02,039
 Product owners request "hazardous cargo in
 Singapore over 500 kg" and you assemble
 existing specs instead of inventing a
 fourth @Query. Read the call site again.
 
 6
-00:01:04,415 --> 00:01:16,896
+00:01:02,159 --> 00:01:14,159
 Nothing there knows whether isHazardous
 checks a boolean column or a status enum.
 That opacity is deliberate: when customs
@@ -46,7 +46,7 @@ rules tighten, you change one spec method
 and every composed query inherits the fix.
 
 7
-00:01:17,015 --> 00:01:28,607
+00:01:14,280 --> 00:01:25,000
 Nullable filters stay readable: Look at
 this java for a moment. Join-based specs
 need care with distinct results when
@@ -54,7 +54,7 @@ collections multiply rows — same caution
 as JPQL joins.
 
 8
-00:01:28,727 --> 00:01:41,495
+00:01:25,120 --> 00:01:38,560
 If a spec joins lines to filter on
 hazardous contents, wrap with
 query.distinct(true) or you will see
@@ -63,7 +63,7 @@ list. Pagination works: findAll(spec,
 pageable).
 
 9
-00:01:41,615 --> 00:01:53,471
+00:01:38,680 --> 00:01:51,120
 Count queries follow the spec too — which
 is why an expensive join in a spec hurts
 both the page query and the count.
@@ -71,7 +71,7 @@ Specifications are not a reason to abandon
 derived methods for findByImoNumber.
 
 10
-00:01:53,591 --> 00:02:05,376
+00:01:51,240 --> 00:02:03,200
 Use the lightest tool that stays clear.
 Dumping all business rules into specs that
 reach across bounded contexts also hurts —
@@ -79,7 +79,7 @@ keep specs about persistence predicates,
 not full harbor workflows.
 
 11
-00:02:05,495 --> 00:02:17,304
+00:02:03,320 --> 00:02:15,000
 And a specification that silently ignores
 an invalid port code instead of failing
 fast will hide operator typos behind an
@@ -87,7 +87,7 @@ empty result set. You can now query cargo
 with composable rules.
 
 12
-00:02:17,424 --> 00:02:29,280
+00:02:15,120 --> 00:02:26,480
 Read-heavy vessel directory screens still
 hammer the database with identical
 lookups. Caching those directory reads —

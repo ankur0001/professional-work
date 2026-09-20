@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:12,336
+00:00:00,000 --> 00:00:11,800
 A shipping clerk attaches a bill of lading
 — a PDF — to a cargo booking. The browser
 does not send JSON. It sends
@@ -7,7 +7,7 @@ multipart/form-data: fields plus a binary
 part.
 
 2
-00:00:12,455 --> 00:00:23,664
+00:00:11,919 --> 00:00:21,719
 If your controller still expects
 @RequestBody, the adapter will not bind
 what you think. Spring MVC treats
@@ -15,7 +15,7 @@ multipart as a first-class request shape
 on the dispatcher path.
 
 3
-00:00:23,783 --> 00:00:36,863
+00:00:21,839 --> 00:00:34,359
 Before handler invocation,
 DispatcherServlet can resolve a multipart
 request into a wrapped request the adapter
@@ -24,14 +24,14 @@ MultipartResolver when servlet multipart
 support is enabled.
 
 4
-00:00:36,983 --> 00:00:48,287
+00:00:34,479 --> 00:00:45,479
 You bind parts with MultipartFile (or
 Part) alongside ordinary form fields. Look
 at this java for a moment. @RequestPart
 names the multipart field.
 
 5
-00:00:48,407 --> 00:00:59,855
+00:00:45,599 --> 00:00:57,359
 MultipartFile gives you bytes, size,
 content type, and the client-supplied
 filename. Treat that filename as hostile
@@ -39,27 +39,27 @@ metadata — never concatenate it straight
 into a filesystem path.
 
 6
-00:00:59,975 --> 00:01:09,815
+00:00:57,479 --> 00:01:06,519
 Prefer generated storage keys and store
 the original name as data. Size limits are
 production essentials, not afterthoughts:
 Look at this example.
 
 7
-00:01:09,935 --> 00:01:18,287
+00:01:06,639 --> 00:01:14,319
 spring: When a clerk uploads a 40MB scan,
 the container should reject early with a
 clear error rather than buffering until
 the heap suffers.
 
 8
-00:01:18,407 --> 00:01:25,487
+00:01:14,439 --> 00:01:20,439
 Align gateway limits, Boot multipart
 limits, and reverse-proxy body sizes so
 the failure mode is intentional.
 
 9
-00:01:25,607 --> 00:01:34,991
+00:01:20,559 --> 00:01:30,319
 Streaming large files through getBytes()
 is fine for small PDFs and wrong for
 multi-hundred-megabyte transfers — use
@@ -67,21 +67,21 @@ getInputStream() and stream to object
 storage.
 
 10
-00:01:35,111 --> 00:01:43,415
+00:01:30,439 --> 00:01:37,879
 Virus scanning and content-type sniffing
 belong in the store or a dedicated
 pipeline; trusting Content-Type from the
 client alone is not enough.
 
 11
-00:01:43,536 --> 00:01:51,359
+00:01:37,999 --> 00:01:46,319
 On the dispatcher path, multipart
 resolution happens before the adapter
 invokes your method — remember the early
 step in doDispatch.
 
 12
-00:01:51,480 --> 00:02:02,975
+00:01:46,439 --> 00:01:58,759
 If resolution fails because the body is
 not multipart or exceeds limits, your
 controller never runs; advice and error
@@ -89,14 +89,14 @@ handling still should return a JSON
 problem, not an HTML container page.
 
 13
-00:02:03,096 --> 00:02:12,288
+00:01:58,879 --> 00:02:07,199
 People bind multipart with @RequestBody
 and blame Jackson. Others disable size
 limits "temporarily" for a demo and leave
 them off.
 
 14
-00:02:12,408 --> 00:02:25,008
+00:02:07,319 --> 00:02:19,879
 A third trap is writing uploads into a
 directory inside the fat JAR’s working
 tree without cleanup — disks fill, pods
@@ -104,7 +104,7 @@ restart, bookings look fine until storage
 fails. Uploads now fit the MVC model.
 
 15
-00:02:25,128 --> 00:02:36,528
+00:02:19,999 --> 00:02:33,199
 The broader craft around the stack you
 already have — resource-oriented URLs,
 disciplined statuses, paginated
@@ -113,5 +113,5 @@ idempotent creates for parcels — is REST
 best practice,
 
 16
-00:02:36,648 --> 00:02:39,096
+00:02:33,319 --> 00:02:34,959
 not another annotation.

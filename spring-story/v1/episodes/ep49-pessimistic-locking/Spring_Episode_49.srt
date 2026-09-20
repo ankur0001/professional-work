@@ -1,11 +1,11 @@
 1
-00:00:00,000 --> 00:00:09,432
+00:00:00,000 --> 00:00:08,320
 Storm diversion. One free slot left on
 berth B7. Two reservation requests hit the
 API within milliseconds.
 
 2
-00:00:09,551 --> 00:00:20,327
+00:00:08,439 --> 00:00:18,559
 Optimistic locking would let both read
 "one slot left," then fail one at commit —
 acceptable for clerks who can retry,
@@ -13,14 +13,14 @@ painful when an automated gate must answer
 now and only one ship may win.
 
 3
-00:00:20,448 --> 00:00:32,280
+00:00:18,679 --> 00:00:29,320
 Pessimistic locking serializes access: the
 first transaction locks the row; the
 second waits or fails fast. JPA expresses
 this with lock modes on find / query APIs.
 
 4
-00:00:32,399 --> 00:00:47,495
+00:00:29,439 --> 00:00:44,159
 LockModeType.PESSIMISTIC_WRITE typically
 becomes SELECT ... FOR UPDATE on databases
 that support it. Look at this java for a
@@ -28,7 +28,7 @@ moment. Look at this java for a moment.
 Walk the timeline.
 
 5
-00:00:47,615 --> 00:01:01,247
+00:00:44,280 --> 00:00:57,880
 Transaction A calls findForUpdate("B7")
 and holds the row lock. Transaction B’s
 findForUpdate("B7") blocks until A commits
@@ -36,7 +36,7 @@ or rolls back — or times out, depending on
 database and Spring lock timeout settings.
 
 6
-00:01:01,367 --> 00:01:14,087
+00:00:58,000 --> 00:01:10,239
 After A commits with zero remaining slots,
 B loads the fresh state and reserve(1)
 throws a business exception instead of
@@ -44,7 +44,7 @@ overbooking. No version collision theater;
 the database queue did the serialization.
 
 7
-00:01:14,207 --> 00:01:25,775
+00:01:10,359 --> 00:01:21,640
 PESSIMISTIC_READ is a shared lock where
 the dialect supports it — useful for read-
 stable sections, less common for
@@ -52,7 +52,7 @@ reservation. PESSIMISTIC_WRITE is the
 reservation tool.
 
 8
-00:01:25,896 --> 00:01:37,152
+00:01:21,759 --> 00:01:33,839
 Lock timeout and deadlock detection are
 operational concerns: set timeouts so a
 stuck transaction does not freeze the
@@ -61,7 +61,7 @@ section short — lock, decide, write,
 commit.
 
 9
-00:01:37,272 --> 00:01:53,207
+00:01:33,959 --> 00:01:48,359
 Do not lock, then call a remote tide API,
 then write. Pessimistic locking is not
 free. It reduces concurrency on hot rows.
@@ -70,14 +70,14 @@ how you recreate the worst of pessimistic
 UIs.
 
 10
-00:01:53,328 --> 00:02:01,487
+00:01:48,479 --> 00:01:56,759
 Prefer optimistic locking for ordinary
 collaborative edits; reach for
 PESSIMISTIC_WRITE when the business rule
 is "exactly one winner,
 
 11
-00:02:01,608 --> 00:02:12,743
+00:01:56,879 --> 00:02:09,199
 no retry loop." Using @Version and
 PESSIMISTIC_WRITE on every entity "for
 safety" fights itself — you pay lock costs
@@ -85,13 +85,13 @@ and still write version columns without a
 clear policy.
 
 12
-00:02:12,864 --> 00:02:19,752
+00:02:09,319 --> 00:02:16,199
 Locking in a non-transactional method also
 fails: without a transaction boundary, the
 lock has nowhere to live.
 
 13
-00:02:19,872 --> 00:02:31,848
+00:02:16,319 --> 00:02:29,039
 And forgetting that FOR UPDATE behavior
 varies by dialect leads to surprises when
 tests on H2 differ from Postgres in
@@ -99,7 +99,7 @@ production. You can now choose optimistic
 vs pessimistic for berth fights.
 
 14
-00:02:31,968 --> 00:02:45,048
+00:02:29,159 --> 00:02:42,039
 Separately, the schedule board can still
 feel slow even when no one is colliding —
 not because of locks, but because of how

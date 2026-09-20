@@ -1,11 +1,11 @@
 1
-00:00:00,000 --> 00:00:07,944
+00:00:00,000 --> 00:00:07,519
 A warehouse handheld loads CargoItem
 CARGO-441 during a request, shows it on
 screen, and the HTTP call ends.
 
 2
-00:00:08,064 --> 00:00:19,368
+00:00:07,639 --> 00:00:19,519
 Two minutes later the clerk taps "mark
 damaged." If you keep the old Java object
 and call save carelessly, you are holding
@@ -13,7 +13,7 @@ a *detached* entity — and merge mistakes
 are about to enter the chat.
 
 3
-00:00:19,487 --> 00:00:34,607
+00:00:19,640 --> 00:00:33,359
 JPA entities move through named states.
 Transient: a new CargoItem(...) that the
 persistence context has never seen — no
@@ -22,7 +22,7 @@ inside an open persistence context; dirty
 checking applies.
 
 4
-00:00:34,727 --> 00:00:50,567
+00:00:33,480 --> 00:00:47,040
 Detached: the context closed (typically
 when the transaction/request ended) but
 the object still sits in memory with an
@@ -31,7 +31,7 @@ Look at this java for a moment. Walk a
 request.
 
 5
-00:00:50,687 --> 00:01:05,015
+00:00:47,160 --> 00:01:01,160
 Controller calls a transactional service.
 Service does
 cargoItems.findByTrackingCode("CARGO-441")
@@ -40,21 +40,21 @@ transaction commits; persistence context
 closes.
 
 6
-00:01:05,135 --> 00:01:16,415
+00:01:01,280 --> 00:01:11,200
 The object the UI still references is now
 detached. Calling markDamaged() on that
 detached instance changes only the JVM
 heap. Nothing schedules SQL.
 
 7
-00:01:16,536 --> 00:01:26,280
+00:01:11,319 --> 00:01:20,639
 The common mistake is "merge everything":
 Look at this java for a moment.
 EntityManager.merge copies state onto a
 managed instance (or loads one).
 
 8
-00:01:26,400 --> 00:01:38,448
+00:01:20,759 --> 00:01:32,799
 If the UI sent a half-populated object,
 merge can overwrite database columns with
 nulls or stale values. Prefer an explicit
@@ -62,7 +62,7 @@ reload inside the new transaction: Look at
 this java for a moment.
 
 9
-00:01:38,568 --> 00:01:55,056
+00:01:32,919 --> 00:01:51,319
 Transient → managed via persist / save on
 a new entity. Managed → removed via remove
 / delete. Managed → detached when the
@@ -71,14 +71,14 @@ find/reload (safe) or merge (powerful,
 sharp).
 
 10
-00:01:55,176 --> 00:02:03,960
+00:01:51,439 --> 00:02:01,559
 Lifecycle callbacks (@PrePersist,
 @PreUpdate) can stamp updatedAt on cargo
 rows, but they are not a substitute for
 clear state handling.
 
 11
-00:02:04,080 --> 00:02:15,360
+00:02:01,679 --> 00:02:12,119
 Believing "once an entity always managed"
 across requests is the root misconception.
 Another is using merge as a generic upsert
@@ -86,7 +86,7 @@ without knowing which fields the detached
 graph carries.
 
 12
-00:02:15,480 --> 00:02:25,824
+00:02:12,239 --> 00:02:23,399
 A third is mutating a detached collection
 of cargo lines and expecting orphan
 removal to run — orphan removal requires a
@@ -94,7 +94,7 @@ managed parent. Lifecycle names the
 states.
 
 13
-00:02:25,944 --> 00:02:36,072
+00:02:23,519 --> 00:02:35,079
 The room those managed instances live in
 for the duration of a unit of work — and
 the rule that the same database row is the

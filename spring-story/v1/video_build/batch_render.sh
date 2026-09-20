@@ -22,23 +22,37 @@ mkdir -p "$LOG_DIR"
 DONE_MARKER=$LOG_DIR/completed.txt
 touch "$DONE_MARKER"
 
+# FORCE_RERENDER=1: wipe prior Edge/old outputs and ignore completed markers
+if [[ "${FORCE_RERENDER:-0}" == "1" ]]; then
+  : > "$DONE_MARKER"
+  echo "FORCE_RERENDER=1 — cleared completed markers; will re-synth with Chatterbox"
+fi
+
 echo "Batch render Spring Story EP$(printf '%02d' "$START")–EP$(printf '%02d' "$END")"
 
 for ep in $(seq "$START" "$END"); do
   epz=$(printf '%02d' "$ep")
-  if grep -qx "$epz" "$DONE_MARKER"; then
+  if [[ "${FORCE_RERENDER:-0}" != "1" ]] && grep -qx "$epz" "$DONE_MARKER"; then
     echo "SKIP EP$epz (already marked done)"
     continue
   fi
-  # Skip if final captioned mp4 already exists in episode folder
-  if ls spring-story/v1/episodes/ep${ep}-*/Spring_Episode_${epz}_*_CAPTIONED.mp4 >/dev/null 2>&1 \
-     || ls spring-story/v1/episodes/ep${epz}-*/Spring_Episode_${epz}_*_CAPTIONED.mp4 >/dev/null 2>&1; then
-    # ignore PREVIEW
-    if ls spring-story/v1/episodes/ep*-*/Spring_Episode_${epz}_*_CAPTIONED.mp4 2>/dev/null | grep -v PREVIEW >/dev/null; then
-      echo "SKIP EP$epz (captioned mp4 present)"
-      echo "$epz" >> "$DONE_MARKER"
-      continue
+  # Skip if final captioned mp4 already exists (unless FORCE_RERENDER=1)
+  if [[ "${FORCE_RERENDER:-0}" != "1" ]]; then
+    if ls spring-story/v1/episodes/ep${ep}-*/Spring_Episode_${epz}_*_CAPTIONED.mp4 >/dev/null 2>&1 \
+       || ls spring-story/v1/episodes/ep${epz}-*/Spring_Episode_${epz}_*_CAPTIONED.mp4 >/dev/null 2>&1; then
+      if ls spring-story/v1/episodes/ep*-*/Spring_Episode_${epz}_*_CAPTIONED.mp4 2>/dev/null | grep -v PREVIEW >/dev/null; then
+        echo "SKIP EP$epz (captioned mp4 present)"
+        echo "$epz" >> "$DONE_MARKER"
+        continue
+      fi
     fi
+  else
+    # Drop prior Edge-TTS (or older) outputs + work audio so Chatterbox re-synths
+    rm -f spring-story/v1/episodes/ep${ep}-*/Spring_Episode_${epz}_*.mp4 \
+          spring-story/v1/episodes/ep${epz}-*/Spring_Episode_${epz}_*.mp4 \
+          spring-story/v1/episodes/ep${ep}-*/Spring_Episode_${epz}.srt \
+          spring-story/v1/episodes/ep${epz}-*/Spring_Episode_${epz}.srt 2>/dev/null || true
+    rm -rf spring-story/v1/video_build/work/ep${epz}
   fi
   echo "======== EP$epz $(date -Is) ========"
   if python3 -u spring-story/v1/video_build/render_spring_episode.py --ep "$ep" 2>&1 | tee -a "$LOG_DIR/ep${epz}.log"; then

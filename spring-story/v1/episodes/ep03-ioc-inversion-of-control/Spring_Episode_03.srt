@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:10,583
+00:00:00,000 --> 00:00:09,599
 Breakpoint on line 41 of
 AppointmentScheduler.book. The hospital's
 outpatient desk is stuck on a flaky
@@ -7,13 +7,13 @@ integration test, so you step into the
 constructor chain.
 
 2
-00:00:10,703 --> 00:00:19,344
+00:00:09,719 --> 00:00:22,359
 new DoctorDirectory(...), then new
 RoomBoard(...), then new SmsNotifier(new T
 wilioClient(System.getenv("TWILIO_KEY"))).
 
 3
-00:00:19,463 --> 00:00:30,863
+00:00:22,479 --> 00:00:33,000
 Three frames later you are configuring a
 vendor SDK inside a domain type that was
 supposed to be about appointment slots.
@@ -21,7 +21,7 @@ That stack trace is Inversion of Control
 explained by its absence.
 
 4
-00:00:30,983 --> 00:00:44,495
+00:00:33,119 --> 00:00:45,079
 Control of creation still lives in the
 business class. Every collaborator birth,
 every config lookup, every concrete type
@@ -29,7 +29,7 @@ choice is decided by AppointmentScheduler
 itself. IoC flips the ownership.
 
 5
-00:00:44,615 --> 00:00:55,584
+00:00:45,199 --> 00:00:56,119
 The scheduler stops being the composer. It
 declares what it needs — a directory of
 doctors, a room board, a notifier — and
@@ -37,14 +37,14 @@ something outside constructs and supplies
 those parts.
 
 6
-00:00:55,704 --> 00:01:04,391
+00:00:56,239 --> 00:01:03,999
 In Spring, that outside force is the
 container. Your code becomes a musician
 with a clear part; the container runs the
 orchestra.
 
 7
-00:01:04,512 --> 00:01:15,263
+00:01:04,119 --> 00:01:16,319
 Before IoC, the hospital code looked like
 this in spirit: the scheduler knew Twilio
 existed, knew which environment variable
@@ -52,7 +52,7 @@ held the key, and knew that rooms were
 backed by a JDBC board.
 
 8
-00:01:15,384 --> 00:01:30,408
+00:01:16,439 --> 00:01:28,919
 Tests could not book a slot without
 standing up SMS. Swapping the notifier for
 an in-memory stub meant editing production
@@ -61,7 +61,7 @@ a moment. Read the runtime story
 carefully.
 
 9
-00:01:30,527 --> 00:01:44,039
+00:01:29,039 --> 00:01:41,319
 When the container starts, it creates
 DoctorDirectory, RoomBoard, and an
 AppointmentNotifier implementation first
@@ -70,7 +70,7 @@ Then it invokes the scheduler constructor
 with those instances.
 
 10
-00:01:44,159 --> 00:01:59,688
+00:01:41,439 --> 00:01:55,599
 book never calls new on its collaborators.
 If a test passes a fake notifier,
 confirmation becomes a list append. If
@@ -79,7 +79,7 @@ get texts. Same scheduler bytecode either
 way.
 
 11
-00:01:59,807 --> 00:02:13,608
+00:01:55,719 --> 00:02:09,359
 Misconception unique to IoC: "IoC means I
 must never write new anywhere." No. Domain
 values — Booking, PatientId, a temporary
@@ -87,7 +87,7 @@ ArrayList inside an algorithm — are still
 yours to construct.
 
 12
-00:02:13,727 --> 00:02:25,655
+00:02:09,479 --> 00:02:21,239
 IoC targets the wiring of long-lived
 collaborators and infrastructure, not
 every object that exists for three lines.
@@ -95,7 +95,7 @@ The hospital team can finally unit-test
 slot logic without Twilio.
 
 13
-00:02:25,775 --> 00:02:36,743
+00:02:21,359 --> 00:02:32,759
 What they still argue about in code review
 is the how of supply: constructor
 parameters versus setters versus field
@@ -103,5 +103,5 @@ injection, and who decides which notifier
 implementation lands in that constructor.
 
 14
-00:02:36,863 --> 00:02:39,959
+00:02:32,879 --> 00:02:34,999
 That mechanism has a name of its own.

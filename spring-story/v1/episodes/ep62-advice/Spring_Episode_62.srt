@@ -1,12 +1,12 @@
 1
-00:00:00,000 --> 00:00:10,968
+00:00:00,000 --> 00:00:10,320
 The tide API flakes. Not always — just
 enough that berth planners see timeouts on
 calm mornings. You do not want every
 caller to invent its own retry loop.
 
 2
-00:00:11,087 --> 00:00:24,695
+00:00:10,439 --> 00:00:24,920
 You want one place that says: around tide
 fetches, retry a couple of times, then
 surface the failure. That “around” is
@@ -15,7 +15,7 @@ stand; advice is what you do while
 standing there.
 
 3
-00:00:24,815 --> 00:00:37,439
+00:00:25,039 --> 00:00:37,679
 Spring’s annotation model maps cleanly
 onto spoken intent: before, after
 returning, after throwing, after finally,
@@ -23,7 +23,7 @@ and around. Look at this java for a
 moment. Walk each kind.
 
 4
-00:00:37,560 --> 00:00:49,008
+00:00:37,799 --> 00:00:49,679
 @Before runs before the target; it can
 throw and stop the call — here a red
 station board freezes forecasts.
@@ -31,14 +31,14 @@ station board freezes forecasts.
 can bind the returned TideWindow.
 
 5
-00:00:49,128 --> 00:00:59,064
+00:00:49,799 --> 00:00:58,679
 @AfterThrowing runs only when the target
 throws, binding the exception type you
 care about. @After is the finally analog —
 good for clearing thread state.
 
 6
-00:00:59,183 --> 00:01:10,343
+00:00:58,799 --> 00:01:11,239
 @Around is the power tool: receive a
 ProceedingJoinPoint, choose whether to
 call proceed, call it multiple times for
@@ -46,7 +46,7 @@ retry, replace arguments, replace the
 return value, or wrap exceptions.
 
 7
-00:01:10,463 --> 00:01:26,256
+00:01:11,359 --> 00:01:25,079
 The flaky tide retry lives naturally here.
 Transaction management is around-style in
 spirit: begin before proceed, commit or
@@ -55,28 +55,28 @@ before or around. Timing is naturally
 around.
 
 8
-00:01:26,376 --> 00:01:36,384
+00:01:25,200 --> 00:01:34,640
 Prefer the weakest advice that expresses
 intent. If you only need to log a return
 value, @AfterReturning is clearer than an
 @Around that always proceeds.
 
 9
-00:01:36,504 --> 00:01:44,712
+00:01:34,760 --> 00:01:42,200
 Order among advice kinds on the same join
 point follows Spring’s rules; when
 multiple aspects apply you need explicit
 aspect ordering later.
 
 10
-00:01:44,832 --> 00:01:53,952
+00:01:42,320 --> 00:01:51,280
 Inside one @Around, your code’s structure
 is the order: before proceed is before;
 after is after. Misuse patterns are
 familiar.
 
 11
-00:01:54,072 --> 00:02:08,183
+00:01:51,400 --> 00:02:05,000
 Calling proceed twice by accident doubles
 side effects — fine for deliberate retry,
 disastrous for a charge. Forgetting
@@ -85,14 +85,14 @@ Heavy domain work in @Before muddies the
 aspect.
 
 12
-00:02:08,304 --> 00:02:15,432
+00:02:05,120 --> 00:02:14,039
 Swallowing exceptions inside @Around
 without rethrow can bypass @AfterThrowing
 and transactional rollback you thought you
 had.
 
 13
-00:02:15,551 --> 00:02:27,407
+00:02:14,159 --> 00:02:25,400
 Advice answers “what happens at the join
 point.” It does not answer “which join
 points.” Without a precise selector, the
@@ -100,5 +100,5 @@ same advice might attach to every public
 method — or to nothing.
 
 14
-00:02:27,527 --> 00:02:30,840
+00:02:25,519 --> 00:02:28,239
 Aiming the advice is the job of pointcuts.

@@ -1,11 +1,11 @@
 1
-00:00:00,000 --> 00:00:07,919
+00:00:00,000 --> 00:00:08,279
 Look at this java for a moment. No
 @ComponentScan. No stereotype on
 TicketService.
 
 2
-00:00:08,039 --> 00:00:19,152
+00:00:08,399 --> 00:00:19,640
 The full-screen cinema box office wires
 every collaborator in one @Configuration
 class so the seating map never appears
@@ -14,12 +14,12 @@ graph top to bottom before Friday night
 rush.
 
 3
-00:00:19,271 --> 00:00:24,695
+00:00:19,759 --> 00:00:24,439
 @Configuration marks a class as a source
 of bean definitions via @Bean methods.
 
 4
-00:00:24,815 --> 00:00:35,183
+00:00:24,559 --> 00:00:35,839
 In full (default) mode, Spring enhances
 the configuration class — historically
 with CGLIB — so calls between @Bean
@@ -27,14 +27,14 @@ methods on the same class do not create a
 second instance.
 
 5
-00:00:35,304 --> 00:00:44,040
+00:00:35,959 --> 00:00:43,999
 When ticketService() calls seatMap(), that
 call is intercepted and returns the
 singleton already managed by the
 container, not a fresh SeatMap.load(...).
 
 6
-00:00:44,160 --> 00:00:58,344
+00:00:44,119 --> 00:00:57,919
 That interception is the whole point of
 default @Configuration semantics. Walk
 each method. seatMap() loads auditorium
@@ -43,7 +43,7 @@ method name seatMap becomes the default
 bean name.
 
 7
-00:00:58,463 --> 00:01:11,615
+00:00:58,039 --> 00:01:11,879
 pricingPolicy() returns a matinee policy
 singleton. ticketService() looks like
 ordinary Java calling two neighbors —
@@ -52,7 +52,7 @@ call asks the container for the singleton
 of that bean name.
 
 8
-00:01:11,735 --> 00:01:21,191
+00:01:11,999 --> 00:01:21,759
 paymentGateway(Environment env) uses a
 different injection style: method
 *parameters* are satisfied from the
@@ -60,12 +60,12 @@ container (Environment is a built-in
 bean),
 
 9
-00:01:21,311 --> 00:01:26,519
+00:01:21,879 --> 00:01:26,079
 then the method body constructs the card-
 present gateway with a required property.
 
 10
-00:01:26,639 --> 00:01:40,607
+00:01:26,199 --> 00:01:38,719
 No sibling call needed. Runtime refresh
 for the cinema app, in order. Context
 registers CinemaTicketingConfig as a
@@ -74,13 +74,13 @@ proxyBeanMethods remains true (the
 default).
 
 11
-00:01:40,727 --> 00:01:46,991
+00:01:38,839 --> 00:01:45,119
 It derives bean definitions named seatMap,
 pricingPolicy, ticketService,
 paymentGateway.
 
 12
-00:01:47,111 --> 00:01:59,615
+00:01:45,239 --> 00:01:58,359
 At end of refresh (or on first demand),
 instantiating ticketService invokes the
 enhanced method; inside, seatMap() and
@@ -89,16 +89,16 @@ interceptor to container-managed
 singletons — one JSON load,
 
 13
-00:01:59,735 --> 00:02:01,703
+00:01:58,479 --> 00:01:59,759
 one policy.
 
 14
-00:02:01,823 --> 00:02:05,471
+00:01:59,879 --> 00:02:02,879
 Cashiers in the same JVM share that seat
 map.
 
 15
-00:02:05,591 --> 00:02:15,311
+00:02:03,000 --> 00:02:13,280
 You still need session-scoped or request-
 scoped hold state elsewhere if reserved
 seats are per guest; configuration mode
@@ -106,11 +106,11 @@ only guarantees singleton *definition*
 semantics for these beans,
 
 16
-00:02:15,431 --> 00:02:18,911
+00:02:13,400 --> 00:02:16,400
 not business-level locking across kiosks.
 
 17
-00:02:19,031 --> 00:02:29,831
+00:02:16,520 --> 00:02:28,400
 Lite mode flips the footgun back on.
 @Configuration(proxyBeanMethods = false) —
 or plain @Bean methods on a class
@@ -118,12 +118,12 @@ or plain @Bean methods on a class
 enhancement.
 
 18
-00:02:29,951 --> 00:02:35,399
+00:02:28,520 --> 00:02:33,000
 Then ticketService() calling seatMap()
 truly executes SeatMap.load again.
 
 19
-00:02:35,519 --> 00:02:47,591
+00:02:33,120 --> 00:02:47,759
 Symptom: two SeatMap instances in memory;
 cashier A reserves seat H12 on map
 instance 1; cashier B still sees H12 free
@@ -131,14 +131,14 @@ on map instance 2; double-booking until
 something hits the database constraint.
 
 20
-00:02:47,711 --> 00:02:56,279
+00:02:47,879 --> 00:02:56,599
 Another symptom in tests: asserting
 ticketService and a separately injected
 SeatMap are == fails under lite mode and
 passes under full mode.
 
 21
-00:02:56,399 --> 00:03:05,783
+00:02:56,719 --> 00:03:06,520
 Fix when you want lite mode for faster
 startup: do not call sibling @Bean methods
 — inject collaborators as method
@@ -146,7 +146,7 @@ parameters: Look at this java for a
 moment.
 
 22
-00:03:05,903 --> 00:03:17,879
+00:03:06,639 --> 00:03:20,599
 Failure mode without lite mode involved:
 forgetting @Configuration entirely and
 only using @Bean on a @Component class —
@@ -155,28 +155,28 @@ inter-bean calls are plain Java, same
 split-brain risk.
 
 23
-00:03:17,999 --> 00:03:27,263
+00:03:20,719 --> 00:03:29,759
 Symptom often appears only under
 concurrent kiosk use, not in a single-
 threaded unit test that never compares
 identities. Trade-offs.
 
 24
-00:03:27,383 --> 00:03:36,263
+00:03:29,879 --> 00:03:39,159
 Full @Configuration makes method-call
 wiring safe and readable for small graphs;
 enhancement adds a proxy/subclass and a
 bit of startup cost.
 
 25
-00:03:36,383 --> 00:03:44,663
+00:03:39,280 --> 00:03:47,000
 Lite mode and parameter injection scale
 better for large configs and avoid proxy
 surprises, at the cost of losing "just
 call the method" style.
 
 26
-00:03:44,783 --> 00:03:55,151
+00:03:47,120 --> 00:03:57,200
 Explicit @Configuration without component
 scanning maximizes auditability for
 regulated box-office systems; it costs a
@@ -184,7 +184,7 @@ registration line whenever a new service
 appears.
 
 27
-00:03:55,271 --> 00:04:09,551
+00:03:57,319 --> 00:04:10,799
 Misconception unique to @Configuration: "A
 @Configuration class is just a factory
 with annotations; method calls behave like
@@ -193,7 +193,7 @@ methods mode they do not. That is the
 feature.
 
 28
-00:04:09,671 --> 00:04:22,367
+00:04:10,919 --> 00:04:23,719
 If you need ordinary Java call semantics,
 set proxyBeanMethods = false and inject
 collaborators as method parameters instead
@@ -201,13 +201,13 @@ of calling sibling @Bean methods. Cinema
 wiring is explicit and readable.
 
 29
-00:04:22,487 --> 00:04:29,879
+00:04:23,839 --> 00:04:30,159
 The SMS confirmation vendor SDK still
 cannot be annotated @Component because the
 cinema does not own that JAR.
 
 30
-00:04:29,999 --> 00:04:37,343
+00:04:30,279 --> 00:04:37,839
 Registering foreign objects needs the
 @Bean method pattern as a first-class tool
 — not only inside cozy configuration

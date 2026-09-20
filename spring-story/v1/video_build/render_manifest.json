@@ -1,9 +1,9 @@
 [
   {
-    "ep": 112,
-    "title": "Production Case Studies",
-    "beats": 29,
-    "duration_sec": 296.922,
-    "mp4": "/workspace/spring-story/v1/episodes/ep112-production-case-studies/Spring_Episode_112_Production_Case_Studies.mp4"
+    "ep": 83,
+    "title": "Microservices with Spring",
+    "beats": 22,
+    "duration_sec": 241.67,
+    "mp4": "/workspace/spring-story/v1/episodes/ep83-microservices-with-spring/Spring_Episode_83_Microservices_with_Spring.mp4"
   }
 ]

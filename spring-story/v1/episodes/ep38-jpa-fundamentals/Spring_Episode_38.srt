@@ -1,5 +1,5 @@
 1
-00:00:00,000 --> 00:00:12,887
+00:00:00,000 --> 00:00:12,119
 Harbor ops can expose a REST board forever
 and still not have a product. Sooner or
 later someone asks you to store a vessel,
@@ -8,14 +8,14 @@ update its berth flag without corrupting
 the row.
 
 2
-00:00:13,007 --> 00:00:22,415
+00:00:12,239 --> 00:00:20,719
 That is when Java objects meet relational
 tables — and the mismatch becomes the real
 work. Picture a vessel registry written
 with raw JDBC.
 
 3
-00:00:22,535 --> 00:00:38,256
+00:00:20,839 --> 00:00:38,359
 You open a connection, write INSERT INTO
 vessels (imo_number, name, flag_state)
 VALUES (?, ?, ?), then walk a ResultSet
@@ -24,14 +24,14 @@ Tomorrow you add gross_tonnage. Every
 mapper breaks.
 
 4
-00:00:38,375 --> 00:00:49,679
+00:00:38,479 --> 00:00:49,000
 You concatenate SQL for filters and hope
 nobody injects a quote. You copy the same
 findById / save / delete boilerplate for
 berths, manifests, and cargo lines.
 
 5
-00:00:49,799 --> 00:01:03,287
+00:00:49,119 --> 00:01:01,239
 Transactions live in try/finally blocks
 scattered through services. There is no
 shared identity for "the same vessel row I
@@ -39,7 +39,7 @@ already loaded." There is no unit of work
 — only statements you remember to run.
 
 6
-00:01:03,407 --> 00:01:19,343
+00:01:01,359 --> 00:01:13,599
 That tax is not a Java syntax problem. It
 is an object-relational problem. Objects
 have graphs, identity, and lifecycle.
@@ -47,7 +47,7 @@ Tables have rows, keys, and joins.
 Something has to translate.
 
 7
-00:01:19,463 --> 00:01:34,463
+00:01:13,719 --> 00:01:29,039
 JPA — the Jakarta Persistence API — is
 that standard translation layer. You map a
 class to a table with annotations. An
@@ -56,13 +56,13 @@ sitting on top of one) loads and saves
 those entities.
 
 8
-00:01:34,584 --> 00:01:41,880
+00:01:29,159 --> 00:01:35,519
 Hibernate is the most common JPA provider
 in Spring apps: it implements the
 specification and generates the SQL.
 
 9
-00:01:42,000 --> 00:01:54,504
+00:01:35,640 --> 00:01:48,120
 Spring Data JPA then removes the DAO
 boilerplate so you declare an interface
 and get a working repository at runtime.
@@ -70,7 +70,7 @@ Keep the names stacked. JPA is the API and
 mapping rules.
 
 10
-00:01:54,623 --> 00:02:05,663
+00:01:48,239 --> 00:01:58,439
 Hibernate is the engine that talks to the
 database. Spring Data JPA is the Spring
 abstraction that generates repository
@@ -78,14 +78,14 @@ implementations and plugs into Spring
 transactions.
 
 11
-00:02:05,783 --> 00:02:13,847
+00:01:58,559 --> 00:02:07,239
 Boot wires the datasource,
 EntityManagerFactory, and transaction
 manager when spring-boot-starter-data-jpa
 is on the classpath.
 
 12
-00:02:13,967 --> 00:02:27,816
+00:02:07,359 --> 00:02:21,759
 Make the before-and-after concrete with a
 Vessel entity — not a service that only
 wires beans: Look at this java for a
@@ -94,7 +94,7 @@ moment. @Entity marks a persistence type.
 from the class.
 
 13
-00:02:27,935 --> 00:02:42,287
+00:02:21,879 --> 00:02:35,919
 @Id declares the primary key;
 @GeneratedValue lets the database assign
 it. Columns become fields. The protected
@@ -103,7 +103,7 @@ your domain still constructs with a real
 constructor.
 
 14
-00:02:42,407 --> 00:02:54,671
+00:02:36,039 --> 00:02:47,239
 When Hibernate loads a row, it
 materializes a Vessel instance. When you
 change name inside a transaction and
@@ -111,7 +111,7 @@ flush, Hibernate issues UPDATE. You did
 not write the SQL string.
 
 15
-00:02:54,791 --> 00:03:08,543
+00:02:47,359 --> 00:02:59,479
 Spring Data JPA then shrinks the
 repository side: Look at this java for a
 moment. save, findById, and derived
@@ -119,7 +119,7 @@ finders appear without a hand-written DAO.
 Underneath, SQL still runs.
 
 16
-00:03:08,663 --> 00:03:21,839
+00:02:59,599 --> 00:03:11,599
 JPA does not erase the database; it
 mediates it. JPA is not "annotations
 instead of SQL forever." You still need to
@@ -127,7 +127,7 @@ understand joins, indexes, and
 transactional boundaries.
 
 17
-00:03:21,959 --> 00:03:32,159
+00:03:11,719 --> 00:03:23,079
 Annotating a random DTO with @Entity
 because you want Jackson to serialize it
 is another wrong turn — entities are
@@ -135,14 +135,14 @@ persistence types with identity and
 lifecycle, not wire formats.
 
 18
-00:03:32,279 --> 00:03:42,119
+00:03:23,199 --> 00:03:32,199
 And skipping the no-arg constructor until
 runtime blows up is a rite of passage you
 can skip by reading the mapping rules
 once. You can map a vessel and save it.
 
 19
-00:03:42,239 --> 00:03:50,231
+00:03:32,319 --> 00:03:41,400
 What Hibernate does between "field
 changed" and "UPDATE left the process" —
 dirty checking, snapshots, flush — is the

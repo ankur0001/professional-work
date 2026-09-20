@@ -1,9 +1,6 @@
-#!/usr/bin/env python3
-"""Edge-TTS narration engine for The Spring Story (no API key, CPU-friendly).
+"""DEPRECATED: Spring Story production TTS is now Chatterbox Turbo
+(same as Java Story). Kept only as an optional fallback.
 
-Drop-in style API matching the Java Chatterbox helper:
-  SAMPLE_RATE, synth_beat(text) -> np.ndarray float32 mono
-"""
 from __future__ import annotations
 
 import asyncio
