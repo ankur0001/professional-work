@@ -1,9 +1,9 @@
 [
   {
-    "ep": 5,
-    "title": "BeanFactory",
-    "beats": 31,
-    "duration_sec": 316.05,
-    "mp4": "/workspace/spring-story/v1/episodes/ep05-beanfactory/Spring_Episode_05_BeanFactory.mp4"
+    "ep": 6,
+    "title": "ApplicationContext",
+    "beats": 32,
+    "duration_sec": 313.85,
+    "mp4": "/workspace/spring-story/v1/episodes/ep06-applicationcontext/Spring_Episode_06_ApplicationContext.mp4"
   }
 ]
