@@ -1,9 +1,9 @@
 [
   {
-    "ep": 4,
-    "title": "Dependency Injection",
-    "beats": 23,
-    "duration_sec": 252.43,
-    "mp4": "/workspace/spring-story/v1/episodes/ep04-dependency-injection/Spring_Episode_04_Dependency_Injection.mp4"
+    "ep": 5,
+    "title": "BeanFactory",
+    "beats": 31,
+    "duration_sec": 316.05,
+    "mp4": "/workspace/spring-story/v1/episodes/ep05-beanfactory/Spring_Episode_05_BeanFactory.mp4"
   }
 ]
