@@ -1,9 +1,9 @@
 [
   {
-    "ep": 19,
-    "title": "Auto Configuration",
-    "beats": 29,
-    "duration_sec": 317.625,
-    "mp4": "/workspace/spring-story/v1/episodes/ep19-auto-configuration/Spring_Episode_19_Auto_Configuration.mp4"
+    "ep": 21,
+    "title": "@SpringBootApplication",
+    "beats": 30,
+    "duration_sec": 318.73,
+    "mp4": "/workspace/spring-story/v1/episodes/ep21-springbootapplication/Spring_Episode_21_SpringBootApplication.mp4"
   }
 ]
