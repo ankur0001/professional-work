@@ -1,9 +1,9 @@
 [
   {
-    "ep": 73,
-    "title": "CSRF",
-    "beats": 20,
-    "duration_sec": 211.65,
-    "mp4": "/workspace/spring-story/v1/episodes/ep73-csrf/Spring_Episode_73_CSRF.mp4"
+    "ep": 74,
+    "title": "CORS",
+    "beats": 18,
+    "duration_sec": 194.97,
+    "mp4": "/workspace/spring-story/v1/episodes/ep74-cors/Spring_Episode_74_CORS.mp4"
   }
 ]
